@@ -1,0 +1,79 @@
+@using Application.Constants.Identity
+
+@attribute [Authorize(PermissionConstants.Roles.Edit)]
+
+<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center"
+           ContentStyle="max-height: 600px; min-width: 250px; overflow-y: scroll">
+    <DialogContent>
+        <MudTabs Centered="true" Border="true" Elevation="20" Rounded="true">
+            @if (_canRemoveRoles)
+            {
+                <MudTabPanel Text="Assigned">
+                    <MudTable Items="@_assignedUsers" Hover="true" Dense="true" Striped="true" @bind-SelectedItems="_removeUsers" 
+                       MultiSelection="true" Elevation="15" Height="400px">
+                        <ToolBarContent>
+                            <MudContainer Class="d-flex flex-wrap gap-4">
+                                <MudText Typo="Typo.h6">Assigned Users</MudText>
+                                <MudSpacer/>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Remove"
+                                           Disabled="@(_removeUsers.Count < 1)" OnClick="RemoveUsers">Remove</MudButton>
+                            </MudContainer>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh>Username</MudTh>
+                            <MudTh>Email</MudTh>
+                            <MudTh>Is Enabled</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.VerifiedUser"/></MudTd>
+                            <MudTd DataLabel="Username">@context.Username</MudTd>
+                            <MudTd DataLabel="Email">@context.EmailAddress</MudTd>
+                            <MudTd DataLabel="Enablement">@context.AuthState</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+            }
+            @if (_canAddRoles)
+            {
+                <MudTabPanel Text="Available">
+                    <MudTable Items="@_availableUsers" Hover="true" Dense="true" Striped="true" @bind-SelectedItems="_addUsers" 
+                    MultiSelection="true" Elevation="15" Height="400px">
+                        <ToolBarContent>
+                            <MudContainer Class="d-flex flex-wrap gap-4">
+                                <MudText Typo="Typo.h6">Available Users</MudText>
+                                <MudSpacer/>
+                                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Color="Color.Success"
+                                           Disabled="@(_addUsers.Count < 1)" OnClick="AddUsers">Add</MudButton>
+                            </MudContainer>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh>Username</MudTh>
+                            <MudTh>Email</MudTh>
+                            <MudTh>Enablement</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.VerifiedUser"/></MudTd>
+                            <MudTd DataLabel="Username">@context.Username</MudTd>
+                            <MudTd DataLabel="Email">@context.EmailAddress</MudTd>
+                            <MudTd DataLabel="Enablement">@context.AuthState</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+            }
+        </MudTabs>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="Cancel">Cancel
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Save" 
+                       OnClick="Save">Save
+            </MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

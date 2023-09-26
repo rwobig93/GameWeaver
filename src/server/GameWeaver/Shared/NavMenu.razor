@@ -1,0 +1,59 @@
+﻿<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
+    <MudNavLink Href="@AppRouteConstants.Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
+        Home
+    </MudNavLink>
+    @if (_canViewCounter || _canViewWeather)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_canViewCounter)
+        {
+            <MudNavLink Href="@AppRouteConstants.Example.Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AddCircleOutline">
+                Counter
+            </MudNavLink>
+        }
+        @if (_canViewWeather)
+        {
+            <MudNavLink Href="@AppRouteConstants.Example.WeatherData" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WbSunny">
+                Weather Forecasts
+            </MudNavLink>
+        }
+    }
+    @if (_canViewUsers || _canViewRoles)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_canViewUsers)
+        {
+            <MudNavLink Href="@AppRouteConstants.Admin.Users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisorAccount">
+                User Admin
+            </MudNavLink>
+        }
+        @if (_canViewRoles)
+        {
+            <MudNavLink Href="@AppRouteConstants.Admin.Roles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PermContactCalendar">
+                Role Admin
+            </MudNavLink>
+        }
+        @if (_canViewAuditTrails)
+        {
+            <MudNavLink Href="@AppRouteConstants.Admin.AuditTrails" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FormatListNumbered">
+                Audit Trails
+            </MudNavLink>
+        }
+    }
+    @if (_canViewApi || _canViewJobs)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_canViewApi)
+        {
+            <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
+                API
+            </MudNavLink>
+        }
+        @if (_canViewJobs)
+        {
+            <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WorkOutline">
+                Jobs Dashboard
+            </MudNavLink>
+        }
+    }
+</MudNavMenu>

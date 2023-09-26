@@ -1,0 +1,38 @@
+﻿@using Application.Constants.Identity
+@using Domain.Enums.Identity
+
+@attribute [Authorize(PermissionConstants.Api.GenerateToken)]
+
+<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center" ContentStyle="min-width: 400px;">
+    <DialogContent>
+        @if (_creatingNewToken)
+        {
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudSelect Class="d-flex" @bind-Value="_tokenTimeframe" Label="Token Lifetime" OpenIcon="@Icons.Material.Filled.Api"
+                           AdornmentColor="Color.Secondary">
+                    @foreach (UserApiTokenTimeframe item in Enum.GetValues(typeof(UserApiTokenTimeframe)))
+                    {
+                        <MudSelectItem Value="@item">@item</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        }
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+            <MudTextField @bind-Value="_apiToken.Description" Label="Token Description" Variant="Variant.Outlined"/>
+        </MudItem>
+    </DialogContent>
+    <DialogActions>
+        <MudContainer xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-column justify-center">
+            <MudItem Class="d-flex justify-center py-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="@Cancel">Cancel
+                </MudButton>
+            </MudItem>
+            <MudItem Class="d-flex justify-center py-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Api"
+                           OnClick="@Save">@_saveButtonText
+                </MudButton>
+            </MudItem>
+        </MudContainer>
+    </DialogActions>
+</MudDialog>

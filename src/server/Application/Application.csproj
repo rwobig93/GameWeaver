@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>11</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <NoWarn>CS1591</NoWarn>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <DocumentationFile>Application.xml</DocumentationFile>
+    </PropertyGroup>
+    
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Asp.Versioning.Http" Version="7.0.0" />
+      <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+      <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+      <PackageReference Include="FluentEmail.Core" Version="3.0.2" />
+      <PackageReference Include="Hangfire" Version="1.8.3" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.3" />
+      <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.32.0" />
+      <PackageReference Include="MudBlazor" Version="6.7.0" />
+      <PackageReference Include="OAuth2" Version="0.10.3" />
+      <PackageReference Include="RestSharp.Authenticators" Version="1.1.1" />
+      <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
+      <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+      <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
+      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.32.0" />
+    </ItemGroup>
+
+
+</Project>

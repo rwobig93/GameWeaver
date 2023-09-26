@@ -1,0 +1,20 @@
+﻿@model Application.Models.Email.EmailAction;
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <title>Email Change Confirmation</title>
+</head>
+<body>
+<div>
+    Hey @Model.Username!
+    
+    Please confirm your email address to change your account email here: <a href="@Model.ActionUrl">Confirm Email Change</a>
+</div>
+</body>
+</html>

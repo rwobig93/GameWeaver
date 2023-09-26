@@ -1,0 +1,74 @@
+@attribute [Route(AppRouteConstants.Identity.Register)]
+
+@attribute [AllowAnonymous]
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12">
+            <div class="d-flex justify-center mt-4">
+                <MudIcon Icon="@Icons.Material.Outlined.BlurCircular" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mt-4">
+            <MudText Align="Align.Center" Typo="Typo.h5">So you wanna join the club huh?</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mb-2">
+            <MudText Align="Align.Center" Typo="Typo.h5">We just need a little info from you first</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
+            @if (PageIsLoading)
+            {
+                <MudProgressLinear Color="Color.Primary" Rounded="true" Indeterminate="true" Class="my-7"/>
+            }
+            else
+            {
+                <MudProgressLinear Color="Color.Primary" Rounded="true" Indeterminate="false" Value="0" Class="my-7"/>
+            }
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
+            <MudTextField @bind-Value="DesiredUsername" Label="Desired Username" Variant="Variant.Outlined"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
+            <MudTextField @bind-Value="DesiredEmail" Label="Desired Email" Variant="Variant.Outlined"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudTextField @bind-Value="DesiredPassword" Label="Desired Password" Variant="Variant.Outlined" InputType="@_passwordInput"
+                          Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
+                          AdornmentAriaLabel="Show Desired Password"
+                          Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordRequirements))"/>
+            <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
+                <MudText Align="Align.Left" Class="mx-4">Minimum Length:     @_passwordRequirements.MinimumLength</MudText>
+                <MudText Align="Align.Left" Class="mx-4">Maximum Length:     @_passwordRequirements.MaximumLength</MudText>
+                <MudText Align="Align.Left" Class="mx-4">Requires Special:   @_passwordRequirements.RequiresSpecialCharacters</MudText>
+                <MudText Align="Align.Left" Class="mx-4">Requires Lowercase: @_passwordRequirements.RequiresLowercase</MudText>
+                <MudText Align="Align.Left" Class="mx-4">Requires Uppercase: @_passwordRequirements.RequiresUppercase</MudText>
+                <MudText Align="Align.Left" Class="mx-4">Requires Numbers:   @_passwordRequirements.RequiresNumbers</MudText>
+            </MudMenu>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudTextField @bind-Value="ConfirmPassword" Label="Confirm Password" Variant="Variant.Outlined" InputType="@_passwordConfirmInput"
+                          Adornment="Adornment.End" AdornmentIcon="@_passwordConfirmInputIcon" OnAdornmentClick="@ToggleConfirmPasswordVisibility"
+                          AdornmentAriaLabel="Show Confirm Password"
+                          Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordsMatch))"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurOn" 
+                       OnClick="@RegisterAsync">Lets Do Iiiiiiiiiiiiiiiiit!
+            </MudButton>
+        </MudItem>
+        @if (ServerState.IsRunningInDebugMode)
+        {
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" FullWidth="true" StartIcon="@Icons.Material.Filled.LogoDev" 
+                           OnClick="@DebugFillRegistrationInfo">Fill Registration For Wingman
+                </MudButton>
+            </MudItem>
+        }
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.ArrowBack" 
+                       OnClick="@GoHome">Go Back
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+

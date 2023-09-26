@@ -1,0 +1,24 @@
+<MudContainer MaxWidth="MaxWidth.Large">
+    <MudGrid Class="d-flex flex-column ma-4">
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
+            <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
+            <MudText Align="Align.Center" Typo="Typo.h5">@Text</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" Link="@AppRouteConstants.Index">Go Home</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    [Parameter] public string Icon { get; set; } = Icons.Material.Filled.QuestionMark;
+    [Parameter] public Color IconColor { get; set; } = Color.Primary;
+    [Parameter] public Color TextColor { get; set; } = Color.Default;
+    [Parameter] public string Text { get; set; } = "What up yo!?";
+    [Parameter] public int IconWidthPixels { get; set; } = 250;
+    [Parameter] public int IconHeightPixels { get; set; } = 250;
+
+    private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
+}

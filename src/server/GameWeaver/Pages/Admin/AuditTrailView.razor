@@ -1,0 +1,50 @@
+@using Application.Constants.Identity
+@using Application.Helpers.Runtime
+
+@attribute [Route(AppRouteConstants.Admin.AuditTrailView)]
+@attribute [Authorize(PermissionConstants.Audit.View)]
+
+@if (_invalidDataProvided)
+{
+    <IconWithMessageDisplay Icon="@Icons.Material.Filled.ErrorOutline" Text="Invalid Audit Trail Id provided"/>
+}
+else
+{
+    <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="GoBack">Go Back
+        </MudButton>
+    </MudPaper>
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Audit Trail Details</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_viewingTrail.Id" Label="ID" Variant="Variant.Outlined" ReadOnly="true"/>
+            <MudTextField Value="@_viewingTrail.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)"
+                          Label="Timestamp" Variant="Variant.Outlined" ReadOnly="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_viewingTrail.TableName" Label="Record Type" Variant="Variant.Outlined" ReadOnly="true"/>
+            <MudTextField @bind-Value="_viewingTrail.RecordId" Label="Record Id" Variant="Variant.Outlined" ReadOnly="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_viewingTrail.ChangedBy" Label="Changed By Id" Variant="Variant.Outlined" ReadOnly="true"/>
+            <MudTextField @bind-Value="_viewingTrail.ChangedByUsername" Label="Changed By Username" Variant="Variant.Outlined" ReadOnly="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField Value="@_viewingTrail.Action.ToString()" Label="Action" Variant="Variant.Outlined" ReadOnly="true"/>
+        </MudItem>
+    </MudPaper>
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Audit Trail Diff</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField Value="@Serializer.Serialize(_viewingTrail.Before)" Lines="20" Label="Before" Variant="Variant.Outlined" 
+            ReadOnly="true"/>
+            <MudTextField Value="@Serializer.Serialize(_viewingTrail.After)" Lines="20" Label="After" Variant="Variant.Outlined" 
+            ReadOnly="true"/>
+        </MudItem>
+    </MudPaper>
+}

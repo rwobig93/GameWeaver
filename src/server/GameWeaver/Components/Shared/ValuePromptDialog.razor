@@ -1,0 +1,24 @@
+﻿
+@attribute [AllowAnonymous]
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Style="min-width: 250px;" Class="d-flex flex-column">
+            <MudGrid>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36"  Class="d-flex justify-center pa-4">
+                    <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                    <MudTextField @bind-Value="_returnValue" Label="@FieldLabel" OnKeyDown="@TextFieldKeyDown" Variant="Variant.Outlined" Adornment="Adornment.End"/>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="@Confirm">@ConfirmButtonText</MudButton>
+        <MudButton Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>

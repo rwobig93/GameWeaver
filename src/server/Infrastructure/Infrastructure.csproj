@@ -1,0 +1,62 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>11</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions">
+        <HintPath>..\..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\6.0.7\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Application\Application.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Asp.Versioning.Http" Version="7.0.0" />
+      <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="6.0.5" />
+      <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
+      <PackageReference Include="EPPlus" Version="6.2.6" />
+      <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
+      <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
+      <PackageReference Include="Hangfire" Version="1.8.3" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.3" />
+      <PackageReference Include="Hangfire.PostgreSql" Version="1.19.13" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.9" />
+      <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="7.0.0" />
+      <PackageReference Include="MudBlazor" Version="6.7.0" />
+      <PackageReference Include="OAuth2" Version="0.10.3" />
+      <PackageReference Include="Otp.NET" Version="1.3.0" />
+      <PackageReference Include="QRCoder" Version="1.4.3" />
+      <PackageReference Include="RandomNameGeneratorNG" Version="2.0.2" />
+      <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
+      <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
+      <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
+      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
+      <PackageReference Include="System.Text.Json" Version="7.0.3" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="DatabaseScripts\MsSql\Tables\Roles.sql" />
+      <None Remove="EmailTemplates\RegistrationConfirmation.cshtml" />
+      <None Remove="EmailTemplates\PasswordReset.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Database\" />
+    </ItemGroup>
+
+</Project>

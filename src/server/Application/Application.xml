@@ -1,0 +1,469 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Application</name>
+    </assembly>
+    <members>
+        <member name="T:Application.Api.v1.Api.ApiEndpoints">
+            <summary>
+            Endpoints dealing with overall API integration functionality
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.Api.ApiEndpoints.MapEndpointsApi(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Registers the API endpoints
+            </summary>
+            <param name="app">Running application</param>
+        </member>
+        <member name="M:Application.Api.v1.Api.ApiEndpoints.GetToken(Application.Requests.Api.ApiGetTokenRequest,Application.Services.Identity.IAppAccountService)">
+            <summary>
+            Gets a Json Web Token (JWT) for use in API calls
+            </summary>
+            <param name="tokenRequest">Credentials to authenticate</param>
+            <param name="accountService"></param>
+            <returns>JWT with an expiration datetime in GMT/UTC</returns>
+            <remarks>
+            - Expiration time returned is in GMT/UTC
+            </remarks>
+        </member>
+        <member name="M:Application.Api.v1.Api.ApiEndpoints.WhoAmI(Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Return basic information about the currently authenticated account
+            </summary>
+            <param name="currentUserService"></param>
+            <returns>Basic user information</returns>
+        </member>
+        <member name="T:Application.Api.v1.Example.WeatherEndpoints">
+            <summary>
+            API endpoints for the example weather service
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.Example.WeatherEndpoints.MapEndpointsWeather(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Registers the example weather endpoints
+            </summary>
+            <param name="app"></param>
+        </member>
+        <member name="M:Application.Api.v1.Example.WeatherEndpoints.GetForecastAsync(System.Nullable{System.DateOnly},System.Nullable{System.Int32},Application.Services.Example.IWeatherService)">
+            <summary>
+            Get randomly generated example weather data
+            </summary>
+            <param name="startDate">Inclusive date to start with for weather retrieval</param>
+            <param name="weatherCount">Number of days to get weather data for</param>
+            <param name="weatherForecast"></param>
+            <returns>List of weather data for each day</returns>
+        </member>
+        <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
+            <summary>
+            API endpoints for application permissions
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.MapEndpointsPermissions(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Register the API endpoints
+            </summary>
+            <param name="app"></param>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetAllPermissions(Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Get all application permissions for roles and users
+            </summary>
+            <param name="permissionService"></param>
+            <returns>List of application permissions for both roles and users</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetPermission(System.Guid,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Get a specific permission
+            </summary>
+            <param name="permissionId">GUID ID of the desired permission to retrieve</param>
+            <param name="permissionService"></param>
+            <returns>Permission object for a user or role</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToRole(Application.Requests.Identity.Permission.PermissionCreateForRoleRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Add the specified permission to the specified role
+            </summary>
+            <param name="permissionRequest">Detail used to map a permission to a role</param>
+            <param name="permissionService"></param>
+            <param name="currentUserService"></param>
+            <returns>Guid ID of the permission added</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToUser(Application.Requests.Identity.Permission.PermissionCreateForUserRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Add the specified permission to the specified user
+            </summary>
+            <param name="permissionRequest">Detail used to map a permission to a user</param>
+            <param name="permissionService"></param>
+            <param name="currentUserService"></param>
+            <returns>GUID ID of the permission added</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.DoesUserHavePermission(System.Guid,System.Guid,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Get whether a user has a specific permission
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="permissionId">GUID ID of the permission</param>
+            <param name="permissionService"></param>
+            <returns>Boolean indicating whether the specified user has the specified permission</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.DoesRoleHavePermission(System.Guid,System.Guid,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Get whether a role has a specific permission
+            </summary>
+            <param name="roleId">GUID ID of the role</param>
+            <param name="permissionId">GUID ID of the permission</param>
+            <param name="permissionService"></param>
+            <returns>Boolean indicating whether the specified role has the specified permission</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.RemovePermissionFromUser(Application.Requests.Identity.Permission.PermissionRemoveFromUserRequest,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Remove the specified permission from the specified user
+            </summary>
+            <param name="permissionRequest">Detail used to remove a permission from a user</param>
+            <param name="permissionService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.RemovePermissionFromRole(Application.Requests.Identity.Permission.PermissionRemoveFromRoleRequest,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Remove the specified permission from the specified role 
+            </summary>
+            <param name="permissionRequest">Detail used to remove a permission from a role</param>
+            <param name="permissionService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetDirectPermissionsForUser(System.Guid,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Get only permissions assigned directly to the specified user
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="permissionService"></param>
+            <returns>List of directly assigned permissions to the specified user</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetAllPermissionsForUser(System.Guid,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Get all permissions for a user, including those inherited from assigned roles
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="permissionService"></param>
+            <returns>List of all permissions for a user, including those inherited from roles</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetAllPermissionsForRole(System.Guid,Application.Services.Identity.IAppPermissionService)">
+            <summary>
+            Get all permissions assigned to the specified role
+            </summary>
+            <param name="roleId">GUID ID of the role</param>
+            <param name="permissionService"></param>
+            <returns>List of permissions assigned to the specified role</returns>
+        </member>
+        <member name="T:Application.Api.v1.Identity.RoleEndpoints">
+            <summary>
+            API endpoints for application roles
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.MapEndpointsRoles(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Register role API endpoints
+            </summary>
+            <param name="app"></param>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.GetAllRoles(Application.Services.Identity.IAppRoleService)">
+            <summary>
+            Get all roles
+            </summary>
+            <param name="roleService"></param>
+            <returns>List of all roles</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.GetById(System.Guid,Application.Services.Identity.IAppRoleService)">
+            <summary>
+            Get the specified role
+            </summary>
+            <param name="roleId">GUID ID of the role</param>
+            <param name="roleService"></param>
+            <returns>Detail regarding the specified role</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.CreateRole(Application.Requests.Identity.Role.CreateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Create a role
+            </summary>
+            <param name="roleRequest">Detail used to create a role</param>
+            <param name="roleService"></param>
+            <param name="currentUserService"></param>
+            <returns>GUID ID of the newly created role</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.UpdateRole(Application.Requests.Identity.Role.UpdateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update a role's properties
+            </summary>
+            <param name="roleRequest">Detail used to update a role, any properties left empty will not be updated</param>
+            <param name="roleService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.DeleteRole(System.Guid,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete the specified role
+            </summary>
+            <param name="roleId">GUID ID of the role</param>
+            <param name="roleService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.IsUserInRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService)">
+            <summary>
+            Determine whether the specified user is in the specified role
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="roleId">GUID ID of the role</param>
+            <param name="roleService"></param>
+            <returns>Boolean indicating whether the specified user is a member of the specified role</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.AddUserToRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Add the specified user to the specified role
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="roleId">GUID ID of the role</param>
+            <param name="roleService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.RemoveUserFromRole(System.Guid,System.Guid,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Remove the specified user from the specified role
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="roleId">GUID ID of the user</param>
+            <param name="roleService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.GetRolesForUser(System.Guid,Application.Services.Identity.IAppRoleService)">
+            <summary>
+            Get all roles for the specified user
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="roleService"></param>
+            <returns>List of roles assigned to the specified user</returns>
+        </member>
+        <member name="T:Application.Api.v1.Identity.UserEndpoints">
+            <summary>
+            API endpoints for application users
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.MapEndpointsUsers(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Register user API endpoints
+            </summary>
+            <param name="app"></param>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.Register(Application.Requests.Identity.User.UserRegisterRequest,Application.Services.Identity.IAppAccountService)">
+            <summary>
+            Register a user account
+            </summary>
+            <param name="registerRequest">Details used to register a user account</param>
+            <param name="accountService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetAllUsers(Application.Services.Identity.IAppUserService)">
+            <summary>
+            Get all users
+            </summary>
+            <param name="userService"></param>
+            <returns>List of all users</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetUserById(System.Guid,Application.Services.Identity.IAppUserService)">
+            <summary>
+            Get the specified user
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="userService"></param>
+            <returns>Detail regarding the specified user</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetFullUserById(System.Guid,Application.Services.Identity.IAppUserService)">
+            <summary>
+            Get full user detail for a user including permissions and extended attributes
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="userService"></param>
+            <returns>Detail for the specified user including permissions and extended attributes</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetUserByEmail(System.String,Application.Services.Identity.IAppUserService)">
+            <summary>
+            Get a user by email
+            </summary>
+            <param name="email">Email address of the user</param>
+            <param name="userService"></param>
+            <returns>Detail for the specified user</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetFullUserByEmail(System.String,Application.Services.Identity.IAppUserService)">
+            <summary>
+            Get full user detail for a user including permissions and extended attributes
+            </summary>
+            <param name="email">Email address for the user</param>
+            <param name="userService"></param>
+            <returns>Detail for the specified user including permissions and extended attributes</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetUserByUsername(System.String,Application.Services.Identity.IAppUserService)">
+            <summary>
+            Get a user by username
+            </summary>
+            <param name="username">Username of the user</param>
+            <param name="userService"></param>
+            <returns>Details of the specified user</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetFullUserByUsername(System.String,Application.Services.Identity.IAppUserService)">
+            <summary>
+            Get full user detail for a user including permissions and extended attributes
+            </summary>
+            <param name="username">Username of the user</param>
+            <param name="userService"></param>
+            <returns>Detail for the specified user including permissions and extended attributes</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.CreateUser(Application.Requests.Identity.User.UserCreateRequest,Application.Services.Identity.IAppUserService,Application.Services.Identity.IAppAccountService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Create a user account, bypassing registration
+            </summary>
+            <param name="userRequest">Details used to create the user</param>
+            <param name="userService"></param>
+            <param name="accountService"></param>
+            <param name="currentUserService"></param>
+            <returns>GUID ID of the newly created user account</returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.UpdateUser(Application.Requests.Identity.User.UserUpdateRequest,Application.Services.Identity.IAppUserService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update properties of the specified user account
+            </summary>
+            <param name="userRequest">Details used to update a user account, any empty properties won't be updated</param>
+            <param name="userService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.DeleteUser(System.Guid,Application.Services.Identity.IAppUserService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete the specified user account
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="userService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.ResetPassword(System.Guid,Application.Services.Identity.IAppAccountService)">
+            <summary>
+            Reset the password of the specified user account
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="accountService"></param>
+            <returns></returns>
+            <remarks>
+            - User will be forced to re-authenticate after initiating a reset
+            - Password reset email will be sent to the user's email address
+            </remarks>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.EnableUser(System.Guid,Application.Services.Identity.IAppAccountService)">
+            <summary>
+            Enable the specified user account
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="accountService"></param>
+            <returns></returns>
+            <remarks>
+            - Can also be used to bypass a locked out account timeout
+            </remarks>
+        </member>
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.DisableUser(System.Guid,Application.Services.Identity.IAppAccountService)">
+            <summary>
+            Disable the specified user account
+            </summary>
+            <param name="userId">GUID ID of the user</param>
+            <param name="accountService"></param>
+            <returns></returns>
+        </member>
+        <member name="T:Application.Api.v1.Lifecycle.AuditEndpoints">
+            <summary>
+            API endpoints for application audit trails
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.MapEndpointsAudit(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Register API endpoints for audit
+            </summary>
+            <param name="app"></param>
+        </member>
+        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.GetAllTrails(Application.Services.Lifecycle.IAuditTrailService)">
+            <summary>
+            Get all audit trails
+            </summary>
+            <param name="auditService"></param>
+            <returns>List of all audit trails</returns>
+        </member>
+        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.GetAuditTrailById(System.Guid,Application.Services.Lifecycle.IAuditTrailService)">
+            <summary>
+            Get the specified audit trail
+            </summary>
+            <param name="id">GUID ID of the audit trail</param>
+            <param name="auditService"></param>
+            <returns>Detail regarding the specified audit trail</returns>
+        </member>
+        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.GetAuditTrailsByChangedBy(System.Guid,Application.Services.Lifecycle.IAuditTrailService)">
+            <summary>
+            Get all audit trails where an entity was modified by a specific user
+            </summary>
+            <param name="id">GUID ID of the user modifying entities</param>
+            <param name="auditService"></param>
+            <returns>List of all audit trails where an entity was modified by the specified user</returns>
+        </member>
+        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.GetAuditTrailsByRecordId(System.Guid,Application.Services.Lifecycle.IAuditTrailService)">
+            <summary>
+            Get all audit trails for a specific entity
+            </summary>
+            <param name="id">GUID ID of the entity that was modified</param>
+            <param name="auditService"></param>
+            <returns>List of all audit trails where the specified entity ID is the modified entity</returns>
+        </member>
+        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.Delete(Domain.Enums.Lifecycle.CleanupTimeframe,Application.Services.Lifecycle.IAuditTrailService)">
+            <summary>
+            Delete audit records older than a specified threshold
+            </summary>
+            <param name="olderThan">
+            Timeframe of records to keep, any records older than this will be deleted
+            
+            Options:
+             - OneMonth
+             - ThreeMonths
+             - SixMonths
+             - OneYear
+             - TenYears
+            </param>
+            <param name="auditService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Helpers.Identity.PermissionHelpers.GetAllBuiltInPermissions">
+            <summary>
+            Returns a list of all native permissions values
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Helpers.Web.UrlHelpers.GenerateRandomBytes">
+            <summary>
+            Generate a cryptographically secure array of bytes with a fixed length
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Helpers.Web.UrlHelpers.GenerateToken(System.Int32)">
+            <summary>
+            Generate a single fixed length token that can be used in a URL
+            </summary>
+            <param name="numberOfBytes">Desired token size in bytes, larger is more secure</param>
+            <returns>A single generated URL friendly token</returns>
+            <exception cref="T:System.ArgumentOutOfRangeException">Byte size can be 1 to 256</exception>
+        </member>
+        <member name="M:Application.Helpers.Web.UrlHelpers.GenerateTokens(System.Int32,System.Int32)">
+            <summary>
+            Generate a desired count of fixed length tokens that can be used in a URL
+            </summary>
+            <param name="tokenCount">Number of tokens to generate and return</param>
+            <param name="numberOfBytes">Desired token size in bytes, larger is more secure</param>
+            <returns>An enumerable of generated URL friendly tokens</returns>
+        </member>
+    </members>
+</doc>

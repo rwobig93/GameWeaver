@@ -1,0 +1,14 @@
+﻿<MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined">
+    <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.AccountSettings)">
+        General
+    </MudButton>
+    @if (_canEditTheme)
+    {
+        <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Themes)">
+            Themes
+        </MudButton>
+    }
+    <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Security)">
+        Security
+    </MudButton>
+</MudButtonGroup>

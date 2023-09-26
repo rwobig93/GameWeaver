@@ -1,0 +1,66 @@
+﻿@attribute [Route(AppRouteConstants.Example.WeatherData)]
+@using Application.Services.Example
+@using Application.Constants.Identity
+@using Application.Responses.Example
+
+@inject IWeatherService WeatherForecast
+
+@attribute [Authorize(Policy = PermissionConstants.Example.Weather)]
+
+<MudSpacer/>
+
+<MudTable Items="@_forecasts" Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" SortLabel="Sort By"
+          Virtualize="true" Loading="@(_forecasts == null)" Filter="@SearchFunction" @bind-selected="_selectedItem"
+          FixedFooter="true" FixedHeader="true">
+    <ToolBarContent>
+        <MudContainer Class="d-flex flex-wrap gap-4 justify-center align-center">
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudText Typo="Typo.h6">Weather Forecast</MudText>
+            </MudItem>
+            <MudSpacer/>
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudTooltip Text="Refresh Data">
+                    <MudButton Color="Color.Success" OnClick="@RefreshWeatherData" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.Refresh"/>
+                    </MudButton>
+                </MudTooltip>
+            </MudItem>
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudTooltip Text="Number of day entries to get | Tip: Hold Shift + Use mouse wheel scroll">
+                    <MudNumericField @bind-Value="@_daysToGet" Label="Days To Get" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+                </MudTooltip>
+            </MudItem>
+            <MudSpacer/>
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudTextField @bind-Value="_searchString" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </MudItem>
+        </MudContainer>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" 
+                                  SortBy="new Func<WeatherDataResponse,object>(x=>x.Date)">Date</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel 
+                   SortBy="new Func<WeatherDataResponse,object>(x=>x.TemperatureC)">Temp. (C)</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel 
+                   SortBy="new Func<WeatherDataResponse,object>(x=>x.TemperatureF)">Temp. (F)</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel 
+                   SortBy="new Func<WeatherDataResponse,object>(x=>x.Summary!)">Summary</MudTableSortLabel></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+        <MudTd DataLabel="Temp. (C)">@context.TemperatureC</MudTd>
+        <MudTd DataLabel="Temp. (F)">@context.TemperatureF</MudTd>
+        <MudTd DataLabel="Summary">@context.Summary</MudTd>
+    </RowTemplate>
+    <PagerContent>
+        <MudContainer Class="d-flex flex-wrap gap-4 justify-center align-center">
+            <MudSwitch @bind-Checked="@_hover" Color="Color.Primary">Hover</MudSwitch>
+            <MudSwitch @bind-Checked="@_dense" Color="Color.Secondary">Dense</MudSwitch>
+            <MudSwitch @bind-Checked="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
+            <MudSwitch @bind-Checked="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
+            <MudSpacer/>
+            <MudTablePager PageSizeOptions="new[] {25, 50, 100, 1000}">25</MudTablePager>
+        </MudContainer>
+    </PagerContent>
+</MudTable>

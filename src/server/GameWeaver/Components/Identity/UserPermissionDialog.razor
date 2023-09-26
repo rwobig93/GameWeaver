@@ -1,0 +1,110 @@
+@using Application.Constants.Identity
+@using Application.Models.Identity.Permission
+
+@attribute [Authorize(PermissionConstants.Users.Edit)]
+
+<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center"
+           ContentStyle="max-height: 600px; min-width: 250px; overflow-y: scroll">
+    <DialogContent>
+        <MudTabs Centered="true" Border="true" Elevation="20" Rounded="true">
+            @if (_canRemovePermissions)
+            {
+                <MudTabPanel Text="Assigned">
+                    <MudTable Items="@_assignedPermissions" Hover="true" Dense="false" Striped="true" 
+                    @bind-SelectedItems="_removePermissions" 
+                              MultiSelection="true" Elevation="15" Virtualize="true" FixedHeader="true" GroupBy="@_groupDefinitionDb"
+                              GroupHeaderStyle="background-color:var(--mud-palette-background-grey)" Height="400px">
+                        <ToolBarContent>
+                            <MudContainer Class="d-flex flex-wrap gap-4">
+                                <MudText Typo="Typo.h6">Assigned Permissions</MudText>
+                                <MudSpacer/>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Remove"
+                                           Disabled="@(_removePermissions.Count < 1)" OnClick="RemovePermissions">Remove</MudButton>
+                            </MudContainer>
+                        </ToolBarContent>
+                        <ColGroup>
+                            <col style="width: 60px;" />
+                            @if (_groupDefinitionDb.Expandable)
+                            {
+                                <col style="width: 60px;" />
+                            }
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                        </ColGroup>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh><MudTableSortLabel SortLabel="Access" T="AppPermissionSlim">Access</MudTableSortLabel></MudTh>
+                            <MudTh>Description</MudTh>
+                        </HeaderContent>
+                        <GroupHeaderTemplate>
+                            <MudTh colspan="5">@($"{context.GroupName}: {context.Key}")</MudTh>
+                        </GroupHeaderTemplate>
+                        <RowTemplate>
+                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
+                            <MudTd DataLabel="Access">@context.Access</MudTd>
+                            <MudTd DataLabel="Description">@context.Description</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+            }
+            @if (_canAddPermissions)
+            {
+                <MudTabPanel Text="Available">
+                    <MudTable Items="@_availablePermissions" Hover="true" Dense="false" Striped="true" 
+                    @bind-SelectedItems="_addPermissions" 
+                              MultiSelection="true" Elevation="15" Virtualize="true" FixedHeader="true" GroupBy="@_groupDefinitionCreate"
+                              GroupHeaderStyle="background-color:var(--mud-palette-background-grey)" Height="400px">
+                        <ToolBarContent>
+                            <MudContainer Class="d-flex flex-wrap gap-4">
+                                <MudText Typo="Typo.h6">Available Permissions</MudText>
+                                <MudSpacer/>
+                                <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Color="Color.Success"
+                                           Disabled="@(_addPermissions.Count < 1)" OnClick="AddPermissions">Add</MudButton>
+                            </MudContainer>
+                        </ToolBarContent>
+                        <ColGroup>
+                            <col style="width: 60px;" />
+                            @if (_groupDefinitionCreate.Expandable)
+                            {
+                                <col style="width: 60px;" />
+                            }
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                            <col />
+                        </ColGroup>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh><MudTableSortLabel SortLabel="Access" T="AppPermissionCreate">Access</MudTableSortLabel></MudTh>
+                            <MudTh>Description</MudTh>
+                        </HeaderContent>
+                        <GroupHeaderTemplate>
+                            <MudTh colspan="5">@($"{context.GroupName}: {context.Key}")</MudTh>
+                        </GroupHeaderTemplate>
+                        <RowTemplate>
+                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
+                            <MudTd DataLabel="Access">@context.Access</MudTd>
+                            <MudTd DataLabel="Description">@context.Description</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+            }
+        </MudTabs>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="Cancel">Cancel
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Save" 
+                       OnClick="Save">Save
+            </MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

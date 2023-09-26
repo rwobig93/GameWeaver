@@ -1,0 +1,59 @@
+﻿@using GameWeaver.Components.Account
+
+<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="false" Rounded="true" Class="px-2">
+    <MudPaper Elevation="5" Class="d-flex flex-column my-4 justify-center align-center mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12" Class="d-flex ma-4 align-center">
+            <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium" ProfileImageUrl="@UserFull.ProfilePictureDataUrl"/>
+            <MudText Align="Align.Right" Class="pl-2">@GetDisplayUsername()</MudText>
+        </MudItem>
+    </MudPaper>
+    <MudPaper Elevation="5" Class="d-flex mb-4 justify-center align-center mud-text-align-center">
+        <MudNavLink Href="@AppRouteConstants.Account.AccountSettings" Match="NavLinkMatch.Prefix"
+                    Icon="@Icons.Material.Filled.PersonPin">
+            Account Settings
+        </MudNavLink>
+    </MudPaper>
+    @if (_canEditTheme)
+    {
+        <MudPaper Elevation="5" Class="d-flex mb-4">
+            <MudExpansionPanel Text="Themes" Class="d-flex flex-column pa-1">
+                <MudItem>
+                    <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
+                </MudItem>
+                <MudItem Class="d-flex flex-column align-center">
+                    @foreach (var theme in AvailableThemes)
+                    {
+                        <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
+                                       OnClick="@(() => ChangeThemeOnLayout(theme))">
+                                @theme.FriendlyName
+                            </MudButton>
+                        </MudTooltip>
+                    }
+                </MudItem>
+            </MudExpansionPanel>
+        </MudPaper>
+    }
+    <MudPaper Elevation="5" Class="d-flex mb-4">
+        <MudExpansionPanel Text="Client Information" Class="d-flex flex-column pa-1 my-1">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
+                <MudChip Color="Color.Primary">Application Version</MudChip>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudText Typo="Typo.caption" Class="pl-2">@($"v{ServerState.ApplicationVersion.ToString()}")</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
+                <MudChip Color="Color.Tertiary">Current Timezone</MudChip>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudText Typo="Typo.caption" Class="pl-2">@_clientTimeZone</MudText>
+            </MudItem>
+        </MudExpansionPanel>
+    </MudPaper>
+    <MudSpacer/>
+    <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-8 mud-text-align-center">
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" EndIcon="@Icons.Material.Filled.Logout"
+                   OnClick="@LogoutUser">Logout
+        </MudButton>
+    </MudItem>
+</MudNavMenu>

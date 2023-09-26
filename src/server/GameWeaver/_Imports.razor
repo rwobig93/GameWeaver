@@ -1,0 +1,31 @@
+﻿@using System.Net.Http
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components;
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Web.Virtualization
+@using Microsoft.AspNetCore.WebUtilities;
+@using Microsoft.JSInterop
+@using GameWeaver
+@using GameWeaver.Shared
+@using MudBlazor
+@using Blazorade.Core.Components.Server
+@using Application.Constants.Web
+@using Application.Services.Identity
+@using Application.Services.System
+@using Blazored.LocalStorage
+@using Infrastructure.Services.Auth
+@using Infrastructure.Services.Identity
+@using GameWeaver.Components.Shared;
+
+@attribute [Authorize]
+@inject NavigationManager NavManager
+@inject AuthStateProvider AuthProvider
+@inject IAuthorizationService AuthorizationService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject ICurrentUserService CurrentUserService
+@inject ILogger Logger
+@inject IDateTimeService DateTimeService

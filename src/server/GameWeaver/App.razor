@@ -1,0 +1,75 @@
+﻿@using GameWeaver.Pages.Identity
+
+<Error>
+    <Router AppAssembly="@typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
+                <Authorizing>
+                    @* <p>Authorizing...</p> *@
+                </Authorizing>
+                <NotAuthorized>
+                    @if (!_firstRender)
+                    {
+                        @* <p>Redirecting...</p> *@
+                    }
+                    else if (context.User.Identity!.IsAuthenticated)
+                    {
+                        <NotAuthorized/>
+                    }
+                    else
+                    {
+                        <Login/>
+                    }
+                </NotAuthorized>
+            </AuthorizeRouteView>
+        </Found>
+        <NotFound>
+            <CascadingAuthenticationState>
+                <LayoutView Layout="@typeof(MainLayout)">
+                    <NotFound/>
+                </LayoutView>
+            </CascadingAuthenticationState>
+        </NotFound>
+    </Router>
+</Error>
+
+<ComponentReconnectModal ConnectionStateBackgroundColor="#27272f">
+    <ReconnectingTemplate>
+        <p>
+            Oops! Seems that the connection with the server
+            has been lost. This is normally due to lost or
+            poor network connectivity.
+        </p>
+        <p>
+            Please hang on a while while we try to reconnect...
+        </p>
+    </ReconnectingTemplate>
+    <ReconnectFailedTemplate>
+        <p>
+            We're sorry, but the reconnection attempts have failed.
+        </p>
+        <p>
+            You can now either try to
+            <a href="javascript:window.Blazor.reconnect()">reconnect</a>
+            or just <a href="javascript:location.reload()">reload</a>
+            the page.
+        </p>
+        <p>
+            It's likely that reloading will not work since failure to
+            reconnect usually is due to a network failure or
+            the server has been taken down for maintenance.
+        </p>
+    </ReconnectFailedTemplate>
+    <ReconnectRejectedTemplate>
+        <p>
+            Connection attempts have all been rejected by the server.
+            This is often caused by a fault on the server.
+        </p>
+        <p>
+            You can try to
+            <a href="javascript:location.reload()">reload</a>
+            the page, please note that this will likely not
+            succeed due to an assumed failure on the server.
+        </p>
+    </ReconnectRejectedTemplate>
+</ComponentReconnectModal>

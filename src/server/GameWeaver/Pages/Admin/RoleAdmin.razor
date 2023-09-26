@@ -1,0 +1,69 @@
+﻿@using Domain.DatabaseEntities.Identity
+@using Application.Constants.Identity
+@using Application.Models.Identity.Role
+
+@attribute [Route(AppRouteConstants.Admin.Roles)]
+@attribute [Authorize(PermissionConstants.Roles.View)]
+
+
+<MudItem xs="16" sm="20" md="28" lg="36">
+    <MudTable ServerData="@(new Func<TableState, Task<TableData<AppRoleSlim>>>(ServerReload))"
+              Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table" MultiSelection="false">
+        <ToolBarContent>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudText Typo="Typo.h6" Class="pr-2 my-2">Roles</MudText>
+                @if (_canCreateRoles)
+                {
+                    <MudButton Color="Color.Success" OnClick="@(CreateRole)" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.Add" Class="my-2">Create</MudButton>
+                }
+                @if (_canExportRoles)
+                {
+                    <MudMenu Label="Export" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                             IconColor="Color.Tertiary" Color="Color.Tertiary" AnchorOrigin="Origin.BottomLeft">
+                        <MudMenuItem IconColor="Color.Tertiary" OnClick="@ExportSelectedToExcel" Icon="@Icons.Material.Filled.FileDownload">Current Filtered To xlsx</MudMenuItem>
+                        <MudMenuItem IconColor="Color.Tertiary" OnClick="@ExportAllToExcel" Icon="@Icons.Material.Filled.FileDownload">All To xlsx</MudMenuItem>
+                    </MudMenu>
+                }
+            </MudContainer>
+            <MudSpacer/>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </MudContainer>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Id" T="AppRoleDb">Id (Last 4)</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Name" T="AppRoleDb">Name</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Description" T="AppRoleDb">Description</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="View">
+                    <MudButton Color="Color.Warning" OnClick="@(() => ViewRole(context.Id))" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"/>
+                    </MudButton>
+                </MudTooltip>
+            </MudTd>
+            <MudTd DataLabel="Id">@context.Id.ToString()[(context.Id.ToString().Length - 4)..]</MudTd>
+            <MudTd DataLabel="Name">@context.Name</MudTd>
+            <MudTd DataLabel="Description">@context.Description</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No matching records found</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudText>Loading...</MudText>
+        </LoadingContent>
+        <PagerContent>
+            <MudContainer Class="d-flex flex-wrap gap-4">
+                <MudSwitch @bind-Checked="@_hover" Color="Color.Primary">Hover</MudSwitch>
+                <MudSwitch @bind-Checked="@_dense" Color="Color.Secondary">Dense</MudSwitch>
+                <MudSwitch @bind-Checked="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
+                <MudSwitch @bind-Checked="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
+                <MudSpacer/>
+                <MudTablePager/>
+            </MudContainer>
+        </PagerContent>
+    </MudTable>
+</MudItem>

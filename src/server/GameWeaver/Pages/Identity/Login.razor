@@ -1,0 +1,80 @@
+﻿@attribute [Route(AppRouteConstants.Identity.Login)]
+@using System.Globalization
+@using Domain.Enums.Integration
+
+@attribute [AllowAnonymous]
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudGrid Class="justify-center my-4 mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-4">
+            <MudIcon Icon="@Icons.Material.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mt-4">
+            <MudText Align="Align.Center" Typo="Typo.h5">Hey there stranger! Please login and stay awhile :)</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
+            <MudTextField @bind-Value="Username" Label="Username" Variant="Variant.Outlined"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudTextField @bind-Value="Password" Label="Password" Variant="Variant.Outlined" InputType="@_passwordInput" 
+                          Style="background-color: transparent;" Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon"
+                          OnAdornmentClick="@TogglePasswordVisibility" AdornmentAriaLabel="Show Password"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurOn" 
+                       OnClick="@LoginAsync">Login
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurCircular"
+                       OnClick="@RegisterAsync">Register
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" FullWidth="true" StartIcon="@Icons.Material.Filled.BlurLinear"
+                       OnClick="@ForgotPassword">Forgot Password
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    @if (ExternalAuth.AnyProvidersEnabled)
+    {
+        <MudGrid Class="justify-center my-4 mud-text-align-center">
+            @if (ExternalAuth.ProviderEnabledGoogle)
+            {
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Custom.Brands.Google"
+                               OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Google))">Login with Google
+                    </MudButton>
+                </MudItem>
+            }
+            @if (ExternalAuth.ProviderEnabledSpotify)
+            {
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.LibraryMusic"
+                               OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Spotify))">Login with Spotify
+                    </MudButton>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+    <MudGrid Class="justify-center my-4 mud-text-align-center">
+        @if (ServerState.IsRunningInDebugMode)
+        {
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" FullWidth="true" StartIcon="@Icons.Material.Filled.LogoDev"
+                           OnClick="@DebugFillAdminCredentials">Fill Admin Credentials
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" FullWidth="true" StartIcon="@Icons.Material.Filled.LogoDev"
+                           OnClick="@DebugFillModeratorCredentials">Fill Moderator Credentials
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Info" FullWidth="true" StartIcon="@Icons.Material.Filled.LogoDev"
+                           OnClick="@DebugFillBasicCredentials">Fill Basic Credentials
+                </MudButton>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>

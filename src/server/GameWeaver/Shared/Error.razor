@@ -1,0 +1,45 @@
+﻿@inject ILogger<Error> Logger
+
+<CascadingValue Value="@this">
+    @ChildContent
+</CascadingValue>
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    public void ProcessError(Exception ex)
+    {
+        Logger.LogError("Error:ProcessError - Type: {Type} Message: {Message}",
+            ex.GetType(), ex.Message);
+    //StateHasChanged();
+    }
+
+}
+
+@* <PageTitle>Error</PageTitle> *@
+@* *@
+@* <MudContainer> *@
+@*     <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center"> *@
+@*         <MudItem xs="12" sm="12" md="12"> *@
+@*             <div class="d-flex justify-center mt-4"> *@
+@*                 <MudIcon Icon="@Icons.Material.Filled.BlurCircular" Color="@Color.Error" Size="@Size.Large" Style="width: 250px; height: 250px;"/> *@
+@*             </div> *@
+@*         </MudItem> *@
+@*         <MudItem xs="12" sm="12" md="12"> *@
+@*             <MudText Align="Align.Center" Typo="Typo.h2">Error</MudText> *@
+@*             <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller"> *@
+@*                 An error occurred while processing your request. *@
+@*             </MudText> *@
+@*         </MudItem> *@
+@*         <MudItem xs="12" sm="12" md="12"> *@
+@*             @if (Model.ShowRequestId) *@
+@*             { *@
+@*                 <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error"> *@
+@*                     Request ID: @Model.RequestId *@
+@*                 </MudAlert> *@
+@*             } *@
+@*         </MudItem> *@
+@*     </MudGrid> *@
+@* </MudContainer> *@

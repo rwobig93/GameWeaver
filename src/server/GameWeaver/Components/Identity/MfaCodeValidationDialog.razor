@@ -1,0 +1,28 @@
+
+@attribute [AllowAnonymous]
+
+<MudDialog Class="pa-4 justify-center my-4 mud-text-align-center">
+    <DialogContent>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mb-2">
+            <MudText Align="Align.Center" Typo="Typo.h5">
+                <MudIcon Icon="@Icons.Material.Outlined.Key" Size="Size.Medium"/> @VerifyCodeMessage:
+            </MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
+            <MudTextField T="string" @bind-Value="_mfaCode" Placeholder="TOTP Code" OnKeyDown="MfaCodeTextfieldKeyDown"
+                          IconSize="Size.Medium" Class="mt-0"/>
+        </MudItem>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="Cancel">Cancel
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Verified" 
+                       OnClick="@VerifyMfaCode">Verify Code
+            </MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

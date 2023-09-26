@@ -1,0 +1,110 @@
+﻿@using Application.Constants.Identity
+@using Application.Models.Identity.User
+
+@attribute [Route(AppRouteConstants.Admin.Users)]
+@attribute [Authorize(PermissionConstants.Users.View)]
+
+
+<MudItem xs="16" sm="20" md="28" lg="36">
+    <MudTable ServerData="@(new Func<TableState, Task<TableData<AppUserSlim>>>(ServerReload))" MultiSelection="@_allowUserSelection"
+              @bind-SelectedItems="_selectedItems" Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table" >
+        <ToolBarContent>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudText Typo="Typo.h6" Class="pr-2 my-2">Users</MudText>
+                @if (_canEnableUsers || _canDisableUsers || _canResetPasswords)
+                {
+                    <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                             IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
+                        @if (_canEnableUsers)
+                        {
+                            <MudMenuItem IconColor="Color.Success" Disabled="@(_selectedItems.Count < 1)" OnClick="@EnableAccounts"
+                                         Icon="@Icons.Material.Filled.LockOpen">Enable</MudMenuItem>
+                        }
+                        @if (_canDisableUsers)
+                        {
+                            <MudMenuItem IconColor="Color.Error" Disabled="@(_selectedItems.Count < 1)" OnClick="@DisableAccounts"
+                                         Icon="@Icons.Material.Filled.Lock">Disable</MudMenuItem>
+                        }
+                        @if (_canResetPasswords)
+                        {
+                            <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="@ForcePasswordResets"
+                                         Icon="@Icons.Material.Filled.LockReset">Reset Password</MudMenuItem>
+                        }
+                    </MudMenu>
+                }
+                @if (_canAdminServiceAccounts)
+                {
+                    <MudMenu Label="Create" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                             IconColor="Color.Success" Color="Color.Success" AnchorOrigin="Origin.BottomLeft">
+                        @if (_canAdminServiceAccounts)
+                        {
+                            <MudMenuItem IconColor="Color.Success" OnClick="@CreateServiceAccount"
+                                         Icon="@Icons.Material.Filled.Add">Create Service Account</MudMenuItem>
+                        }
+                    </MudMenu>
+                }
+                @if (_canExportUsers)
+                {
+                    <MudMenu Label="Export" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                             IconColor="Color.Tertiary" Color="Color.Tertiary" AnchorOrigin="Origin.BottomLeft">
+                        <MudMenuItem IconColor="Color.Tertiary" OnClick="@ExportSelectedToExcel" Icon="@Icons.Material.Filled.FileDownload">Current Filtered To xlsx</MudMenuItem>
+                        <MudMenuItem IconColor="Color.Tertiary" OnClick="@ExportAllToExcel" Icon="@Icons.Material.Filled.FileDownload">All To xlsx</MudMenuItem>
+                    </MudMenu>
+                }
+            </MudContainer>
+            <MudSpacer/>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudMenu Label="Filters" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         IconColor="Color.Primary" Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" Class="d-flex flex-column">
+                    <MudCheckBox @bind-Checked="_filterLockedOut" Label="Locked Out" Color="Color.Secondary" Class="d-flex me-4"/>
+                    <MudCheckBox @bind-Checked="_filterDisabled" Label="Disabled" Color="Color.Primary" Class="d-flex me-4"/>
+                </MudMenu>
+                <MudTextField T="string" ValueChanged="@(SearchText)" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+                <MudButton Color="Color.Success" OnClick="@(ReloadSearch)" Variant="Variant.Outlined" Class="my-2">Search</MudButton>
+                <MudButton Color="Color.Warning" OnClick="@(ClearSearch)" Variant="Variant.Outlined" Class="my-2">Reset</MudButton>
+            </MudContainer>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Id" T="AppUserSlim">Id (Last 4)</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Username" T="AppUserSlim">Username</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Enabled" T="AppUserSlim">Enablement</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="AccountType" T="AppUserSlim">AccountType</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Notes" T="AppUserSlim">Notes</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="View">
+                    <MudButton Color="Color.Warning" OnClick="@(() => ViewUser(context.Id))" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"/>
+                    </MudButton>
+                </MudTooltip>
+            </MudTd>
+            <MudTd DataLabel="Id">@context.Id.ToString()[(context.Id.ToString().Length - 4)..]</MudTd>
+            <MudTd DataLabel="Username">@context.Username</MudTd>
+            <MudTd DataLabel="Enabled">@context.AuthState</MudTd>
+            <MudTd DataLabel="AccountType">@context.AccountType</MudTd>
+            <MudTd DataLabel="Notes">@context.Notes</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No matching records found</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudText>Loading...</MudText>
+        </LoadingContent>
+        <FooterContent>
+            <MudTd colspan="5">Select All</MudTd>
+        </FooterContent>
+        <PagerContent>
+            <MudContainer Class="d-flex flex-wrap gap-4">
+                <MudSwitch @bind-Checked="@_hover" Color="Color.Primary">Hover</MudSwitch>
+                <MudSwitch @bind-Checked="@_dense" Color="Color.Secondary">Dense</MudSwitch>
+                <MudSwitch @bind-Checked="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
+                <MudSwitch @bind-Checked="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
+                <MudSpacer/>
+                <MudTablePager/>
+            </MudContainer>
+        </PagerContent>
+    </MudTable>
+</MudItem>

@@ -1,0 +1,48 @@
+﻿@attribute [Route(AppRouteConstants.Identity.ConfirmEmail)]
+
+@attribute [AllowAnonymous]
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+    <MudSpacer/>
+    @switch (HasValidationRan)
+    {
+        case true when IsCodeValid:
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-4">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+            </MudItem>
+            break;
+        case true when !IsCodeValid:
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-4">
+                <MudIcon Icon="@Icons.Material.Filled.ReportGmailerrorred" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+            </MudItem>
+            break;
+        default:
+            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-4">
+                <MudIcon Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+            </MudItem>
+            break;
+    }
+    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+        @switch (HasValidationRan)
+        {
+            case true when IsCodeValid:
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mt-4">
+                    <MudText Align="Align.Center" Typo="Typo.h5">Your email has been confirmed!</MudText>
+                </MudItem>
+                break;
+            case true when !IsCodeValid:
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mt-4">
+                    <MudText Align="Align.Center" Typo="Typo.h5">The code you provided was invalid</MudText>
+                </MudItem>
+                break;
+            default:
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center mt-4">
+                    <MudText Align="Align.Center" Typo="Typo.h5">What up yo!?</MudText>
+                </MudItem>
+                break;
+        }
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Large" Link="/">Go Home</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

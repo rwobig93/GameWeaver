@@ -1,0 +1,28 @@
+﻿@using Application.Constants.Identity
+
+@attribute [Authorize(PermissionConstants.Roles.Create)]
+
+<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center" ContentStyle="min-width: 400px;">
+    <DialogContent>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+            <MudTextField @bind-Value="_newRole.Name" Label="Name" Variant="Variant.Outlined"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+            <MudTextField @bind-Value="_newRole.Description" Label="Description" Variant="Variant.Outlined"/>
+        </MudItem>
+    </DialogContent>
+    <DialogActions>
+        <MudContainer xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-column justify-center">
+            <MudItem Class="d-flex justify-center py-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                           OnClick="@Cancel">Cancel
+                </MudButton>
+            </MudItem>
+            <MudItem Class="d-flex justify-center py-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true" StartIcon="@Icons.Material.Filled.Save"
+                           OnClick="@Save">Save
+                </MudButton>
+            </MudItem>
+        </MudContainer>
+    </DialogActions>
+</MudDialog>
