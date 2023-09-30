@@ -1,9 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Application.Settings;
 
-namespace WeaverService.Settings;
+namespace Application.Settings;
 
-public class AppConfiguration : IAppSettingsSection
+public class GeneralConfiguration : IAppSettingsSection
 {
     public const string SectionName = "General";
     
