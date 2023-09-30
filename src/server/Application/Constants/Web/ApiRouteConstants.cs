@@ -92,6 +92,7 @@ public static class ApiRouteExtensions
     {
         if (hostOrigin.EndsWith('/'))
             hostOrigin = hostOrigin[..^1];
+        
         return string.Concat(hostOrigin, uri);
     }
 }
