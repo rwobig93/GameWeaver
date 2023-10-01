@@ -8,7 +8,7 @@ namespace Infrastructure.Services;
 
 public class ServerService : IServerService
 {
-    public bool ServerIsUp => throw new NotImplementedException();
+    public bool ServerIsUp { get; internal set; }
 
     public async Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest)
     {
@@ -22,9 +22,10 @@ public class ServerService : IServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<bool>> CheckIfServerIsUp()
+    public async Task<bool> CheckIfServerIsUp()
     {
         await Task.CompletedTask;
-        throw new NotImplementedException();
+        ServerIsUp = false;
+        return false;
     }
 }

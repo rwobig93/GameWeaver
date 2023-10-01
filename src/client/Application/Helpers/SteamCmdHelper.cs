@@ -8,14 +8,14 @@ namespace Application.Helpers;
 
 public static class SteamCmdHelper
 {
-    public static bool SteamCmdCommand(string command, GameServerLocal gameServerLocal = null,
-        DataReceivedEventHandler outputHandler = null, EventHandler exitHandler = null)
+    private static bool SteamCmdCommand(string command, GameServerLocal? gameServerLocal = null,
+        DataReceivedEventHandler? outputHandler = null, EventHandler? exitHandler = null)
     {
         // .\steamcmd.exe +login anonymous +force_install_dir "ConanExiles" +app_update 443030 validate +quit
         // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_update 443030 +app_status 443030 +quit
         // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login ${SteamLoginName} +app_info_update 1 +app_status ${SteamAppID} +quit/
         // https://steamapi.xpaw.me/
-        Log.Verbose($"Starting SteamCMDCommand({command}, {outputHandler}, {exitHandler})");
+        Log.Verbose("Starting SteamCMDCommand({Command}, {OutputHandler}, {ExitHandler})", command, outputHandler, exitHandler);
         try
         {
             // Steam CMD will update by default w/o an argument
@@ -26,13 +26,13 @@ public static class SteamCmdHelper
             if (!command.EndsWith("+quit"))
                 command += " +quit";
 
-            var steamDto = new RunSteamDto()
-            {
-                Command = command,
-                OutputHandler = outputHandler,
-                ExitHandler = exitHandler,
-                GameServer = gameServerLocal
-            };
+            // var steamDto = new RunSteamDto()
+            // {
+            //     Command = command,
+            //     OutputHandler = outputHandler,
+            //     ExitHandler = exitHandler,
+            //     GameServer = gameServerLocal
+            // };
 
             // TODO: Look at ThreadRunner options
             // var threadAdded = ThreadRunner.SteamCMDRun(RunSteamCmd, steamDto);
@@ -47,7 +47,7 @@ public static class SteamCmdHelper
         }
         catch (Exception ex)
         {
-            Log.Error($"SteamCMDCommand Error: {ex.Message}");
+            Log.Error("SteamCMDCommand Error: {ExMessage}", ex.Message);
             return false;
         }
     }
@@ -56,7 +56,7 @@ public static class SteamCmdHelper
     {
         // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_status "443030" +quit
         // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
-        Log.Verbose($"Starting CheckForAppUpdate({command})");
+        Log.Verbose("Starting CheckForAppUpdate({Command})", command);
         try
         {
             // Add +quit to the end of the argument array to close upon finishing
@@ -77,8 +77,8 @@ public static class SteamCmdHelper
                 }
             };
 
-            steamCmd.OutputDataReceived += Events.SteamCMD_OutputDataReceived;
-            steamCmd.Exited += Events.SteamCMD_Exited;
+            // steamCmd.OutputDataReceived += Events.SteamCMD_OutputDataReceived;
+            // steamCmd.Exited += Events.SteamCMD_Exited;
             steamCmd.Start();
 
             var installState = HandleSteamCmdOutput(steamCmd);
@@ -121,13 +121,13 @@ public static class SteamCmdHelper
         else
         {
             Log.Verbose("outputHandler was null, using default event handler");
-            steamCmd.OutputDataReceived += Events.SteamCMD_OutputDataReceived;
+            // steamCmd.OutputDataReceived += Events.SteamCMD_OutputDataReceived;
         }
 
         if (runSteamDto.GameServer != null)
         {
             Log.Verbose("GameServer wasn't null, using async callback for GameServer update on exit");
-            steamCmd.Exited += async (s, e) => await Events.SteamCMD_Exit_UpdateGameServerState(s, e, runSteamDto.GameServer);
+            // steamCmd.Exited += async (s, e) => await Events.SteamCMD_Exit_UpdateGameServerState(s, e, runSteamDto.GameServer);
         }
         else if (runSteamDto.ExitHandler != null)
         {
@@ -137,7 +137,7 @@ public static class SteamCmdHelper
         else
         {
             Log.Verbose("exitHandler was null, using default event handler");
-            steamCmd.Exited += Events.SteamCMD_Exited;
+            // steamCmd.Exited += Events.SteamCMD_Exited;
         }
 
         steamCmd.Start();
@@ -294,8 +294,8 @@ public static class SteamCmdHelper
         using (var webClient = new WebClient())
 #pragma warning restore SYSLIB0014
         {
-            webClient.DownloadProgressChanged += Events.WebClient_DownloadProgressChanged;
-            webClient.DownloadFileCompleted += Events.WebClient_DownloadFileCompleted;
+            // webClient.DownloadProgressChanged += Events.WebClient_DownloadProgressChanged;
+            // webClient.DownloadFileCompleted += Events.WebClient_DownloadFileCompleted;
             webClient.DownloadFile(OsHelper.GetDownloadDirectory(), Path.Combine(OsHelper.GetSteamCachePath(), "steamcmd.zip"));
         }
 

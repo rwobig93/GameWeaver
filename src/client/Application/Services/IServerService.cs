@@ -10,5 +10,5 @@ public interface IServerService
     public bool ServerIsUp { get; }
     Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest);
     Task<IResult<UserBasicResponse>> GetAuthenticatedHost();
-    Task<IResult<bool>> CheckIfServerIsUp();
+    Task<bool> CheckIfServerIsUp();
 }
