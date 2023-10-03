@@ -2,7 +2,7 @@
 using Domain.Models;
 using Serilog;
 
-namespace WeaverService.Handlers;
+namespace Application.Helpers;
 
 public class ThreadRunner
 {

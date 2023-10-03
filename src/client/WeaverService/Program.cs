@@ -6,6 +6,7 @@ Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
         services.AddHostedService<ServerBroker>();
+        services.AddHostedService<HostBroker>();
     })
     .Build()
     .Run();

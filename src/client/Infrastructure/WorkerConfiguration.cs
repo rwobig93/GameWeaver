@@ -18,15 +18,16 @@ public static class WorkerConfiguration
 
         builder.ConfigureServices((context, services) =>
             {
-                services.AddServiceConfiguration(context.Configuration);
-                services.AddServiceServices(context.Configuration);
+                services.AddSettings(context.Configuration);
+                services.AddHostedServices(context.Configuration);
+                services.AddClientServices(context.Configuration);
             }
         );
 
         return builder;
     }
 
-    private static void AddServiceConfiguration(this IServiceCollection services, IConfiguration configuration)
+    private static void AddSettings(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddOptions<GeneralConfiguration>()
             .Bind(configuration.GetRequiredSection(GeneralConfiguration.SectionName))
@@ -38,10 +39,20 @@ public static class WorkerConfiguration
             .ValidateOnStart();
     }
 
-    private static void AddServiceServices(this IServiceCollection services, IConfiguration configuration)
+    private static void AddHostedServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IServerService, ServerService>();
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IGameServerService, GameServerService>();
+    }
+
+    private static void AddClientServices(this IServiceCollection services, IConfiguration configuration)
+    {
+        var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
+        
+        services.AddHttpClient("server", client =>
+        {
+            client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/'));
+        });
     }
 }
