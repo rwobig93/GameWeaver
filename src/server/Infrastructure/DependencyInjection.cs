@@ -10,6 +10,7 @@ using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Example;
+using Application.Services.Hosts;
 using Application.Services.Identity;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
@@ -26,6 +27,7 @@ using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
+using Infrastructure.Services.Hosts;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
 using Infrastructure.Services.Lifecycle;
@@ -202,13 +204,18 @@ public static class DependencyInjection
 
     private static void AddApplicationServices(this IServiceCollection services)
     {
+        // Integration Services
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
         services.AddSingleton<IExcelService, ExcelService>();
         services.AddTransient<IEmailService, EmailService>();
         
+        // Web Service Services
         services.AddTransient<IMfaService, MfaService>();
         services.AddTransient<IQrCodeService, QrCodeService>();
         services.AddTransient<IJobManager, JobManager>();
+
+        // Game Server Orchestration Services
+        services.AddSingleton<IHostService, HostService>();
         
         // Example services
         services.AddSingleton<IWeatherService, WeatherForecastService>();
