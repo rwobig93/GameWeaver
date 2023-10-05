@@ -14,7 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "server", "server", "{9B81BB
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client", "client", "{86E19DEF-312F-4CB0-8AEE-13B02AF283BD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_resources", "_resources", "{D91DCF2C-323D-4E37-971B-CA3086940136}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_solution_items", "_solution_items", "{D91DCF2C-323D-4E37-971B-CA3086940136}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 		.gitignore = .gitignore

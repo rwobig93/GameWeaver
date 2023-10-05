@@ -2,16 +2,16 @@
 
 public class SteamAppList
 {
-    public Applist Applist { get; set; }
+    public required AppList AppList { get; set; }
 }
 
-public class Applist
+public class AppList
 {
-    public App[] Apps { get; set; }
+    public required App[] Apps { get; set; }
 }
 
 public class App
 {
     public int AppId { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = "";
 }

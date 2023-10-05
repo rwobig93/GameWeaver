@@ -2,8 +2,8 @@
 
 public class Mod
 {
-    public int GameID { get; set; }
-    public int ToolID { get; set; }
-    public string SteamID { get; set; }
-    public string FriendlyName { get; set; }
+    public int GameId { get; set; }
+    public int ToolId { get; set; }
+    public string SteamId { get; set; } = "";
+    public string FriendlyName { get; set; } = "";
 }
