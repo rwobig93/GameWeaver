@@ -3,7 +3,7 @@ using Application.Requests.Hosts;
 using Application.Responses.Hosts;
 using Application.Services.Hosts;
 
-namespace Infrastructure.Services.Hosts;
+namespace Infrastructure.Services.GameServer;
 
 public class HostService : IHostService
 {

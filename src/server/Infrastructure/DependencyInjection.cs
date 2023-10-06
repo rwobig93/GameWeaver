@@ -27,7 +27,7 @@ using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.Example;
-using Infrastructure.Services.Hosts;
+using Infrastructure.Services.GameServer;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
 using Infrastructure.Services.Lifecycle;

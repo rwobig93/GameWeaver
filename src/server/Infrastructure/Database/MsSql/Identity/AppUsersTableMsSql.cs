@@ -446,7 +446,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
                     AccountType = COALESCE(@AccountType, AccountType), Notes = COALESCE(@Notes, Notes)
-                WHERE Id = COALESCE(@Id, Id);
+                WHERE Id = @Id;
             end"
     };
 
