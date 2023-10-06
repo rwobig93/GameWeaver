@@ -1,4 +1,4 @@
-namespace Application.Database.Providers;
+namespace Application.Database.MsSql;
 
 public interface IMsSqlEnforcedEntity : ISqlEnforcedEntity
 {

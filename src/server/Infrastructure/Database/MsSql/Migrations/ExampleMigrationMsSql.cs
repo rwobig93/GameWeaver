@@ -1,4 +1,4 @@
-using Application.Database.Providers;
+using Application.Database.MsSql;
 using Infrastructure.Database.MsSql.Identity;
 
 namespace Infrastructure.Database.MsSql.Migrations;

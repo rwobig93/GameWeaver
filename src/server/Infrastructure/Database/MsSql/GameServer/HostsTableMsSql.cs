@@ -1,5 +1,5 @@
 using Application.Database;
-using Application.Database.Providers;
+using Application.Database.MsSql;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.GameServer;
@@ -45,11 +45,12 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
-                @Id UNIQUEIDENTIFIER
+                @Id UNIQUEIDENTIFIER,
+                @DeletedOn datetime2
             AS
             begin
-                DELETE
-                FROM dbo.[{Table.TableName}]
+                UPDATE dbo.[{Table.TableName}]
+                SET IsDeleted = 1, DeletedOn = @DeletedOn
                 WHERE Id = @Id;
             end"
     };
@@ -212,7 +213,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
                 @LastModifiedOn datetime2 = null,
                 @IsDeleted BIT = null,
-                @DeletedOn datetime2 = null,
+                @DeletedOn datetime2 = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]

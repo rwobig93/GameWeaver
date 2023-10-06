@@ -1,4 +1,4 @@
-namespace Application.Database.Providers;
+namespace Application.Database.Postgres;
 
 public interface IPostgresqlEnforcedEntity : ISqlEnforcedEntity
 {

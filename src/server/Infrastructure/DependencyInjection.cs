@@ -6,11 +6,12 @@ using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
 using Application.Models.Web;
+using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.Example;
-using Application.Services.Hosts;
+using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
@@ -22,6 +23,7 @@ using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Infrastructure.HealthChecks;
+using Infrastructure.Repositories.MsSql.GameServer;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
@@ -295,11 +297,14 @@ public static class DependencyInjection
         switch (databaseProvider)
         {
             case DatabaseProviderType.MsSql:
+                // System Database Repositories
                 services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
                 services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
                 services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
                 services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
                 services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
+                // GameServer Database Repositories
+                services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
                 break;
             case DatabaseProviderType.Postgresql:
                 throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");

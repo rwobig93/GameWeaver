@@ -1,7 +1,7 @@
 using Application.Models.Web;
 using Application.Requests.Hosts;
 using Application.Responses.Hosts;
-using Application.Services.Hosts;
+using Application.Services.GameServer;
 
 namespace Infrastructure.Services.GameServer;
 

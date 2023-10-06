@@ -1,7 +1,8 @@
 using System.Data;
 using System.Data.SqlClient;
 using Application.Database;
-using Application.Database.Providers;
+using Application.Database.MsSql;
+using Application.Database.Postgres;
 using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Settings.AppSettings;
