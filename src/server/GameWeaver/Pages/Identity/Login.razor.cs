@@ -10,7 +10,7 @@ using Application.Helpers.Integrations;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Repositories.Identity;
-using Application.Requests.Identity.User;
+using Application.Requests.v1.Identity.User;
 using Application.Services.Identity;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;

@@ -3,7 +3,7 @@ namespace Domain.Enums.GameServer;
 public enum ConnectivityState
 {
     Unknown = 0,
-    Shutdown = 1,
+    UnRegistered = 1,
     SpinningUp = 2,
     Connectable = 3,
     InternallyConnectable = 4,
@@ -11,5 +11,6 @@ public enum ConnectivityState
     Stalled = 6,
     Unreachable = 7,
     Restarting = 8,
-    Installing = 9
+    Installing = 9,
+    Shutdown = 10
 }

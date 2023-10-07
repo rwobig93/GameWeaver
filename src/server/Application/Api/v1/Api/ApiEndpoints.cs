@@ -1,9 +1,9 @@
 ﻿using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Models.Web;
-using Application.Requests.Api;
-using Application.Responses.Api;
-using Application.Responses.Identity;
+using Application.Requests.v1.Api;
+using Application.Responses.v1.Api;
+using Application.Responses.v1.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Authorization;
 

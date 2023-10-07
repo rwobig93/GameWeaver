@@ -1,5 +1,5 @@
 ﻿using Application.Helpers.Identity;
-using Application.Responses.Identity;
+using Application.Responses.v1.Identity;
 
 namespace GameWeaver.Pages.Identity;
 

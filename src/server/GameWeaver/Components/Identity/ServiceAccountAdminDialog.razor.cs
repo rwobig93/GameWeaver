@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
-using Application.Responses.Identity;
+using Application.Responses.v1.Identity;
 using Domain.Enums.Identity;
 
 namespace GameWeaver.Components.Identity;

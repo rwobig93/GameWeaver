@@ -1,5 +1,5 @@
 ﻿using Application.Models.Lifecycle;
-using Application.Responses.Lifecycle;
+using Application.Responses.v1.Lifecycle;
 using Domain.DatabaseEntities.Lifecycle;
 
 namespace Application.Mappers.Lifecycle;

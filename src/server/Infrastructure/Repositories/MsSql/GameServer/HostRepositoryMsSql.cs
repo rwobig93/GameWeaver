@@ -1,4 +1,5 @@
-﻿using Application.Helpers.Lifecycle;
+﻿using System.Globalization;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Host;
@@ -11,6 +12,7 @@ using Domain.Enums.Database;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
+using Infrastructure.Database.MsSql.Lifecycle;
 using Infrastructure.Database.MsSql.Shared;
 
 namespace Infrastructure.Repositories.MsSql.GameServer;
@@ -458,6 +460,223 @@ public class HostRepositoryMsSql : IHostRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, HostRegistrationsTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAsync()
+    {
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var allCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(HostCheckInTableMsSql.GetAll, new { });
+            
+            actionReturn.Succeed(allCheckIns);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAfterAsync(DateTime afterDate)
+    {
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.GetAllAfter, new {AfterDate = afterDate});
+            
+            actionReturn.Succeed(foundCheckIns);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetAllAfter.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            
+            var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
+            
+            actionReturn.Succeed(foundCheckIns);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> GetCheckInCountAsync()
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowCount = (await _database.LoadData<int, dynamic>(
+                GeneralTableMsSql.GetRowCount, new {HostCheckInTableMsSql.Table.TableName})).FirstOrDefault();
+            
+            actionReturn.Succeed(rowCount);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<HostCheckInDb>> GetCheckInByIdAsync(int id)
+    {
+        DatabaseActionResult<HostCheckInDb> actionReturn = new();
+
+        try
+        {
+            var foundCheckIn = (await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            
+            actionReturn.Succeed(foundCheckIn!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInByHostIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.GetByHostId, new {HostId = id});
+            
+            actionReturn.Succeed(foundCheckIns);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> CreateCheckInAsync(HostCheckInCreate createObject)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveDataReturnId(HostCheckInTableMsSql.Insert, createObject);
+
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowsDeleted = await _database.SaveData(HostCheckInTableMsSql.DeleteAllForHostId, new {HostId = id});
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.DeleteAllForHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var cleanupTimestamp = olderThan switch
+            {
+                CleanupTimeframe.OneMonth => _dateTime.NowDatabaseTime.AddMonths(-1).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.ThreeMonths => _dateTime.NowDatabaseTime.AddMonths(-3).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.SixMonths => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.OneYear => _dateTime.NowDatabaseTime.AddYears(-1).ToString(CultureInfo.CurrentCulture),
+                CleanupTimeframe.TenYears => _dateTime.NowDatabaseTime.AddYears(-10).ToString(CultureInfo.CurrentCulture),
+                _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture)
+            };
+
+            var rowsDeleted = await _database.SaveData(HostCheckInTableMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.DeleteOlderThan.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsAsync(string searchText)
+    {
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults = await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.Search, new { SearchTerm = searchText });
+            
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            
+            var searchResults = await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+            
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;

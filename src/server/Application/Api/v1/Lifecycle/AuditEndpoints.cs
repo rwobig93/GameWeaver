@@ -4,7 +4,7 @@ using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Mappers.Lifecycle;
 using Application.Models.Web;
-using Application.Responses.Lifecycle;
+using Application.Responses.v1.Lifecycle;
 using Application.Services.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;

@@ -1,5 +1,6 @@
 using Application.Models.GameServer.Host;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 
 namespace Application.Repositories.GameServer;
@@ -27,4 +28,15 @@ public interface IHostRepository
     Task<DatabaseActionResult> UpdateRegistrationAsync(HostRegistrationUpdate updateObject);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> SearchRegistrationsAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAsync();
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAfterAsync(DateTime afterDate);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<int>> GetCheckInCountAsync();
+    Task<DatabaseActionResult<HostCheckInDb>> GetCheckInByIdAsync(int id);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInByHostIdAsync(Guid id);
+    Task<DatabaseActionResult> CreateCheckInAsync(HostCheckInCreate createObject);
+    Task<DatabaseActionResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id);
+    Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsAsync(string searchText);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

@@ -1,8 +1,8 @@
 ﻿using Application.Models.Identity.Permission;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
-using Application.Requests.Identity.Role;
-using Application.Responses.Identity;
+using Application.Requests.v1.Identity.Role;
+using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 
 namespace Application.Mappers.Identity;

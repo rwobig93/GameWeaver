@@ -1,6 +1,6 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
-using Application.Responses.Identity;
+using Application.Responses.v1.Identity;
 using Application.Services.Identity;
 using Microsoft.AspNetCore.Components;
 

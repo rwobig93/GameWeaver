@@ -1,7 +1,7 @@
 ﻿using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Models.Web;
-using Application.Responses.Example;
+using Application.Responses.v1.Example;
 using Application.Services.Example;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

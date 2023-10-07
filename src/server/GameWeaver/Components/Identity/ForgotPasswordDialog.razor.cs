@@ -1,6 +1,6 @@
 using Application.Constants.Communication;
 using Application.Helpers.Identity;
-using Application.Requests.Identity.User;
+using Application.Requests.v1.Identity.User;
 using Application.Services.Lifecycle;
 
 namespace GameWeaver.Components.Identity;
