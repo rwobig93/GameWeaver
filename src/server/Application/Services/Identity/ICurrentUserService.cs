@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Application.Models.Identity.User;
-using Application.Responses.Identity;
+using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 
 namespace Application.Services.Identity;

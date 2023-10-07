@@ -38,7 +38,7 @@ public class AppUserService : IAppUserService
     private static async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb? userFullDb)
     {
         if (userFullDb is null)
-            return await Result<AppUserFull?>.FailAsync(ErrorMessageConstants.UserNotFoundError);
+            return await Result<AppUserFull?>.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
         
         var fullUser = userFullDb.ToFull();
         
@@ -246,7 +246,7 @@ public class AppUserService : IAppUserService
         {
             var foundUser = await GetByIdAsync(updateObject.Id);
             if (!foundUser.Succeeded || foundUser.Data is null)
-                return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+                return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
 
             var updateUser = await _userRepository.UpdateAsync(updateObject);
             if (!updateUser.Succeeded)
@@ -269,7 +269,7 @@ public class AppUserService : IAppUserService
                         {"Detail", "Successfully updated service account but failed to update all dynamic permissions with the new name"},
                         {"Error", serviceAccountPermissions.ErrorMessage}
                     });
-                return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
+                return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
             }
 
             List<string> errorMessages = new();
@@ -300,7 +300,7 @@ public class AppUserService : IAppUserService
                         {"Error", message}
                     });
             
-            return await Result.FailAsync(ErrorMessageConstants.GenericErrorContactAdmin);
+            return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
         }
         catch (Exception ex)
         {
@@ -314,7 +314,7 @@ public class AppUserService : IAppUserService
         {
             var foundUser = await GetByIdAsync(userId);
             if (!foundUser.Succeeded || foundUser.Data is null)
-                return await Result.FailAsync(ErrorMessageConstants.UserNotFoundError);
+                return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
             
             var deleteUser = await _userRepository.DeleteAsync(userId, modifyingUserId);
             if (!deleteUser.Succeeded)

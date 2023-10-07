@@ -4,7 +4,7 @@ using Application.Helpers.Integrations;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
-using Application.Responses.Identity;
+using Application.Responses.v1.Identity;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;

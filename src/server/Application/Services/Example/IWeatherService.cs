@@ -1,4 +1,4 @@
-﻿using Application.Responses.Example;
+﻿using Application.Responses.v1.Example;
 
 namespace Application.Services.Example;
 

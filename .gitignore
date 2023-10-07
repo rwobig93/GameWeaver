@@ -1,6 +1,7 @@
 # Development Resources
 appsettings.Development.json
-/.idea/.idea.RazorKick/.idea/dataSources/
+**/.idea/dataSources/
+**/.idea/discord.xml
 
 # User-specific files
 *.rsuser
@@ -395,4 +396,3 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-/.idea/

@@ -5,8 +5,8 @@ using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Web;
-using Application.Requests.Identity.User;
-using Application.Responses.Identity;
+using Application.Requests.v1.Identity.User;
+using Application.Responses.v1.Identity;
 using Application.Services.Identity;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -103,7 +103,7 @@ public static class UserEndpoints
                 return await Result<UserBasicResponse>.FailAsync(foundUser.Messages);
 
             if (foundUser.Data is null)
-                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<UserBasicResponse>.SuccessAsync(foundUser.Data.ToResponse());
         }
@@ -129,7 +129,7 @@ public static class UserEndpoints
                 return await Result<UserFullResponse>.FailAsync(foundUser.Messages);
 
             if (foundUser.Data is null)
-                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<UserFullResponse>.SuccessAsync(foundUser.Data.ToResponse());
         }
@@ -155,7 +155,7 @@ public static class UserEndpoints
                 return await Result<UserBasicResponse>.FailAsync(foundUser.Messages);
 
             if (foundUser.Data is null)
-                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<UserBasicResponse>.SuccessAsync(foundUser.Data.ToResponse());
         }
@@ -181,7 +181,7 @@ public static class UserEndpoints
                 return await Result<UserFullResponse>.FailAsync(foundUser.Messages);
 
             if (foundUser.Data is null)
-                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<UserFullResponse>.SuccessAsync(foundUser.Data.ToResponse());
         }
@@ -207,7 +207,7 @@ public static class UserEndpoints
                 return await Result<UserBasicResponse>.FailAsync(foundUser.Messages);
 
             if (foundUser.Data is null)
-                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<UserBasicResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<UserBasicResponse>.SuccessAsync(foundUser.Data.ToResponse());
         }
@@ -233,7 +233,7 @@ public static class UserEndpoints
                 return await Result<UserFullResponse>.FailAsync(foundUser.Messages);
 
             if (foundUser.Data is null)
-                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<UserFullResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<UserFullResponse>.SuccessAsync(foundUser.Data.ToResponse());
         }

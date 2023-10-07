@@ -1,5 +1,5 @@
 using Application.Database;
-using Application.Database.Providers;
+using Application.Database.MsSql;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Identity;
@@ -446,7 +446,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
                     AccountType = COALESCE(@AccountType, AccountType), Notes = COALESCE(@Notes, Notes)
-                WHERE Id = COALESCE(@Id, Id);
+                WHERE Id = @Id;
             end"
     };
 

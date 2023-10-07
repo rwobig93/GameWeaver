@@ -1,9 +1,9 @@
 ﻿using Application.Models.Identity.UserExtensions;
 using Application.Models.Web;
-using Application.Requests.Api;
-using Application.Requests.Identity.User;
-using Application.Responses.Api;
-using Application.Responses.Identity;
+using Application.Requests.v1.Api;
+using Application.Requests.v1.Identity.User;
+using Application.Responses.v1.Api;
+using Application.Responses.v1.Identity;
 using Domain.Enums.Identity;
 using Domain.Enums.Integration;
 using Domain.Models.Identity;

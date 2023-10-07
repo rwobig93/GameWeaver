@@ -74,4 +74,11 @@ public static class PermissionConstants
         public const string Search = "Permissions.System.Audit.Search";
         public const string DeleteOld = "Permissions.System.Audit.DeleteOld";
     }
+
+    public static class Hosts
+    {
+        public const string CreateRegistration = "Permissions.GameServer.Hosts.CreateRegistration";
+        public const string Register = "Permissions.GameServer.Hosts.Register";
+        public const string CheckIn = "Permissions.GameServer.Hosts.CheckIn";
+    }
 }

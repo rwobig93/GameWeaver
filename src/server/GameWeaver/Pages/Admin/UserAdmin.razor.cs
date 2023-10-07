@@ -1,6 +1,5 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
-using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Services.Integrations;
 using Domain.Enums.Identity;

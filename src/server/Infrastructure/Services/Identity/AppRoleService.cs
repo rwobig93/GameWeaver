@@ -302,7 +302,7 @@ public class AppRoleService : IAppRoleService
 
             var canUserDoThisAction = await CanUserDoThisAction(modifyingUserId, updateObject.Id);
             if (!canUserDoThisAction)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.CannotAdministrateAdminRole);
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.Roles.CannotAdministrateAdminRole);
 
             updateObject.LastModifiedBy = modifyingUserId;
             updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
@@ -325,7 +325,7 @@ public class AppRoleService : IAppRoleService
         {
             var foundRole = await GetByIdAsync(id);
             if (!foundRole.Succeeded || foundRole.Data is null)
-                return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+                return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
             var roleUserCount = await GetUsersForRole(id);
             if (!roleUserCount.Succeeded)

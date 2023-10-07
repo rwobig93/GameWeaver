@@ -1,8 +1,8 @@
 ﻿using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
-using Application.Requests.Identity.Permission;
-using Application.Responses.Identity;
+using Application.Requests.v1.Identity.Permission;
+using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;

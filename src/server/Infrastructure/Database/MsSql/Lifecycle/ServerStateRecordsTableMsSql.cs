@@ -1,5 +1,5 @@
 ﻿using Application.Database;
-using Application.Database.Providers;
+using Application.Database.MsSql;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.MsSql.Lifecycle;

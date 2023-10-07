@@ -3,7 +3,7 @@ using System.Net.Mail;
 using System.Security.Claims;
 using Application.Constants.Identity;
 using Application.Helpers.Web;
-using Application.Responses.Identity;
+using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 using Microsoft.AspNetCore.Identity;
 using Bcrypt = BCrypt.Net.BCrypt;

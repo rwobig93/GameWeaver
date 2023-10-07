@@ -1,6 +1,6 @@
 using Application.Constants.Communication;
 using Application.Helpers.Identity;
-using Application.Requests.Identity.User;
+using Application.Requests.v1.Identity.User;
 using Application.Services.Lifecycle;
 
 namespace GameWeaver.Components.Identity;
@@ -21,7 +21,7 @@ public partial class ForgotPasswordDialog
         var validEmailAddress = AccountHelpers.IsValidEmailAddress(EmailAddress);
         if (!validEmailAddress)
         {
-            Snackbar.Add(ErrorMessageConstants.InvalidValueError);
+            Snackbar.Add(ErrorMessageConstants.Generic.InvalidValueError);
             PageIsLoading = false;
             return;
         }
@@ -29,7 +29,7 @@ public partial class ForgotPasswordDialog
         var emailExists = await DoesEmailExist();
         if (!emailExists)
         {
-            Snackbar.Add(ErrorMessageConstants.GenericErrorContactAdmin);
+            Snackbar.Add(ErrorMessageConstants.Generic.ContactAdmin);
             PageIsLoading = false;
             return;
         }

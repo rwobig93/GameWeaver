@@ -1,8 +1,13 @@
-using WeaverService;
+using Infrastructure;
+using WeaverService.Workers;
 
-var builder = Host.CreateDefaultBuilder(args);
-
-builder.AddInfrastructure()
+Host.CreateDefaultBuilder(args)
+    .AddInfrastructure()
+    .ConfigureServices(services =>
+    {
+        services.AddHostedService<ServerBroker>();
+        services.AddHostedService<HostBroker>();
+    })
     .Build()
     .Run();
     

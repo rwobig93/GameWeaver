@@ -4,7 +4,7 @@ using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Mappers.Lifecycle;
 using Application.Models.Web;
-using Application.Responses.Lifecycle;
+using Application.Responses.v1.Lifecycle;
 using Application.Services.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;
@@ -68,7 +68,7 @@ public static class AuditEndpoints
                 return await Result<AuditTrailResponse>.FailAsync(foundAuditTrail.Messages);
 
             if (foundAuditTrail.Data is null)
-                return await Result<AuditTrailResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<AuditTrailResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<AuditTrailResponse>.SuccessAsync(foundAuditTrail.Data.ToResponse());
         }
