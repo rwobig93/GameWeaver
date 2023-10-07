@@ -4,6 +4,7 @@ using Application.Constants;
 using Application.Helpers;
 using Application.Services;
 using Application.Settings;
+using Domain.Enums;
 using Domain.Models;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -18,7 +19,7 @@ public class ServerBroker : BackgroundService
     private readonly GeneralConfiguration _generalConfig;
 
     private static DateTime _lastRuntime;
-    private static readonly ConcurrentQueue<WeaverCommunication> WeaverOutQueue = new();
+    private static readonly ConcurrentQueue<WeaverToServerMessage> WeaverOutQueue = new();
 
     public ServerBroker(ILogger logger, IServerService serverService, IHttpClientFactory httpClientFactory, IOptions<GeneralConfiguration> generalConfig)
     {
@@ -59,10 +60,10 @@ public class ServerBroker : BackgroundService
         _logger.Debug("Server status is: {ServerStatus}", serverIsUp);
     }
 
-    public static void AddWeaverOutCommunication(WeaverCommunication communication)
+    public static void AddWeaverOutCommunication(WeaverToServerMessage message)
     {
-        Log.Debug("Adding weaver outgoing communication: {WeaverCommAction}", communication.Action);
-        WeaverOutQueue.Enqueue(communication);
+        Log.Debug("Adding weaver outgoing communication: {MessageAction}", message.Action);
+        WeaverOutQueue.Enqueue(message);
     }
 
     private async Task SendOutQueueCommunication()
@@ -75,7 +76,7 @@ public class ServerBroker : BackgroundService
         
         if (WeaverOutQueue.IsEmpty)
         {
-            _logger.Debug("Outgoing communication queue is empty, skipping...");
+            _logger.Verbose("Outgoing communication queue is empty, skipping...");
             return;
         }
 
@@ -87,28 +88,28 @@ public class ServerBroker : BackgroundService
         while (runAttemptsLeft > 0 && !WeaverOutQueue.IsEmpty)
         {
             runAttemptsLeft -= 1;
-            if (!WeaverOutQueue.TryDequeue(out var communication)) continue;
+            if (!WeaverOutQueue.TryDequeue(out var message)) continue;
             
-            _logger.Debug("Sending outgoing communication => {WeaverCommAction}", communication.Action);
+            _logger.Debug("Sending outgoing communication => {MessageAction}", message.Action);
             
             var response = await httpClient.GetAsync("/uri");
             if (response.IsSuccessStatusCode)
             {
-                _logger.Debug("Server successfully processed outgoing communication: {WeaverCommAction}", communication.Action);
+                _logger.Debug("Server successfully processed outgoing communication: {MessageAction}", message.Action);
                 continue;
             }
 
-            if (communication.AttemptCount >= _generalConfig.MaxQueueAttempts)
+            if (message.AttemptCount >= _generalConfig.MaxQueueAttempts)
             {
-                _logger.Warning("Maximum attempts reached for outgoing communication, dropping: {AttemptCount} {WeaverCommAction}",
-                    communication.AttemptCount, communication.Action);
+                _logger.Warning("Maximum attempts reached for outgoing communication, dropping: {AttemptCount} {MessageAction}",
+                    message.AttemptCount, message.Action);
                 continue;
             }
             
-            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WeaverCommAction}] => {StatusCode} {ErrorMessage}", 
-                communication.Action, response.StatusCode, await response.Content.ReadAsStringAsync());
-            communication.AttemptCount += 1;
-            AddWeaverOutCommunication(communication);
+            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{MessageAction}] => {StatusCode} {ErrorMessage}", 
+                message.Action, response.StatusCode, await response.Content.ReadAsStringAsync());
+            message.AttemptCount += 1;
+            AddWeaverOutCommunication(message);
         }
         
         _logger.Debug("Finished parsing outgoing weaver communication queue, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);

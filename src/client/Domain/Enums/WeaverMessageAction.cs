@@ -1,6 +1,6 @@
 namespace Domain.Enums;
 
-public enum WeaverCommAction
+public enum WeaverMessageAction
 {
     Unknown
 }

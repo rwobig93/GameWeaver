@@ -2,8 +2,8 @@ using Domain.Enums;
 
 namespace Domain.Models;
 
-public class WeaverCommunication
+public class WeaverToServerMessage
 {
-    public WeaverCommAction Action { get; set; }
+    public WeaverMessageAction Action { get; set; }
     public int AttemptCount { get; set; } = 0;
 }
