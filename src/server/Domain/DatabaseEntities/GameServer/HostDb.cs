@@ -11,6 +11,7 @@ public class HostDb : IAuditableEntity<Guid>
     public string PasswordSalt { get; set; } = null!;
     public string Hostname { get; set; } = "";
     public string FriendlyName { get; set; } = "";
+    public string Description { get; set; } = "";
     public string PrivateIp { get; set; } = "";
     public string PublicIp { get; set; } = "";
     public ConnectivityState CurrentState { get; set; }

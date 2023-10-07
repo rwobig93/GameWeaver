@@ -1,6 +1,6 @@
 using Application.Models.GameServer.Host;
 using Application.Models.Web;
-using Application.Requests.v1.Hosts;
+using Application.Requests.v1.GameServer;
 using Application.Responses.v1.GameServer;
 using Domain.Enums.Lifecycle;
 
@@ -8,7 +8,7 @@ namespace Application.Services.GameServer;
 
 public interface IHostService
 {
-    Task<IResult<HostNewRegisterResponse>> GetNewRegistration();
+    Task<IResult<HostNewRegisterResponse>> GetNewRegistration(string description);
     Task<IResult<HostRegisterResponse>> Register(HostRegisterRequest request);
     Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
     Task<IResult<IEnumerable<HostSlim>>> GetAllAsync();

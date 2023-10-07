@@ -372,6 +372,24 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetActiveRegistrationsByDescriptionAsync(string description)
+    {
+        DatabaseActionResult<IEnumerable<HostRegistrationDb>> actionReturn = new();
+
+        try
+        {
+            var foundRegistrations = await _database.LoadData<HostRegistrationDb, dynamic>(
+                HostRegistrationsTableMsSql.GetActiveByDescription, new {Description = description});
+            actionReturn.Succeed(foundRegistrations);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostRegistrationsTableMsSql.GetActiveByDescription.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();

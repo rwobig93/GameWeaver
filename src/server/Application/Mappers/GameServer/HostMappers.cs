@@ -14,6 +14,7 @@ public static class HostMappers
             OwnerId = hostDb.OwnerId,
             Hostname = hostDb.Hostname,
             FriendlyName = hostDb.FriendlyName,
+            Description = hostDb.Description,
             PrivateIp = hostDb.PrivateIp,
             PublicIp = hostDb.PublicIp,
             CurrentState = hostDb.CurrentState,
@@ -38,6 +39,7 @@ public static class HostMappers
             PasswordSalt = hostDb.PasswordSalt,
             Hostname = hostDb.Hostname,
             FriendlyName = hostDb.FriendlyName,
+            Description = hostDb.Description,
             PrivateIp = hostDb.PrivateIp,
             PublicIp = hostDb.PublicIp,
             CurrentState = hostDb.CurrentState,
@@ -58,6 +60,7 @@ public static class HostMappers
         {
             Id = registrationDb.Id,
             HostId = registrationDb.HostId,
+            Description = registrationDb.Description,
             Active = registrationDb.Active,
             Key = registrationDb.Key,
             ActivationDate = registrationDb.ActivationDate,
@@ -75,6 +78,7 @@ public static class HostMappers
         {
             Id = registrationDb.Id,
             HostId = registrationDb.HostId,
+            Description = registrationDb.Description,
             Active = registrationDb.Active,
             Key = registrationDb.Key,
             ActivationDate = registrationDb.ActivationDate,

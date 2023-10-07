@@ -20,6 +20,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
+                    [Description] NVARCHAR(2048) NOT NULL,
                     [Active] BIT NOT NULL,
                     [Key] NVARCHAR(256) NOT NULL,
                     [ActivationDate] datetime2 NOT NULL,
@@ -121,6 +122,22 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetActiveByDescription = new()
+    {
+        Table = Table,
+        Action = "GetActiveByDescription",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetActiveByDescription]
+                @Description NVARCHAR(256)
+            AS
+            begin
+                SELECT h.*
+                FROM dbo.[{Table.TableName}] h
+                WHERE h.Active = 1 AND h.Description = @Description
+                ORDER BY h.Id;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -128,6 +145,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @HostId UNIQUEIDENTIFIER,
+                @Description NVARCHAR(2048),
                 @Active BIT,
                 @Key NVARCHAR(256),
                 @ActivationDate datetime2,
@@ -138,9 +156,10 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (HostId, Active, Key, ActivationDate, ActivationPublicIp, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (HostId, Description, Active, Key, ActivationDate, ActivationPublicIp, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@HostId, @Active, @Key, @ActivationDate, @ActivationPublicIp, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                VALUES (@HostId, @Description, @Active, @Key, @ActivationDate, @ActivationPublicIp, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted,
+                        @DeletedOn);
             end"
     };
     
@@ -159,6 +178,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.HostId LIKE '%' + @SearchTerm + '%'
                     OR h.Key LIKE '%' + @SearchTerm + '%'
+                    OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%';
             end"
     };
@@ -180,6 +200,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.HostId LIKE '%' + @SearchTerm + '%'
                     OR h.Key LIKE '%' + @SearchTerm + '%'
+                    OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%'
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -193,6 +214,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @HostId UNIQUEIDENTIFIER = null,
+                @Description NVARCHAR(2048) = null,
                 @Active BIT = null,
                 @Key NVARCHAR(256) = null,
                 @ActivationDate datetime2 = null,
@@ -204,9 +226,9 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET HostId = COALESCE(@HostId, HostId), Active = COALESCE(@Active, Active), Key = COALESCE(@Key, Key), ActivationDate = COALESCE(@ActivationDate, ActivationDate),
-                    ActivationPublicIp = COALESCE(@ActivationPublicIp, ActivationPublicIp), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
-                    CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
+                SET HostId = COALESCE(@HostId, HostId), Description = COALESCE(@Description, Description), Active = COALESCE(@Active, Active), Key = COALESCE(@Key, Key),
+                    ActivationDate = COALESCE(@ActivationDate, ActivationDate), ActivationPublicIp = COALESCE(@ActivationPublicIp, ActivationPublicIp),
+                    CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
                     LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
                 WHERE Id = @Id;
             end"

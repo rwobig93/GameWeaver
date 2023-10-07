@@ -24,6 +24,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                     [PasswordSalt] NVARCHAR(256) NOT NULL,
                     [Hostname] NVARCHAR(256) NULL,
                     [FriendlyName] NVARCHAR(256) NULL,
+                    [Description] NVARCHAR(2048) NULL,
                     [PrivateIp] NVARCHAR(128) NULL,
                     [PublicIp] NVARCHAR(128) NULL,
                     [CurrentState] INT NOT NULL,
@@ -127,6 +128,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PasswordSalt NVARCHAR(256),
                 @Hostname NVARCHAR(256),
                 @FriendlyName NVARCHAR(256),
+                @Description NVARCHAR(2048),
                 @PrivateIp NVARCHAR(128),
                 @PublicIp NVARCHAR(128),
                 @CurrentState INT,
@@ -140,11 +142,11 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, Hostname, FriendlyName, PrivateIp, PublicIp, CurrentState, Os, AllowedPorts, CreatedBy,
-                                                     CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
+                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, Hostname, FriendlyName, Description, PrivateIp, PublicIp, CurrentState, Os, AllowedPorts,
+                                                     CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@OwnerId, @PasswordHash, @PasswordSalt, @Hostname, @FriendlyName, @PrivateIp, @PublicIp, @CurrentState, @Os, @AllowedPorts, @CreatedBy, @CreatedOn, 
-                        @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                VALUES (@OwnerId, @PasswordHash, @PasswordSalt, @Hostname, @FriendlyName, @Description, @PrivateIp, @PublicIp, @CurrentState, @Os, @AllowedPorts, @CreatedBy,
+                        @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"
     };
     
@@ -163,6 +165,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
+                    OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
                     OR h.PublicIp LIKE '%' + @SearchTerm + '%';
             end"
@@ -185,6 +188,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
+                    OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
                     OR h.PublicIp LIKE '%' + @SearchTerm + '%'
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -203,6 +207,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PasswordSalt NVARCHAR(256) = null,
                 @Hostname NVARCHAR(256) = null,
                 @FriendlyName NVARCHAR(256) = null,
+                @Description NVARCHAR(2048) = null,
                 @PrivateIp NVARCHAR(128) = null,
                 @PublicIp NVARCHAR(128) = null,
                 @CurrentState INT = null,
@@ -218,11 +223,11 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET OwnerId = COALESCE(@OwnerId, OwnerId), PasswordHash = COALESCE(@PasswordHash, PasswordHash), PasswordSalt = COALESCE(@PasswordSalt, PasswordSalt),
-                    Hostname = COALESCE(@Hostname, Hostname), FriendlyName = COALESCE(@FriendlyName, FriendlyName), PrivateIp = COALESCE(@PrivateIp, PrivateIp),
-                    PublicIp = COALESCE(@PublicIp, PublicIp), CurrentState = COALESCE(@CurrentState, CurrentState), Os = COALESCE(@Os, Os),
-                    AllowedPorts = COALESCE(@AllowedPorts, AllowedPorts), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
-                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
-                    IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
+                    Hostname = COALESCE(@Hostname, Hostname), FriendlyName = COALESCE(@FriendlyName, FriendlyName), Description = COALESCE(@Description, Description),
+                    PrivateIp = COALESCE(@PrivateIp, PrivateIp), PublicIp = COALESCE(@PublicIp, PublicIp), CurrentState = COALESCE(@CurrentState, CurrentState),
+                    Os = COALESCE(@Os, Os), AllowedPorts = COALESCE(@AllowedPorts, AllowedPorts), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
+                    CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
+                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;
             end"
     };

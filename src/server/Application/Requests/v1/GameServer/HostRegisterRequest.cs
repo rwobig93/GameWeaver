@@ -1,4 +1,4 @@
-namespace Application.Requests.v1.Hosts;
+namespace Application.Requests.v1.GameServer;
 
 public class HostRegisterRequest
 {

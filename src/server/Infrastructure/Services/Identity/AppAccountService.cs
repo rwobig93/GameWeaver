@@ -412,7 +412,7 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            // Remove client id and tokens from local client storage and deauthenticate
+            // Remove client id and tokens from local client storage and de-authenticate
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
             _authProvider.DeauthenticateUser();

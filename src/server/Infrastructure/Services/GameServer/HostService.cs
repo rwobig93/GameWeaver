@@ -1,17 +1,43 @@
+using Application.Constants.Communication;
 using Application.Models.GameServer.Host;
 using Application.Models.Web;
-using Application.Requests.v1.Hosts;
+using Application.Repositories.GameServer;
+using Application.Requests.v1.GameServer;
 using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
+using Application.Services.Lifecycle;
+using Application.Services.System;
+using Application.Settings.AppSettings;
 using Domain.Enums.Lifecycle;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;
 
 public class HostService : IHostService
 {
-    public async Task<IResult<HostNewRegisterResponse>> GetNewRegistration()
+    private readonly IHostRepository _hostRepository;
+    private readonly IDateTimeService _dateTime;
+    private readonly IRunningServerState _serverState;
+    private readonly AppConfiguration _appConfig;
+
+    public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig)
     {
-        throw new NotImplementedException();
+        _hostRepository = hostRepository;
+        _dateTime = dateTime;
+        _serverState = serverState;
+        _appConfig = appConfig.Value;
+    }
+
+    public async Task<IResult<HostNewRegisterResponse>> GetNewRegistration(string description)
+    {
+        var matchingDescriptionRequest = await _hostRepository.GetActiveRegistrationsByDescriptionAsync(description);
+        if (!matchingDescriptionRequest.Succeeded)
+            return await Result<HostNewRegisterResponse>.FailAsync(matchingDescriptionRequest.ErrorMessage);
+        if (matchingDescriptionRequest.Result is null || matchingDescriptionRequest.Result.Any())
+            return await Result<HostNewRegisterResponse>.FailAsync("Active registration with matching description already exists," +
+                                                                   " please use the existing registration or provide a different description");
+
+        return await Result<HostNewRegisterResponse>.SuccessAsync();
     }
 
     public async Task<IResult<HostRegisterResponse>> Register(HostRegisterRequest request)
