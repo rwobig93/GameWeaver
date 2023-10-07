@@ -80,7 +80,7 @@ public static class PermissionEndpoints
                 return await Result<PermissionResponse>.FailAsync(foundPermission.Messages);
 
             if (foundPermission.Data is null)
-                return await Result<PermissionResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                    return await Result<PermissionResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<PermissionResponse>.SuccessAsync(foundPermission.Data.ToResponse());
         }
@@ -153,7 +153,7 @@ public static class PermissionEndpoints
         {
             var foundPermission = await permissionService.GetByIdAsync(permissionId);
             if (!foundPermission.Succeeded) return await Result<bool>.FailAsync(foundPermission.Messages);
-            if (foundPermission.Data is null) return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            if (foundPermission.Data is null) return await Result<bool>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
             
             return await permissionService.UserIncludingRolesHasPermission(userId, foundPermission.Data!.ClaimValue);
         }
@@ -178,7 +178,7 @@ public static class PermissionEndpoints
         {
             var foundPermission = await permissionService.GetByIdAsync(permissionId);
             if (!foundPermission.Succeeded) return await Result<bool>.FailAsync(foundPermission.Messages);
-            if (foundPermission.Data is null) return await Result<bool>.FailAsync(ErrorMessageConstants.InvalidValueError);
+            if (foundPermission.Data is null) return await Result<bool>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
             
             return await permissionService.RoleHasPermission(roleId, foundPermission.Data!.ClaimValue);
         }
@@ -203,7 +203,7 @@ public static class PermissionEndpoints
             var foundPermission =
                 await permissionService.GetByUserIdAndValueAsync(permissionRequest.UserId, permissionRequest.PermissionValue);
             if (!foundPermission.Succeeded) return await Result.FailAsync(foundPermission.Messages);
-            if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.InvalidValueError);
+            if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
             
             var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id, Guid.Empty);
             if (!permissionResponse.Succeeded) return permissionResponse;
@@ -231,7 +231,7 @@ public static class PermissionEndpoints
             var foundPermission =
                 await permissionService.GetByUserIdAndValueAsync(permissionRequest.RoleId, permissionRequest.PermissionValue);
             if (!foundPermission.Succeeded) return await Result.FailAsync(foundPermission.Messages);
-            if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.InvalidValueError);
+            if (foundPermission.Data is null) return await Result.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
             
             var permissionResponse = await permissionService.DeleteAsync(foundPermission.Data.Id, Guid.Empty);
             if (!permissionResponse.Succeeded) return permissionResponse;

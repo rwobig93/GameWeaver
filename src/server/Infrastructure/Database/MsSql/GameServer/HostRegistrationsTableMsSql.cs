@@ -122,6 +122,23 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetByHostIdAndKey = new()
+    {
+        Table = Table,
+        Action = "GetByHostIdAndKey",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByHostIdAndKey]
+                @HostId NVARCHAR(256),
+                @Key NVARCHAR(256)
+            AS
+            begin
+                SELECT TOP 1 h.*
+                FROM dbo.[{Table.TableName}] h
+                WHERE h.HostId = @HostId AND h.Key = @Key AND h.Active = 1
+                ORDER BY h.Id;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure GetActiveByDescription = new()
     {
         Table = Table,

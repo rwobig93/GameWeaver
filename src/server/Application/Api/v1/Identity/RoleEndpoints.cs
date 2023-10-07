@@ -76,7 +76,7 @@ public static class RoleEndpoints
                 return await Result<RoleResponse>.FailAsync(role.Messages);
 
             if (role.Data is null)
-                return await Result<RoleResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<RoleResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<RoleResponse>.SuccessAsync(role.Data.ToResponse());
         }

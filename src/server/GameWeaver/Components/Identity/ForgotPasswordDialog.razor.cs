@@ -21,7 +21,7 @@ public partial class ForgotPasswordDialog
         var validEmailAddress = AccountHelpers.IsValidEmailAddress(EmailAddress);
         if (!validEmailAddress)
         {
-            Snackbar.Add(ErrorMessageConstants.InvalidValueError);
+            Snackbar.Add(ErrorMessageConstants.Generic.InvalidValueError);
             PageIsLoading = false;
             return;
         }
@@ -29,7 +29,7 @@ public partial class ForgotPasswordDialog
         var emailExists = await DoesEmailExist();
         if (!emailExists)
         {
-            Snackbar.Add(ErrorMessageConstants.GenericErrorContactAdmin);
+            Snackbar.Add(ErrorMessageConstants.Generic.ContactAdmin);
             PageIsLoading = false;
             return;
         }

@@ -496,7 +496,7 @@ public class AppPermissionService : IAppPermissionService
             }
 
             if (!await CanUserDoThisAction(modifyingUserId, createObject.ClaimValue))
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.CannotAdministrateMissingPermission);
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
 
             createObject.CreatedBy = modifyingUserId;
             createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
@@ -536,11 +536,11 @@ public class AppPermissionService : IAppPermissionService
         {
             var foundPermission = await _permissionRepository.GetByIdAsync(updateObject.Id);
             if (!foundPermission.Succeeded || foundPermission.Result?.ClaimValue is null)
-                return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+                return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
             var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
             if (!userCanDoAction)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.CannotAdministrateMissingPermission);
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
 
             updateObject.LastModifiedBy = modifyingUserId;
             updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
@@ -563,11 +563,11 @@ public class AppPermissionService : IAppPermissionService
         {
             var foundPermission = await _permissionRepository.GetByIdAsync(permissionId);
             if (!foundPermission.Succeeded || foundPermission.Result?.ClaimValue is null)
-                return await Result.FailAsync(ErrorMessageConstants.GenericNotFound);
+                return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
             var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
             if (!userCanDoAction)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.CannotAdministrateMissingPermission);
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
             
             var deleteRequest = await _permissionRepository.DeleteAsync(foundPermission.Result.Id, modifyingUserId);
             if (!deleteRequest.Succeeded)

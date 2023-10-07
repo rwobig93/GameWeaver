@@ -24,6 +24,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<int>> GetRegistrationCountAsync();
     Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByIdAsync(Guid id);
     Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByHostIdAsync(Guid hostId);
+    Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByHostIdAndKeyAsync(Guid hostId, string key);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetActiveRegistrationsByDescriptionAsync(string description);
     Task<DatabaseActionResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate createObject);
     Task<DatabaseActionResult> UpdateRegistrationAsync(HostRegistrationUpdate updateObject);

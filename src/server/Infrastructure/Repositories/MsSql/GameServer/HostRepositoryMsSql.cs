@@ -12,7 +12,6 @@ using Domain.Enums.Database;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
-using Infrastructure.Database.MsSql.Lifecycle;
 using Infrastructure.Database.MsSql.Shared;
 
 namespace Infrastructure.Repositories.MsSql.GameServer;
@@ -367,6 +366,24 @@ public class HostRepositoryMsSql : IHostRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, HostRegistrationsTableMsSql.GetByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByHostIdAndKeyAsync(Guid hostId, string key)
+    {
+        DatabaseActionResult<HostRegistrationDb> actionReturn = new();
+
+        try
+        {
+            var foundRegistration = (await _database.LoadData<HostRegistrationDb, dynamic>(
+                HostRegistrationsTableMsSql.GetByHostIdAndKey, new {HostId = hostId, Key = key})).FirstOrDefault();
+            actionReturn.Succeed(foundRegistration!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostRegistrationsTableMsSql.GetByHostIdAndKey.Path, ex.Message);
         }
 
         return actionReturn;

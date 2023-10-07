@@ -222,7 +222,7 @@ public partial class Login
         var foundUser = await UserService.GetByUsernameSecurityFullAsync(Username);
         if (!foundUser.Succeeded || foundUser.Data is null)
         {
-            Snackbar.Add(ErrorMessageConstants.CredentialsInvalidError, Severity.Error);
+            Snackbar.Add(ErrorMessageConstants.Authentication.CredentialsInvalidError, Severity.Error);
             return false;
         }
 
@@ -300,7 +300,7 @@ public partial class Login
             var userSecurityRequest = await UserService.GetByIdSecurityFullAsync(authenticatedUserId);
             if (!userSecurityRequest.Succeeded || userSecurityRequest.Data is null)
             {
-                Snackbar.Add(ErrorMessageConstants.CredentialsInvalidError, Severity.Error);
+                Snackbar.Add(ErrorMessageConstants.Authentication.CredentialsInvalidError, Severity.Error);
                 return;
             }
 

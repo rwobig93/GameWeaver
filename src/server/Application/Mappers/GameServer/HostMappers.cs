@@ -1,6 +1,5 @@
 ﻿using Application.Models.GameServer.Host;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
@@ -27,6 +26,11 @@ public static class HostMappers
             IsDeleted = hostDb.IsDeleted,
             DeletedOn = hostDb.DeletedOn
         };
+    }
+
+    public static IEnumerable<HostSlim> ToSlims(this IEnumerable<HostDb> hostDbs)
+    {
+        return hostDbs.Select(x => x.ToSlim()).ToList();
     }
 
     public static HostUpdate ToUpdate(this HostDb hostDb)
@@ -72,6 +76,11 @@ public static class HostMappers
         };
     }
 
+    public static IEnumerable<HostRegistrationFull> ToFulls(this IEnumerable<HostRegistrationDb> hostDbs)
+    {
+        return hostDbs.Select(x => x.ToFull()).ToList();
+    }
+
     public static HostRegistrationUpdate ToUpdate(this HostRegistrationDb registrationDb)
     {
         return new HostRegistrationUpdate
@@ -88,5 +97,26 @@ public static class HostMappers
             LastModifiedBy = registrationDb.LastModifiedBy,
             LastModifiedOn = registrationDb.LastModifiedOn
         };
+    }
+
+    public static HostCheckInFull ToFull(this HostCheckInDb checkInDb)
+    {
+        return new HostCheckInFull
+        {
+            Id = checkInDb.Id,
+            HostId = checkInDb.HostId,
+            SendTimestamp = checkInDb.SendTimestamp,
+            ReceiveTimestamp = checkInDb.ReceiveTimestamp,
+            CpuUsage = checkInDb.CpuUsage,
+            RamUsage = checkInDb.RamUsage,
+            Uptime = checkInDb.Uptime,
+            NetworkOutMb = checkInDb.NetworkOutMb,
+            NetworkInMb = checkInDb.NetworkInMb
+        };
+    }
+
+    public static IEnumerable<HostCheckInFull> ToFulls(this IEnumerable<HostCheckInDb> checkInDbs)
+    {
+        return checkInDbs.Select(x => x.ToFull()).ToList();
     }
 }

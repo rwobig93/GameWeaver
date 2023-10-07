@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Application.Settings;
+﻿namespace Application.Settings;
 
 public class AuthConfiguration : IAppSettingsSection
 {

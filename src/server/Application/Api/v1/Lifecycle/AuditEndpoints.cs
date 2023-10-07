@@ -68,7 +68,7 @@ public static class AuditEndpoints
                 return await Result<AuditTrailResponse>.FailAsync(foundAuditTrail.Messages);
 
             if (foundAuditTrail.Data is null)
-                return await Result<AuditTrailResponse>.FailAsync(ErrorMessageConstants.InvalidValueError);
+                return await Result<AuditTrailResponse>.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
 
             return await Result<AuditTrailResponse>.SuccessAsync(foundAuditTrail.Data.ToResponse());
         }

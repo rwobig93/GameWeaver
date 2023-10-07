@@ -80,6 +80,16 @@ public static class ApiRouteConstants
         }
     }
 
+    public static class GameServer
+    {
+        public static class Host
+        {
+            public const string GetRegistration = "/api/gameserver/host/get-registration";
+            public const string Register = "/api/gameserver/host/register";
+            public const string CheckIn = "/api/gameserver/host/checkin";
+        }
+    }
+
     public static class Example
     {
         public const string Weather = "/api/example/weather";

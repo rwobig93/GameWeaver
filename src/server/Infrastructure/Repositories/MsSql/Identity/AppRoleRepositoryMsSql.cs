@@ -283,7 +283,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 AppRolesTableMsSql.GetByName, new {Name = roleName})).FirstOrDefault();
             if (foundRole is null)
             {
-                actionReturn.Fail(ErrorMessageConstants.GenericNotFound);
+                actionReturn.Fail(ErrorMessageConstants.Generic.NotFound);
                 return actionReturn;
             }
             
