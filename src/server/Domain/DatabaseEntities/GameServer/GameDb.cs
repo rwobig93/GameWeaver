@@ -1,7 +1,10 @@
+using Domain.Contracts;
+
 namespace Domain.DatabaseEntities.GameServer;
 
-public class GameDb
+public class GameDb : IAuditableEntity<Guid>
 {
+    public Guid Id { get; set; }
     public string FriendlyName { get; set; } = "";
     public string SteamName { get; set; } = "";
     public int SteamGameId { get; set; }
@@ -15,8 +18,6 @@ public class GameDb
     public string DescriptionShort { get; set; } = "";
     public string DescriptionLong { get; set; } = "";
     public string DescriptionAbout { get; set; } = "";
-    public string Developers { get; set; } = "";
-    public string Publishers { get; set; } = "";
     public string PriceInitial { get; set; } = "";
     public string PriceCurrent { get; set; } = "";
     public int PriceDiscount { get; set; }
@@ -28,4 +29,10 @@ public class GameDb
     public string RequirementsMacRecommended { get; set; } = "";
     public string RequirementsLinuxMinimum { get; set; } = "";
     public string RequirementsLinuxRecommended { get; set; } = "";
+    public Guid CreatedBy { get; set; }
+    public DateTime CreatedOn { get; set; }
+    public Guid? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedOn { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedOn { get; set; }
 }

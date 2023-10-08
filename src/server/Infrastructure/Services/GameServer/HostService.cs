@@ -8,6 +8,8 @@ using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Host;
+using Application.Models.GameServer.HostCheckIn;
+using Application.Models.GameServer.HostRegistration;
 using Application.Models.Identity.Permission;
 using Application.Models.Web;
 using Application.Repositories.GameServer;

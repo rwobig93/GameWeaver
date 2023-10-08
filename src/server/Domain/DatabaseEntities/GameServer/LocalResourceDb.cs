@@ -5,6 +5,8 @@ namespace Domain.DatabaseEntities.GameServer;
 public class LocalResourceDb
 {
     public Guid Id { get; set; }
+    public Guid GameProfileId { get; set; }
+    public Guid GameServerId { get; set; }
     public string Name { get; set; } = "";
     public string Path { get; set; } = "";
     public bool Startup { get; set; } = false;

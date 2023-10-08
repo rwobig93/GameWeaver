@@ -1,6 +1,8 @@
+using Domain.Contracts;
+
 namespace Domain.DatabaseEntities.GameServer;
 
-public class ModDb
+public class ModDb : IAuditableEntity<Guid>
 {
     public Guid Id { get; set; }
     public Guid GameId { get; set; }
@@ -9,4 +11,10 @@ public class ModDb
     public string SteamId { get; set; } = "";
     public string FriendlyName { get; set; } = "";
     public string CurrentHash { get; set; } = "";
+    public Guid CreatedBy { get; set; }
+    public DateTime CreatedOn { get; set; }
+    public Guid? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedOn { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedOn { get; set; }
 }

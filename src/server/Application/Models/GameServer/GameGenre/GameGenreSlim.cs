@@ -1,6 +1,6 @@
-namespace Domain.DatabaseEntities.GameServer;
+namespace Application.Models.GameServer.GameGenre;
 
-public class GenreDb
+public class GameGenreSlim
 {
     public Guid Id { get; set; }
     public Guid GameId { get; set; }

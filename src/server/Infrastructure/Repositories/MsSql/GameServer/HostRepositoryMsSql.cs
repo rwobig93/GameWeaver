@@ -3,6 +3,8 @@ using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Host;
+using Application.Models.GameServer.HostCheckIn;
+using Application.Models.GameServer.HostRegistration;
 using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;

@@ -1,4 +1,4 @@
-﻿namespace Application.Models.GameServer.Host;
+﻿namespace Application.Models.GameServer.HostRegistration;
 
 public class HostRegistrationCreate
 {

@@ -1,4 +1,6 @@
 ﻿using Application.Models.GameServer.Host;
+using Application.Models.GameServer.HostCheckIn;
+using Application.Models.GameServer.HostRegistration;
 using Domain.DatabaseEntities.GameServer;
 
 namespace Application.Mappers.GameServer;

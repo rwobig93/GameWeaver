@@ -1,4 +1,4 @@
-﻿namespace Application.Models.GameServer.Host;
+﻿namespace Application.Models.GameServer.HostCheckIn;
 
 public class HostCheckInCreate
 {

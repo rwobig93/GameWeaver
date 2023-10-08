@@ -2,6 +2,7 @@ namespace Application.Models.GameServer.Game;
 
 public class GameSlim
 {
+    public Guid Id { get; set; }
     public string FriendlyName { get; set; } = "";
     public string SteamName { get; set; } = "";
     public int SteamGameId { get; set; }
@@ -16,8 +17,6 @@ public class GameSlim
     public string DescriptionShort { get; set; } = "";
     public string DescriptionLong { get; set; } = "";
     public string DescriptionAbout { get; set; } = "";
-    public string Developers { get; set; } = "";
-    public string Publishers { get; set; } = "";
     public string PriceInitial { get; set; } = "";
     public string PriceCurrent { get; set; } = "";
     public int PriceDiscount { get; set; }
