@@ -5,12 +5,14 @@ using Application.Mappers.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
+using Application.Models.GameServer.WeaverWork;
 using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.Database;
+using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
@@ -717,5 +719,196 @@ public class HostRepositoryMsSql : IHostRepository
         }
 
         return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkAsync()
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var allWork = await _database.LoadData<WeaverWorkDb, dynamic>(WeaverWorksTableMsSql.GetAll, new { });
+            
+            actionReturn.Succeed(allWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
+            
+            actionReturn.Succeed(allWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> GetWeaverWorkCountAsync()
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowCount = (await _database.LoadData<int, dynamic>(
+                GeneralTableMsSql.GetRowCount, new {WeaverWorksTableMsSql.Table.TableName})).FirstOrDefault();
+            actionReturn.Succeed(rowCount);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(Guid id)
+    {
+        DatabaseActionResult<WeaverWorkDb> actionReturn = new();
+
+        try
+        {
+            var foundWork = (await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundWork!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByHostIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetByHostId, new {HostId = id});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByGameServerIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetByGameServerId, new {GameServerId = id});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetByGameServerId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetByTargetType, new {TargetType = target});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetByTargetType.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByStatusAsync(WeaverWorkState status)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetByStatus, new {Status = status});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetByStatus.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<Guid>> CreateWeaverWorkAsync(WeaverWorkCreate createObject)
+    {
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            createObject.CreatedOn = _dateTime.NowDatabaseTime;
+
+            var createdId = await _database.SaveDataReturnId(WeaverWorksTableMsSql.Insert, createObject);
+
+            var foundWork = await GetWeaverWorkByIdAsync(createdId);
+
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundWork.Result!.Id,
+                createObject.CreatedBy, DatabaseActionType.Create, null, foundWork.Result!.ToSlim());
+
+            actionReturn.Succeed(createdId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id, Guid modifyingUserId)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkAsync(string searchText)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        throw new NotImplementedException();
     }
 }
