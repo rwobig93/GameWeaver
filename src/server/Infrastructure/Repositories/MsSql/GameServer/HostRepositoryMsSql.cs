@@ -894,21 +894,76 @@ public class HostRepositoryMsSql : IHostRepository
 
     public async Task<DatabaseActionResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(WeaverWorksTableMsSql.Update, updateObject);
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.Update.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(WeaverWorksTableMsSql.Delete, new {Id = id});
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.Delete.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkAsync(string searchText)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.Search, new { SearchTerm = searchText });
+            
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 }

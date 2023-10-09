@@ -55,7 +55,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByStatusAsync(WeaverWorkState status);
     Task<DatabaseActionResult<Guid>> CreateWeaverWorkAsync(WeaverWorkCreate createObject);
     Task<DatabaseActionResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject);
-    Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id, Guid modifyingUserId);
+    Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }
