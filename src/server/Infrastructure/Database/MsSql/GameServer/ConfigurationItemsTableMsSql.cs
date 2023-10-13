@@ -34,8 +34,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
-                @Id UNIQUEIDENTIFIER,
-                @DeletedOn datetime2
+                @Id UNIQUEIDENTIFIER
             AS
             begin
                 DELETE FROM dbo.[{Table.TableName}]

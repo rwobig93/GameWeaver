@@ -130,6 +130,22 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetByFriendlyName = new()
+    {
+        Table = Table,
+        Action = "GetByFriendlyName",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByFriendlyName]
+                @FriendlyName NVARCHAR(128)
+            AS
+            begin
+                SELECT g.*
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.FriendlyName = @FriendlyName
+                ORDER BY g.Id;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure GetBySteamGameId = new()
     {
         Table = Table,

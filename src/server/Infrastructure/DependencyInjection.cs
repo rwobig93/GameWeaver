@@ -305,6 +305,8 @@ public static class DependencyInjection
                 services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
                 // GameServer Database Repositories
                 services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
+                services.AddSingleton<IGameRepository, GameRepositoryMsSql>();
+                services.AddSingleton<IGameServerRepository, GameServerRepositoryMsSql>();
                 break;
             case DatabaseProviderType.Postgresql:
                 throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");

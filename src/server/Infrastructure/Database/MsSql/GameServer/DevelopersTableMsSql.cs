@@ -100,6 +100,22 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetByName = new()
+    {
+        Table = Table,
+        Action = "GetByName",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByName]
+                @Name NVARCHAR(128)
+            AS
+            begin
+                SELECT TOP 1 g.*
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.Name = @Name
+                ORDER BY g.Id;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
