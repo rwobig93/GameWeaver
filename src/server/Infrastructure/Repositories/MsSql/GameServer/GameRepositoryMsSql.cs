@@ -397,7 +397,7 @@ public class GameRepositoryMsSql : IGameRepository
         {
             var foundDeveloper = await _database.LoadData<DeveloperDb, dynamic>(
                 DevelopersTableMsSql.GetByGameId, new {Id = id});
-            actionReturn.Succeed(foundDeveloper!);
+            actionReturn.Succeed(foundDeveloper);
         }
         catch (Exception ex)
         {
@@ -431,6 +431,10 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
+            var foundDeveloper = await GetDeveloperByIdAsync(id);
+            if (!foundDeveloper.Succeeded || foundDeveloper.Result is null)
+                throw new Exception(foundDeveloper.ErrorMessage);
+
             await _database.SaveData(DevelopersTableMsSql.Delete, new { Id = id });
             
             actionReturn.Succeed();
@@ -614,6 +618,10 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
+            var foundPublisher = await GetPublisherByIdAsync(id);
+            if (!foundPublisher.Succeeded || foundPublisher.Result is null)
+                throw new Exception(foundPublisher.ErrorMessage);
+
             await _database.SaveData(PublishersTableMsSql.Delete, new { Id = id });
             
             actionReturn.Succeed();
@@ -797,6 +805,10 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
+            var foundGenre = await GetGameGenreByIdAsync(id);
+            if (!foundGenre.Succeeded || foundGenre.Result is null)
+                throw new Exception(foundGenre.ErrorMessage);
+
             await _database.SaveData(GameGenreTableMsSql.Delete, new { Id = id });
             
             actionReturn.Succeed();
