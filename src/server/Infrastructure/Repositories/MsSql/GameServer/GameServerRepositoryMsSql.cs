@@ -488,201 +488,788 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
     public async Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ConfigurationItemDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<ConfigurationItemDb, dynamic>(
+                ConfigurationItemsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ConfigurationItemsTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetAllLocalResourcesAsync()
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
+
+        try
+        {
+            var allResources = await _database.LoadData<LocalResourceDb, dynamic>(LocalResourcesTableMsSql.GetAll, new { });
+            actionReturn.Succeed(allResources);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetAllLocalResourcesPaginatedAsync(int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allResources = await _database.LoadData<LocalResourceDb, dynamic>(
+                LocalResourcesTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allResources);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<int>> GetLocalResourcesCountAsync()
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowCount = (await _database.LoadData<int, dynamic>(
+                GeneralTableMsSql.GetRowCount, new {LocalResourcesTableMsSql.Table.TableName})).FirstOrDefault();
+            actionReturn.Succeed(rowCount);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<LocalResourceDb>> GetLocalResourceByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<LocalResourceDb> actionReturn = new();
+
+        try
+        {
+            var foundResource = (await _database.LoadData<LocalResourceDb, dynamic>(
+                LocalResourcesTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundResource!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameProfileIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
+
+        try
+        {
+            var foundResource = await _database.LoadData<LocalResourceDb, dynamic>(
+                LocalResourcesTableMsSql.GetByGameProfileId, new {GameProfileId = id});
+            actionReturn.Succeed(foundResource);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetByGameProfileId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameServerIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
+
+        try
+        {
+            var foundResource = await _database.LoadData<LocalResourceDb, dynamic>(
+                LocalResourcesTableMsSql.GetByGameServerId, new {GameServerId = id});
+            actionReturn.Succeed(foundResource);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetByGameServerId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            var createdId = await _database.SaveDataReturnId(LocalResourcesTableMsSql.Insert, createObject);
+
+            actionReturn.Succeed(createdId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult> UpdateLocalResourceAsync(LocalResourceUpdate updateObject)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(LocalResourcesTableMsSql.Update, updateObject);
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.Update.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult> DeleteLocalResourceAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            var foundResource = await GetLocalResourceByIdAsync(id);
+            if (!foundResource.Succeeded || foundResource.Result is null)
+                throw new Exception(foundResource.ErrorMessage);
+            
+            await _database.SaveData(LocalResourcesTableMsSql.Delete, new { Id = id });
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.Delete.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> SearchLocalResourceAsync(string searchText)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults = await _database.LoadData<LocalResourceDb, dynamic>(
+                LocalResourcesTableMsSql.Search, new { SearchTerm = searchText });
+            
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> SearchLocalResourcePaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<LocalResourceDb, dynamic>(
+                LocalResourcesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetAllGameProfilesAsync()
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
+
+        try
+        {
+            var allProfiles = await _database.LoadData<GameProfileDb, dynamic>(GameProfilesTableMsSql.GetAll, new { });
+            actionReturn.Succeed(allProfiles);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetAllGameProfilesPaginatedAsync(int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allProfiles = await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allProfiles);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<int>> GetGameProfileCountAsync()
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowCount = (await _database.LoadData<int, dynamic>(
+                GeneralTableMsSql.GetRowCount, new {GameProfilesTableMsSql.Table.TableName})).FirstOrDefault();
+            actionReturn.Succeed(rowCount);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<GameProfileDb>> GetGameProfileByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<GameProfileDb> actionReturn = new();
+
+        try
+        {
+            var foundProfile = (await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundProfile!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<GameProfileDb>> GetGameProfileByFriendlyNameAsync(string friendlyName)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<GameProfileDb> actionReturn = new();
+
+        try
+        {
+            var foundProfile = (await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetByFriendlyName, new {FriendlyName = friendlyName})).FirstOrDefault();
+            actionReturn.Succeed(foundProfile!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetByFriendlyName.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(int id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
+
+        try
+        {
+            var foundProfile = await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetByGameId, new {GameId = id});
+            actionReturn.Succeed(foundProfile);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetByGameId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByOwnerIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
+
+        try
+        {
+            var foundProfile = await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetByOwnerId, new {OwnerId = id});
+            actionReturn.Succeed(foundProfile);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetByOwnerId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
+
+        try
+        {
+            var foundProfile = await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetByServerProcessName, new {ServerProcessName = serverProcessName});
+            actionReturn.Succeed(foundProfile);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetByServerProcessName.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            createObject.CreatedOn = _dateTime.NowDatabaseTime;
+
+            var createdId = await _database.SaveDataReturnId(GameProfilesTableMsSql.Insert, createObject);
+
+            var foundProfile = await GetGameProfileByIdAsync(createdId);
+
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result!.Id,
+                createObject.CreatedBy, DatabaseActionType.Create, null, foundProfile.Result!.ToSlim());
+
+            actionReturn.Succeed(createdId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult> UpdateGameProfileAsync(GameProfileUpdate updateObject)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            var beforeObject = (await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
+            
+            await _database.SaveData(GameProfilesTableMsSql.Update, updateObject);
+            
+            var afterObject = (await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
+
+            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
+
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, beforeObject!.Id,
+                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.Update.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id, Guid modifyingUserId)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            var foundProfile = await GetGameProfileByIdAsync(id);
+            if (!foundProfile.Succeeded || foundProfile.Result is null)
+                throw new Exception(foundProfile.ErrorMessage);
+            var gameProfileUpdate = foundProfile.Result.ToUpdate();
+            
+            // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
+            gameProfileUpdate.LastModifiedBy = modifyingUserId;
+            await UpdateGameProfileAsync(gameProfileUpdate);
+            await _database.SaveData(GameProfilesTableMsSql.Delete, 
+                new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
+
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, id,
+                gameProfileUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, gameProfileUpdate);
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.Delete.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> SearchGameProfilesAsync(string searchText)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults = await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.Search, new { SearchTerm = searchText });
+            
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> SearchGameProfilesPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<GameProfileDb, dynamic>(
+                GameProfilesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameProfilesTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> GetAllModsAsync()
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var allMods = await _database.LoadData<ModDb, dynamic>(ModsTableMsSql.GetAll, new { });
+            actionReturn.Succeed(allMods);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> GetAllModsPaginatedAsync(int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var allMods = await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+            actionReturn.Succeed(allMods);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<int>> GetModCountAsync()
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowCount = (await _database.LoadData<int, dynamic>(
+                GeneralTableMsSql.GetRowCount, new {ModsTableMsSql.Table.TableName})).FirstOrDefault();
+            actionReturn.Succeed(rowCount);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<ModDb>> GetModByIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<ModDb> actionReturn = new();
+
+        try
+        {
+            var foundMod = (await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundMod!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<ModDb>> GetModByCurrentHashAsync(string hash)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<ModDb> actionReturn = new();
+
+        try
+        {
+            var foundMod = (await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetByCurrentHash, new {CurrentHash = hash})).FirstOrDefault();
+            actionReturn.Succeed(foundMod!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetByCurrentHash.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> GetModsByFriendlyNameAsync(string friendlyName)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var foundMods = await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetByFriendlyName, new {FriendlyName = friendlyName});
+            actionReturn.Succeed(foundMods);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetByFriendlyName.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> GetModsByGameIdAsync(Guid id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var foundMods = await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetByGameId, new {GameId = id});
+            actionReturn.Succeed(foundMods);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetByGameId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> GetModsBySteamGameIdAsync(int id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var foundMods = await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetBySteamGameId, new {SteamGameId = id});
+            actionReturn.Succeed(foundMods);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetBySteamGameId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<ModDb>> GetModBySteamIdAsync(string id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<ModDb> actionReturn = new();
+
+        try
+        {
+            var foundMod = (await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetBySteamId, new {SteamId = id})).FirstOrDefault();
+            actionReturn.Succeed(foundMod!);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetBySteamId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> GetModsBySteamToolIdAsync(int id)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var foundMods = await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetBySteamToolId, new {SteamToolId = id});
+            actionReturn.Succeed(foundMods);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.GetBySteamToolId.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<Guid>> CreateModAsync(ModCreate createObject)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            createObject.CreatedOn = _dateTime.NowDatabaseTime;
+
+            var createdId = await _database.SaveDataReturnId(ModsTableMsSql.Insert, createObject);
+
+            var foundMod = await GetModByIdAsync(createdId);
+
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result!.Id,
+                createObject.CreatedBy, DatabaseActionType.Create, null, foundMod.Result!.ToSlim());
+
+            actionReturn.Succeed(createdId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult> UpdateModAsync(ModUpdate updateObject)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            var beforeObject = (await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
+            
+            await _database.SaveData(ModsTableMsSql.Update, updateObject);
+            
+            var afterObject = (await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
+
+            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
+
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, beforeObject!.Id,
+                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.Update.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult> DeleteModAsync(Guid id, Guid modifyingUserId)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            var foundMod = await GetModByIdAsync(id);
+            if (!foundMod.Succeeded || foundMod.Result is null)
+                throw new Exception(foundMod.ErrorMessage);
+            
+            await _database.SaveData(ModsTableMsSql.Delete, new { Id = id });
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.Delete.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> SearchModsAsync(string searchText)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults = await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.Search, new { SearchTerm = searchText });
+            
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<ModDb>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        throw new NotImplementedException();
+        DatabaseActionResult<IEnumerable<ModDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<ModDb, dynamic>(
+                ModsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, ModsTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
     }
 }
