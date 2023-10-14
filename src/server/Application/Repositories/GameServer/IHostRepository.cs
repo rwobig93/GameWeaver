@@ -1,5 +1,9 @@
 using Application.Models.GameServer.Host;
+using Application.Models.GameServer.HostCheckIn;
+using Application.Models.GameServer.HostRegistration;
+using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 
@@ -41,4 +45,17 @@ public interface IHostRepository
     Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkAsync();
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<int>> GetWeaverWorkCountAsync();
+    Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByHostIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByGameServerIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByStatusAsync(WeaverWorkState status);
+    Task<DatabaseActionResult<Guid>> CreateWeaverWorkAsync(WeaverWorkCreate createObject);
+    Task<DatabaseActionResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject);
+    Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkAsync(string searchText);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

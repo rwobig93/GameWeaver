@@ -17,5 +17,15 @@ public enum AuditTableName
     TshootPermissions = 12,
     AuthState = 13,
     Hosts = 14,
-    HostRegistrations = 15
+    HostRegistrations = 15,
+    WeaverWorks = 16,
+    GameGenres = 17,
+    GameProfiles = 18,
+    GameServers = 19,
+    Developers = 20,
+    Publishers = 21,
+    Games = 22,
+    LocalResources = 23,
+    Mods = 24,
+    ConfigurationItems = 25
 }
