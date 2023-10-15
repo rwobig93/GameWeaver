@@ -140,7 +140,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @Args NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, GameServerId, Name, Path, Startup, StartupPriority, Type, Extension, Args);
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, GameServerId, Name, Path, Startup, StartupPriority, Type, Extension, Args)
                 OUTPUT INSERTED.Id
                 VALUES (@GameProfileId, @GameServerId, @Name, @Path, @Startup, @StartupPriority, @Type, @Extension, @Args);
             end"
@@ -212,9 +212,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET GameProfileId = COALESECE(@GameProfileId, GameProfileId), GameServerId = COALESECE(@GameServerId, GameServerId), Name = COALESECE(@Name, Name),
-                    Path = COALESECE(@Path, Path), Startup = COALESECE(@Startup, Startup), StartupPriority = COALESECE(@StartupPriority, StartupPriority),
-                    Type = COALESECE(@Type, Type), Extension = COALESECE(@Extension, Extension), Args = COALESECE(@Args, Args)
+                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), GameServerId = COALESCE(@GameServerId, GameServerId), Name = COALESCE(@Name, Name),
+                    Path = COALESCE(@Path, Path), Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority),
+                    Type = COALESCE(@Type, Type), Extension = COALESCE(@Extension, Extension), Args = COALESCE(@Args, Args)
                 WHERE Id = @Id;
             end"
     };

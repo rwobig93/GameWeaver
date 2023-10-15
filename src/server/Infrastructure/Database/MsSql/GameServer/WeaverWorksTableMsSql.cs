@@ -172,7 +172,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (HostId, GameServerId, TargetType, Status, WorkData, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn);
+                INSERT into dbo.[{Table.TableName}] (HostId, GameServerId, TargetType, Status, WorkData, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
                 VALUES (@HostId, @GameServerId, @TargetType, @Status, @WorkData, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
@@ -191,11 +191,9 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.GameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR w.Path LIKE '%' + @SearchTerm + '%'
-                    OR w.Category LIKE '%' + @SearchTerm + '%'
-                    OR w.Key LIKE '%' + @SearchTerm + '%'
-                    OR w.Value LIKE '%' + @SearchTerm + '%';
+                WHERE w.HostId LIKE '%' + @SearchTerm + '%'
+                    OR w.GameServerId LIKE '%' + @SearchTerm + '%'
+                    OR w.WorkData LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -214,11 +212,9 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.GameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR w.Path LIKE '%' + @SearchTerm + '%'
-                    OR w.Category LIKE '%' + @SearchTerm + '%'
-                    OR w.Key LIKE '%' + @SearchTerm + '%'
-                    OR w.Value LIKE '%' + @SearchTerm + '%'
+                WHERE w.HostId LIKE '%' + @SearchTerm + '%'
+                    OR w.GameServerId LIKE '%' + @SearchTerm + '%'
+                    OR w.WorkData LIKE '%' + @SearchTerm + '%'
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

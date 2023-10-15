@@ -18,7 +18,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] int IDENTITY(1,1) PRIMARY KEY
+                    [Id] int IDENTITY(1,1) PRIMARY KEY,
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
                     [SendTimestamp] datetime2 NOT NULL,
                     [ReceiveTimestamp] datetime2 NOT NULL,
@@ -173,12 +173,12 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
         Action = "DeleteAllForHostId",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteAllForHostId]
-                @HostId DATETIME2
+                @HostId UNIQUEIDENTIFIER
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId = @HostId;
+                FROM dbo.[{Table.TableName}]
+                WHERE HostId = @HostId;
             end"
     };
     
@@ -193,7 +193,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
             begin
                 DELETE
                 FROM dbo.[{Table.TableName}]
-                WHERE Timestamp < @OlderThan;
+                WHERE ReceiveTimestamp < @OlderThan;
             end"
     };
 }

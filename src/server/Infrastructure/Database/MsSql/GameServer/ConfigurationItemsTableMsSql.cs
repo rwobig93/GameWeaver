@@ -116,7 +116,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 @Value NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, Path, Category, Key, Value);
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, Path, Category, [Key], Value)
                 OUTPUT INSERTED.Id
                 VALUES (@GameProfileId, @Path, @Category, @Key, @Value);
             end"
@@ -138,7 +138,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 WHERE c.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
-                    OR c.Key LIKE '%' + @SearchTerm + '%'
+                    OR c.[Key] LIKE '%' + @SearchTerm + '%'
                     OR c.Value LIKE '%' + @SearchTerm + '%';
             end"
     };
@@ -161,7 +161,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 WHERE c.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
-                    OR c.Key LIKE '%' + @SearchTerm + '%'
+                    OR c.[Key] LIKE '%' + @SearchTerm + '%'
                     OR c.Value LIKE '%' + @SearchTerm + '%'
                 ORDER BY c.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -182,7 +182,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Path = COALESCE(@Path, Path), Category = COALESCE(@Category, Category), Key = COALESCE(@Key, Key),
+                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Path = COALESCE(@Path, Path), Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]),
                     Value = COALESCE(@Value, Value)
                 WHERE Id = @Id;
             end"

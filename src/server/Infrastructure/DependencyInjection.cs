@@ -218,6 +218,9 @@ public static class DependencyInjection
 
         // Game Server Orchestration Services
         services.AddSingleton<IHostService, HostService>();
+        services.AddSingleton<IGameService, GameService>();
+        services.AddSingleton<IGameServerService, GameServerService>();
+        services.AddSingleton<INetworkService, NetworkService>();
         
         // Example services
         services.AddSingleton<IWeatherService, WeatherForecastService>();

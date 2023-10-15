@@ -128,7 +128,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 @Description NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (GameId, Name, Description);
+                INSERT into dbo.[{Table.TableName}]  (GameId, Name, Description)
                 OUTPUT INSERTED.Id
                 VALUES (@GameId, @Name, @Description);
             end"

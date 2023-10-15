@@ -37,6 +37,11 @@ public static class AppRouteConstants
         public const string ServiceAccountAdmin = "/admin/service/users";
     }
 
+    public static class Developer
+    {
+        public const string Testing = "/dev/testing";
+    }
+
     public static class Api
     {
         public const string Root = "/api";

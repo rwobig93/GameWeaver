@@ -176,7 +176,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (FriendlyName, OwnerId, GameId, ServerProcessName, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn);
+                INSERT into dbo.[{Table.TableName}] (FriendlyName, OwnerId, GameId, ServerProcessName, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
                 VALUES (@FriendlyName, @OwnerId, @GameId, @ServerProcessName, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"

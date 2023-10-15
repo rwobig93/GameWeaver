@@ -126,7 +126,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 @Name NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (GameId, Name);
+                INSERT into dbo.[{Table.TableName}] (GameId, Name)
                 OUTPUT INSERTED.Id
                 VALUES (@GameId, @Name);
             end"
