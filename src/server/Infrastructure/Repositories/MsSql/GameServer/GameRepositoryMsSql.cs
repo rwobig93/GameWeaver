@@ -3,6 +3,7 @@ using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
+using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
@@ -781,7 +782,7 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateGameGenreAsync(PublisherCreate createObject)
+    public async Task<DatabaseActionResult<Guid>> CreateGameGenreAsync(GameGenreCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 

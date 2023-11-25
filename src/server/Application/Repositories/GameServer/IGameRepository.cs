@@ -1,5 +1,6 @@
 ﻿using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
+using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.Publishers;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Models.Database;
@@ -47,7 +48,7 @@ public interface IGameRepository
     Task<DatabaseActionResult<GameGenreDb>> GetGameGenreByIdAsync(Guid id);
     Task<DatabaseActionResult<GameGenreDb>> GetGameGenreByNameAsync(string name);
     Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> GetGameGenresByGameIdAsync(Guid id);
-    Task<DatabaseActionResult<Guid>> CreateGameGenreAsync(PublisherCreate createObject);
+    Task<DatabaseActionResult<Guid>> CreateGameGenreAsync(GameGenreCreate createObject);
     Task<DatabaseActionResult> DeleteGameGenreAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> SearchGameGenresAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> SearchGameGenresPaginatedAsync(string searchText, int pageNumber, int pageSize);
