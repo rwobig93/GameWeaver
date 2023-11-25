@@ -69,26 +69,26 @@ public class NetworkService : INetworkService
             {
                 case NetworkProtocol.Tcp:
                 {
-                    using var client = new TcpClient();
-                    client.Client.SendTimeout = timeoutMilliseconds;
-                    client.Client.ReceiveTimeout = timeoutMilliseconds;
+                    using var tcpClient = new TcpClient();
+                    tcpClient.Client.SendTimeout = timeoutMilliseconds;
+                    tcpClient.Client.ReceiveTimeout = timeoutMilliseconds;
                     // TODO: Resolve host if hostname or loopback is provided instead
-                    var connectTask = client.BeginConnect(IPAddress.Parse(ipAddress), port, null, null);
+                    var connectTask = tcpClient.BeginConnect(IPAddress.Parse(ipAddress), port, null, null);
                     var connectResponseReceived = connectTask.AsyncWaitHandle.WaitOne(timeoutMilliseconds);
-                    client.Close();
+                    tcpClient.Close();
 
                     return await Result<bool>.SuccessAsync(connectResponseReceived);
                 }
                 case NetworkProtocol.Udp:
                 {
-                    using var client = new UdpClient();
-                    client.Client.SendTimeout = timeoutMilliseconds;
-                    client.Client.ReceiveTimeout = timeoutMilliseconds;
-                    client.Connect(ipAddress, port);
-                    await client.SendAsync(new byte[69]);
-                    var receiveTask = client.BeginReceive(null, null);
+                    using var udpClient = new UdpClient();
+                    udpClient.Client.SendTimeout = timeoutMilliseconds;
+                    udpClient.Client.ReceiveTimeout = timeoutMilliseconds;
+                    udpClient.Connect(ipAddress, port);
+                    await udpClient.SendAsync(new byte[69]);
+                    var receiveTask = udpClient.BeginReceive(null, null);
                     var responseReceived = receiveTask.AsyncWaitHandle.WaitOne(timeoutMilliseconds);
-                    client.Close();
+                    udpClient.Close();
                     
                     return await Result<bool>.SuccessAsync(responseReceived);
                 }

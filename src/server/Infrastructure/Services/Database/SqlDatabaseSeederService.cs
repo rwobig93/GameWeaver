@@ -320,7 +320,7 @@ public class SqlDatabaseSeederService : IHostedService
     {
         try
         {
-            using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+            using IDbConnection connection = new SqlConnection(_dbConfig.MsSql);
             connection.Execute(databaseUpgrade ? migration.Up : migration.Down);
             _logger.Debug("Sql Migration Success: [Upgrade]{DatabaseUpgrade} [TargetVersion]{TargetVersion}", databaseUpgrade, migration.VersionTarget);
         }

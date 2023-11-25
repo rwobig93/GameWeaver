@@ -87,4 +87,12 @@ public partial class DeveloperTesting
         var status = checkResponse.Data ? "Online" : "Offline";
         _serverStatus = $"{status} at {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
     }
+
+    private async Task TestPortOpen()
+    {
+        var checkResponse = await NetworkService.IsPortOpenAsync(_serverIp, _serverPort, _serverProtocol, 1000);
+        
+        var status = checkResponse.Data ? "Open" : "Closed";
+        _serverStatus = $"{status} at {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
+    }
 }

@@ -115,11 +115,11 @@ public static class DependencyInjection
             switch (databaseSettings.Provider)
             {
                 case DatabaseProviderType.MsSql:
-                    x.UseSqlServerStorage(databaseSettings.Core);
+                    x.UseSqlServerStorage(databaseSettings.MsSql);
                     break;
                 case DatabaseProviderType.Postgresql:
                     // Need to add database support for application before we can fully support Postgresql
-                    x.UsePostgreSqlStorage(databaseSettings.Core);
+                    x.UsePostgreSqlStorage(databaseSettings.MsSql);
                     throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
                 default:
                     throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
@@ -313,6 +313,8 @@ public static class DependencyInjection
                 break;
             case DatabaseProviderType.Postgresql:
                 throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+            case DatabaseProviderType.Sqlite:
+                throw new Exception("Sqlite Database Provider isn't supported, please enter a supported provider in appsettings.json!");
             default:
                 throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
         }

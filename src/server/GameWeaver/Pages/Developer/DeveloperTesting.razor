@@ -43,8 +43,11 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
-                    <MudButton Variant="Variant.Text" DisableElevation="true" Color="Color.Primary" OnClick="@(TestServerConnectivity)">
-                        Check
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(TestServerConnectivity)">
+                        Check GameServer Status
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(TestPortOpen)">
+                        Check Port Open
                     </MudButton>
                 </MudItem>
             </MudExpansionPanel>
