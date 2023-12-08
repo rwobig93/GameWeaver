@@ -4,7 +4,6 @@ using Application.Constants;
 using Application.Helpers;
 using Application.Services;
 using Application.Settings;
-using Domain.Enums;
 using Domain.Models;
 using Microsoft.Extensions.Options;
 using Serilog;

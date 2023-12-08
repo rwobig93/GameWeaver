@@ -53,4 +53,10 @@ public static class ErrorMessageConstants
         public const string RegisterNotFound =
             "Failure occurred attempting to register your host, please contact the administrator, this failure attempt has been logged";
     }
+
+    public static class GameProfiles
+    {
+        public const string MatchingName =
+            "The friendly name you provided already matches an existing profile, please provide a different friendly name for this profile";
+    }
 }
