@@ -41,7 +41,7 @@ public static class WorkerConfiguration
 
     private static void AddHostedServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IServerService, ServerService>();
+        services.AddSingleton<IControlServerService, ControlServerService>();
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IGameServerService, GameServerService>();
     }

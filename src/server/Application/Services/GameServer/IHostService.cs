@@ -10,8 +10,8 @@ namespace Application.Services.GameServer;
 
 public interface IHostService
 {
-    Task<IResult<HostNewRegisterResponse>> GetNewRegistration(string description, Guid requestingUserId, Guid hostOwnerId);
-    Task<IResult<HostRegisterResponse>> Register(HostRegisterRequest request, string registrationIp);
+    Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(string description, Guid requestingUserId, Guid hostOwnerId);
+    Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, string registrationIp);
     Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
     Task<IResult<IEnumerable<HostSlim>>> GetAllAsync();
     Task<IResult<IEnumerable<HostSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);

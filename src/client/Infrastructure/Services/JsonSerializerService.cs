@@ -1,8 +1,8 @@
-﻿using Application.Services.System;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using Application.Services;
 
-namespace Infrastructure.Services.System;
+namespace Infrastructure.Services;
 
 public class JsonSerializerService : ISerializerService
 {

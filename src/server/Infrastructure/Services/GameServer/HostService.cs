@@ -43,7 +43,7 @@ public class HostService : IHostService
         _appConfig = appConfig.Value;
     }
 
-    public async Task<IResult<HostNewRegisterResponse>> GetNewRegistration(string description, Guid requestingUserId, Guid hostOwnerId)
+    public async Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(string description, Guid requestingUserId, Guid hostOwnerId)
     {
         // Description is the unique identifier for registration since we know nothing about the host being registered yet, ensure only 1
         var matchingDescriptionRequest = await _hostRepository.GetActiveRegistrationsByDescriptionAsync(description);
@@ -83,7 +83,7 @@ public class HostService : IHostService
             return await Result<HostNewRegisterResponse>.FailAsync(newRegistrationRequest.ErrorMessage);
 
         // Build the registration URI for the host to register with
-        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, ApiRouteConstants.GameServer.Host.Register));
+        var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, ApiRouteConstants.GameServer.Host.RegistrationConfirm));
         var registrationUriUser = QueryHelpers.AddQueryString(endpointUri.ToString(), "hostId", newHostRequest.Result.ToString());
         var registrationUriFull = QueryHelpers.AddQueryString(registrationUriUser, "registerKey", registrationKey);
         
@@ -97,7 +97,7 @@ public class HostService : IHostService
         return await Result<HostNewRegisterResponse>.SuccessAsync(response);
     }
 
-    public async Task<IResult<HostRegisterResponse>> Register(HostRegisterRequest request, string registrationIp)
+    public async Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, string registrationIp)
     {
         var foundRegistrationRequest = await _hostRepository.GetRegistrationByHostIdAndKeyAsync(request.HostId, request.Key);
         if (!foundRegistrationRequest.Succeeded || foundRegistrationRequest.Result is null)

@@ -85,7 +85,7 @@ public static class ApiRouteConstants
         public static class Host
         {
             public const string GetRegistration = "/api/gameserver/host/get-registration";
-            public const string Register = "/api/gameserver/host/register";
+            public const string RegistrationConfirm = "/api/gameserver/host/registration-confirm";
             public const string CheckIn = "/api/gameserver/host/checkin";
         }
     }

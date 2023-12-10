@@ -10,17 +10,17 @@ using Serilog;
 
 namespace WeaverService.Workers;
 
-public class ServerBroker : BackgroundService
+public class ControlServerBroker : BackgroundService
 {
     private readonly ILogger _logger;
-    private readonly IServerService _serverService;
+    private readonly IControlServerService _serverService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly GeneralConfiguration _generalConfig;
 
     private static DateTime _lastRuntime;
     private static readonly ConcurrentQueue<WeaverToServerMessage> WeaverOutQueue = new();
 
-    public ServerBroker(ILogger logger, IServerService serverService, IHttpClientFactory httpClientFactory, IOptions<GeneralConfiguration> generalConfig)
+    public ControlServerBroker(ILogger logger, IControlServerService serverService, IHttpClientFactory httpClientFactory, IOptions<GeneralConfiguration> generalConfig)
     {
         _logger = logger;
         _serverService = serverService;
@@ -30,7 +30,7 @@ public class ServerBroker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.Debug("Started {ServiceName} service", nameof(ServerBroker));
+        _logger.Debug("Started {ServiceName} service", nameof(ControlServerBroker));
         ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
         
         while (!stoppingToken.IsCancellationRequested)
@@ -45,7 +45,7 @@ public class ServerBroker : BackgroundService
                 await Task.Delay(1000 - millisecondsPassed, stoppingToken);
         }
         
-        _logger.Debug("Stopping {ServiceName} service", nameof(ServerBroker));
+        _logger.Debug("Stopping {ServiceName} service", nameof(ControlServerBroker));
     }
 
     private async Task ValidateServerStatus()
@@ -69,7 +69,7 @@ public class ServerBroker : BackgroundService
     {
         if (!_serverService.ServerIsUp)
         {
-            _logger.Information("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
+            _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
             return;
         }
         

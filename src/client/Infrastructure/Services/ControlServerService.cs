@@ -6,7 +6,7 @@ using Domain.Contracts;
 
 namespace Infrastructure.Services;
 
-public class ServerService : IServerService
+public class ControlServerService : IControlServerService
 {
     public bool ServerIsUp { get; internal set; }
 

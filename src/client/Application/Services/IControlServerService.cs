@@ -5,7 +5,7 @@ using Domain.Contracts;
 
 namespace Application.Services;
 
-public interface IServerService
+public interface IControlServerService
 {
     public bool ServerIsUp { get; }
     Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest);
