@@ -8,6 +8,8 @@ namespace Application.Services;
 public interface IControlServerService
 {
     public bool ServerIsUp { get; }
+    public ApiTokenResponse ActiveToken { get; }
+    
     Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest);
     Task<IResult<UserBasicResponse>> GetAuthenticatedHost();
     Task<bool> CheckIfServerIsUp();

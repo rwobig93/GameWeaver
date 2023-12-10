@@ -54,5 +54,7 @@ public static class WorkerConfiguration
         {
             client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/'));
         });
+
+        services.AddSingleton<ISerializerService, JsonSerializerService>();
     }
 }
