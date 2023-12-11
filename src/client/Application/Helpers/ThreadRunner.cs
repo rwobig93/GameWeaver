@@ -6,15 +6,15 @@ namespace Application.Helpers;
 
 public class ThreadRunner
 {
-    private static BackgroundWorker GameRunner { get; set; }
-    private static List<RunSteamThreadDto> QueueGameRunner { get; set; }
-    private static bool RunningGameRunner = false;
+    private static BackgroundWorker? GameRunner { get; set; }
+    private static List<RunSteamThreadDto>? QueueGameRunner { get; set; }
+    private static bool _runningGameRunner;
 
-    public static bool SteamCMDRun(Action<RunSteamDto> callbackMethod, RunSteamDto steamDto)
+    public static bool SteamCmdRun(Action<RunSteamDto> callbackMethod, RunSteamDto steamDto)
     {
         try
         {
-            if (QueueGameRunner == null)
+            if (QueueGameRunner is null)
             {
                 InitializeQueueGameRunner();
             }
@@ -41,7 +41,7 @@ public class ThreadRunner
     private static void AddThreadedMethodToQueue(RunSteamThreadDto steamThreadDto)
     {
         Log.Debug("Starting AddThreadedMethodToQueue");
-        QueueGameRunner.Add(steamThreadDto);
+        QueueGameRunner!.Add(steamThreadDto);
         Log.Debug("Finished AddThreadedMethodToQueue");
     }
 
@@ -56,7 +56,7 @@ public class ThreadRunner
     {
         Log.Debug("Running InitializeThreadRunner()");
 
-        RunningGameRunner = true;
+        _runningGameRunner = true;
         GameRunner = new BackgroundWorker
         {
             WorkerReportsProgress = true
@@ -69,20 +69,20 @@ public class ThreadRunner
         Log.Information("Initialized new GameRunner");
     }
 
-    private static void GameRunner_DoWork(object sender, DoWorkEventArgs e)
+    private static void GameRunner_DoWork(object? sender, DoWorkEventArgs e)
     {
         Log.Debug("Running GameRunner_DoWork");
-        while (RunningGameRunner)
+        while (_runningGameRunner)
         {
             try
             {
-                if (QueueGameRunner.Count <= 0)
+                if (QueueGameRunner!.Count <= 0)
                 {
                     Thread.Sleep(500);
                 }
                 else
                 {
-                    QueueGameRunner[0].RunSteamMethod(QueueGameRunner[0].SteamDto);
+                    QueueGameRunner[0].RunSteamMethod!(QueueGameRunner[0].SteamDto);
                     QueueGameRunner.RemoveAt(0);
                 }
             }
@@ -94,12 +94,12 @@ public class ThreadRunner
         Log.Debug("Finished GameRunner_DoWork");
     }
 
-    private static void GameRunner_ProgressChanged(object sender, ProgressChangedEventArgs e)
+    private static void GameRunner_ProgressChanged(object? sender, ProgressChangedEventArgs e)
     {
-        Log.Debug($"GameRunner Progress Change: {e.ProgressPercentage}");
+        Log.Debug("GameRunner Progress Change: {Progress}", e.ProgressPercentage);
     }
 
-    private static void GameRunner_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+    private static void GameRunner_RunWorkerCompleted(object? sender, RunWorkerCompletedEventArgs e)
     {
         Log.Information("GameRunner Thread Finished");
     }

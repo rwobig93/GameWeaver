@@ -35,14 +35,21 @@ public class ControlServerBroker : BackgroundService
         
         while (!stoppingToken.IsCancellationRequested)
         {
-            _lastRuntime = DateTime.Now;
+            try
+            {
+                _lastRuntime = DateTime.Now;
 
-            await ValidateServerStatus();
-            await SendOutQueueCommunication();
+                await ValidateServerStatus();
+                await SendOutQueueCommunication();
 
-            var millisecondsPassed = (DateTime.Now - _lastRuntime).Milliseconds;
-            if (millisecondsPassed < 1000)
-                await Task.Delay(1000 - millisecondsPassed, stoppingToken);
+                var millisecondsPassed = (DateTime.Now - _lastRuntime).Milliseconds;
+                if (millisecondsPassed < 1000)
+                    await Task.Delay(1000 - millisecondsPassed, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop", nameof(ControlServerBroker));
+            }
         }
         
         _logger.Debug("Stopping {ServiceName} service", nameof(ControlServerBroker));
@@ -54,7 +61,7 @@ public class ControlServerBroker : BackgroundService
         var serverIsUp = await _serverService.CheckIfServerIsUp();
         
         if (previousServerStatus != serverIsUp)
-            _logger.Warning("Server connectivity status changed, server connectivity is now: {ServerStatus}", serverIsUp);
+            _logger.Information("Server connectivity status changed, server connectivity is now: {ServerStatus}", serverIsUp);
         
         _logger.Debug("Server status is: {ServerStatus}", serverIsUp);
     }
