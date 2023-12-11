@@ -53,6 +53,46 @@
             <param name="weatherForecast"></param>
             <returns>List of weather data for each day</returns>
         </member>
+        <member name="T:Application.Api.v1.GameServer.HostEndpoints">
+            <summary>
+            Endpoints dealing with game server host operations
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.MapEndpointsHost(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Registers the API endpoints
+            </summary>
+            <param name="app">Running application</param>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationGenerateNew(System.String,System.Guid,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Generates a new registration token to register a new host, the host must then use the registration URI to complete registration
+            </summary>
+            <param name="description">A unique description of the host registration, intended to be a detailed identifier</param>
+            <param name="hostOwnerId">ID of the account that will be the owner of this host</param>
+            <param name="hostService"></param>
+            <param name="currentUserService"></param>
+            <returns>Host ID, Key and full registration confirmation URI for the new host to complete registration</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationConfirm(Application.Requests.v1.GameServer.HostRegisterRequest,Application.Services.GameServer.IHostService)">
+            <summary>
+            Confirms and completes an active registration
+            </summary>
+            <param name="request">Host ID and Key of a valid and active registration</param>
+            <param name="hostService"></param>
+            <returns>Host ID and Host Token for use when authenticating the host</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetToken(Application.Requests.v1.GameServer.HostAuthRequest,Application.Services.GameServer.IHostService)">
+            <summary>
+            Generate a valid authorization token for use in host API endpoints
+            </summary>
+            <param name="request">Valid and active Host ID and Host Key</param>
+            <param name="hostService"></param>
+            <returns>JWT with an expiration datetime in GMT/UTC</returns>
+            <remarks>
+            - Expiration time returned is in GMT/UTC
+            </remarks>
+        </member>
         <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
             <summary>
             API endpoints for application permissions

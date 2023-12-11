@@ -1,5 +1,6 @@
 ﻿using Application.Api.v1.Api;
 using Application.Api.v1.Example;
+using Application.Api.v1.GameServer;
 using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
 using Application.Constants.Web;
@@ -176,6 +177,7 @@ public static class WebServerConfiguration
     {
         // Map all other endpoints for the application (not identity and not examples)
         app.MapEndpointsAudit();
+        app.MapEndpointsHost();
     }
 
     private static void AddScheduledJobs(this IHost app)
