@@ -1,10 +1,12 @@
 using Application.Constants.Web;
 using Application.Helpers.Web;
+using Application.Models.GameServer.HostCheckIn;
 using Application.Models.Web;
 using Application.Requests.v1.GameServer;
 using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
+using Application.Services.System;
 
 namespace Application.Api.v1.GameServer;
 
@@ -22,6 +24,7 @@ public static class HostEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Host.GetRegistration, RegistrationGenerateNew).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.RegistrationConfirm, RegistrationConfirm).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.GetToken, GetToken).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, GetToken).ApiVersionOne();
     }
 
     /// <summary>
@@ -83,6 +86,41 @@ public static class HostEndpoints
         catch (Exception ex)
         {
             return await Result<HostAuthResponse>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Inject a valid host check-in status
+    /// </summary>
+    /// <param name="request">Host check-in details</param>
+    /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
+    /// <param name="dateTimeService"></param>
+    /// <returns>Success or Failure with no return payload</returns>
+    private static async Task<IResult> Checkin(HostCheckInRequest request, IHostService hostService, ICurrentUserService currentUserService,
+        IDateTimeService dateTimeService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+
+            var createCheckIn = new HostCheckInCreate
+            {
+                HostId = currentUserId,
+                SendTimestamp = request.SendTimestamp,
+                ReceiveTimestamp = dateTimeService.NowDatabaseTime,
+                CpuUsage = request.CpuUsage,
+                RamUsage = request.RamUsage,
+                Uptime = request.Uptime,
+                NetworkOutMb = request.NetworkOutMb,
+                NetworkInMb = request.NetworkInMb
+            };
+            
+            return await hostService.CreateCheckInAsync(createCheckIn);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
         }
     }
 }

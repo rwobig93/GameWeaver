@@ -1,6 +1,5 @@
-﻿using Application.Requests.Api;
-using Application.Responses.Api;
-using Application.Responses.Identity;
+﻿using Application.Requests.Host;
+using Application.Responses.Host;
 using Domain.Contracts;
 
 namespace Application.Services;
@@ -8,10 +7,10 @@ namespace Application.Services;
 public interface IControlServerService
 {
     public bool ServerIsUp { get; }
-    public ApiTokenResponse ActiveToken { get; }
+    public HostAuthResponse ActiveToken { get; }
     
-    // TODO: Fill out the server API endpoints, then do corresponding methods here for interoperability 
-    Task<IResult<ApiTokenResponse>> GetApiToken(ApiGetTokenRequest tokenRequest);
-    Task<IResult<UserBasicResponse>> GetAuthenticatedHost();
     Task<bool> CheckIfServerIsUp();
+    Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request);
+    Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
+    Task<IResult> Checkin(HostCheckInRequest request);
 }

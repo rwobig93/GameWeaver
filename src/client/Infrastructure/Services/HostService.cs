@@ -1,6 +1,5 @@
 ﻿using Application.Constants;
 using Application.Services;
-using Application.Settings;
 using Domain.Contracts;
 using Newtonsoft.Json.Linq;
 

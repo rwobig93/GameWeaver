@@ -93,6 +93,16 @@
             - Expiration time returned is in GMT/UTC
             </remarks>
         </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Checkin(Application.Requests.v1.GameServer.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService)">
+            <summary>
+            Inject a valid host check-in status
+            </summary>
+            <param name="request">Host check-in details</param>
+            <param name="hostService"></param>
+            <param name="currentUserService"></param>
+            <param name="dateTimeService"></param>
+            <returns>Success or Failure with no return payload</returns>
+        </member>
         <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
             <summary>
             API endpoints for application permissions
