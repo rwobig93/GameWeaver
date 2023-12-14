@@ -1,4 +1,6 @@
+using Application.Constants;
 using Application.Services;
+using Application.Services.System;
 using Application.Settings;
 using Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
@@ -50,11 +52,12 @@ public static class WorkerConfiguration
     {
         var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
         
-        services.AddHttpClient("server", client =>
+        services.AddHttpClient(HttpConstants.IdServer, client =>
         {
             client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/'));
         });
 
+        services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddSingleton<ISerializerService, JsonSerializerService>();
     }
 }

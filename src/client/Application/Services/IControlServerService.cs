@@ -10,7 +10,7 @@ public interface IControlServerService
     public HostAuthResponse ActiveToken { get; }
     
     Task<bool> CheckIfServerIsUp();
-    Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request);
-    Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
+    Task<IResult<HostRegisterResponse>> RegistrationConfirm();
+    Task<IResult<HostAuthResponse>> GetToken();
     Task<IResult> Checkin(HostCheckInRequest request);
 }
