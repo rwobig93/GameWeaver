@@ -1,6 +1,4 @@
-﻿using Domain.Contracts;
-
-namespace Application.Services;
+﻿namespace Application.Services;
 
 public interface IHostService
 {

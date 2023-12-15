@@ -9,4 +9,6 @@ public class AuthConfiguration : IAppSettingsSection
     public string Host { get; init; } = "";
 
     public string Key { get; init; } = "";
+
+    public int TokenRenewThresholdMinutes { get; set; } = 3;
 }

@@ -40,7 +40,8 @@ public class ControlServerBroker : BackgroundService
                 _lastRuntime = DateTime.Now;
 
                 await ValidateServerStatus();
-                await SendOutQueueCommunication();
+                // TODO: Add checkin logic, add registered check, pull registration directly from url instead of host and key, those are intended for registered
+                // await SendOutQueueCommunication();
 
                 var millisecondsPassed = (DateTime.Now - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < 1000)
@@ -86,9 +87,6 @@ public class ControlServerBroker : BackgroundService
             return;
         }
 
-        // TODO: Handle auth, renew token when old token expires | If expiration is within 5 seconds or more then get a new token
-        var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
-
         var runAttemptsLeft = _generalConfig.QueueMaxPerRun;
 
         while (runAttemptsLeft > 0 && !WeaverOutQueue.IsEmpty)
@@ -97,9 +95,10 @@ public class ControlServerBroker : BackgroundService
             if (!WeaverOutQueue.TryDequeue(out var message)) continue;
             
             _logger.Debug("Sending outgoing communication => {MessageAction}", message.Action);
-            
-            var response = await httpClient.GetAsync("/uri");
-            if (response.IsSuccessStatusCode)
+
+            // TODO: Add real endpoint from server service to send outgoing communications
+            var response = await _serverService.CheckIfServerIsUp();
+            if (response)
             {
                 _logger.Debug("Server successfully processed outgoing communication: {MessageAction}", message.Action);
                 continue;
@@ -112,8 +111,7 @@ public class ControlServerBroker : BackgroundService
                 continue;
             }
             
-            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{MessageAction}] => {StatusCode} {ErrorMessage}", 
-                message.Action, response.StatusCode, await response.Content.ReadAsStringAsync());
+            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{MessageAction}]", message.Action);
             message.AttemptCount += 1;
             AddWeaverOutCommunication(message);
         }

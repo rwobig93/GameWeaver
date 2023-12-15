@@ -2,6 +2,11 @@
 
 public class ApiConstants
 {
+    public static class Monitoring
+    {
+        public const string Health = "/_health";
+    }
+    
     public static class GameServer
     {
         public static class Host

@@ -10,6 +10,7 @@ using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;
 
@@ -20,12 +21,12 @@ public class GameService : IGameService
     private readonly IRunningServerState _serverState;
     private readonly AppConfiguration _appConfig;
 
-    public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IRunningServerState serverState, AppConfiguration appConfig)
+    public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig)
     {
         _gameRepository = gameRepository;
         _dateTime = dateTime;
         _serverState = serverState;
-        _appConfig = appConfig;
+        _appConfig = appConfig.Value;
     }
 
     public async Task<IResult<IEnumerable<GameSlim>>> GetAllAsync()

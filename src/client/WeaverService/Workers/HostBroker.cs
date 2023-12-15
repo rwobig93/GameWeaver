@@ -17,7 +17,7 @@ public class HostBroker : BackgroundService
         {
             await Task.CompletedTask;
             _logger.Debug("Placeholder");
-            await Task.Delay(1000, stoppingToken);
+            await Task.Delay(10000, stoppingToken);
         }
         
         _logger.Debug("Stopping {ServiceName} service", nameof(HostBroker));
