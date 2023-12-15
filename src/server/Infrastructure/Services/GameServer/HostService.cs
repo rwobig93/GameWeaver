@@ -84,8 +84,8 @@ public class HostService : IHostService
 
         // Build the registration URI for the host to register with
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, ApiRouteConstants.GameServer.Host.RegistrationConfirm));
-        var registrationUriUser = QueryHelpers.AddQueryString(endpointUri.ToString(), "hostId", newHostRequest.Result.ToString());
-        var registrationUriFull = QueryHelpers.AddQueryString(registrationUriUser, "registerKey", registrationKey);
+        var registrationUriUser = QueryHelpers.AddQueryString(endpointUri.ToString(), HostConstants.QueryHostId, newHostRequest.Result.ToString());
+        var registrationUriFull = QueryHelpers.AddQueryString(registrationUriUser, HostConstants.QueryHostRegisterKey, registrationKey);
         
         var response = new HostNewRegisterResponse
         {

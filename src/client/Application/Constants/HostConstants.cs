@@ -7,4 +7,6 @@ public class HostConstants
 #else
     public const string ConfigFile = "appsettings.json";
 #endif
+    public const string QueryHostId = "hostId";
+    public const string QueryHostRegisterKey = "registerKey";
 }

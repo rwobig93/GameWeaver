@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Application.Constants;
+using Application.Helpers;
 using Application.Requests.Host;
 using Application.Responses.Host;
 using Application.Responses.Monitoring;
@@ -63,14 +64,13 @@ public class ControlServerService : IControlServerService
 
     public async Task<IResult<HostRegisterResponse>> RegistrationConfirm()
     {
+        // TODO: Validate hostId and key to ensure registered or not then register url
+        if (string.IsNullOrWhiteSpace(_authConfig.RegisterUrl))
+            return await Result<HostRegisterResponse>.SuccessAsync();
         if (!_authConfig.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
             return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");
 
-        var confirmRequest = new HostRegisterRequest
-        {
-            HostId = Guid.Parse(_authConfig.Host),
-            Key = _authConfig.Key
-        };
+        var confirmRequest = ApiHelpers.GetRequestFromUrl(_authConfig.RegisterUrl);
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
         var payload = new StringContent(_serializerService.Serialize(confirmRequest), Encoding.UTF8, "application/json");
@@ -135,7 +135,9 @@ public class ControlServerService : IControlServerService
 
     public async Task<IResult> Checkin(HostCheckInRequest request)
     {
-        await EnsureAuthTokenIsUpdated();
+        var tokenEnforcement = await EnsureAuthTokenIsUpdated();
+        if (!tokenEnforcement.Succeeded)
+            return await Result.FailAsync(tokenEnforcement.Messages);
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
         var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
