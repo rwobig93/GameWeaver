@@ -102,6 +102,7 @@ public static class HostEndpoints
     {
         try
         {
+            // TODO: Add return with host job list
             var currentUserId = await currentUserService.GetApiCurrentUserId();
 
             var createCheckIn = new HostCheckInCreate
