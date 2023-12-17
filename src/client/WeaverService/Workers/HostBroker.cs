@@ -13,6 +13,8 @@ public class HostBroker : BackgroundService
     {
         _logger.Debug("Started {ServiceName} service", nameof(HostBroker));
         
+        // TODO: Add folder structure and dependency enforcement like SteamCMD before jumping into the execution loop
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.CompletedTask;
