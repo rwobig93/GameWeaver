@@ -72,6 +72,9 @@ public class ControlServerBroker : BackgroundService
 
     public static void AddWeaverOutCommunication(WeaverToServerMessage message)
     {
+        // TODO: Define what the ToServer and ToClient messages should look like
+        // TODO: After object structures are defined add a table for 'HostWork' that will store the job status and details
+        // TODO: The HostWork table will be used to know what to send to each host for any that aren't picked up and store host status updates
         Log.Debug("Adding weaver outgoing communication: {MessageAction}", message.Action);
         WeaverOutQueue.Enqueue(message);
     }
