@@ -213,7 +213,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 INSERT into dbo.[{Table.TableName}] (GameId, SteamGameId, SteamToolId, SteamId, FriendlyName, CurrentHash, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn,
-                                                     IsDeleted, DeletedOn);
+                                                     IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
                 VALUES (@GameId, @SteamGameId, @SteamToolId, @SteamId, @FriendlyName, @CurrentHash, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted,
                         @DeletedOn);

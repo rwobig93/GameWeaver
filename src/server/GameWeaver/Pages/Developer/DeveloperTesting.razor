@@ -1,0 +1,56 @@
+﻿@using Application.Constants.Identity
+@using Domain.Enums.GameServer
+@attribute [Route(AppRouteConstants.Developer.Testing)]
+@attribute [Authorize(PermissionConstants.Developer.Dev)]
+
+<MudContainer>
+    <MudGrid Class="pa-4 justify-center mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12">
+            <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
+                Hello @_loggedInUser.Username! You have @(GetDevType()) access!
+            </MudText>
+        </MudItem>
+        @if (_isContributor)
+        {
+            <MudItem xs="12" sm="12" md="12">
+                <MudText Align="Align.Center" Typo="Typo.button" Class="smaller">
+                Thank you for your contributions to the project!
+                </MudText>
+            </MudItem>
+        }
+        @if (_isTester)
+        {
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="GameServer Networking">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Server Status: @_serverStatus</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                    <MudTextField Variant="Variant.Outlined" Label="Host IP" @bind-Value="_serverIp" />
+                    <MudTextField Variant="Variant.Outlined" Label="Host Port" @bind-Value="_serverPort" />
+                    <MudSelect Class="d-flex" @bind-Value="_serverProtocol" Label="Protocol" OpenIcon="@Icons.Material.Filled.NetworkCheck"
+                               AdornmentColor="Color.Secondary">
+                        @foreach (NetworkProtocol item in Enum.GetValues(typeof(NetworkProtocol)))
+                        {
+                            <MudSelectItem Value="@item">@(item.ToString().ToUpper())</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSelect Class="d-flex" @bind-Value="_serverSource" Label="Type" OpenIcon="@Icons.Material.Filled.Gamepad"
+                               AdornmentColor="Color.Tertiary">
+                        @foreach (GameSource item in Enum.GetValues(typeof(GameSource)))
+                        {
+                            <MudSelectItem Value="@item">@item</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(TestServerConnectivity)">
+                        Check GameServer Status
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(TestPortOpen)">
+                        Check Port Open
+                    </MudButton>
+                </MudItem>
+            </MudExpansionPanel>
+        }
+    </MudGrid>
+</MudContainer>

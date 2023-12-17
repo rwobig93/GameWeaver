@@ -23,7 +23,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                     [Description] NVARCHAR(2048) NOT NULL,
                     [Active] BIT NOT NULL,
                     [Key] NVARCHAR(256) NOT NULL,
-                    [ActivationDate] datetime2 NOT NULL,
+                    [ActivationDate] datetime2 NULL,
                     [ActivationPublicIp] NVARCHAR(128) NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
@@ -134,7 +134,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT TOP 1 h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId = @HostId AND h.Key = @Key AND h.Active = 1
+                WHERE h.HostId = @HostId AND h.[Key] = @Key AND h.Active = 1
                 ORDER BY h.Id;
             end"
     };
@@ -173,10 +173,9 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (HostId, Description, Active, Key, ActivationDate, ActivationPublicIp, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (HostId, Description, Active, [Key], ActivationDate, ActivationPublicIp, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@HostId, @Description, @Active, @Key, @ActivationDate, @ActivationPublicIp, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted,
-                        @DeletedOn);
+                VALUES (@HostId, @Description, @Active, @Key, @ActivationDate, @ActivationPublicIp, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -194,7 +193,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.HostId LIKE '%' + @SearchTerm + '%'
-                    OR h.Key LIKE '%' + @SearchTerm + '%'
+                    OR h.[Key] LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%';
             end"
@@ -216,7 +215,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.HostId LIKE '%' + @SearchTerm + '%'
-                    OR h.Key LIKE '%' + @SearchTerm + '%'
+                    OR h.[Key] LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%'
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -243,7 +242,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET HostId = COALESCE(@HostId, HostId), Description = COALESCE(@Description, Description), Active = COALESCE(@Active, Active), Key = COALESCE(@Key, Key),
+                SET HostId = COALESCE(@HostId, HostId), Description = COALESCE(@Description, Description), Active = COALESCE(@Active, Active), [Key] = COALESCE(@Key, [Key]),
                     ActivationDate = COALESCE(@ActivationDate, ActivationDate), ActivationPublicIp = COALESCE(@ActivationPublicIp, ActivationPublicIp),
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
                     LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)

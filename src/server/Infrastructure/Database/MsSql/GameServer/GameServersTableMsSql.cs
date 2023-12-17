@@ -220,7 +220,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 INSERT into dbo.[{Table.TableName}]  (OwnerId, HostId, GameId, GameProfileId, ServerName, Password, PasswordRcon, PasswordAdmin, PublicIp, PrivateIp,
                                                       ExternalHostname, PortGame, PortQuery, PortRcon, Modded, Private, ServerState, CreatedBy, CreatedOn, LastModifiedBy,
-                                                      LastModifiedOn, IsDeleted, DeletedOn);
+                                                      LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
                 VALUES (@OwnerId, @HostId, @GameId, @GameProfileId, @ServerName, @Password, @PasswordRcon, @PasswordAdmin, @PublicIp, @PrivateIp, @ExternalHostname, @PortGame,
                         @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
@@ -240,11 +240,14 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.FriendlyName LIKE '%' + @SearchTerm + '%'
-                    OR g.SteamName LIKE '%' + @SearchTerm + '%'
-                    OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
-                    OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
-                    OR g.DescriptionShort LIKE '%' + @SearchTerm + '%';
+                WHERE g.OwnerId LIKE '%' + @SearchTerm + '%'
+                    OR g.HostId LIKE '%' + @SearchTerm + '%'
+                    OR g.GameId LIKE '%' + @SearchTerm + '%'
+                    OR g.GameProfileId LIKE '%' + @SearchTerm + '%'
+                    OR g.PublicIp LIKE '%' + @SearchTerm + '%'
+                    OR g.PrivateIp LIKE '%' + @SearchTerm + '%'
+                    OR g.ExternalHostname LIKE '%' + @SearchTerm + '%'
+                    OR g.ServerName LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -263,11 +266,14 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.FriendlyName LIKE '%' + @SearchTerm + '%'
-                    OR g.SteamName LIKE '%' + @SearchTerm + '%'
-                    OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
-                    OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
-                    OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
+                WHERE g.OwnerId LIKE '%' + @SearchTerm + '%'
+                    OR g.HostId LIKE '%' + @SearchTerm + '%'
+                    OR g.GameId LIKE '%' + @SearchTerm + '%'
+                    OR g.GameProfileId LIKE '%' + @SearchTerm + '%'
+                    OR g.PublicIp LIKE '%' + @SearchTerm + '%'
+                    OR g.PrivateIp LIKE '%' + @SearchTerm + '%'
+                    OR g.ExternalHostname LIKE '%' + @SearchTerm + '%'
+                    OR g.ServerName LIKE '%' + @SearchTerm + '%'
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

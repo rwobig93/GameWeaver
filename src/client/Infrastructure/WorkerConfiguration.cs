@@ -1,5 +1,8 @@
+using Application.Constants;
 using Application.Services;
+using Application.Services.System;
 using Application.Settings;
+using Infrastructure.Handlers;
 using Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +44,7 @@ public static class WorkerConfiguration
 
     private static void AddHostedServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IServerService, ServerService>();
+        services.AddSingleton<IControlServerService, ControlServerService>();
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IGameServerService, GameServerService>();
     }
@@ -49,10 +52,13 @@ public static class WorkerConfiguration
     private static void AddClientServices(this IServiceCollection services, IConfiguration configuration)
     {
         var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
+        services.AddTransient<AuthTokenDelegatingHandler>();
         
-        services.AddHttpClient("server", client =>
-        {
-            client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/'));
-        });
+        services.AddHttpClient(HttpConstants.Unauthenticated, client => { client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/')); });
+        services.AddHttpClient(HttpConstants.AuthenticatedServer, client => { client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/')); })
+            .AddHttpMessageHandler<AuthTokenDelegatingHandler>();
+
+        services.AddSingleton<IDateTimeService, DateTimeService>();
+        services.AddSingleton<ISerializerService, JsonSerializerService>();
     }
 }

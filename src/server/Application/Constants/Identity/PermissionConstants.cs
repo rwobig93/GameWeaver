@@ -75,6 +75,13 @@ public static class PermissionConstants
         public const string DeleteOld = "Permissions.System.Audit.DeleteOld";
     }
 
+    public static class Developer
+    {
+        public const string Dev = "Permissions.System.Developer.Dev";
+        public const string Contributor = "Permissions.System.Developer.Contributor";
+        public const string Tester = "Permissions.System.Developer.Tester";
+    }
+
     public static class Hosts
     {
         public const string CreateRegistration = "Permissions.GameServer.Hosts.CreateRegistration";

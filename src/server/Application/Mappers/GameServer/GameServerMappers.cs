@@ -1,6 +1,5 @@
 using Application.Models.GameServer.GameServer;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 

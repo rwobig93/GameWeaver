@@ -28,9 +28,20 @@ public class SqlDataService : ISqlDataService
         EnforceDatabaseEntities();
     }
 
+    private string GetCurrentConnectionString()
+    {
+        return _dbConfig.Provider switch
+        {
+            DatabaseProviderType.MsSql => _dbConfig.MsSql,
+            DatabaseProviderType.Postgresql => _dbConfig.Postgres,
+            DatabaseProviderType.Sqlite => _dbConfig.Sqlite,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
     public async Task<int> SaveData<TParameters>(ISqlDatabaseScript script, TParameters parameters, string connectionId, int timeoutSeconds = 5)
     {
-        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
 
         return await connection.ExecuteAsync(script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
@@ -38,7 +49,7 @@ public class SqlDataService : ISqlDataService
     public async Task<Guid> SaveDataReturnId<TParameters>(
         ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection", int timeoutSeconds = 5)
     {
-        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
 
         return await connection.ExecuteScalarAsync<Guid>(
             script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
@@ -47,7 +58,7 @@ public class SqlDataService : ISqlDataService
     public async Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(ISqlDatabaseScript script, TParameters parameters,
         string connectionId, int timeoutSeconds = 5)
     {
-        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
 
         return await connection.QueryAsync<TDataClass>(
             script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
@@ -56,7 +67,7 @@ public class SqlDataService : ISqlDataService
     public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(ISqlDatabaseScript script,
         Func<TDataClass, TDataClassJoin, TDataClass> joinMapping, TParameters parameters, string connectionId, int timeoutSeconds = 5)
     {
-        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
 
         return await connection.QueryAsync(
             script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
@@ -66,7 +77,7 @@ public class SqlDataService : ISqlDataService
         ISqlDatabaseScript script,  Func<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TDataClass> joinMapping,
         TParameters parameters, string connectionId, int timeoutSeconds = 5)
     {
-        using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
 
         return await connection.QueryAsync(
             script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
@@ -76,7 +87,7 @@ public class SqlDataService : ISqlDataService
     {
         try
         {
-            using IDbConnection connection = new SqlConnection(_dbConfig.Core);
+            using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
             connection.Execute(dbEntity.SqlStatement);
             _logger.Debug("Sql Enforce Success: [Type]{scriptType} [Name]{scriptName}",
                 dbEntity.Type, dbEntity.FriendlyName);

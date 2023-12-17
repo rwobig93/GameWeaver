@@ -115,12 +115,16 @@ public static class DependencyInjection
             switch (databaseSettings.Provider)
             {
                 case DatabaseProviderType.MsSql:
-                    x.UseSqlServerStorage(databaseSettings.Core);
+                    x.UseSqlServerStorage(databaseSettings.MsSql);
                     break;
                 case DatabaseProviderType.Postgresql:
                     // Need to add database support for application before we can fully support Postgresql
-                    x.UsePostgreSqlStorage(databaseSettings.Core);
+                    x.UsePostgreSqlStorage(databaseSettings.MsSql);
                     throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+                case DatabaseProviderType.Sqlite:
+                    // Need to add database support for application before we can fully support Sqlite
+                    x.UsePostgreSqlStorage(databaseSettings.Sqlite);
+                    throw new Exception("Sqlite Database Provider isn't supported, please enter a supported provider in appsettings.json!");
                 default:
                     throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
             }
@@ -218,6 +222,9 @@ public static class DependencyInjection
 
         // Game Server Orchestration Services
         services.AddSingleton<IHostService, HostService>();
+        services.AddSingleton<IGameService, GameService>();
+        services.AddSingleton<IGameServerService, GameServerService>();
+        services.AddSingleton<INetworkService, NetworkService>();
         
         // Example services
         services.AddSingleton<IWeatherService, WeatherForecastService>();
@@ -244,14 +251,20 @@ public static class DependencyInjection
                     x.IncludeXmlComments(xmlPath);
             }
             
-            x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
                 Type = SecuritySchemeType.ApiKey,
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
                 In = ParameterLocation.Header,
                 Description = "JSON Web Token Header Authorization Using Bearer Scheme",
+
             });
             x.AddSecurityRequirement(new OpenApiSecurityRequirement()
             {
@@ -310,6 +323,8 @@ public static class DependencyInjection
                 break;
             case DatabaseProviderType.Postgresql:
                 throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+            case DatabaseProviderType.Sqlite:
+                throw new Exception("Sqlite Database Provider isn't supported, please enter a supported provider in appsettings.json!");
             default:
                 throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
         }

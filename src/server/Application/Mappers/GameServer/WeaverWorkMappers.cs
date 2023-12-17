@@ -1,6 +1,5 @@
 using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 

@@ -56,4 +56,14 @@
             </MudNavLink>
         }
     }
+    @if (_isDeveloper)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_isDeveloper)
+        {
+            <MudNavLink Href="@AppRouteConstants.Developer.Testing" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DeveloperMode">
+                Dev Testing
+            </MudNavLink>
+        }
+    }
 </MudNavMenu>

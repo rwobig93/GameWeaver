@@ -30,7 +30,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     [UrlWebsite] NVARCHAR(256) NOT NULL,
                     [ControllerSupport] NVARCHAR(128) NOT NULL,
                     [DescriptionShort] NVARCHAR(256) NOT NULL,
-                    [DescriptionLong] NVARCHAR(4096) NOT NULL,
+                    [DescriptionLong] NVARCHAR(4000) NOT NULL,
                     [DescriptionAbout] NVARCHAR(2048) NOT NULL,
                     [PriceInitial] NVARCHAR(128) NOT NULL,
                     [PriceCurrent] NVARCHAR(128) NOT NULL,
@@ -184,7 +184,6 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
-                @Name NVARCHAR(128),
                 @FriendlyName NVARCHAR(128),
                 @SteamName NVARCHAR(128),
                 @SteamGameId int,
@@ -196,7 +195,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @UrlWebsite NVARCHAR(256),
                 @ControllerSupport NVARCHAR(128),
                 @DescriptionShort NVARCHAR(256),
-                @DescriptionLong NVARCHAR(4096),
+                @DescriptionLong NVARCHAR(4000),
                 @DescriptionAbout NVARCHAR(2048),
                 @PriceInitial NVARCHAR(128),
                 @PriceCurrent NVARCHAR(128),
@@ -217,13 +216,13 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (Name, FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, UrlBackground, UrlLogo, UrlLogoSmall,
+                INSERT into dbo.[{Table.TableName}]  (FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, UrlBackground, UrlLogo, UrlLogoSmall,
                                                       UrlWebsite, ControllerSupport, DescriptionShort, DescriptionLong, DescriptionAbout, PriceInitial, PriceCurrent,
                                                       PriceDiscount, MetaCriticScore, UrlMetaCriticPage, RequirementsPcMinimum, RequirementsPcRecommended, RequirementsMacMinimum,
                                                       RequirementsMacRecommended, RequirementsLinuxMinimum, RequirementsLinuxRecommended, CreatedBy, CreatedOn, LastModifiedBy,
-                                                      LastModifiedOn, IsDeleted, DeletedOn);
+                                                      LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@Name, @FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
+                VALUES (@FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
                         @ControllerSupport, @DescriptionShort, @DescriptionLong, @DescriptionAbout, @PriceInitial, @PriceCurrent, @PriceDiscount, @MetaCriticScore,
                         @UrlMetaCriticPage, @RequirementsPcMinimum, @RequirementsPcRecommended, @RequirementsMacMinimum, @RequirementsMacRecommended, @RequirementsLinuxMinimum,
                         @RequirementsLinuxRecommended, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
@@ -282,7 +281,6 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
-                @Name NVARCHAR(128) = null,
                 @FriendlyName NVARCHAR(128) = null,
                 @SteamName NVARCHAR(128) = null,
                 @SteamGameId int = null,
@@ -294,7 +292,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @UrlWebsite NVARCHAR(256) = null,
                 @ControllerSupport NVARCHAR(128) = null,
                 @DescriptionShort NVARCHAR(256) = null,
-                @DescriptionLong NVARCHAR(4096) = null,
+                @DescriptionLong NVARCHAR(4000) = null,
                 @DescriptionAbout NVARCHAR(2048) = null,
                 @PriceInitial NVARCHAR(128) = null,
                 @PriceCurrent NVARCHAR(128) = null,
@@ -316,7 +314,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET Name = COALESCE(@Name, Name), FriendlyName = COALESCE(@FriendlyName, FriendlyName), SteamName = COALESCE(@SteamName, SteamName),
+                SET FriendlyName = COALESCE(@FriendlyName, FriendlyName), SteamName = COALESCE(@SteamName, SteamName),
                     SteamGameId = COALESCE(@SteamGameId, SteamGameId), SteamToolId = COALESCE(@SteamToolId, SteamToolId),
                     DefaultGameProfileId = COALESCE(@DefaultGameProfileId, DefaultGameProfileId), UrlBackground = COALESCE(@UrlBackground, UrlBackground),
                     UrlLogo = COALESCE(@UrlLogo, UrlLogo), UrlLogoSmall = COALESCE(@UrlLogoSmall, UrlLogoSmall), UrlWebsite = COALESCE(@UrlWebsite, UrlWebsite),

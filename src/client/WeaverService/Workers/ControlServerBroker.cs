@@ -2,26 +2,26 @@
 using System.Collections.Concurrent;
 using Application.Constants;
 using Application.Helpers;
+using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
-using Domain.Enums;
 using Domain.Models;
 using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace WeaverService.Workers;
 
-public class ServerBroker : BackgroundService
+public class ControlServerBroker : BackgroundService
 {
     private readonly ILogger _logger;
-    private readonly IServerService _serverService;
+    private readonly IControlServerService _serverService;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly GeneralConfiguration _generalConfig;
 
     private static DateTime _lastRuntime;
     private static readonly ConcurrentQueue<WeaverToServerMessage> WeaverOutQueue = new();
 
-    public ServerBroker(ILogger logger, IServerService serverService, IHttpClientFactory httpClientFactory, IOptions<GeneralConfiguration> generalConfig)
+    public ControlServerBroker(ILogger logger, IControlServerService serverService, IHttpClientFactory httpClientFactory, IOptions<GeneralConfiguration> generalConfig)
     {
         _logger = logger;
         _serverService = serverService;
@@ -31,22 +31,30 @@ public class ServerBroker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.Debug("Started {ServiceName} service", nameof(ServerBroker));
+        _logger.Debug("Started {ServiceName} service", nameof(ControlServerBroker));
         ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
         
         while (!stoppingToken.IsCancellationRequested)
         {
-            _lastRuntime = DateTime.Now;
+            try
+            {
+                _lastRuntime = DateTime.Now;
 
-            await ValidateServerStatus();
-            await SendOutQueueCommunication();
+                await ValidateServerStatus();
+                await _serverService.Checkin(new HostCheckInRequest());
+                await SendOutQueueCommunication();
 
-            var millisecondsPassed = (DateTime.Now - _lastRuntime).Milliseconds;
-            if (millisecondsPassed < 1000)
-                await Task.Delay(1000 - millisecondsPassed, stoppingToken);
+                var millisecondsPassed = (DateTime.Now - _lastRuntime).Milliseconds;
+                if (millisecondsPassed < 1000)
+                    await Task.Delay(1000 - millisecondsPassed, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop", nameof(ControlServerBroker));
+            }
         }
         
-        _logger.Debug("Stopping {ServiceName} service", nameof(ServerBroker));
+        _logger.Debug("Stopping {ServiceName} service", nameof(ControlServerBroker));
     }
 
     private async Task ValidateServerStatus()
@@ -55,9 +63,12 @@ public class ServerBroker : BackgroundService
         var serverIsUp = await _serverService.CheckIfServerIsUp();
         
         if (previousServerStatus != serverIsUp)
-            _logger.Warning("Server connectivity status changed, server connectivity is now: {ServerStatus}", serverIsUp);
+            _logger.Information("Server connectivity status changed, server connectivity is now: {ServerStatus}", serverIsUp);
+
+        if (_serverService is {ServerIsUp: true, RegisteredWithServer: false})
+            await _serverService.RegistrationConfirm();
         
-        _logger.Debug("Server status is: {ServerStatus}", serverIsUp);
+        _logger.Debug("Control Server is up: {ServerStatus}", serverIsUp);
     }
 
     public static void AddWeaverOutCommunication(WeaverToServerMessage message)
@@ -68,9 +79,17 @@ public class ServerBroker : BackgroundService
 
     private async Task SendOutQueueCommunication()
     {
+        if (!_serverService.RegisteredWithServer) { return; }
+        
         if (!_serverService.ServerIsUp)
         {
-            _logger.Information("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
+            _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
+            return;
+        }
+
+        if (!_serverService.RegisteredWithServer)
+        {
+            _logger.Debug("Client isn't currently registered with the control server, skipping handling communication queue");
             return;
         }
         
@@ -80,9 +99,6 @@ public class ServerBroker : BackgroundService
             return;
         }
 
-        // TODO: Handle auth, renew token when old token expires | If expiration is within 5 seconds or more then get a new token
-        var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
-
         var runAttemptsLeft = _generalConfig.QueueMaxPerRun;
 
         while (runAttemptsLeft > 0 && !WeaverOutQueue.IsEmpty)
@@ -91,9 +107,10 @@ public class ServerBroker : BackgroundService
             if (!WeaverOutQueue.TryDequeue(out var message)) continue;
             
             _logger.Debug("Sending outgoing communication => {MessageAction}", message.Action);
-            
-            var response = await httpClient.GetAsync("/uri");
-            if (response.IsSuccessStatusCode)
+
+            // TODO: Add real endpoint from server service to send outgoing communications
+            var response = await _serverService.CheckIfServerIsUp();
+            if (response)
             {
                 _logger.Debug("Server successfully processed outgoing communication: {MessageAction}", message.Action);
                 continue;
@@ -106,8 +123,7 @@ public class ServerBroker : BackgroundService
                 continue;
             }
             
-            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{MessageAction}] => {StatusCode} {ErrorMessage}", 
-                message.Action, response.StatusCode, await response.Content.ReadAsStringAsync());
+            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{MessageAction}]", message.Action);
             message.AttemptCount += 1;
             AddWeaverOutCommunication(message);
         }
