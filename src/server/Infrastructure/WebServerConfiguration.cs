@@ -1,5 +1,4 @@
 ﻿using Application.Api.v1.Api;
-using Application.Api.v1.Example;
 using Application.Api.v1.GameServer;
 using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
@@ -36,7 +35,6 @@ public static class WebServerConfiguration
         app.ConfigureApiServices();
         app.ConfigureIdentityServices();
         
-        app.MapExampleApiEndpoints();
         app.MapApplicationApiEndpoints();
         
         app.AddScheduledJobs();
@@ -165,12 +163,6 @@ public static class WebServerConfiguration
         app.MapEndpointsRoles();
         app.MapEndpointsPermissions();
         app.MapEndpointsApi();
-    }
-
-    private static void MapExampleApiEndpoints(this IEndpointRouteBuilder app)
-    {
-        // Map all example API endpoints
-        app.MapEndpointsWeather();
     }
 
     private static void MapApplicationApiEndpoints(this IEndpointRouteBuilder app)

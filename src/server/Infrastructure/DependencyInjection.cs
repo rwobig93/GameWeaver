@@ -10,7 +10,6 @@ using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
-using Application.Services.Example;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.Integrations;
@@ -28,7 +27,6 @@ using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
-using Infrastructure.Services.Example;
 using Infrastructure.Services.GameServer;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
@@ -225,9 +223,6 @@ public static class DependencyInjection
         services.AddSingleton<IGameService, GameService>();
         services.AddSingleton<IGameServerService, GameServerService>();
         services.AddSingleton<INetworkService, NetworkService>();
-        
-        // Example services
-        services.AddSingleton<IWeatherService, WeatherForecastService>();
     }
 
     private static void AddApiServices(this IServiceCollection services)

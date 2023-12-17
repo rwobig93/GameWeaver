@@ -1,12 +1,10 @@
-﻿using System.Net;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application.Constants;
 using Application.Helpers;
 using Application.Services;
 using Domain.Contracts;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 

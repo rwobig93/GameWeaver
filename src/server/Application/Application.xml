@@ -33,26 +33,6 @@
             <param name="currentUserService"></param>
             <returns>Basic user information</returns>
         </member>
-        <member name="T:Application.Api.v1.Example.WeatherEndpoints">
-            <summary>
-            API endpoints for the example weather service
-            </summary>
-        </member>
-        <member name="M:Application.Api.v1.Example.WeatherEndpoints.MapEndpointsWeather(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
-            <summary>
-            Registers the example weather endpoints
-            </summary>
-            <param name="app"></param>
-        </member>
-        <member name="M:Application.Api.v1.Example.WeatherEndpoints.GetForecastAsync(System.Nullable{System.DateOnly},System.Nullable{System.Int32},Application.Services.Example.IWeatherService)">
-            <summary>
-            Get randomly generated example weather data
-            </summary>
-            <param name="startDate">Inclusive date to start with for weather retrieval</param>
-            <param name="weatherCount">Number of days to get weather data for</param>
-            <param name="weatherForecast"></param>
-            <returns>List of weather data for each day</returns>
-        </member>
         <member name="T:Application.Api.v1.GameServer.HostEndpoints">
             <summary>
             Endpoints dealing with game server host operations

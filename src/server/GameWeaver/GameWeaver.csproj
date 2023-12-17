@@ -41,6 +41,8 @@
       <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\ICON-LICENSE" />
       <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\README.md" />
       <_ContentIncludedByDefault Remove="Components\Example\SurveyPromptComponent.razor" />
+      <_ContentIncludedByDefault Remove="Pages\Example\Counter.razor" />
+      <_ContentIncludedByDefault Remove="Pages\Example\WeatherData.razor" />
     </ItemGroup>
 
     <ItemGroup>
