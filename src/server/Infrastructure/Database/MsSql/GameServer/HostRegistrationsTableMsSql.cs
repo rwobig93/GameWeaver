@@ -23,7 +23,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                     [Description] NVARCHAR(2048) NOT NULL,
                     [Active] BIT NOT NULL,
                     [Key] NVARCHAR(256) NOT NULL,
-                    [ActivationDate] datetime2 NOT NULL,
+                    [ActivationDate] datetime2 NULL,
                     [ActivationPublicIp] NVARCHAR(128) NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,

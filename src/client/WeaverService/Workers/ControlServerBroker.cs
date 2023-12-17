@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using Application.Constants;
 using Application.Helpers;
+using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
 using Domain.Models;
@@ -40,8 +41,8 @@ public class ControlServerBroker : BackgroundService
                 _lastRuntime = DateTime.Now;
 
                 await ValidateServerStatus();
-                // TODO: Add checkin logic, add registered check, pull registration directly from url instead of host and key, those are intended for registered
-                // await SendOutQueueCommunication();
+                await _serverService.Checkin(new HostCheckInRequest());
+                await SendOutQueueCommunication();
 
                 var millisecondsPassed = (DateTime.Now - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < 1000)
@@ -63,8 +64,11 @@ public class ControlServerBroker : BackgroundService
         
         if (previousServerStatus != serverIsUp)
             _logger.Information("Server connectivity status changed, server connectivity is now: {ServerStatus}", serverIsUp);
+
+        if (_serverService is {ServerIsUp: true, RegisteredWithServer: false})
+            await _serverService.RegistrationConfirm();
         
-        _logger.Debug("Server status is: {ServerStatus}", serverIsUp);
+        _logger.Debug("Server is up: {ServerStatus}", serverIsUp);
     }
 
     public static void AddWeaverOutCommunication(WeaverToServerMessage message)
@@ -75,9 +79,17 @@ public class ControlServerBroker : BackgroundService
 
     private async Task SendOutQueueCommunication()
     {
+        if (!_serverService.RegisteredWithServer) { return; }
+        
         if (!_serverService.ServerIsUp)
         {
             _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
+            return;
+        }
+
+        if (!_serverService.RegisteredWithServer)
+        {
+            _logger.Debug("Client isn't currently registered with the control server, skipping handling communication queue");
             return;
         }
         

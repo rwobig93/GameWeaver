@@ -25,8 +25,6 @@ public class AuthTokenDelegatingHandler : DelegatingHandler
         // Add current valid token to the request headers
         request.Headers.Authorization =
             new AuthenticationHeaderValue(ApiConstants.AuthorizationScheme, _serverService.ActiveToken.Token);
-        _logger.Verbose("Added authorization header to request(last 4 of token with length of {TokenLength}): <{AuthScheme}: ..{Token}>",
-            _serverService.ActiveToken.Token.Length, ApiConstants.AuthorizationScheme, _serverService.ActiveToken.Token[^4..]);
         
         // Handle and return the response
         var response = await base.SendAsync(request, cancellationToken);

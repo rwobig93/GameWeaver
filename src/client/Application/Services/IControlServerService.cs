@@ -7,6 +7,7 @@ namespace Application.Services;
 public interface IControlServerService
 {
     public bool ServerIsUp { get; }
+    public bool RegisteredWithServer { get; }
     public HostAuthResponse ActiveToken { get; }
     
     Task<bool> CheckIfServerIsUp();

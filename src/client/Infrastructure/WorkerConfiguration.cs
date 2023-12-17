@@ -52,6 +52,7 @@ public static class WorkerConfiguration
     private static void AddClientServices(this IServiceCollection services, IConfiguration configuration)
     {
         var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
+        services.AddTransient<AuthTokenDelegatingHandler>();
         
         services.AddHttpClient(HttpConstants.IdServer, client =>
         {

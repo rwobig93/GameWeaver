@@ -8,6 +8,7 @@ public class ApiHelpers
 {
     public static HostRegisterRequest? GetRequestFromUrl(string registerUrl)
     {
+        // TODO: HostId isn't being parsed for some reason, need to dig in further
         var hostId = HttpUtility.ParseQueryString(registerUrl).Get(HostConstants.QueryHostId);
         var registerKey = HttpUtility.ParseQueryString(registerUrl).Get(HostConstants.QueryHostRegisterKey);
 

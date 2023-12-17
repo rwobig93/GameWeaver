@@ -251,14 +251,20 @@ public static class DependencyInjection
                     x.IncludeXmlComments(xmlPath);
             }
             
-            x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+            x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
                 Name = "Authorization",
                 Type = SecuritySchemeType.ApiKey,
                 Scheme = "Bearer",
                 BearerFormat = "JWT",
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                },
                 In = ParameterLocation.Header,
                 Description = "JSON Web Token Header Authorization Using Bearer Scheme",
+
             });
             x.AddSecurityRequirement(new OpenApiSecurityRequirement()
             {

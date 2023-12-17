@@ -76,8 +76,12 @@ public class HostService : IHostService
             Description = description,
             Active = true,
             Key = registrationKey,
+            ActivationDate = null,
+            ActivationPublicIp = "",
             CreatedBy = requestingUserId,
-            CreatedOn = _dateTime.NowDatabaseTime
+            CreatedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = null,
+            LastModifiedOn = null
         });
         if (!newRegistrationRequest.Succeeded)
             return await Result<HostNewRegisterResponse>.FailAsync(newRegistrationRequest.ErrorMessage);

@@ -34,6 +34,7 @@ public class ControlServerService : IControlServerService
     }
 
     public bool ServerIsUp { get; private set; }
+    public bool RegisteredWithServer { get; private set; }
     public HostAuthResponse ActiveToken { get; } = new() { Token = "" };
 
     /// <summary>
@@ -121,7 +122,7 @@ public class ControlServerService : IControlServerService
     {
         var hostIdIsValid = Guid.TryParse(_authConfig.Host, out var parsedHostId);
         if (!hostIdIsValid || string.IsNullOrWhiteSpace(_authConfig.Key))
-            return await Result<HostAuthResponse>.FailAsync("HostId or key is invalid, please fix the pair or do a new registration");
+            return await Result<HostAuthResponse>.FailAsync("HostId or key is invalid, please fix the host/key pair or do a new registration");
         
         // Prep authentication request
         var tokenRequest = new HostAuthRequest
@@ -138,15 +139,12 @@ public class ControlServerService : IControlServerService
         if (!response.IsSuccessStatusCode)
             return await Result<HostAuthResponse>.FailAsync(responseContent);
 
-        // Now that we have a successful token response we'll set the active token to be re-used until expiration
+        // Now that we have a successful token response we'll set the active token to be re-used until expiration and indicate we are registered
         var convertedResponse = _serializerService.Deserialize<HostAuthResponse>(responseContent);
         ActiveToken.Token = convertedResponse.Token;
         ActiveToken.RefreshToken = convertedResponse.RefreshToken;
         ActiveToken.RefreshTokenExpiryTime = convertedResponse.RefreshTokenExpiryTime;
-
-        // Set the authorization header for the HttpClient to re-use on requests
-        httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue(ApiConstants.AuthorizationScheme, ActiveToken.Token);
+        RegisteredWithServer = true;
         
         return await Result<HostAuthResponse>.SuccessAsync(convertedResponse);
     }
@@ -178,6 +176,8 @@ public class ControlServerService : IControlServerService
     /// <returns></returns>
     public async Task<IResult> Checkin(HostCheckInRequest request)
     {
+        if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
+        
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
         var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
 
