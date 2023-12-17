@@ -74,6 +74,20 @@ public static class OsHelper
         return Path.Combine(instancePath, ".Backup");
     }
 
+    public static string GetDebugSanitizedPath(string debugPath)
+    {
+        var pathParts = debugPath.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+        var binIndex = Array.IndexOf(pathParts, "bin");
+
+        if (binIndex < 0)
+        {
+            throw new InvalidOperationException("The 'bin' directory was not found in the path.");
+        }
+
+        var projectPathParts = pathParts.Take(binIndex);
+        return Path.Combine(projectPathParts.ToArray());
+    }
+
     /// <summary>
     /// Reliable method to get IPv4 addresses based on interface type
     /// </summary>

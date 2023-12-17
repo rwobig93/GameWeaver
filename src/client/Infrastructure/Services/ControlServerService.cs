@@ -9,13 +9,14 @@ using Application.Services;
 using Application.Services.System;
 using Application.Settings;
 using Domain.Contracts;
+using Domain.Models.Host;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
 
 public class ControlServerService : IControlServerService
 {
-    private readonly AuthConfiguration _authConfig;
+    private readonly IOptionsMonitor<AuthConfiguration> _authConfig;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly ISerializerService _serializerService;
     private readonly GeneralConfiguration _generalConfig;
@@ -30,12 +31,13 @@ public class ControlServerService : IControlServerService
         _dateTimeService = dateTimeService;
         _logger = logger;
         _generalConfig = generalConfig.Value;
-        _authConfig = authConfig.CurrentValue;
+        // TODO: _authConfig isn't being updated when the file is being changed
+        _authConfig = authConfig;
     }
 
     public bool ServerIsUp { get; private set; }
     public bool RegisteredWithServer { get; private set; }
-    public HostAuthResponse ActiveToken { get; } = new() { Token = "" };
+    public HostAuthorization Authorization { get; } = new() { Token = "" };
 
     /// <summary>
     /// Check if the control server is up and responding
@@ -47,7 +49,7 @@ public class ControlServerService : IControlServerService
         try
         {
             // Hit the health monitoring endpoint of the control server to validate the server is up
-            var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
+            var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
             var response = await httpClient.GetAsync(ApiConstants.Monitoring.Health);
             ServerIsUp = response.IsSuccessStatusCode;
             if (!ServerIsUp)
@@ -81,30 +83,31 @@ public class ControlServerService : IControlServerService
     public async Task<IResult<HostRegisterResponse>> RegistrationConfirm()
     {
         // Client should already be registered if there is no register URL and we have a valid Id and Key pair
-        var hostIdIsValid = Guid.TryParse(_authConfig.Host, out _);
-        if (string.IsNullOrWhiteSpace(_authConfig.RegisterUrl) && hostIdIsValid && !string.IsNullOrWhiteSpace(_authConfig.Key))
+        var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out _);
+        if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl) && hostIdIsValid && !string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
             return await Result<HostRegisterResponse>.SuccessAsync();
-        if (!_authConfig.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
+        if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
             return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");
 
         // Prep confirmation request
-        var confirmRequest = ApiHelpers.GetRequestFromUrl(_authConfig.RegisterUrl);
-        var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
+        var confirmRequest = ApiHelpers.GetRequestFromUrl(_authConfig.CurrentValue.RegisterUrl);
+        var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.Serialize(confirmRequest), Encoding.UTF8, "application/json");
 
         // Handle registration confirmation to the control server
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.RegistrationConfirm, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-            return await Result<HostRegisterResponse>.FailAsync(responseContent);
+        var convertedResponse = _serializerService.Deserialize<HostRegisterResponse>(responseContent);
+        if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
+            return await Result<HostRegisterResponse>.FailAsync(convertedResponse.Messages);
 
         // Parse the successful registration, clear URL in settings and save HostId and Key for authenticating to the control server going forward
-        var convertedResponse = _serializerService.Deserialize<HostRegisterResponse>(responseContent);
         var updatedAuthConfig = new AuthConfiguration
         {
             RegisterUrl = "",
-            Host = convertedResponse.HostId.ToString(),
-            Key = convertedResponse.HostToken
+            Host = convertedResponse.Data.HostId.ToString(),
+            Key = convertedResponse.Data.HostToken,
+            TokenRenewThresholdMinutes = _authConfig.CurrentValue.TokenRenewThresholdMinutes
         };
         var saveResponse = await _serializerService.SaveSettings(AuthConfiguration.SectionName, updatedAuthConfig);
         if (!saveResponse.Succeeded)
@@ -120,30 +123,31 @@ public class ControlServerService : IControlServerService
     /// <returns>Token, Refresh Token and Token Expiration in UTC/GMT</returns>
     public async Task<IResult<HostAuthResponse>> GetToken()
     {
-        var hostIdIsValid = Guid.TryParse(_authConfig.Host, out var parsedHostId);
-        if (!hostIdIsValid || string.IsNullOrWhiteSpace(_authConfig.Key))
+        var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out var parsedHostId);
+        if (!hostIdIsValid || string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
             return await Result<HostAuthResponse>.FailAsync("HostId or key is invalid, please fix the host/key pair or do a new registration");
         
         // Prep authentication request
         var tokenRequest = new HostAuthRequest
         {
             HostId = parsedHostId,
-            HostToken = _authConfig.Key
+            HostToken = _authConfig.CurrentValue.Key
         };
-        var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
+        // We must use an unauthenticated client to prevent a stack overflow as the token delegate handler runs with an authenticated client
+        var httpClient = _httpClientFactory.CreateClient(HttpConstants.Unauthenticated);
         var payload = new StringContent(_serializerService.Serialize(tokenRequest), Encoding.UTF8, "application/json");
 
         // Handle the token response
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.GetToken, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
-        if (!response.IsSuccessStatusCode)
-            return await Result<HostAuthResponse>.FailAsync(responseContent);
+        var convertedResponse = _serializerService.Deserialize<HostAuthResponse>(responseContent);
+        if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
+            return await Result<HostAuthResponse>.FailAsync(convertedResponse.Messages);
 
         // Now that we have a successful token response we'll set the active token to be re-used until expiration and indicate we are registered
-        var convertedResponse = _serializerService.Deserialize<HostAuthResponse>(responseContent);
-        ActiveToken.Token = convertedResponse.Token;
-        ActiveToken.RefreshToken = convertedResponse.RefreshToken;
-        ActiveToken.RefreshTokenExpiryTime = convertedResponse.RefreshTokenExpiryTime;
+        Authorization.Token = convertedResponse.Data.Token;
+        Authorization.RefreshToken = convertedResponse.Data.RefreshToken;
+        Authorization.RefreshTokenExpiryTime = convertedResponse.Data.RefreshTokenExpiryTime;
         RegisteredWithServer = true;
         
         return await Result<HostAuthResponse>.SuccessAsync(convertedResponse);
@@ -155,8 +159,10 @@ public class ControlServerService : IControlServerService
     /// <returns>Success or Failure, will return a message indicating a failure reason</returns>
     public async Task<IResult> EnsureAuthTokenIsUpdated()
     {
-        // Token isn't within or over expiration threshold
-        if (_dateTimeService.NowDatabaseTime - ActiveToken.RefreshTokenExpiryTime > TimeSpan.FromMinutes(_authConfig.TokenRenewThresholdMinutes))
+        // Token isn't within or over expiration threshold & we have the authorization token
+        var expirationTime = Authorization.RefreshTokenExpiryTime - _dateTimeService.NowDatabaseTime;
+        var expirationThreshold = TimeSpan.FromMinutes(_authConfig.CurrentValue.TokenRenewThresholdMinutes);
+        if (expirationTime.Minutes > expirationThreshold.Minutes && !string.IsNullOrWhiteSpace(Authorization.Token))
         {
             return await Result.SuccessAsync();
         }
@@ -178,10 +184,10 @@ public class ControlServerService : IControlServerService
     {
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
-        var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
+        var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
 
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.GetToken, payload);
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             return await Result.FailAsync(responseContent);

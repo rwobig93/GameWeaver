@@ -1,8 +1,9 @@
+using Domain.Contracts;
+using Domain.Models.Host;
+
 namespace Application.Responses.Host;
 
-public class HostAuthResponse
+public class HostAuthResponse : Result
 {
-    public string Token { get; set; } = null!;
-    public string RefreshToken { get; set; } = null!;
-    public DateTime RefreshTokenExpiryTime { get; set; }
+    public HostAuthorization Data { get; set; } = null!;
 }

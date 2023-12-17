@@ -68,7 +68,7 @@ public class ControlServerBroker : BackgroundService
         if (_serverService is {ServerIsUp: true, RegisteredWithServer: false})
             await _serverService.RegistrationConfirm();
         
-        _logger.Debug("Server is up: {ServerStatus}", serverIsUp);
+        _logger.Debug("Control Server is up: {ServerStatus}", serverIsUp);
     }
 
     public static void AddWeaverOutCommunication(WeaverToServerMessage message)

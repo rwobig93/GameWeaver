@@ -54,10 +54,9 @@ public static class WorkerConfiguration
         var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
         services.AddTransient<AuthTokenDelegatingHandler>();
         
-        services.AddHttpClient(HttpConstants.IdServer, client =>
-        {
-            client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/'));
-        }).AddHttpMessageHandler<AuthTokenDelegatingHandler>();
+        services.AddHttpClient(HttpConstants.Unauthenticated, client => { client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/')); });
+        services.AddHttpClient(HttpConstants.AuthenticatedServer, client => { client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/')); })
+            .AddHttpMessageHandler<AuthTokenDelegatingHandler>();
 
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddSingleton<ISerializerService, JsonSerializerService>();

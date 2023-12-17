@@ -1,7 +1,9 @@
-﻿using System.Reflection;
+﻿using System.Net;
+using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Application.Constants;
+using Application.Helpers;
 using Application.Services;
 using Domain.Contracts;
 using Newtonsoft.Json;
@@ -21,7 +23,7 @@ public class JsonSerializerService : ISerializerService
         IncludeFields = false,
         MaxDepth = 64,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = false,
+        PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
         WriteIndented = true
@@ -47,23 +49,30 @@ public class JsonSerializerService : ISerializerService
         try
         {
             // Load the file
-            var filePath = Path.Combine(AppContext.BaseDirectory, HostConstants.ConfigFile);
+            #if DEBUG
+                var filePath = Path.Combine(OsHelper.GetDebugSanitizedPath(AppContext.BaseDirectory), HostConstants.ConfigFile);
+            #else
+                var filePath = Path.Combine(AppContext.BaseDirectory, HostConstants.ConfigFile);
+            #endif
             var json = File.ReadAllText(filePath);
-            var jsonObj = JsonSerializer.Deserialize<dynamic>(json)!;
+            var jsonObj = JObject.Parse(json);
 
             // Set the new value
-            JContainer section = jsonObj[settingsSectionName];
-            if (section is not null)
+            var section = jsonObj[settingsSectionName];
+            if (section is JContainer jContainer)
             {
                 foreach (var prop in updatedSection.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
                 {
-                    section[prop.Name] = new JValue(prop.GetValue(updatedSection));
+                    jContainer[prop.Name] = JToken.FromObject(prop.GetValue(updatedSection)!);
                 }
             }
 
+            // C:\Users\username\RiderProjects\ProjectName\src\client\Project\appsettings.Development.json
+            // C:\Users\username\RiderProjects\ProjectName\src\client\Project\bin\Debug\net7.0\appsettings.Development.json
+            
             // Save the file
-            string output = JsonSerializer.Serialize(jsonObj, Formatting.Indented);
-            File.WriteAllText(filePath, output);
+            var exportFile = jsonObj.ToString();
+            File.WriteAllText(filePath, exportFile);
 
             return await Result.SuccessAsync();
         }
