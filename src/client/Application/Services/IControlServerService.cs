@@ -12,5 +12,6 @@ public interface IControlServerService
     Task<bool> CheckIfServerIsUp();
     Task<IResult<HostRegisterResponse>> RegistrationConfirm();
     Task<IResult<HostAuthResponse>> GetToken();
+    Task<IResult> EnsureAuthTokenIsUpdated();
     Task<IResult> Checkin(HostCheckInRequest request);
 }

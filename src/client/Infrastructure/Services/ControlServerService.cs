@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.Http.Headers;
+using System.Text;
 using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;
@@ -114,8 +115,8 @@ public class ControlServerService : IControlServerService
     /// <summary>
     /// Get a new auth token from the control server using the host and key pair retrieved from registration
     /// </summary>
-    /// <remarks>Will update the 'ActiveToken' property of this service</remarks>
-    /// <returns></returns>
+    /// <remarks>Will update the 'ActiveToken' property of this service and add the token to the active httpClient</remarks>
+    /// <returns>Token, Refresh Token and Token Expiration in UTC/GMT</returns>
     public async Task<IResult<HostAuthResponse>> GetToken()
     {
         var hostIdIsValid = Guid.TryParse(_authConfig.Host, out var parsedHostId);
@@ -142,6 +143,10 @@ public class ControlServerService : IControlServerService
         ActiveToken.Token = convertedResponse.Token;
         ActiveToken.RefreshToken = convertedResponse.RefreshToken;
         ActiveToken.RefreshTokenExpiryTime = convertedResponse.RefreshTokenExpiryTime;
+
+        // Set the authorization header for the HttpClient to re-use on requests
+        httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(ApiConstants.AuthorizationScheme, ActiveToken.Token);
         
         return await Result<HostAuthResponse>.SuccessAsync(convertedResponse);
     }
@@ -150,7 +155,7 @@ public class ControlServerService : IControlServerService
     /// Shortcut method to ensure the authentication token is valid, will refresh the active token if it is expired or within expiration threshold
     /// </summary>
     /// <returns>Success or Failure, will return a message indicating a failure reason</returns>
-    private async Task<IResult> EnsureAuthTokenIsUpdated()
+    public async Task<IResult> EnsureAuthTokenIsUpdated()
     {
         // Token isn't within or over expiration threshold
         if (_dateTimeService.NowDatabaseTime - ActiveToken.RefreshTokenExpiryTime > TimeSpan.FromMinutes(_authConfig.TokenRenewThresholdMinutes))
@@ -173,10 +178,6 @@ public class ControlServerService : IControlServerService
     /// <returns></returns>
     public async Task<IResult> Checkin(HostCheckInRequest request)
     {
-        var tokenEnforcement = await EnsureAuthTokenIsUpdated();
-        if (!tokenEnforcement.Succeeded)
-            return await Result.FailAsync(tokenEnforcement.Messages);
-        
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.IdServer);
         var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
 

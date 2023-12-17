@@ -16,6 +16,6 @@ public class Database
 {
     public string duration { get; set; } = "";
     public string status { get; set; } = "";
-    public object[] tags { get; set; }
+    public object[] tags { get; set; } = Array.Empty<object>();
 }
 
