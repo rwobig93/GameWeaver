@@ -4,7 +4,7 @@ namespace Application.Models.GameServer.WeaverWork;
 
 public class WeaverWorkUpdate
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public Guid? HostId { get; set; }
     public Guid? GameServerId { get; set; }
     public WeaverWorkTarget? TargetType { get; set; }

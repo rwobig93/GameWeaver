@@ -3,9 +3,9 @@ using Domain.Enums.GameServer;
 
 namespace Domain.DatabaseEntities.GameServer;
 
-public class WeaverWorkDb : IAuditableEntity<Guid>
+public class WeaverWorkDb : IAuditableEntity<int>
 {
-    public Guid Id { get; set; }
+    public int Id { get; set; }
     public Guid HostId { get; set; }
     public Guid? GameServerId { get; set; }
     public WeaverWorkTarget TargetType { get; set; }

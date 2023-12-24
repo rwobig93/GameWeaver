@@ -74,7 +74,7 @@ public class ControlServerBroker : BackgroundService
     {
         // TODO: After object structures are defined add a table for 'HostWork' that will store the job status and details
         // TODO: The HostWork table will be used to know what to send to each host for any that aren't picked up and store host status updates
-        Log.Debug("Adding weaver outgoing communication: [{WorkId}]{WorkStatus}", message.WorkId, message.Status);
+        Log.Debug("Adding weaver outgoing communication: [{WorkId}]{WorkStatus}", message.Id, message.Status);
         WeaverOutQueue.Enqueue(message);
     }
 
@@ -101,23 +101,23 @@ public class ControlServerBroker : BackgroundService
             runAttemptsLeft -= 1;
             if (!WeaverOutQueue.TryDequeue(out var message)) continue;
             
-            _logger.Debug("Sending outgoing communication => {WorkId}", message.WorkId);
+            _logger.Debug("Sending outgoing communication => {WorkId}", message.Id);
 
             var response = await _serverService.SendCommunication(message);
             if (response.Succeeded)
             {
-                _logger.Debug("Server successfully processed outgoing communication: {WorkId}", message.WorkId);
+                _logger.Debug("Server successfully processed outgoing communication: {WorkId}", message.Id);
                 continue;
             }
 
             if (message.AttemptCount >= _generalConfig.Value.MaxQueueAttempts)
             {
                 _logger.Warning("Maximum attempts reached for outgoing communication, dropping: {AttemptCount} {WorkId}",
-                    message.AttemptCount, message.WorkId);
+                    message.AttemptCount, message.Id);
                 continue;
             }
             
-            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", message.WorkId);
+            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", message.Id);
             message.AttemptCount += 1;
             AddWeaverOutCommunication(message);
         }

@@ -11,6 +11,9 @@ public interface ISqlDataService
 
     public Task<Guid> SaveDataReturnId<TParameters>(ISqlDatabaseScript script, TParameters parameters,  string connectionId = "DefaultConnection",
         int timeoutSeconds = 5);
+
+    public Task<int> SaveDataReturnIntId<TParameters>(ISqlDatabaseScript script, TParameters parameters,  string connectionId = "DefaultConnection",
+        int timeoutSeconds = 5);
     
     public Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(ISqlDatabaseScript script, TParameters parameters,
         string connectionId = "DefaultConnection", int timeoutSeconds = 5);

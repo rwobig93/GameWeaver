@@ -1,9 +1,10 @@
-using Domain.Enums;
+using Domain.Enums.GameServer;
 
-namespace Domain.Models.ControlServer;
+namespace Application.Responses.v1.GameServer;
 
-public class WeaverToClientMessage
+public class HostCheckInResponse
 {
+    // TODO: Finish translation from WeaverWork to HostCheckInResponse
     public int Id { get; set; }
     public Guid? GameServerId { get; set; }
     public WeaverWorkTarget TargetType { get; set; }

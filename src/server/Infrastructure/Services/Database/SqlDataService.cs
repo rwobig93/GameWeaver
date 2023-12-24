@@ -55,6 +55,15 @@ public class SqlDataService : ISqlDataService
             script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 
+    public async Task<int> SaveDataReturnIntId<TParameters>(
+        ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection", int timeoutSeconds = 5)
+    {
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
+
+        return await connection.ExecuteScalarAsync<int>(
+            script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
+    }
+
     public async Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(ISqlDatabaseScript script, TParameters parameters,
         string connectionId, int timeoutSeconds = 5)
     {
