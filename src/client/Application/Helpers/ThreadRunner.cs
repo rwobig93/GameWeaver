@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using Domain.Models;
+using Domain.Models.Host;
 using Serilog;
 
 namespace Application.Helpers;

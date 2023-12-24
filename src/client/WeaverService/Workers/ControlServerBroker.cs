@@ -4,7 +4,7 @@ using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
-using Domain.Models;
+using Domain.Models.ControlServer;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -14,18 +14,16 @@ public class ControlServerBroker : BackgroundService
 {
     private readonly ILogger _logger;
     private readonly IControlServerService _serverService;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly GeneralConfiguration _generalConfig;
+    private readonly IOptions<GeneralConfiguration> _generalConfig;
 
     private static DateTime _lastRuntime;
     private static readonly ConcurrentQueue<WeaverToServerMessage> WeaverOutQueue = new();
 
-    public ControlServerBroker(ILogger logger, IControlServerService serverService, IHttpClientFactory httpClientFactory, IOptions<GeneralConfiguration> generalConfig)
+    public ControlServerBroker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig)
     {
         _logger = logger;
         _serverService = serverService;
-        _httpClientFactory = httpClientFactory;
-        _generalConfig = generalConfig.Value;
+        _generalConfig = generalConfig;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -40,6 +38,8 @@ public class ControlServerBroker : BackgroundService
                 _lastRuntime = DateTime.Now;
 
                 await ValidateServerStatus();
+                // TODO: Get host and resource telemetry and finish full checkin
+                // TODO: Refactor checkin to respond w/ WeaverToClient work
                 await _serverService.Checkin(new HostCheckInRequest());
                 await SendOutQueueCommunication();
 
@@ -72,10 +72,9 @@ public class ControlServerBroker : BackgroundService
 
     public static void AddWeaverOutCommunication(WeaverToServerMessage message)
     {
-        // TODO: Define what the ToServer and ToClient messages should look like
         // TODO: After object structures are defined add a table for 'HostWork' that will store the job status and details
         // TODO: The HostWork table will be used to know what to send to each host for any that aren't picked up and store host status updates
-        Log.Debug("Adding weaver outgoing communication: {MessageAction}", message.Action);
+        Log.Debug("Adding weaver outgoing communication: [{WorkId}]{WorkStatus}", message.WorkId, message.Status);
         WeaverOutQueue.Enqueue(message);
     }
 
@@ -88,12 +87,6 @@ public class ControlServerBroker : BackgroundService
             _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
             return;
         }
-
-        if (!_serverService.RegisteredWithServer)
-        {
-            _logger.Debug("Client isn't currently registered with the control server, skipping handling communication queue");
-            return;
-        }
         
         if (WeaverOutQueue.IsEmpty)
         {
@@ -101,31 +94,30 @@ public class ControlServerBroker : BackgroundService
             return;
         }
 
-        var runAttemptsLeft = _generalConfig.QueueMaxPerRun;
+        var runAttemptsLeft = _generalConfig.Value.QueueMaxPerRun;
 
         while (runAttemptsLeft > 0 && !WeaverOutQueue.IsEmpty)
         {
             runAttemptsLeft -= 1;
             if (!WeaverOutQueue.TryDequeue(out var message)) continue;
             
-            _logger.Debug("Sending outgoing communication => {MessageAction}", message.Action);
+            _logger.Debug("Sending outgoing communication => {WorkId}", message.WorkId);
 
-            // TODO: Add real endpoint from server service to send outgoing communications
-            var response = await _serverService.CheckIfServerIsUp();
-            if (response)
+            var response = await _serverService.SendCommunication(message);
+            if (response.Succeeded)
             {
-                _logger.Debug("Server successfully processed outgoing communication: {MessageAction}", message.Action);
+                _logger.Debug("Server successfully processed outgoing communication: {WorkId}", message.WorkId);
                 continue;
             }
 
-            if (message.AttemptCount >= _generalConfig.MaxQueueAttempts)
+            if (message.AttemptCount >= _generalConfig.Value.MaxQueueAttempts)
             {
-                _logger.Warning("Maximum attempts reached for outgoing communication, dropping: {AttemptCount} {MessageAction}",
-                    message.AttemptCount, message.Action);
+                _logger.Warning("Maximum attempts reached for outgoing communication, dropping: {AttemptCount} {WorkId}",
+                    message.AttemptCount, message.WorkId);
                 continue;
             }
             
-            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{MessageAction}]", message.Action);
+            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", message.WorkId);
             message.AttemptCount += 1;
             AddWeaverOutCommunication(message);
         }

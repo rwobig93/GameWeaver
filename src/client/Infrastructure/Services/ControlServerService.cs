@@ -5,9 +5,9 @@ using Application.Requests.Host;
 using Application.Responses.Host;
 using Application.Responses.Monitoring;
 using Application.Services;
-using Application.Services.System;
 using Application.Settings;
 using Domain.Contracts;
+using Domain.Models.ControlServer;
 using Domain.Models.Host;
 using Microsoft.Extensions.Options;
 
@@ -187,6 +187,21 @@ public class ControlServerService : IControlServerService
         var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
 
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+            return await Result.FailAsync(responseContent);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> SendCommunication(WeaverToServerMessage message)
+    {
+        if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
+        
+        var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
+        var payload = new StringContent(_serializerService.Serialize(message), Encoding.UTF8, "application/json");
+
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             return await Result.FailAsync(responseContent);

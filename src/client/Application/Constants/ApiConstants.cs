@@ -17,6 +17,7 @@ public class ApiConstants
             public const string RegistrationConfirm = "/api/gameserver/host/registration-confirm";
             public const string GetToken = "/api/gameserver/host/get-token";
             public const string CheckIn = "/api/gameserver/host/checkin";
+            public const string UpdateWorkStatus = "/api/gameserver/host/work";
         }
     }
 }

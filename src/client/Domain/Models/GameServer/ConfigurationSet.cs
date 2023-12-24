@@ -1,4 +1,4 @@
-﻿namespace Domain.Models;
+﻿namespace Domain.Models.GameServer;
 
 public class ConfigurationSet
 {

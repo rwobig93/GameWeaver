@@ -1,4 +1,4 @@
-﻿namespace Domain.Models;
+﻿namespace Application.Models.External.Steam;
 
 public class SteamAppList
 {

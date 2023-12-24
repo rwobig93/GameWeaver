@@ -1,6 +1,6 @@
 ﻿using Domain.Enums;
 
-namespace Domain.Models;
+namespace Domain.Models.GameServer;
 
 public class GameServerLocal
 {
@@ -27,5 +27,5 @@ public class GameServerLocal
     public GameSource Source { get; set; }
     public List<Mod> ModList { get; set; } = new();
     public List<LocationPointer> Resources { get; set; } = new();
-    public List<UpdateItem> UpdatesWaiting { get; set; } = new();
+    public List<GameServerSoftwareUpdate> UpdatesWaiting { get; set; } = new();
 }

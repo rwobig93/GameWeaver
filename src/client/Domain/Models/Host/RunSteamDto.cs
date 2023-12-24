@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
+using Domain.Models.GameServer;
 
-namespace Domain.Models;
+namespace Domain.Models.Host;
 
 public class RunSteamDto
 {
