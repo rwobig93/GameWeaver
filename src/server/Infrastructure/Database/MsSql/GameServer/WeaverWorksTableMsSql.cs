@@ -137,6 +137,38 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetTenWaitingByHostId = new()
+    {
+        Table = Table,
+        Action = "GetWaitingByHostId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetWaitingByHostId]
+                @HostId UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT TOP 10 w.*
+                FROM dbo.[{Table.TableName}] w
+                WHERE w.HostId = @HostId AND w.Status = 0
+                ORDER BY w.Id;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure GetAllWaitingByHostId = new()
+    {
+        Table = Table,
+        Action = "GetAllWaitingByHostId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllWaitingByHostId]
+                @HostId UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT w.*
+                FROM dbo.[{Table.TableName}] w
+                WHERE w.HostId = @HostId AND w.Status = 0
+                ORDER BY w.Id;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure GetByGameServerId = new()
     {
         Table = Table,

@@ -813,6 +813,42 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWaitingWorkByHostIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetTenWaitingByHostId, new {HostId = id});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetTenWaitingByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverAllWaitingWorkByHostIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetAllWaitingByHostId, new {HostId = id});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetAllWaitingByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByGameServerIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();

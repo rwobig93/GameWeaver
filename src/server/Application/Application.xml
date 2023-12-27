@@ -81,7 +81,7 @@
             <param name="hostService"></param>
             <param name="currentUserService"></param>
             <param name="dateTimeService"></param>
-            <returns>Success or Failure with no return payload</returns>
+            <returns>Success or Failure, payload is a list of work for the host to process</returns>
         </member>
         <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
             <summary>

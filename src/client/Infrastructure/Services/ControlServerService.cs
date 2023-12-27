@@ -7,7 +7,6 @@ using Application.Responses.Monitoring;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
-using Domain.Models.ControlServer;
 using Domain.Models.Host;
 using Microsoft.Extensions.Options;
 
@@ -194,12 +193,17 @@ public class ControlServerService : IControlServerService
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> SendCommunication(WeaverToServerMessage message)
+    /// <summary>
+    /// Send status update to the control server for the given work
+    /// </summary>
+    /// <param name="request">Update request with details regarding the work needing a status update</param>
+    /// <returns></returns>
+    public async Task<IResult> WorkStatusUpdate(WeaverWorkUpdateRequest request)
     {
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.Serialize(message), Encoding.UTF8, "application/json");
+        var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
 
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();

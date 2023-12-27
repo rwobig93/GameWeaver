@@ -40,4 +40,5 @@ public class PaginatedResult<T> : Result
     public bool HasPreviousPage => CurrentPage > 1;
 
     public bool HasNextPage => CurrentPage < TotalPages;
+    // TODO: Implement 'Next' property that returns the fulL URL w/ the query parameters needed to get the next results, return null if there are no more results
 }

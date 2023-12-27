@@ -2,7 +2,7 @@ using Domain.Enums;
 
 namespace Domain.Models.ControlServer;
 
-public class WeaverToClientMessage
+public class WeaverWorkClient
 {
     public int Id { get; set; }
     public Guid? GameServerId { get; set; }

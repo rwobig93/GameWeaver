@@ -4,7 +4,6 @@ using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
-using Domain.Models.ControlServer;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -17,7 +16,7 @@ public class ControlServerBroker : BackgroundService
     private readonly IOptions<GeneralConfiguration> _generalConfig;
 
     private static DateTime _lastRuntime;
-    private static readonly ConcurrentQueue<WeaverToServerMessage> WeaverOutQueue = new();
+    private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
 
     public ControlServerBroker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig)
     {
@@ -39,7 +38,6 @@ public class ControlServerBroker : BackgroundService
 
                 await ValidateServerStatus();
                 // TODO: Get host and resource telemetry and finish full checkin
-                // TODO: Refactor checkin to respond w/ WeaverToClient work
                 await _serverService.Checkin(new HostCheckInRequest());
                 await SendOutQueueCommunication();
 
@@ -70,12 +68,10 @@ public class ControlServerBroker : BackgroundService
         _logger.Debug("Control Server is up: {ServerStatus}", serverIsUp);
     }
 
-    public static void AddWeaverOutCommunication(WeaverToServerMessage message)
+    public static void AddWeaverWorkUpdate(WeaverWorkUpdateRequest request)
     {
-        // TODO: After object structures are defined add a table for 'HostWork' that will store the job status and details
-        // TODO: The HostWork table will be used to know what to send to each host for any that aren't picked up and store host status updates
-        Log.Debug("Adding weaver outgoing communication: [{WorkId}]{WorkStatus}", message.Id, message.Status);
-        WeaverOutQueue.Enqueue(message);
+        Log.Debug("Adding weaver work update: [{WorkId}]{WorkStatus}", request.Id, request.Status);
+        WorkUpdateQueue.Enqueue(request);
     }
 
     private async Task SendOutQueueCommunication()
@@ -84,11 +80,11 @@ public class ControlServerBroker : BackgroundService
         
         if (!_serverService.ServerIsUp)
         {
-            _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
+            _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);
             return;
         }
         
-        if (WeaverOutQueue.IsEmpty)
+        if (WorkUpdateQueue.IsEmpty)
         {
             _logger.Verbose("Outgoing communication queue is empty, skipping...");
             return;
@@ -96,14 +92,14 @@ public class ControlServerBroker : BackgroundService
 
         var runAttemptsLeft = _generalConfig.Value.QueueMaxPerRun;
 
-        while (runAttemptsLeft > 0 && !WeaverOutQueue.IsEmpty)
+        while (runAttemptsLeft > 0 && !WorkUpdateQueue.IsEmpty)
         {
             runAttemptsLeft -= 1;
-            if (!WeaverOutQueue.TryDequeue(out var message)) continue;
+            if (!WorkUpdateQueue.TryDequeue(out var message)) continue;
             
             _logger.Debug("Sending outgoing communication => {WorkId}", message.Id);
 
-            var response = await _serverService.SendCommunication(message);
+            var response = await _serverService.WorkStatusUpdate(message);
             if (response.Succeeded)
             {
                 _logger.Debug("Server successfully processed outgoing communication: {WorkId}", message.Id);
@@ -119,9 +115,9 @@ public class ControlServerBroker : BackgroundService
             
             _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", message.Id);
             message.AttemptCount += 1;
-            AddWeaverOutCommunication(message);
+            AddWeaverWorkUpdate(message);
         }
         
-        _logger.Debug("Finished parsing outgoing weaver communication queue, current items waiting: {OutCommItemCount}", WeaverOutQueue.Count);
+        _logger.Debug("Finished parsing outgoing weaver communication queue, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);
     }
 }

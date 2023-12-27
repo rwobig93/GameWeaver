@@ -1,6 +1,8 @@
 using Application.Constants.Web;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.HostCheckIn;
+using Application.Models.GameServer.WeaverWork;
 using Application.Models.Web;
 using Application.Requests.v1.GameServer;
 using Application.Responses.v1.GameServer;
@@ -24,7 +26,7 @@ public static class HostEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Host.GetRegistration, RegistrationGenerateNew).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.RegistrationConfirm, RegistrationConfirm).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.GetToken, GetToken).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, GetToken).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, Checkin).ApiVersionOne();
     }
 
     /// <summary>
@@ -96,13 +98,12 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <param name="dateTimeService"></param>
-    /// <returns>Success or Failure with no return payload</returns>
-    private static async Task<IResult> Checkin(HostCheckInRequest request, IHostService hostService, ICurrentUserService currentUserService,
+    /// <returns>Success or Failure, payload is a list of work for the host to process</returns>
+    private static async Task<IResult<IEnumerable<WeaverWorkClient>>> Checkin(HostCheckInRequest request, IHostService hostService, ICurrentUserService currentUserService,
         IDateTimeService dateTimeService)
     {
         try
         {
-            // TODO: Add return with host job list
             var currentUserId = await currentUserService.GetApiCurrentUserId();
 
             var createCheckIn = new HostCheckInCreate
@@ -116,12 +117,17 @@ public static class HostEndpoints
                 NetworkOutMb = request.NetworkOutMb,
                 NetworkInMb = request.NetworkInMb
             };
-            
-            return await hostService.CreateCheckInAsync(createCheckIn);
+
+            var checkInResponse = await hostService.CreateCheckInAsync(createCheckIn);
+            if (!checkInResponse.Succeeded)
+                return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(checkInResponse.Messages);
+
+            var nextHostWork = await hostService.GetWeaverWaitingWorkByHostIdAsync(currentUserId);
+            return await Result<IEnumerable<WeaverWorkClient>>.SuccessAsync(nextHostWork.Data.ToClientWorks());
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync(ex.Message);
+            return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(ex.Message);
         }
     }
 }
