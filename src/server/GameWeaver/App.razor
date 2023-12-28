@@ -33,43 +33,49 @@
     </CascadingAuthenticationState>
 </Error>
 
-<ComponentReconnectModal ConnectionStateBackgroundColor="#27272f">
-    <ReconnectingTemplate>
-        <p>
-            Oops! Seems that the connection with the server
-            has been lost. This is normally due to lost or
-            poor network connectivity.
-        </p>
-        <p>
-            Please hang on a while while we try to reconnect...
-        </p>
-    </ReconnectingTemplate>
-    <ReconnectFailedTemplate>
-        <p>
-            We're sorry, but the reconnection attempts have failed.
-        </p>
-        <p>
-            You can now either try to
-            <a href="javascript:window.Blazor.reconnect()">reconnect</a>
-            or just <a href="javascript:location.reload()">reload</a>
-            the page.
-        </p>
-        <p>
-            It's likely that reloading will not work since failure to
-            reconnect usually is due to a network failure or
-            the server has been taken down for maintenance.
-        </p>
-    </ReconnectFailedTemplate>
-    <ReconnectRejectedTemplate>
-        <p>
-            Connection attempts have all been rejected by the server.
-            This is often caused by a fault on the server.
-        </p>
-        <p>
-            You can try to
-            <a href="javascript:location.reload()">reload</a>
-            the page, please note that this will likely not
-            succeed due to an assumed failure on the server.
-        </p>
-    </ReconnectRejectedTemplate>
-</ComponentReconnectModal>
+@* TODO: Improve reconnecting modal w/ failure and refusal states. Update css to display better and possibly convert to a component *@
+<div id="components-reconnect-modal">
+    <p>
+        Oops! Seems that the connection with the server
+        has been lost. This is normally due to lost or
+        poor network connectivity.
+    </p>
+    <p>
+        Please hang on a while while we try to reconnect...
+    </p>
+    <p>
+        (Current reconnect attempt: 
+        <span id="components-reconnect-current-attempt"></span> /
+        <span id="components-reconnect-max-retries"></span>)
+    </p>
+</div>
+
+@* <div id="components-reconnect-modal.components-reconnect-failed"> *@
+@*     <p> *@
+@*         We're sorry, but the reconnection attempts have failed. *@
+@*     </p> *@
+@*     <p> *@
+@*         You can now either try to *@
+@*         <a href="javascript:window.Blazor.reconnect()">reconnect</a> *@
+@*         or just <a href="javascript:location.reload()">reload</a> *@
+@*         the page. *@
+@*     </p> *@
+@*     <p> *@
+@*         It's likely that reloading will not work since failure to *@
+@*         reconnect usually is due to a network failure or *@
+@*         the server has been taken down for maintenance. *@
+@*     </p> *@
+@* </div> *@
+@* *@
+@* <div id="components-reconnect-modal.components-reconnect-rejected"> *@
+@*     <p> *@
+@*         Connection attempts have all been rejected by the server. *@
+@*         This is often caused by a fault on the server. *@
+@*     </p> *@
+@*     <p> *@
+@*         You can try to *@
+@*         <a href="javascript:location.reload()">reload</a> *@
+@*         the page, please note that this will likely not *@
+@*         succeed due to an assumed failure on the server. *@
+@*     </p> *@
+@* </div> *@

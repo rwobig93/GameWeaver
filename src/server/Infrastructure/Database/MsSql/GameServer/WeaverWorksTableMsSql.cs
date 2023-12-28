@@ -72,7 +72,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             begin
                 DELETE
                 FROM dbo.[{Table.TableName}]
-                WHERE SendTimestamp < @OlderThan;
+                WHERE CreatedOn < @OlderThan;
             end"
     };
     

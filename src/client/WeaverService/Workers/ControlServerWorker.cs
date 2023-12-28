@@ -9,7 +9,7 @@ using Serilog;
 
 namespace WeaverService.Workers;
 
-public class ControlServerBroker : BackgroundService
+public class ControlServerWorker : BackgroundService
 {
     private readonly ILogger _logger;
     private readonly IControlServerService _serverService;
@@ -18,7 +18,7 @@ public class ControlServerBroker : BackgroundService
     private static DateTime _lastRuntime;
     private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
 
-    public ControlServerBroker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig)
+    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig)
     {
         _logger = logger;
         _serverService = serverService;
@@ -27,7 +27,7 @@ public class ControlServerBroker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.Debug("Started {ServiceName} service", nameof(ControlServerBroker));
+        _logger.Debug("Started {ServiceName} service", nameof(ControlServerWorker));
         ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
         
         while (!stoppingToken.IsCancellationRequested)
@@ -47,11 +47,11 @@ public class ControlServerBroker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop", nameof(ControlServerBroker));
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop", nameof(ControlServerWorker));
             }
         }
         
-        _logger.Debug("Stopping {ServiceName} service", nameof(ControlServerBroker));
+        _logger.Debug("Stopping {ServiceName} service", nameof(ControlServerWorker));
     }
 
     private async Task ValidateServerStatus()

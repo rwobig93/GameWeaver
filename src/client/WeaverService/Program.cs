@@ -5,8 +5,8 @@ Host.CreateDefaultBuilder(args)
     .AddInfrastructure()
     .ConfigureServices(services =>
     {
-        services.AddHostedService<ControlServerBroker>();
-        services.AddHostedService<HostBroker>();
+        services.AddHostedService<ControlServerWorker>();
+        services.AddHostedService<HostWorker>();
     })
     .Build()
     .Run();

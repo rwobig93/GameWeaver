@@ -29,7 +29,6 @@ public class ControlServerService : IControlServerService
         _dateTimeService = dateTimeService;
         _logger = logger;
         _generalConfig = generalConfig.Value;
-        // TODO: _authConfig isn't being updated when the file is being changed
         _authConfig = authConfig;
     }
 

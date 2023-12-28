@@ -4,7 +4,7 @@ using Domain.Models.ControlServer;
 
 namespace WeaverService.Workers;
 
-public class HostBroker : BackgroundService
+public class HostWorker : BackgroundService
 {
     private readonly ILogger _logger;
 
@@ -17,19 +17,19 @@ public class HostBroker : BackgroundService
     public static int NetworkOutMb { get; private set; } = 0;
     public static int NetworkInMb { get; private set; } = 0;
     
-    public HostBroker(ILogger logger)
+    public HostWorker(ILogger logger)
     {
         _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.Debug("Started {ServiceName} service", nameof(HostBroker));
+        _logger.Debug("Started {ServiceName} service", nameof(HostWorker));
         
         // TODO: Add folder structure and dependency enforcement like SteamCMD before jumping into the execution loop
         
         // TODO: Handle WeaverToServer message when resource status changes occur
-        ControlServerBroker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest());
+        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest());
         
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -38,6 +38,6 @@ public class HostBroker : BackgroundService
             await Task.Delay(10000, stoppingToken);
         }
         
-        _logger.Debug("Stopping {ServiceName} service", nameof(HostBroker));
+        _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
     }
 }
