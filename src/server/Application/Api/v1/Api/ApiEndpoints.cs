@@ -38,7 +38,8 @@ public static class ApiEndpoints
     {
         try
         {
-            return await accountService.GetApiAuthToken(tokenRequest);
+            var response = await accountService.GetApiAuthToken(tokenRequest); 
+            return response;
         }
         catch (Exception ex)
         {

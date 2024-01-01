@@ -1,6 +1,6 @@
 namespace Application.Models.Web;
 
-public interface IResult
+public interface IResult : Microsoft.AspNetCore.Http.IResult
 {
     List<string> Messages { get; set; }
 

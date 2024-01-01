@@ -2,22 +2,6 @@
     <MudNavLink Href="@AppRouteConstants.Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
         Home
     </MudNavLink>
-    @if (_canViewCounter || _canViewWeather)
-    {
-        <MudDivider Light="true" DividerType="DividerType.Middle"/>
-        @if (_canViewCounter)
-        {
-            <MudNavLink Href="@AppRouteConstants.Example.Counter" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.AddCircleOutline">
-                Counter
-            </MudNavLink>
-        }
-        @if (_canViewWeather)
-        {
-            <MudNavLink Href="@AppRouteConstants.Example.WeatherData" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WbSunny">
-                Weather Forecasts
-            </MudNavLink>
-        }
-    }
     @if (_canViewUsers || _canViewRoles)
     {
         <MudDivider Light="true" DividerType="DividerType.Middle"/>

@@ -47,7 +47,6 @@ public class AppAccountService : IAppAccountService
     private readonly AppConfiguration _appConfig;
     private readonly ILocalStorageService _localStorage;
     private readonly AuthStateProvider _authProvider;
-    private readonly HttpClient _httpClient;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly IAuditTrailService _auditService;
@@ -58,7 +57,7 @@ public class AppAccountService : IAppAccountService
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
-        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
+        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider,
         IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState,
         IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
         ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig)
@@ -69,7 +68,6 @@ public class AppAccountService : IAppAccountService
         _userRepository = userRepository;
         _localStorage = localStorage;
         _authProvider = authProvider;
-        _httpClient = httpClientFactory.CreateClient("Default");
         _mailService = mailService;
         _dateTime = dateTime;
         _serverState = serverState;
@@ -416,7 +414,6 @@ public class AppAccountService : IAppAccountService
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
             _authProvider.DeauthenticateUser();
-            _httpClient.DefaultRequestHeaders.Authorization = null;
             
             if (!_lifecycleConfig.AuditLoginLogout) return await Result.SuccessAsync();
             
