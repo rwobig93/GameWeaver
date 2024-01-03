@@ -2,4 +2,4 @@
 
 global using Microsoft.AspNetCore.Builder;
 global using Microsoft.AspNetCore.Routing;
-global using IResult = Application.Models.Web.IResult;
+global using IResult = Domain.Contracts.IResult;

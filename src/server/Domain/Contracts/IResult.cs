@@ -1,6 +1,6 @@
-namespace Application.Models.Web;
+namespace Domain.Contracts;
 
-public interface IResult : Microsoft.AspNetCore.Http.IResult
+public interface IResult
 {
     List<string> Messages { get; set; }
 

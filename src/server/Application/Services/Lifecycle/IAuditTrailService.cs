@@ -1,5 +1,6 @@
 ﻿using Application.Models.Lifecycle;
 using Application.Models.Web;
+using Domain.Contracts;
 using Domain.Enums.Lifecycle;
 
 namespace Application.Services.Lifecycle;

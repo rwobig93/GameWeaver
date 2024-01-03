@@ -5,6 +5,7 @@ using Application.Requests.v1.Api;
 using Application.Responses.v1.Api;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
+using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Application.Api.v1.Api;

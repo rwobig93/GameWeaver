@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using Application.Models.GameServer.Network;
 using Application.Models.Web;
 using Application.Services.GameServer;
+using Domain.Contracts;
 using Domain.Enums.GameServer;
 using QueryMaster;
 using QueryMaster.GameServer;

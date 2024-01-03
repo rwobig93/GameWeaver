@@ -4,6 +4,7 @@ using Application.Models.Web;
 using Application.Repositories.Lifecycle;
 using Application.Services.Lifecycle;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Newtonsoft.Json;

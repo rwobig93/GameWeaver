@@ -10,6 +10,7 @@ using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using Domain.Contracts;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;

@@ -1,5 +1,6 @@
 ﻿using Application.Models.Web;
 using Application.Services.System;
+using Domain.Contracts;
 using Microsoft.JSInterop;
 
 namespace Infrastructure.Services.System;

@@ -21,6 +21,7 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
@@ -34,7 +35,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using IResult = Application.Models.Web.IResult;
+using IResult = Domain.Contracts.IResult;
 
 namespace Infrastructure.Services.Identity;
 

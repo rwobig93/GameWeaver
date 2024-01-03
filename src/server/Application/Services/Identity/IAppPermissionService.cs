@@ -2,6 +2,7 @@
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Models.Web;
+using Domain.Contracts;
 
 namespace Application.Services.Identity;
 

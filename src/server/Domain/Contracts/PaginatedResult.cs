@@ -1,4 +1,4 @@
-﻿namespace Application.Models.Web;
+﻿namespace Domain.Contracts;
 
 public class PaginatedResult<T> : Result
 {

@@ -18,6 +18,7 @@ using Application.Services.System;
 using Application.Settings.AppSettings;
 using Asp.Versioning;
 using Blazored.LocalStorage;
+using Domain.Contracts;
 using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.PostgreSql;

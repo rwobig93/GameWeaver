@@ -20,6 +20,7 @@ using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using Domain.Contracts;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.WebUtilities;

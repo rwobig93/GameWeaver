@@ -9,6 +9,7 @@ using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.System;
+using Domain.Contracts;
 
 namespace Application.Api.v1.GameServer;
 

@@ -8,6 +8,7 @@ using Application.Models.Web;
 using Application.Requests.v1.Identity.Permission;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
+using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
