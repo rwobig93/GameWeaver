@@ -3,7 +3,6 @@ using Application.Constants.Web;
 using Application.Helpers.Integrations;
 using Application.Mappers.Integrations;
 using Application.Models.Identity.External;
-using Application.Models.Web;
 using Application.Services.Integrations;
 using Application.Settings.AppSettings;
 using Domain.Contracts;

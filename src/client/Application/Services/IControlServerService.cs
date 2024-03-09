@@ -1,7 +1,6 @@
 ﻿using Application.Requests.Host;
 using Application.Responses.Host;
 using Domain.Contracts;
-using Domain.Models.ControlServer;
 using Domain.Models.Host;
 
 namespace Application.Services;

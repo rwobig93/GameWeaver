@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Security.Authentication;
 using System.Text.Json;
-using Application.Models.Web;
 using Domain.Contracts;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Http;

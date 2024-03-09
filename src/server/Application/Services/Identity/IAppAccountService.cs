@@ -1,5 +1,4 @@
 ﻿using Application.Models.Identity.UserExtensions;
-using Application.Models.Web;
 using Application.Requests.v1.Api;
 using Application.Requests.v1.Identity.User;
 using Application.Responses.v1.Api;

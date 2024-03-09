@@ -9,7 +9,6 @@ using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.UserExtensions;
-using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Requests.v1.Api;
 using Application.Requests.v1.Identity.User;

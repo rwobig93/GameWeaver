@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
-using Domain.Models;
 using Domain.Models.GameServer;
 using Domain.Models.Host;
 using Serilog;

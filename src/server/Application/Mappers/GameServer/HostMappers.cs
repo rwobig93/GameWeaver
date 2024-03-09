@@ -3,7 +3,6 @@ using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
