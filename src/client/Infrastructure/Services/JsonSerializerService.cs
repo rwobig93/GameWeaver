@@ -5,6 +5,7 @@ using Application.Constants;
 using Application.Helpers;
 using Application.Services;
 using Domain.Contracts;
+using Domain.Converters;
 using Newtonsoft.Json.Linq;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
@@ -24,7 +25,8 @@ public class JsonSerializerService : ISerializerService
         PropertyNameCaseInsensitive = true,
         ReadCommentHandling = JsonCommentHandling.Disallow,
         UnknownTypeHandling = JsonUnknownTypeHandling.JsonElement,
-        WriteIndented = true
+        WriteIndented = true,
+        Converters = { new IpAddressConverter() }
     };
 
     public string Serialize<T>(T rawObject)

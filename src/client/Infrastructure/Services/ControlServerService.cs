@@ -199,7 +199,6 @@ public class ControlServerService : IControlServerService
     /// <returns></returns>
     public async Task<IResult> WorkStatusUpdate(WeaverWorkUpdateRequest request)
     {
-        // TODO: Only remove work from the queue or update queue once the control server has the status
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);

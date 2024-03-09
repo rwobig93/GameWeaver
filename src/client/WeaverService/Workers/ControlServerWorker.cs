@@ -1,6 +1,5 @@
 
 using System.Collections.Concurrent;
-using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
@@ -14,34 +13,37 @@ public class ControlServerWorker : BackgroundService
     private readonly ILogger _logger;
     private readonly IControlServerService _serverService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
+    private readonly IDateTimeService _dateTimeService;
 
     private static DateTime _lastRuntime;
     private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
 
-    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig)
+    /// <summary>
+    /// Handles control server communication
+    /// </summary>
+    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig, IDateTimeService dateTimeService)
     {
         _logger = logger;
         _serverService = serverService;
         _generalConfig = generalConfig;
+        _dateTimeService = dateTimeService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(ControlServerWorker));
-        ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
         
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                _lastRuntime = DateTime.Now;
+                _lastRuntime = _dateTimeService.NowDatabaseTime;
 
                 await ValidateServerStatus();
-                // TODO: Get host and resource telemetry and finish full checkin
-                await _serverService.Checkin(new HostCheckInRequest());
+                await CheckInWithControlServer();
                 await SendOutQueueCommunication();
 
-                var millisecondsPassed = (DateTime.Now - _lastRuntime).Milliseconds;
+                var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < 1000)
                     await Task.Delay(1000 - millisecondsPassed, stoppingToken);
             }
@@ -66,6 +68,30 @@ public class ControlServerWorker : BackgroundService
             await _serverService.RegistrationConfirm();
         
         _logger.Debug("Control Server is up: {ServerStatus}", serverIsUp);
+    }
+
+    private async Task CheckInWithControlServer()
+    {
+        var currentResourceUsage = HostWorker.CurrentHostResourceUsage;
+        
+        var checkInRequest = new HostCheckInRequest
+        {
+            SendTimestamp = _dateTimeService.NowDatabaseTime,
+            CpuUsage = currentResourceUsage.CpuUsage,
+            RamUsage = currentResourceUsage.RamUsage,
+            Uptime = currentResourceUsage.Uptime,
+            NetworkOutMb = currentResourceUsage.NetworkOutMb,
+            NetworkInMb = currentResourceUsage.NetworkInMb
+        };
+        
+        var checkInResponse = await _serverService.Checkin(checkInRequest);
+        if (!checkInResponse.Succeeded)
+        {
+            _logger.Error("Failed to check in with the control server: {Error}", checkInResponse.Messages);
+            return;
+        }
+        
+        _logger.Verbose("Successfully checked in with the control server");
     }
 
     public static void AddWeaverWorkUpdate(WeaverWorkUpdateRequest request)

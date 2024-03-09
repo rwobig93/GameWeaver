@@ -1,8 +1,8 @@
-namespace Application.Requests.Host;
+﻿namespace Domain.Models.Host;
 
-public class HostCheckInRequest
+public class HostResourceUsage
 {
-    public DateTime SendTimestamp { get; set; }
+    public DateTime TimeStamp { get; set; } = DateTime.Now;
     public double CpuUsage { get; set; }
     public double RamUsage { get; set; }
     public long Uptime { get; set; }
