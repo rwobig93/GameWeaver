@@ -251,6 +251,11 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> InstallOrUpdateGame()
     {
+        // From Powershell server-watcher.ps1 script
+        // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
+        //
+        // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_status "443030" +quit
+        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
         throw new NotImplementedException();
     }
 
@@ -264,11 +269,13 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> UninstallGame()
     {
+        // Delete game directory and cleanup GameServer object
         throw new NotImplementedException();
     }
 
     public async Task<IResult> UninstallMod()
     {
+        // Delete mod directory and cleanup GameServer object
         throw new NotImplementedException();
     }
 }
