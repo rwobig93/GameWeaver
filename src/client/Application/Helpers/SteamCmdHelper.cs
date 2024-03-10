@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Net;
+using Application.Constants;
 using Domain.Models.GameServer;
 using Domain.Models.Host;
 using Serilog;
@@ -281,23 +282,15 @@ public static class SteamCmdHelper
         Log.Information("Finished extracting SteamCMD to source folder");
     }
 
-    public static void DownloadSteamCmd()
+    public static async Task DownloadSteamCmd()
     {
         Log.Verbose("Starting DownloadSteamCMD()");
-        // TODO: Convert stack methods to async and move to HttpClient instead of WebClient
-        // using (var httpClient = new HttpClient())
-        // {
-        //     var responseStream = await httpClient.GetStreamAsync(Constants.URLSteamCMDDownload);
-        //     using var fileStream = new FileStream(Path.Combine(Constants.PathCache, "steamcmd.zip"), FileMode.Create);
-        //     await responseStream.CopyToAsync(fileStream);
-        // }
-#pragma warning disable SYSLIB0014
-        using (var webClient = new WebClient())
-#pragma warning restore SYSLIB0014
+
+        using (var httpClient = new HttpClient())
         {
-            // webClient.DownloadProgressChanged += Events.WebClient_DownloadProgressChanged;
-            // webClient.DownloadFileCompleted += Events.WebClient_DownloadFileCompleted;
-            webClient.DownloadFile(OsHelper.GetDownloadDirectory(), Path.Combine(OsHelper.GetSteamCachePath(), "steamcmd.zip"));
+            var responseStream = await httpClient.GetStreamAsync(SteamConstants.SteamCmdDownloadUrl);
+            await using var fileStream = new FileStream(Path.Combine(OsHelper.GetSteamCachePath(), "steamcmd.zip"), FileMode.Create);
+            await responseStream.CopyToAsync(fileStream);
         }
 
         Log.Debug("Finished downloading SteamCMD");

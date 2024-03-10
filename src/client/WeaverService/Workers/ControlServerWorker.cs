@@ -39,9 +39,9 @@ public class ControlServerWorker : BackgroundService
             {
                 _lastRuntime = _dateTimeService.NowDatabaseTime;
 
-                await ValidateServerStatus();
-                await CheckInWithControlServer();
-                await SendOutQueueCommunication();
+                // await ValidateServerStatus();
+                // await CheckInWithControlServer();
+                // await SendOutQueueCommunication();
 
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < _generalConfig.Value.ControlServerWorkIntervalMs)
@@ -80,8 +80,8 @@ public class ControlServerWorker : BackgroundService
             CpuUsage = currentResourceUsage.CpuUsage,
             RamUsage = currentResourceUsage.RamUsage,
             Uptime = currentResourceUsage.Uptime,
-            NetworkOutMb = currentResourceUsage.NetworkOutMb,
-            NetworkInMb = currentResourceUsage.NetworkInMb
+            NetworkOutMb = currentResourceUsage.NetworkOutBytes,
+            NetworkInMb = currentResourceUsage.NetworkInBytes
         };
         
         var checkInResponse = await _serverService.Checkin(checkInRequest);

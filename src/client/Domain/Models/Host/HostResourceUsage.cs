@@ -6,6 +6,6 @@ public class HostResourceUsage
     public double CpuUsage { get; set; }
     public double RamUsage { get; set; }
     public long Uptime { get; set; }
-    public double NetworkOutMb { get; set; }
-    public double NetworkInMb { get; set; }
+    public double NetworkOutBytes { get; set; }
+    public double NetworkInBytes { get; set; }
 }

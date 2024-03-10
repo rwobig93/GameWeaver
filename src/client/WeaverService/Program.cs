@@ -5,8 +5,8 @@ Host.CreateDefaultBuilder(args)
     .AddInfrastructure()
     .ConfigureServices(services =>
     {
-        services.AddHostedService<ControlServerWorker>();
         services.AddHostedService<HostWorker>();
+        services.AddHostedService<ControlServerWorker>();
         services.AddHostedService<GameServerWorker>();
     })
     .Build()

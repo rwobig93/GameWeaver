@@ -34,8 +34,6 @@ public class GameServerWorker : BackgroundService
             {
                 _lastRuntime = _dateTimeService.NowDatabaseTime;
 
-                _logger.Debug("Finished GameServerWorker work");
-
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < _generalConfig.Value.GameServerWorkIntervalMs)
                     await Task.Delay(_generalConfig.Value.GameServerWorkIntervalMs - millisecondsPassed, stoppingToken);

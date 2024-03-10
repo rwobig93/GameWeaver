@@ -2,6 +2,7 @@
 appsettings.Development.json
 **/.idea/dataSources/
 **/.idea/discord.xml
+**/_dev-WeaverApp
 
 # User-specific files
 *.rsuser

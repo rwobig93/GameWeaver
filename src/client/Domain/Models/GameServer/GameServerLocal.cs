@@ -27,5 +27,5 @@ public class GameServerLocal
     public GameSource Source { get; set; }
     public List<Mod> ModList { get; set; } = new();
     public List<LocationPointer> Resources { get; set; } = new();
-    public List<GameServerSoftwareUpdate> UpdatesWaiting { get; set; } = new();
+    public List<SoftwareUpdateStatus> UpdatesWaiting { get; set; } = new();
 }

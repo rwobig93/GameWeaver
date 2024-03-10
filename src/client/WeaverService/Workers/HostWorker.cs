@@ -17,6 +17,8 @@ public class HostWorker : BackgroundService
     private readonly IDateTimeService _dateTimeService;
     private readonly ISerializerService _serializerService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
+    private readonly IGameServerService _gameServerService;
+    private readonly IHostApplicationLifetime _appLifetime;
 
     private static readonly ConcurrentQueue<WeaverWorkClient> WorkInProgressQueue = new();
     private static readonly ConcurrentQueue<WeaverWorkClient> WorkWaitingQueue = new();
@@ -28,26 +30,46 @@ public class HostWorker : BackgroundService
     /// <summary>
     /// Handles host IO operations and resource usage gathering
     /// </summary>
-    public HostWorker(ILogger logger, IHostService hostService, IDateTimeService dateTimeService, ISerializerService serializerService, IOptions<GeneralConfiguration> generalConfig)
+    public HostWorker(ILogger logger, IHostService hostService, IDateTimeService dateTimeService, ISerializerService serializerService,
+        IOptions<GeneralConfiguration> generalConfig, IGameServerService gameServerService, IHostApplicationLifetime appLifetime)
     {
         _logger = logger;
         _hostService = hostService;
         _dateTimeService = dateTimeService;
         _serializerService = serializerService;
         _generalConfig = generalConfig;
+        _gameServerService = gameServerService;
+        _appLifetime = appLifetime;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(HostWorker));
+        Directory.CreateDirectory(_generalConfig.Value.AppDirectory);
+        Directory.SetCurrentDirectory(_generalConfig.Value.AppDirectory);
+        _logger.Information("Set application directory: {Directory}", _generalConfig.Value.AppDirectory);
+        _logger.Information("  Full path: {Directory}", Directory.GetCurrentDirectory());
+        _lastRuntime = _dateTimeService.NowDatabaseTime;
         ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
+        
+        var steamCmdStatus = await _gameServerService.ValidateSteamCmdInstall();
+        if (!steamCmdStatus.Succeeded)
+        {
+            _logger.Fatal("SteamCMD validation failed, couldn't install/update SteamCMD, please check logs to troubleshoot");
+            _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
+            _appLifetime.StopApplication();
+        }
+        
 
         // TODO: Implement control server consumption of host detail
         StartResourcePoller();
-        // await Task.Delay(3000, stoppingToken);  // Add startup delay for poller details to fully gather
-        ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
-        // TODO: Add folder structure and dependency enforcement like SteamCMD before jumping into the execution loop
+        // Add startup delay for poller details to fully gather
+        var startupTimePassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
+        if (startupTimePassed < 3000)
+            await Task.Delay(3000 - startupTimePassed, stoppingToken);
+        
+        ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
         while (!stoppingToken.IsCancellationRequested)
         {

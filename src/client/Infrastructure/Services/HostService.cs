@@ -15,7 +15,7 @@ public class HostService : IHostService
         _dateTimeService = dateTimeService;
     }
 
-    private static readonly IHardwareInfo HardwareInfo = new HardwareInfo();
+    private static readonly IHardwareInfo HardwareInfo = new HardwareInfo(useAsteriskInWMI: false);
 
     public void PollHostDetail()
     {
@@ -73,12 +73,12 @@ public class HostService : IHostService
             hostResourceUsage.CpuUsage = cpuUsage;
             hostResourceUsage.RamUsage = ramUsage * 100;
             hostResourceUsage.Uptime = Environment.TickCount64;
-            hostResourceUsage.NetworkOutMb = totalNetworkOutBytes / 1000;
-            hostResourceUsage.NetworkInMb = totalNetworkInBytes / 1000;
+            hostResourceUsage.NetworkOutBytes = totalNetworkOutBytes;
+            hostResourceUsage.NetworkInBytes = totalNetworkInBytes;
             hostResourceUsage.TimeStamp = _dateTimeService.NowDatabaseTime;
             
             _logger.Debug("Successfully gathered host resource usage: {CpuUsage} | {RamUsage} | {Uptime} | {NetInMb} | {NetOutMb}",
-                hostResourceUsage.CpuUsage, hostResourceUsage.RamUsage, TimeSpan.FromMilliseconds(hostResourceUsage.Uptime), hostResourceUsage.NetworkInMb, hostResourceUsage.NetworkOutMb);
+                hostResourceUsage.CpuUsage, hostResourceUsage.RamUsage, TimeSpan.FromMilliseconds(hostResourceUsage.Uptime), hostResourceUsage.NetworkInBytes, hostResourceUsage.NetworkOutBytes);
         }
         catch (Exception ex)
         {

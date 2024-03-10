@@ -22,4 +22,6 @@ public class GeneralConfiguration : IAppSettingsSection
     public int GameServerWorkIntervalMs { get; set; } = 1000;
 
     public int ResourceGatherIntervalMs { get; set; } = 2000;
+
+    public string AppDirectory { get; set; } = "./";
 }
