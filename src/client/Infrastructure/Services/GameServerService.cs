@@ -60,6 +60,49 @@ public class GameServerService : IGameServerService
         return await Result.SuccessAsync();
     }
 
+    public void ClearSteamCmdData()
+    {
+        SteamCmdUpdateInProgress = true;
+        var steamCmdDir = new DirectoryInfo(OsHelper.GetSteamCmdDirectory());
+        _logger.Information("Clearing SteamCMD data at: {Directory}", steamCmdDir);
+        
+        foreach (var file in steamCmdDir.EnumerateFiles())
+        {
+            try
+            {
+                if (file.FullName == OsHelper.GetSteamCmdPath())
+                {
+                    _logger.Verbose("Skipping steamcmd binary: {File}", file.FullName);
+                    continue;
+                }
+                
+                _logger.Debug("Deleting File: {File}", file.FullName);
+                file.Delete();
+            }
+            catch (Exception ex)
+            {
+                _logger.Information(ex, "Failed to delete SteamCMD cache fiel: {Error}", ex.Message);
+            }
+        }
+        _logger.Information("Finished deleting root SteamCMD data files");
+
+        foreach (var dir in steamCmdDir.EnumerateDirectories())
+        {
+            try
+            {
+                _logger.Debug("Deleting directory recursively: {Directory}", dir.FullName);
+                dir.Delete(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.Information(ex, "Failed to delete SteamCMD cache directory: {Error}", ex.Message);
+            }
+        }
+        _logger.Information("Finished deleting SteamCMD data directories");
+        
+        RunSteamCmdCommand(SteamConstants.CommandUpdate, true).RunSynchronously();
+    }
+
     private async Task<IResult> DownloadSteamCmd(string downloadPath)
     {
         try
@@ -108,6 +151,10 @@ public class GameServerService : IGameServerService
 
     private async Task<IResult> RunSteamCmdCommand(string command, bool isMaintenanceCommand = false)
     {
+        // .\steamcmd.exe +login anonymous +force_install_dir "ConanExiles" +app_update 443030 validate +quit
+        // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_update 443030 +app_status 443030 +quit
+        // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login ${SteamLoginName} +app_info_update 1 +app_status ${SteamAppID} +quit/
+        // https://steamapi.xpaw.me/
         _logger.Debug("Running SteamCMD command: [Maintenance:{IsMaintenance}]{Command}", isMaintenanceCommand, command);
         try
         {
@@ -175,11 +222,30 @@ public class GameServerService : IGameServerService
     
     public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame()
     {
+        // From Powershell server-watcher.ps1 script
+        // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
+        //
+        // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_status "443030" +quit
+        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
+        
+        // Another option, check game id via API: https://api.steamcmd.net/v1/info/$steamAppId
+        //  $jsonContent = $response | ConvertFrom-Json
+        //  $version = $jsonContent.data."$steamAppId".depots.branches.public.buildid
+        //  $timeUpdated = $jsonContent.data."$steamAppId".depots.branches.public.timeupdated
+        //  $epoch = [DateTime]::new(1970, 1, 1, 0, 0, 0, [DateTimeKind]::Utc)
+        //  $releaseDate = $epoch.AddSeconds($timeUpdated)
         throw new NotImplementedException();
     }
 
     public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod()
     {
+        // https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?itemcount=1&publishedfileids%5B0%5D=3120364390
+        // See: https://www.reddit.com/r/Steam/comments/30l5au/web_api_for_workshop_items/
+        // response.publishedfiledetails.publishedfileid
+        // response.publishedfiledetails.hcontent_file
+        // response.publishedfiledetails.title
+        // response.publishedfiledetails.time_created
+        // response.publishedfiledetails.time_updated
         throw new NotImplementedException();
     }
 
@@ -190,6 +256,9 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> InstallOrUpdateMod()
     {
+        // steamcmd.exe +login anonymous +workshop_download_item 346110 496735411 +quit
+        // steamcmd.exe +login anonymous +workshop_download_item {steamGameId} {workshopItemId} +quit
+        // See: https://steamcommunity.com/app/346110/discussions/10/530649887212662565/?l=hungarian#c521643320353037920
         throw new NotImplementedException();
     }
 
