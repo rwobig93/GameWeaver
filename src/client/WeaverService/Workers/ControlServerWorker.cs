@@ -44,8 +44,8 @@ public class ControlServerWorker : BackgroundService
                 await SendOutQueueCommunication();
 
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
-                if (millisecondsPassed < 1000)
-                    await Task.Delay(1000 - millisecondsPassed, stoppingToken);
+                if (millisecondsPassed < _generalConfig.Value.ControlServerWorkIntervalMs)
+                    await Task.Delay(_generalConfig.Value.ControlServerWorkIntervalMs - millisecondsPassed, stoppingToken);
             }
             catch (Exception ex)
             {

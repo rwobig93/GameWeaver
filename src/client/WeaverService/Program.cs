@@ -7,6 +7,7 @@ Host.CreateDefaultBuilder(args)
     {
         services.AddHostedService<ControlServerWorker>();
         services.AddHostedService<HostWorker>();
+        services.AddHostedService<GameServerWorker>();
     })
     .Build()
     .Run();

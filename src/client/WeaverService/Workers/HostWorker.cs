@@ -2,9 +2,11 @@ using System.Collections.Concurrent;
 using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
+using Application.Settings;
 using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.Host;
+using Microsoft.Extensions.Options;
 
 namespace WeaverService.Workers;
 
@@ -14,6 +16,7 @@ public class HostWorker : BackgroundService
     private readonly IHostService _hostService;
     private readonly IDateTimeService _dateTimeService;
     private readonly ISerializerService _serializerService;
+    private readonly IOptions<GeneralConfiguration> _generalConfig;
 
     private static readonly ConcurrentQueue<WeaverWorkClient> WorkInProgressQueue = new();
     private static readonly ConcurrentQueue<WeaverWorkClient> WorkWaitingQueue = new();
@@ -25,12 +28,13 @@ public class HostWorker : BackgroundService
     /// <summary>
     /// Handles host IO operations and resource usage gathering
     /// </summary>
-    public HostWorker(ILogger logger, IHostService hostService, IDateTimeService dateTimeService, ISerializerService serializerService)
+    public HostWorker(ILogger logger, IHostService hostService, IDateTimeService dateTimeService, ISerializerService serializerService, IOptions<GeneralConfiguration> generalConfig)
     {
         _logger = logger;
         _hostService = hostService;
         _dateTimeService = dateTimeService;
         _serializerService = serializerService;
+        _generalConfig = generalConfig;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -40,7 +44,7 @@ public class HostWorker : BackgroundService
 
         // TODO: Implement control server consumption of host detail
         StartResourcePoller();
-        await Task.Delay(3000, stoppingToken);  // Add startup delay for poller details to fully gather
+        // await Task.Delay(3000, stoppingToken);  // Add startup delay for poller details to fully gather
         ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
         // TODO: Add folder structure and dependency enforcement like SteamCMD before jumping into the execution loop
@@ -51,8 +55,8 @@ public class HostWorker : BackgroundService
             await UpdateCurrentResourceUsage();
 
             var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
-            if (millisecondsPassed < 1000)
-                await Task.Delay(1000 - millisecondsPassed, stoppingToken);
+            if (millisecondsPassed < _generalConfig.Value.HostWorkIntervalMs)
+                await Task.Delay(_generalConfig.Value.HostWorkIntervalMs - millisecondsPassed, stoppingToken);
         }
         
         _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
@@ -170,8 +174,8 @@ public class HostWorker : BackgroundService
                     
                     // We'll ensure we are on a 2second interval for gathering
                     var millisecondsPassed = (_dateTimeService.NowDatabaseTime - pollerLastRun).Milliseconds;
-                    if (millisecondsPassed < 2000)
-                        Thread.Sleep(2000 - millisecondsPassed);
+                    if (millisecondsPassed < _generalConfig.Value.ResourceGatherIntervalMs)
+                        Thread.Sleep(_generalConfig.Value.ResourceGatherIntervalMs - millisecondsPassed);
                 }
                 catch (Exception ex)
                 {

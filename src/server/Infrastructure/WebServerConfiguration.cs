@@ -73,6 +73,13 @@ public static class WebServerConfiguration
             return;
         }
         
+        // TODO: Register headers and trusted proxies from general configuration
+        // app.UseForwardedHeaders(new ForwardedHeadersOptions
+        // {
+        //     ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+        //                        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+        // });
+        
         app.UseExceptionHandler("/Error");
         app.UseHsts();
     }

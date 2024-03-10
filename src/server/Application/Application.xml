@@ -54,12 +54,13 @@
             <param name="currentUserService"></param>
             <returns>Host ID, Key and full registration confirmation URI for the new host to complete registration</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationConfirm(Application.Requests.v1.GameServer.HostRegisterRequest,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationConfirm(Application.Requests.v1.GameServer.HostRegisterRequest,Application.Services.GameServer.IHostService,Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
             Confirms and completes an active registration
             </summary>
             <param name="request">Host ID and Key of a valid and active registration</param>
             <param name="hostService"></param>
+            <param name="context"></param>
             <returns>Host ID and Host Token for use when authenticating the host</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetToken(Application.Requests.v1.GameServer.HostAuthRequest,Application.Services.GameServer.IHostService)">

@@ -9,6 +9,7 @@ using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.System;
 using Domain.Contracts;
+using Microsoft.AspNetCore.Http;
 
 namespace Application.Api.v1.GameServer;
 
@@ -56,13 +57,14 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="request">Host ID and Key of a valid and active registration</param>
     /// <param name="hostService"></param>
+    /// <param name="context"></param>
     /// <returns>Host ID and Host Token for use when authenticating the host</returns>
-    private static async Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, IHostService hostService)
+    private static async Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, IHostService hostService, HttpContext context)
     {
         try
         {
-            // TODO: Get request IP Address
-            return await hostService.RegistrationConfirm(request, "");
+            var initiatorIp = context.GetConnectionIp();
+            return await hostService.RegistrationConfirm(request, initiatorIp);
         }
         catch (Exception ex)
         {
