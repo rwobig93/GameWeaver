@@ -84,6 +84,7 @@ public class ControlServerWorker : BackgroundService
             NetworkInMb = currentResourceUsage.NetworkInBytes
         };
         
+        // TODO: Serialize w/ Memory Serialization, Deserialize on Server
         var checkInResponse = await _serverService.Checkin(checkInRequest);
         if (!checkInResponse.Succeeded)
         {
@@ -124,7 +125,8 @@ public class ControlServerWorker : BackgroundService
             if (!WorkUpdateQueue.TryDequeue(out var message)) continue;
             
             _logger.Debug("Sending outgoing communication => {WorkId}", message.Id);
-
+            
+            // TODO: Serialize w/ Memory Serialization, Deserialize on Server
             var response = await _serverService.WorkStatusUpdate(message);
             if (response.Succeeded)
             {

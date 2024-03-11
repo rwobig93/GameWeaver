@@ -58,6 +58,6 @@ public static class WorkerConfiguration
             .AddHttpMessageHandler<AuthTokenDelegatingHandler>();
 
         services.AddSingleton<IDateTimeService, DateTimeService>();
-        services.AddSingleton<ISerializerService, JsonSerializerService>();
+        services.AddSingleton<ISerializerService, SerializerService>();
     }
 }

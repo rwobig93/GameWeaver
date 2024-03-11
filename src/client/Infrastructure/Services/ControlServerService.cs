@@ -56,7 +56,7 @@ public class ControlServerService : IControlServerService
             }
 
             // Since the control server is up we'll parse the response and indicate if the server is reporting an unhealthy state for troubleshooting
-            var convertedResponse = _serializerService.Deserialize<HealthCheckResponse>(await response.Content.ReadAsStringAsync());
+            var convertedResponse = _serializerService.DeserializeJson<HealthCheckResponse>(await response.Content.ReadAsStringAsync());
             if (convertedResponse.status != "Healthy")
                 _logger.Warning("Control Server is up but is in an unhealthy state");
         }
@@ -89,12 +89,12 @@ public class ControlServerService : IControlServerService
         // Prep confirmation request
         var confirmRequest = ApiHelpers.GetRequestFromUrl(_authConfig.CurrentValue.RegisterUrl);
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.Serialize(confirmRequest), Encoding.UTF8, "application/json");
+        var payload = new StringContent(_serializerService.SerializeJson(confirmRequest), Encoding.UTF8, "application/json");
 
         // Handle registration confirmation to the control server
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.RegistrationConfirm, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
-        var convertedResponse = _serializerService.Deserialize<HostRegisterResponse>(responseContent);
+        var convertedResponse = _serializerService.DeserializeJson<HostRegisterResponse>(responseContent);
         if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
             return await Result<HostRegisterResponse>.FailAsync(convertedResponse.Messages);
 
@@ -132,12 +132,12 @@ public class ControlServerService : IControlServerService
         };
         // We must use an unauthenticated client to prevent a stack overflow as the token delegate handler runs with an authenticated client
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.Unauthenticated);
-        var payload = new StringContent(_serializerService.Serialize(tokenRequest), Encoding.UTF8, "application/json");
+        var payload = new StringContent(_serializerService.SerializeJson(tokenRequest), Encoding.UTF8, "application/json");
 
         // Handle the token response
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.GetToken, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
-        var convertedResponse = _serializerService.Deserialize<HostAuthResponse>(responseContent);
+        var convertedResponse = _serializerService.DeserializeJson<HostAuthResponse>(responseContent);
         if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
             return await Result<HostAuthResponse>.FailAsync(convertedResponse.Messages);
 
@@ -182,7 +182,7 @@ public class ControlServerService : IControlServerService
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
+        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
 
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
@@ -202,7 +202,7 @@ public class ControlServerService : IControlServerService
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
+        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
 
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();

@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <PackageReference Include="Hardware.Info" Version="100.1.0" />
+      <PackageReference Include="MemoryPack" Version="1.10.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />

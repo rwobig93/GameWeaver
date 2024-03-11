@@ -2,3 +2,4 @@
 
 global using ILogger = Serilog.ILogger;
 global using IResult = Domain.Contracts.IResult;
+global using MemoryPack;

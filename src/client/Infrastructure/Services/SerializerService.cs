@@ -6,12 +6,13 @@ using Application.Helpers;
 using Application.Services;
 using Domain.Contracts;
 using Domain.Converters;
+using MemoryPack;
 using Newtonsoft.Json.Linq;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Infrastructure.Services;
 
-public class JsonSerializerService : ISerializerService
+public class SerializerService : ISerializerService
 {
     private readonly JsonSerializerOptions _options = new()
     {
@@ -29,17 +30,17 @@ public class JsonSerializerService : ISerializerService
         Converters = { new IpAddressConverter() }
     };
 
-    public string Serialize<T>(T rawObject)
+    public string SerializeJson<T>(T rawObject)
     {
         return JsonSerializer.Serialize(rawObject, _options);
     }
 
-    public T Deserialize<T>(string rawJson)
+    public T DeserializeJson<T>(string rawJson)
     {
         return JsonSerializer.Deserialize<T>(rawJson, _options) ?? throw new InvalidOperationException();
     }
 
-    public T Deserialize<T>(byte[] rawJson)
+    public T DeserializeJson<T>(byte[] rawJson)
     {
         return JsonSerializer.Deserialize<T>(rawJson, _options) ?? throw new InvalidOperationException();
     }
@@ -66,9 +67,6 @@ public class JsonSerializerService : ISerializerService
                     jContainer[prop.Name] = JToken.FromObject(prop.GetValue(updatedSection)!);
                 }
             }
-
-            // C:\Users\username\RiderProjects\ProjectName\src\client\Project\appsettings.Development.json
-            // C:\Users\username\RiderProjects\ProjectName\src\client\Project\bin\Debug\net7.0\appsettings.Development.json
             
             // Save the file
             var exportFile = jsonObj.ToString();
@@ -80,5 +78,15 @@ public class JsonSerializerService : ISerializerService
         {
             return await Result.FailAsync(ex.Message);
         }
+    }
+
+    public byte[] SerializeMemory<T>(T rawObject)
+    {
+        return MemoryPackSerializer.Serialize(rawObject);
+    }
+
+    public T? DeserializeMemory<T>(byte[] rawMemory)
+    {
+        return MemoryPackSerializer.Deserialize<T>(rawMemory);
     }
 }

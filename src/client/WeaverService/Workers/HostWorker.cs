@@ -152,15 +152,13 @@ public class HostWorker : BackgroundService
             VideoMode = gpu.VideoModeDescription,
             AdapterRam = gpu.AdapterRAM
         }));
-
-        var serializedRequest = _serializerService.Serialize(hostDetailRequest);
         
         ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
         {
             Id = 0,
             Type = HostWorkType.HostDetail,
             Status = WeaverWorkState.Completed,
-            WorkData = serializedRequest,
+            WorkData = hostDetailRequest,
             AttemptCount = 0
         });
     }
