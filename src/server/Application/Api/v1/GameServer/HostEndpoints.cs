@@ -28,6 +28,7 @@ public static class HostEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Host.RegistrationConfirm, RegistrationConfirm).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.GetToken, GetToken).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, Checkin).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWorkStatus, WorkStatusUpdate).ApiVersionOne();
     }
 
     /// <summary>
@@ -92,7 +93,7 @@ public static class HostEndpoints
             return await Result<HostAuthResponse>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Inject a valid host check-in status
     /// </summary>
@@ -100,36 +101,88 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <param name="dateTimeService"></param>
-    /// <returns>Success or Failure, payload is a list of work for the host to process</returns>
-    private static async Task<IResult<IEnumerable<WeaverWorkClient>>> Checkin(HostCheckInRequest request, IHostService hostService, ICurrentUserService currentUserService,
-        IDateTimeService dateTimeService)
+    /// <param name="serializerService"></param>
+    /// <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
+    private static async Task<IResult<byte[]>> Checkin(byte[] request, IHostService hostService, ICurrentUserService currentUserService,
+        IDateTimeService dateTimeService, ISerializerService serializerService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
 
+            var deserializedRequest = serializerService.DeserializeMemory<HostCheckInRequest>(request);
+            if (deserializedRequest is null)
+                return await Result<byte[]>.FailAsync("Invalid checkin request provided, please verify your payload");
+
             var createCheckIn = new HostCheckInCreate
             {
                 HostId = currentUserId,
-                SendTimestamp = request.SendTimestamp,
+                SendTimestamp = deserializedRequest.SendTimestamp,
                 ReceiveTimestamp = dateTimeService.NowDatabaseTime,
-                CpuUsage = request.CpuUsage,
-                RamUsage = request.RamUsage,
-                Uptime = request.Uptime,
-                NetworkOutMb = request.NetworkOutMb,
-                NetworkInMb = request.NetworkInMb
+                CpuUsage = deserializedRequest.CpuUsage,
+                RamUsage = deserializedRequest.RamUsage,
+                Uptime = deserializedRequest.Uptime,
+                NetworkOutMb = deserializedRequest.NetworkOutMb,
+                NetworkInMb = deserializedRequest.NetworkInMb
             };
 
             var checkInResponse = await hostService.CreateCheckInAsync(createCheckIn);
             if (!checkInResponse.Succeeded)
-                return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(checkInResponse.Messages);
+                return await Result<byte[]>.FailAsync(checkInResponse.Messages);
 
             var nextHostWork = await hostService.GetWeaverWaitingWorkByHostIdAsync(currentUserId);
-            return await Result<IEnumerable<WeaverWorkClient>>.SuccessAsync(nextHostWork.Data.ToClientWorks());
+            var serializedHostWork = serializerService.SerializeMemory(nextHostWork.Data.ToClientWorks());
+            return await Result<byte[]>.SuccessAsync(serializedHostWork);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(ex.Message);
+            return await Result<byte[]>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Update the status of requested weaver work from the host
+    /// </summary>
+    /// <param name="request">Work status update from the host</param>
+    /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
+    /// <param name="dateTimeService"></param>
+    /// <param name="serializerService"></param>
+    /// <returns></returns>
+    private static async Task<IResult> WorkStatusUpdate(byte[] request, IHostService hostService, ICurrentUserService currentUserService,
+        IDateTimeService dateTimeService, ISerializerService serializerService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+
+            var deserializedRequest = serializerService.DeserializeMemory<WeaverWorkUpdate>(request);
+            if (deserializedRequest is null)
+                return await Result<IEnumerable<WeaverWorkClient>>.FailAsync("Invalid work update request provided, please verify your payload");
+
+            var workUpdate = new WeaverWorkUpdate
+            {
+                Id = deserializedRequest.Id,
+                HostId = deserializedRequest.HostId,
+                GameServerId = deserializedRequest.GameServerId,
+                TargetType = deserializedRequest.TargetType,
+                Status = deserializedRequest.Status,
+                WorkData = deserializedRequest.WorkData,
+                CreatedBy = currentUserId,
+                CreatedOn = dateTimeService.NowDatabaseTime,
+                LastModifiedBy = currentUserId,
+                LastModifiedOn = dateTimeService.NowDatabaseTime
+            };
+
+            var workUpdateResponse = await hostService.UpdateWeaverWorkAsync(workUpdate);
+            if (!workUpdateResponse.Succeeded)
+                return await Result.FailAsync(workUpdateResponse.Messages);
+
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
         }
     }
 }

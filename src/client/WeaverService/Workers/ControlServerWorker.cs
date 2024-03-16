@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
+using Domain.Enums;
+using Domain.Models.ControlServer;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -14,6 +16,7 @@ public class ControlServerWorker : BackgroundService
     private readonly IControlServerService _serverService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IDateTimeService _dateTimeService;
+    private readonly ISerializerService _serializerService;
 
     private static DateTime _lastRuntime;
     private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
@@ -21,12 +24,13 @@ public class ControlServerWorker : BackgroundService
     /// <summary>
     /// Handles control server communication
     /// </summary>
-    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig, IDateTimeService dateTimeService)
+    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig, IDateTimeService dateTimeService, ISerializerService serializerService)
     {
         _logger = logger;
         _serverService = serverService;
         _generalConfig = generalConfig;
         _dateTimeService = dateTimeService;
+        _serializerService = serializerService;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -39,9 +43,9 @@ public class ControlServerWorker : BackgroundService
             {
                 _lastRuntime = _dateTimeService.NowDatabaseTime;
 
-                // await ValidateServerStatus();
-                // await CheckInWithControlServer();
-                // await SendOutQueueCommunication();
+                await ValidateServerStatus();
+                await CheckInWithControlServer();
+                await SendOutQueueCommunication();
 
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < _generalConfig.Value.ControlServerWorkIntervalMs)
@@ -84,12 +88,31 @@ public class ControlServerWorker : BackgroundService
             NetworkInMb = currentResourceUsage.NetworkInBytes
         };
         
-        // TODO: Serialize w/ Memory Serialization, Deserialize on Server
         var checkInResponse = await _serverService.Checkin(checkInRequest);
         if (!checkInResponse.Succeeded)
         {
             _logger.Error("Failed to check in with the control server: {Error}", checkInResponse.Messages);
             return;
+        }
+
+        var deserializedNextWork = _serializerService.DeserializeMemory<IEnumerable<WeaverWorkClient>>(checkInResponse.Data);
+        if (deserializedNextWork is not null)
+        {
+            foreach (var work in deserializedNextWork)
+            {
+                switch (work.TargetType)
+                {
+                    case WeaverWorkTarget.Host:
+                        HostWorker.AddWorkToQueue(work);
+                        break;
+                    case WeaverWorkTarget.GameServer:
+                        GameServerWorker.AddWorkToQueue(work);
+                        break;
+                    default:
+                        _logger.Error("Working needing processed doesn't have a valid type provided: {WorkType}", work.TargetType);
+                        break;
+                }
+            }
         }
         
         _logger.Verbose("Successfully checked in with the control server");
@@ -126,7 +149,6 @@ public class ControlServerWorker : BackgroundService
             
             _logger.Debug("Sending outgoing communication => {WorkId}", message.Id);
             
-            // TODO: Serialize w/ Memory Serialization, Deserialize on Server
             var response = await _serverService.WorkStatusUpdate(message);
             if (response.Succeeded)
             {

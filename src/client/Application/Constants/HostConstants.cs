@@ -9,4 +9,6 @@ public class HostConstants
 #endif
     public const string QueryHostId = "hostId";
     public const string QueryHostRegisterKey = "registerKey";
+    public const string InProgressQueuePath = "host-work-inprogress.json";
+    public const string WaitingQueuePath = "host-work-waiting.json";
 }

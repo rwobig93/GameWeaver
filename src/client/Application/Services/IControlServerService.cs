@@ -15,6 +15,6 @@ public interface IControlServerService
     Task<IResult<HostRegisterResponse>> RegistrationConfirm();
     Task<IResult<HostAuthResponse>> GetToken();
     Task<IResult> EnsureAuthTokenIsUpdated();
-    Task<IResult> Checkin(HostCheckInRequest request);
+    Task<IResult<byte[]>> Checkin(HostCheckInRequest request);
     Task<IResult> WorkStatusUpdate(WeaverWorkUpdateRequest request);
 }

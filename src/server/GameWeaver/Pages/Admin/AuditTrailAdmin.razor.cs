@@ -95,8 +95,8 @@ public partial class AuditTrailAdmin
             { "Type", auditTrail => auditTrail.TableName },
             { "ChangedById", auditTrail => auditTrail.ChangedBy.ToString() },
             { "ChangedByUsername", auditTrail => auditTrail.ChangedByUsername },
-            { "Before", auditTrail => Serializer.Serialize(auditTrail.Before) },
-            { "After", auditTrail => Serializer.Serialize(auditTrail.After) }
+            { "Before", auditTrail => Serializer.SerializeJson(auditTrail.Before) },
+            { "After", auditTrail => Serializer.SerializeJson(auditTrail.After) }
         }, sheetName: "AuditTrails");
 
         var fileName =

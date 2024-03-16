@@ -151,7 +151,7 @@ public static class DependencyInjection
             .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
         
         services.AddSingleton<IRunningServerState, RunningServerState>();
-        services.AddSingleton<ISerializerService, JsonSerializerService>();
+        services.AddSingleton<ISerializerService, SerializerService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddScoped<IWebClientService, WebClientService>();
     }

@@ -41,9 +41,9 @@ else
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Audit Trail Diff</MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField Value="@Serializer.Serialize(_viewingTrail.Before)" Lines="20" Label="Before" Variant="Variant.Outlined" 
+            <MudTextField Value="@Serializer.SerializeJson(_viewingTrail.Before)" Lines="20" Label="Before" Variant="Variant.Outlined" 
             ReadOnly="true"/>
-            <MudTextField Value="@Serializer.Serialize(_viewingTrail.After)" Lines="20" Label="After" Variant="Variant.Outlined" 
+            <MudTextField Value="@Serializer.SerializeJson(_viewingTrail.After)" Lines="20" Label="After" Variant="Variant.Outlined" 
             ReadOnly="true"/>
         </MudItem>
     </MudPaper>

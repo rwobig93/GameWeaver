@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
@@ -7,6 +8,7 @@ using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.Host;
 using Microsoft.Extensions.Options;
+using Serilog;
 
 namespace WeaverService.Workers;
 
@@ -20,8 +22,8 @@ public class HostWorker : BackgroundService
     private readonly IGameServerService _gameServerService;
     private readonly IHostApplicationLifetime _appLifetime;
 
-    private static readonly ConcurrentQueue<WeaverWorkClient> WorkInProgressQueue = new();
-    private static readonly ConcurrentQueue<WeaverWorkClient> WorkWaitingQueue = new();
+    private static ConcurrentQueue<WeaverWorkClient> _workInProgressQueue = new();
+    private static ConcurrentQueue<WeaverWorkClient> _workWaitingQueue = new();
     private static DateTime _lastRuntime;
     private static Task? _pollerThread;
 
@@ -60,7 +62,6 @@ public class HostWorker : BackgroundService
             _appLifetime.StopApplication();
         }
         
-
         // TODO: Implement control server consumption of host detail
         StartResourcePoller();
         
@@ -71,17 +72,32 @@ public class HostWorker : BackgroundService
         
         ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
+        // TODO: Implement Sqlite for host work tracking, for now we'll serialize/deserialize a json file
+        await DeserializeWorkQueues();
+        
         while (!stoppingToken.IsCancellationRequested)
         {
             _lastRuntime = _dateTimeService.NowDatabaseTime;
             await UpdateCurrentResourceUsage();
+            
+            // TODO: Handle moving work waiting into in progress queue
+            
+            // TODO: Handle in progress queue work
 
             var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
             if (millisecondsPassed < _generalConfig.Value.HostWorkIntervalMs)
                 await Task.Delay(_generalConfig.Value.HostWorkIntervalMs - millisecondsPassed, stoppingToken);
         }
+
+        await SerializeWorkQueues();
         
         _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
+    }
+
+    public static void AddWorkToQueue(WeaverWorkClient work)
+    {
+        Log.Debug("Adding host work to waiting queue: {Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
+        _workWaitingQueue.Enqueue(work);
     }
 
     private void UpdateHostDetail()
@@ -204,5 +220,37 @@ public class HostWorker : BackgroundService
             }
             // ReSharper disable once FunctionNeverReturns
         });
+    }
+
+    private async Task SerializeWorkQueues()
+    {
+        var serializedInProgressQueue = _serializerService.SerializeJson(_workInProgressQueue);
+        await File.WriteAllTextAsync(HostConstants.InProgressQueuePath, serializedInProgressQueue);
+        
+        _logger.Information("Serialized in progress queue file: {FilePath}", HostConstants.InProgressQueuePath);
+
+        var serializedWaitingQueue = _serializerService.SerializeJson(_workWaitingQueue);
+        await File.WriteAllTextAsync(HostConstants.WaitingQueuePath, serializedWaitingQueue);
+        
+        _logger.Information("Serialized in waiting queue file: {FilePath}", HostConstants.WaitingQueuePath);
+    }
+
+    private async Task DeserializeWorkQueues()
+    {
+        if (!File.Exists(HostConstants.InProgressQueuePath) || !File.Exists(HostConstants.WaitingQueuePath))
+        {
+            _logger.Debug("Work queue file(s) doesn't exist, creating...");
+            await SerializeWorkQueues();
+        }
+
+        var inProgressQueue = await File.ReadAllTextAsync(HostConstants.InProgressQueuePath);
+        _workInProgressQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(inProgressQueue);
+        
+        _logger.Information("Deserialized in progress queue");
+        
+        var waitingQueue = await File.ReadAllTextAsync(HostConstants.WaitingQueuePath);
+        _workInProgressQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(waitingQueue);
+        
+        _logger.Information("Deserialized in waiting queue");
     }
 }

@@ -177,19 +177,19 @@ public class ControlServerService : IControlServerService
     /// </summary>
     /// <param name="request">Host statistics to be sent to the control server</param>
     /// <returns></returns>
-    public async Task<IResult> Checkin(HostCheckInRequest request)
+    public async Task<IResult<byte[]>> Checkin(HostCheckInRequest request)
     {
-        if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
+        if (!RegisteredWithServer) { return await Result<byte[]>.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
+        var payload = new ByteArrayContent(_serializerService.SerializeMemory(request));
 
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
-            return await Result.FailAsync(responseContent);
+            return await Result<byte[]>.FailAsync(responseContent);
 
-        return await Result.SuccessAsync();
+        return await Result<byte[]>.SuccessAsync();
     }
 
     /// <summary>
@@ -202,7 +202,7 @@ public class ControlServerService : IControlServerService
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
+        var payload = new ByteArrayContent(_serializerService.SerializeMemory(request));
 
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();

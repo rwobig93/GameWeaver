@@ -35,7 +35,7 @@ public class AuditTrailService : IAuditTrailService
             convertedTrail.Before = string.IsNullOrWhiteSpace(auditTrailDb.Before)
                 ? new Dictionary<string, string>()
                 : _serializer
-                    .Deserialize<Dictionary<string, string>>(auditTrailDb.Before);
+                    .DeserializeJson<Dictionary<string, string>>(auditTrailDb.Before);
             convertedTrail.After = JsonConvert.DeserializeObject<Dictionary<string, string>>(auditTrailDb.After) ??
                                    new Dictionary<string, string>();
         }
