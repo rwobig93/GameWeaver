@@ -8,5 +8,5 @@ public class WeaverWorkClient
     public Guid? GameServerId { get; set; }
     public WeaverWorkTarget TargetType { get; set; }
     public WeaverWorkState Status { get; set; }
-    public string WorkData { get; set; } = "";
+    public object? WorkData { get; set; }
 }

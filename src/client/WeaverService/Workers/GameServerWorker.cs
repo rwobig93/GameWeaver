@@ -1,7 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using Application.Constants;
+using Application.Helpers;
 using Application.Services;
 using Application.Settings;
+using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.GameServer;
 using Microsoft.Extensions.Options;
@@ -18,8 +20,7 @@ public class GameServerWorker : BackgroundService
     private readonly ISerializerService _serializerService;
 
     private static DateTime _lastRuntime;
-    private static ConcurrentQueue<WeaverWorkClient> _workInProgressQueue = new();
-    private static ConcurrentQueue<WeaverWorkClient> _workWaitingQueue = new();
+    private static ConcurrentQueue<WeaverWorkClient> _workQueue = new();
 
     public static ConcurrentBag<GameServerLocal> GameServers { get; private set; } = new();
 
@@ -49,10 +50,8 @@ public class GameServerWorker : BackgroundService
             try
             {
                 _lastRuntime = _dateTimeService.NowDatabaseTime;
-            
-                // TODO: Handle moving work waiting into in progress queue
-            
-                // TODO: Handle in progress queue work
+                
+                await ProcessWorkQueue();
 
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < _generalConfig.Value.GameServerWorkIntervalMs)
@@ -73,7 +72,7 @@ public class GameServerWorker : BackgroundService
     public static void AddWorkToQueue(WeaverWorkClient work)
     {
         Log.Debug("Adding gameserver work to waiting queue: {Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
-        _workWaitingQueue.Enqueue(work);
+        _workQueue.Enqueue(work);
     }
 
     private async Task SerializeGameServerState()
@@ -98,33 +97,65 @@ public class GameServerWorker : BackgroundService
 
     private async Task SerializeWorkQueues()
     {
-        var serializedInProgressQueue = _serializerService.SerializeJson(_workInProgressQueue);
-        await File.WriteAllTextAsync(GameServerConstants.InProgressQueuePath, serializedInProgressQueue);
+        var serializedWorkQueue = _serializerService.SerializeJson(_workQueue);
+        await File.WriteAllTextAsync(GameServerConstants.WorkQueuePath, serializedWorkQueue);
         
-        _logger.Information("Serialized in progress queue file: {FilePath}", GameServerConstants.InProgressQueuePath);
-
-        var serializedWaitingQueue = _serializerService.SerializeJson(_workWaitingQueue);
-        await File.WriteAllTextAsync(GameServerConstants.WaitingQueuePath, serializedWaitingQueue);
-        
-        _logger.Information("Serialized in waiting queue file: {FilePath}", GameServerConstants.WaitingQueuePath);
+        _logger.Information("Serialized in progress queue file: {FilePath}", GameServerConstants.WorkQueuePath);
     }
 
     private async Task DeserializeWorkQueues()
     {
-        if (!File.Exists(GameServerConstants.InProgressQueuePath) || !File.Exists(GameServerConstants.WaitingQueuePath))
+        if (!File.Exists(GameServerConstants.WorkQueuePath))
         {
-            _logger.Debug("Work queue file(s) doesn't exist, creating...");
+            _logger.Debug("Work queue file doesn't exist, creating... [{FilePath}]", GameServerConstants.WorkQueuePath);
             await SerializeWorkQueues();
         }
 
-        var inProgressQueue = await File.ReadAllTextAsync(GameServerConstants.InProgressQueuePath);
-        _workInProgressQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(inProgressQueue);
+        var workQueue = await File.ReadAllTextAsync(GameServerConstants.WorkQueuePath);
+        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(workQueue);
         
-        _logger.Information("Deserialized in progress queue");
+        _logger.Information("Deserialized gameserver work queue");
+    }
+
+    private async Task ProcessWorkQueue()
+    {
+        var inProgressWorkCount = _workQueue.Count(x => x.Status == WeaverWorkState.InProgress);
+        var workWaitingCount = _workQueue.Count;
+
+        if (inProgressWorkCount >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        {
+            _logger.Verbose("In progress work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}", inProgressWorkCount,
+                _generalConfig.Value.SimultaneousQueueWorkCountMax, workWaitingCount);
+            return;
+        }
         
-        var waitingQueue = await File.ReadAllTextAsync(GameServerConstants.WaitingQueuePath);
-        _workInProgressQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(waitingQueue);
+        if (workWaitingCount <= 0)
+        {
+            _logger.Verbose("No work waiting, moving on");
+            return;
+        }
         
-        _logger.Information("Deserialized in waiting queue");
+        // Work is waiting and we have available queue space, adding next work to the thread pool
+        foreach (var work in _workQueue.Where(x => x.Status == WeaverWorkState.PickedUp))
+        {
+            work.Status = WeaverWorkState.InProgress;
+            ThreadHelper.QueueWork(_ => HandleWork(work).RunSynchronously());
+        }
+    }
+
+    private async Task HandleWork(WeaverWorkClient work)
+    {
+        // TODO: Implement gameserver work and data for handling
+        switch (work.TargetType)
+        {
+            case WeaverWorkTarget.Host:
+                break;
+            case WeaverWorkTarget.GameServer:
+                break;
+            default:
+                _logger.Error("Invalid work type for work: [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
+                break;
+        }
+        await Task.CompletedTask;
     }
 }

@@ -140,7 +140,7 @@ public class ControlServerWorker : BackgroundService
             return;
         }
 
-        var runAttemptsLeft = _generalConfig.Value.QueueMaxPerRun;
+        var runAttemptsLeft = _generalConfig.Value.CommunicationQueueMaxPerRun;
 
         while (runAttemptsLeft > 0 && !WorkUpdateQueue.IsEmpty)
         {

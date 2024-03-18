@@ -1,5 +1,6 @@
 namespace Application.Requests.Host;
 
+[MemoryPackable]
 public class HostCheckInRequest
 {
     public DateTime SendTimestamp { get; set; }

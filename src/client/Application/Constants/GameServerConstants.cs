@@ -3,6 +3,5 @@
 public class GameServerConstants
 {
     public const string GameServerStatePath = "gameserverstate.json";
-    public const string InProgressQueuePath = "gameserver-work-inprogress.json";
-    public const string WaitingQueuePath = "gameserver-work-waiting.json";
+    public const string WorkQueuePath = "gameserver-work-queue.json";
 }
