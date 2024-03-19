@@ -23,7 +23,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                     [GameServerId] UNIQUEIDENTIFIER NULL,
                     [TargetType] int NOT NULL,
                     [Status] int NOT NULL,
-                    [WorkData] NVARCHAR(2048) NOT NULL,
+                    [WorkData] VARBINARY(MAX) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -244,7 +244,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 @GameServerId UNIQUEIDENTIFIER,
                 @TargetType int,
                 @Status int,
-                @WorkData NVARCHAR(2048),
+                @WorkData VARBINARY(MAX),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
@@ -271,8 +271,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
                 WHERE w.HostId LIKE '%' + @SearchTerm + '%'
-                    OR w.GameServerId LIKE '%' + @SearchTerm + '%'
-                    OR w.WorkData LIKE '%' + @SearchTerm + '%';
+                    OR w.GameServerId LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -293,7 +292,6 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] w
                 WHERE w.HostId LIKE '%' + @SearchTerm + '%'
                     OR w.GameServerId LIKE '%' + @SearchTerm + '%'
-                    OR w.WorkData LIKE '%' + @SearchTerm + '%'
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -309,7 +307,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 @GameServerId UNIQUEIDENTIFIER = null,
                 @TargetType int = null,
                 @Status int = null,
-                @WorkData NVARCHAR(2048) = null,
+                @WorkData VARBINARY(MAX) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn datetime2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,

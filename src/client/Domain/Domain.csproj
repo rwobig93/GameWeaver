@@ -6,6 +6,10 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MemoryPack.Core" Version="1.10.0" />
+    </ItemGroup>
+
 
 
 </Project>

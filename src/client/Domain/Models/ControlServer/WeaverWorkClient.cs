@@ -1,7 +1,9 @@
 using Domain.Enums;
+using MemoryPack;
 
 namespace Domain.Models.ControlServer;
 
+[MemoryPackable]
 public class WeaverWorkClient
 {
     public int Id { get; set; }

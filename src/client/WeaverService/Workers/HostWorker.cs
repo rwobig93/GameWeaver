@@ -22,8 +22,7 @@ public class HostWorker : BackgroundService
     private readonly IGameServerService _gameServerService;
     private readonly IHostApplicationLifetime _appLifetime;
 
-    private static ConcurrentQueue<WeaverWorkClient> _workInProgressQueue = new();
-    private static ConcurrentQueue<WeaverWorkClient> _workWaitingQueue = new();
+    private static ConcurrentQueue<WeaverWorkClient> _workQueue = new();
     private static DateTime _lastRuntime;
     private static Task? _pollerThread;
 
@@ -97,7 +96,26 @@ public class HostWorker : BackgroundService
     public static void AddWorkToQueue(WeaverWorkClient work)
     {
         Log.Debug("Adding host work to waiting queue: {Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
-        _workWaitingQueue.Enqueue(work);
+        
+        if (_workQueue.Any(x => x.Id == work.Id))
+        {
+            Log.Verbose("Host work already exists in the queue, skipping duplicate: [{WorkId}]{GamerServerId} of type {WorkType}",
+                work.Id, work.GameServerId, work.TargetType);
+            return;
+        }
+
+        work.Status = WeaverWorkState.PickedUp;
+        _workQueue.Enqueue(work);
+        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+        {
+            Id = work.Id,
+            Type = HostWorkType.StatusUpdate,
+            Status = WeaverWorkState.PickedUp,
+            WorkData = null,
+            AttemptCount = 0
+        });
+        
+        Log.Debug("Added host work to queue:{Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
     }
 
     private void UpdateHostDetail()
@@ -224,33 +242,23 @@ public class HostWorker : BackgroundService
 
     private async Task SerializeWorkQueues()
     {
-        var serializedInProgressQueue = _serializerService.SerializeJson(_workInProgressQueue);
-        await File.WriteAllTextAsync(HostConstants.InProgressQueuePath, serializedInProgressQueue);
+        var serializedWorkQueue = _serializerService.SerializeJson(_workQueue);
+        await File.WriteAllTextAsync(HostConstants.WorkQueuePath, serializedWorkQueue);
         
-        _logger.Information("Serialized in progress queue file: {FilePath}", HostConstants.InProgressQueuePath);
-
-        var serializedWaitingQueue = _serializerService.SerializeJson(_workWaitingQueue);
-        await File.WriteAllTextAsync(HostConstants.WaitingQueuePath, serializedWaitingQueue);
-        
-        _logger.Information("Serialized in waiting queue file: {FilePath}", HostConstants.WaitingQueuePath);
+        _logger.Information("Serialized host work queue file: {FilePath}", HostConstants.WorkQueuePath);
     }
 
     private async Task DeserializeWorkQueues()
     {
-        if (!File.Exists(HostConstants.InProgressQueuePath) || !File.Exists(HostConstants.WaitingQueuePath))
+        if (!File.Exists(HostConstants.WorkQueuePath))
         {
-            _logger.Debug("Work queue file(s) doesn't exist, creating...");
+            _logger.Debug("Host work queue file doesn't exist, creating...");
             await SerializeWorkQueues();
         }
-
-        var inProgressQueue = await File.ReadAllTextAsync(HostConstants.InProgressQueuePath);
-        _workInProgressQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(inProgressQueue);
         
-        _logger.Information("Deserialized in progress queue");
+        var waitingQueue = await File.ReadAllTextAsync(HostConstants.WorkQueuePath);
+        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(waitingQueue);
         
-        var waitingQueue = await File.ReadAllTextAsync(HostConstants.WaitingQueuePath);
-        _workInProgressQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(waitingQueue);
-        
-        _logger.Information("Deserialized in waiting queue");
+        _logger.Information("Deserialized host work queue");
     }
 }

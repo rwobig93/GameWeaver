@@ -220,7 +220,7 @@ public class GameServerService : IGameServerService
         }
     }
     
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame()
+    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(GameServerLocal gameServer)
     {
         // From Powershell server-watcher.ps1 script
         // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
@@ -237,7 +237,7 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod()
+    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(GameServerLocal gameServer, Mod mod)
     {
         // https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?itemcount=1&publishedfileids%5B0%5D=3120364390
         // See: https://www.reddit.com/r/Steam/comments/30l5au/web_api_for_workshop_items/
@@ -249,7 +249,7 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> InstallOrUpdateGame()
+    public async Task<IResult> InstallOrUpdateGame(GameServerLocal gameServer)
     {
         // From Powershell server-watcher.ps1 script
         // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
@@ -259,7 +259,7 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> InstallOrUpdateMod()
+    public async Task<IResult> InstallOrUpdateMod(GameServerLocal gameServer, Mod mod)
     {
         // steamcmd.exe +login anonymous +workshop_download_item 346110 496735411 +quit
         // steamcmd.exe +login anonymous +workshop_download_item {steamGameId} {workshopItemId} +quit
@@ -267,13 +267,13 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> UninstallGame()
+    public async Task<IResult> UninstallGame(GameServerLocal gameServer)
     {
         // Delete game directory and cleanup GameServer object
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> UninstallMod()
+    public async Task<IResult> UninstallMod(GameServerLocal gameServer, Mod mod)
     {
         // Delete mod directory and cleanup GameServer object
         throw new NotImplementedException();
