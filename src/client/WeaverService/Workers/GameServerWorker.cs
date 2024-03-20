@@ -22,8 +22,9 @@ public class GameServerWorker : BackgroundService
 
     private static DateTime _lastRuntime;
     private static ConcurrentQueue<WeaverWorkClient> _workQueue = new();
+    private static int _inProgressWorkCount;
 
-    public static ConcurrentBag<GameServerLocal> GameServers { get; private set; } = new();
+    private static ConcurrentBag<GameServerLocal> GameServers { get; set; } = new();
 
     /// <summary>
     /// Handles Gameserver work including updates, configuration and per server IO
@@ -139,25 +140,36 @@ public class GameServerWorker : BackgroundService
 
     private async Task ProcessWorkQueue()
     {
-        var inProgressWorkCount = _workQueue.Count(x => x.Status == WeaverWorkState.InProgress);
-        var workWaitingCount = _workQueue.Count;
-
-        if (inProgressWorkCount >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        if (_inProgressWorkCount >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
-            _logger.Verbose("In progress work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}", inProgressWorkCount,
-                _generalConfig.Value.SimultaneousQueueWorkCountMax, workWaitingCount);
+            _logger.Verbose("In progress gameserver work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}", _inProgressWorkCount,
+                _generalConfig.Value.SimultaneousQueueWorkCountMax, _workQueue.Count);
             return;
         }
         
-        if (workWaitingCount <= 0)
+        if (_workQueue.Count <= 0)
         {
             _logger.Verbose("No work waiting, moving on");
             return;
         }
         
         // Work is waiting and we have available queue space, adding next work to the thread pool
-        foreach (var work in _workQueue.Where(x => x.Status == WeaverWorkState.PickedUp))
+        var attemptCount = 0;
+        while (_inProgressWorkCount < _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
+            if (attemptCount >= 5)
+            {
+                _logger.Error("Unable to dequeue next item in the gameserver work queue, quiting cycle queue processing");
+                return;
+            }
+            
+            if (!_workQueue.TryDequeue(out var work))
+            {
+                attemptCount++;
+                continue;
+            }
+            
+            _inProgressWorkCount++;
             work.Status = WeaverWorkState.InProgress;
             ThreadHelper.QueueWork(_ => HandleWork(work).RunSynchronously());
         }
@@ -167,98 +179,124 @@ public class GameServerWorker : BackgroundService
 
     private async Task HandleWork(WeaverWorkClient work)
     {
-        // TODO: Implement gameserver work and data for handling
-        switch (work.TargetType)
+        try
         {
-            case WeaverWorkTarget.Host:
-                _logger.Error("Host work somehow got into the GameServer work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
-                HostWorker.AddWorkToQueue(work);
-                _logger.Warning("Gave host work to host worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
-                return;
-            case WeaverWorkTarget.GameServer:
-                _logger.Debug("Starting gameserver work from queue: [{WorkId}]{GamerServerId}", work.Id, work.GameServerId);
-                break;
-            default:
-                _logger.Error("Invalid work type for work: [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = HostWorkType.StatusUpdate,
+                Status = WeaverWorkState.InProgress,
+                WorkData = null,
+                AttemptCount = 0
+            });
+            
+            switch (work.TargetType)
+            {
+                case WeaverWorkTarget.Host:
+                    _logger.Error("Host work somehow got into the GameServer work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
+                    HostWorker.AddWorkToQueue(work);
+                    _logger.Warning("Gave host work to host worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
+                    return;
+                case WeaverWorkTarget.GameServer:
+                    _logger.Debug("Starting gameserver work from queue: [{WorkId}]{GamerServerId}", work.Id, work.GameServerId);
+                    break;
+                default:
+                    _logger.Error("Invalid work type for work: [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
+                    ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+                    {
+                        Id = work.Id,
+                        Type = HostWorkType.StatusUpdate,
+                        Status = WeaverWorkState.Failed,
+                        WorkData = new GameServerWork { Messages = new List<string> {"Gameserver work data was invalid, please verify the payload"}},
+                        AttemptCount = 0
+                    });
+                    return;
+            }
+            
+            if (work.WorkData is null)
+            {
+                _logger.Error("Gameserver work data is empty, no work to do? [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
                 ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                 {
                     Id = work.Id,
                     Type = HostWorkType.StatusUpdate,
                     Status = WeaverWorkState.Failed,
-                    WorkData = new GameServerWork(){ Messages = new List<string> {"Gameserver work data was invalid, please verify the payload"}},
+                    WorkData = new GameServerWork { Messages = new List<string> {"Gameserver work data was empty, nothing to work with"}},
                     AttemptCount = 0
                 });
                 return;
-        }
-        
-        if (work.WorkData is null)
-        {
-            _logger.Error("Gameserver work data is empty, no work to do? [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
-            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-            {
-                Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
-                Status = WeaverWorkState.Failed,
-                WorkData = new GameServerWork(){ Messages = new List<string> {"Gameserver work data was empty, nothing to work with"}},
-                AttemptCount = 0
-            });
-            return;
-        }
+            }
 
-        var gameServerLocal = GameServers.FirstOrDefault(x => x.Id == work.GameServerId);
-        if (gameServerLocal is null)
-        {
-            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}]{GamerServerId} of type {WorkType}",
-                work.Id, work.GameServerId, work.TargetType);
-            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            var gameServerLocal = GameServers.FirstOrDefault(x => x.Id == work.GameServerId);
+            if (gameServerLocal is null)
             {
-                Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
-                Status = WeaverWorkState.Failed,
-                WorkData = new GameServerWork(){ Messages = new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}},
-                AttemptCount = 0
-            });
-            return;
-        }
-        
-        _logger.Information("Starting work for gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
-        var workData = work.WorkData as GameServerWork;
-        switch (workData!.Type)
-        {
-            case GameServerWorkType.Install:
-                await _gameServerService.InstallOrUpdateGame(gameServerLocal);
-                _logger.Information("Finished installing gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
-                break;
-            case GameServerWorkType.Update:
-                await _gameServerService.InstallOrUpdateGame(gameServerLocal);
-                _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
-                break;
-            case GameServerWorkType.Uninstall:
-                await _gameServerService.UninstallGame(gameServerLocal);
-                _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
-                break;
-            default:
-                _logger.Error("Unsupported gameserver work type asked for: Asked {WorkType} for [{GameserverId}]{GameserverName}",
-                    workData.Type, gameServerLocal.Id, gameServerLocal.ServerName);
+                _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}]{GamerServerId} of type {WorkType}",
+                    work.Id, work.GameServerId, work.TargetType);
                 ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                 {
                     Id = work.Id,
                     Type = HostWorkType.StatusUpdate,
                     Status = WeaverWorkState.Failed,
-                    WorkData = new GameServerWork(){ Messages = new List<string> {$"Unsupported gameserver work type asked for: {workData.Type}"}},
+                    WorkData = new GameServerWork { Messages = new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}},
                     AttemptCount = 0
                 });
                 return;
+            }
+            
+            _logger.Information("Starting work for gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+            var workData = work.WorkData as GameServerWork;
+            switch (workData!.Type)
+            {
+                case GameServerWorkType.Install:
+                    await _gameServerService.InstallOrUpdateGame(gameServerLocal);
+                    _logger.Information("Finished installing gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+                    break;
+                case GameServerWorkType.Update:
+                    await _gameServerService.InstallOrUpdateGame(gameServerLocal);
+                    _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+                    break;
+                case GameServerWorkType.Uninstall:
+                    await _gameServerService.UninstallGame(gameServerLocal);
+                    _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+                    break;
+                default:
+                    _logger.Error("Unsupported gameserver work type asked for: Asked {WorkType} for [{GameserverId}]{GameserverName}",
+                        workData.Type, gameServerLocal.Id, gameServerLocal.ServerName);
+                    ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+                    {
+                        Id = work.Id,
+                        Type = HostWorkType.StatusUpdate,
+                        Status = WeaverWorkState.Failed,
+                        WorkData = new GameServerWork { Messages = new List<string> {$"Unsupported gameserver work type asked for: {workData.Type}"}},
+                        AttemptCount = 0
+                    });
+                    return;
+            }
+            
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = HostWorkType.StatusUpdate,
+                Status = WeaverWorkState.Completed,
+                WorkData = null,
+                AttemptCount = 0
+            });
         }
-        
-        // TODO: Add extension method for work updates and replace all definitions
-        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+        catch (Exception ex)
         {
-            Id = work.Id,
-            Type = HostWorkType.StatusUpdate,
-            Status = WeaverWorkState.Completed,
-            WorkData = null,
-            AttemptCount = 0
-        });
+            _logger.Error(ex, "Failure occurred handling gameserver work: {Error}", ex.Message);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = HostWorkType.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = new GameServerWork { Messages = new List<string> {$"Failure occurred handling gameserver work: {ex.Message}"}},
+                AttemptCount = 0
+            });
+        }
+        finally
+        {
+            _inProgressWorkCount--;
+        }
     }
 }

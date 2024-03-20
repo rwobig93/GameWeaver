@@ -3,6 +3,5 @@
 public enum HostWorkType
 {
     StatusUpdate = 0,
-    HostDetail = 1,
-    HostUsage = 2
+    HostDetail = 1
 }

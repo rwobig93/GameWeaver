@@ -14,6 +14,7 @@ public class GameServerLocal
     public string Password { get; set; } = "";
     public string PasswordRcon { get; set; } = "";
     public string PasswordAdmin { get; set; } = "";
+    public string ServerVersion { get; set; } = "";
     public string IpAddress { get; set; } = "";
     public string ExtHostname { get; set; } = "";
     public int PortGame { get; set; } = 0;
