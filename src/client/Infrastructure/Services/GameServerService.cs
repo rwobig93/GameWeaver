@@ -4,8 +4,10 @@ using System.IO.Compression;
 using Application.Constants;
 using Application.Helpers;
 using Application.Services;
+using Application.Settings;
 using Domain.Contracts;
 using Domain.Models.GameServer;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
 
@@ -13,11 +15,13 @@ public class GameServerService : IGameServerService
 {
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTimeService;
+    private readonly IOptions<GeneralConfiguration> _generalConfig;
 
-    public GameServerService(ILogger logger, IDateTimeService dateTimeService)
+    public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig)
     {
         _logger = logger;
         _dateTimeService = dateTimeService;
+        _generalConfig = generalConfig;
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
@@ -319,10 +323,36 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
+    private void DeleteOldBackups(string backupPath)
+    {
+        var backupDirectories = new DirectoryInfo(backupPath)
+            .GetDirectories()
+            .OrderBy(directory => directory.Name)
+            .ToList();
+
+        if (backupDirectories.Count <= _generalConfig.Value.GameserverBackupsToKeep) return;
+        
+        var directoriesToDelete = backupDirectories.Take(backupDirectories.Count - _generalConfig.Value.GameserverBackupsToKeep);
+        foreach (var directory in directoriesToDelete)
+        {
+            try
+            {
+                directory.Delete(recursive: true);
+                _logger.Debug("Deleted gameserver backup: {Directory}", directory.FullName);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to delete gameserver backup: {Error}", ex.Message);
+            }
+        }
+    }
+
     public async Task<IResult> BackupGame(GameServerLocal gameServer)
     {
         try
         {
+            _logger.Debug("Starting backup for gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            
             var backupRootPath = Path.Combine(OsHelper.GetDefaultBackupPath(), gameServer.Id.ToString());
             var backupTimestamp = _dateTimeService.NowDatabaseTime.ToString("yyyyMMdd_HHmm");
             var backupIndex = 0;
@@ -331,8 +361,14 @@ public class GameServerService : IGameServerService
                 var backupPath = Path.Combine(gameServer.InstallDirectory, backupDirectory);
                 var archivePath = Path.Combine(backupRootPath, backupTimestamp, $"{backupIndex}.zip");
                 ZipFile.CreateFromDirectory(backupPath, archivePath, CompressionLevel.Optimal, includeBaseDirectory: false);
+                backupIndex++;
+                _logger.Information("Backed up path: {FilePath}", backupPath);
             }
 
+            _logger.Information("Finished backing up gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            
+            DeleteOldBackups(backupRootPath);
+            
             return await Result.SuccessAsync();
         }
         catch (Exception ex)

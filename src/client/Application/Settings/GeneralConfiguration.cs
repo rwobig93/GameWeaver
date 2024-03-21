@@ -27,4 +27,10 @@ public class GeneralConfiguration : IAppSettingsSection
 
     [Range(1, 100)]
     public int SimultaneousQueueWorkCountMax { get; set; } = 5;
+
+    [Range(1, 10)]
+    public int GameserverBackupsToKeep { get; set; } = 24;
+
+    [Range(1, 10)]
+    public int GameserverBackupIntervalMinutes { get; set; } = 60;
 }

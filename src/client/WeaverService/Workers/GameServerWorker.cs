@@ -21,6 +21,7 @@ public class GameServerWorker : BackgroundService
     private readonly ISerializerService _serializerService;
 
     private static DateTime _lastRuntime;
+    private static DateTime? _lastBackupTime = null;
     private static ConcurrentQueue<WeaverWorkClient> _workQueue = new();
     private static int _inProgressWorkCount;
 
@@ -54,6 +55,7 @@ public class GameServerWorker : BackgroundService
                 _lastRuntime = _dateTimeService.NowDatabaseTime;
                 
                 await ProcessWorkQueue();
+                await BackupGameServers();
 
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < _generalConfig.Value.GameServerWorkIntervalMs)
@@ -69,6 +71,57 @@ public class GameServerWorker : BackgroundService
         await SerializeWorkQueues();
         
         _logger.Debug("Stopping {ServiceName} service", nameof(GameServerWorker));
+    }
+
+    private async Task ProcessWorkQueue()
+    {
+        if (_inProgressWorkCount >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        {
+            _logger.Verbose("In progress gameserver work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}", _inProgressWorkCount,
+                _generalConfig.Value.SimultaneousQueueWorkCountMax, _workQueue.Count);
+            return;
+        }
+        
+        if (_workQueue.Count <= 0)
+        {
+            _logger.Verbose("No work waiting, moving on");
+            return;
+        }
+        
+        // Work is waiting and we have available queue space, adding next work to the thread pool
+        var attemptCount = 0;
+        while (_inProgressWorkCount < _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        {
+            if (attemptCount >= 5)
+            {
+                _logger.Error("Unable to dequeue next item in the gameserver work queue, quiting cycle queue processing");
+                return;
+            }
+            
+            if (!_workQueue.TryDequeue(out var work))
+            {
+                attemptCount++;
+                continue;
+            }
+            
+            _inProgressWorkCount++;
+            work.Status = WeaverWorkState.InProgress;
+            ThreadHelper.QueueWork(_ => HandleWork(work).RunSynchronously());
+        }
+
+        await Task.CompletedTask;
+    }
+
+    private async Task BackupGameServers()
+    {
+        _lastBackupTime ??= _dateTimeService.NowDatabaseTime;
+
+        if (_dateTimeService.NowDatabaseTime < _lastBackupTime.Value.AddMinutes(_generalConfig.Value.GameserverBackupIntervalMinutes)) return;
+
+        foreach (var gameserver in GameServers)
+            await _gameServerService.BackupGame(gameserver);
+        
+        _lastBackupTime = _dateTimeService.NowDatabaseTime;
     }
 
     public static void AddWorkToQueue(WeaverWorkClient work)
@@ -136,45 +189,6 @@ public class GameServerWorker : BackgroundService
         _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(workQueue);
         
         _logger.Information("Deserialized gameserver work queue");
-    }
-
-    private async Task ProcessWorkQueue()
-    {
-        if (_inProgressWorkCount >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
-        {
-            _logger.Verbose("In progress gameserver work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}", _inProgressWorkCount,
-                _generalConfig.Value.SimultaneousQueueWorkCountMax, _workQueue.Count);
-            return;
-        }
-        
-        if (_workQueue.Count <= 0)
-        {
-            _logger.Verbose("No work waiting, moving on");
-            return;
-        }
-        
-        // Work is waiting and we have available queue space, adding next work to the thread pool
-        var attemptCount = 0;
-        while (_inProgressWorkCount < _generalConfig.Value.SimultaneousQueueWorkCountMax)
-        {
-            if (attemptCount >= 5)
-            {
-                _logger.Error("Unable to dequeue next item in the gameserver work queue, quiting cycle queue processing");
-                return;
-            }
-            
-            if (!_workQueue.TryDequeue(out var work))
-            {
-                attemptCount++;
-                continue;
-            }
-            
-            _inProgressWorkCount++;
-            work.Status = WeaverWorkState.InProgress;
-            ThreadHelper.QueueWork(_ => HandleWork(work).RunSynchronously());
-        }
-
-        await Task.CompletedTask;
     }
 
     private async Task HandleWork(WeaverWorkClient work)
