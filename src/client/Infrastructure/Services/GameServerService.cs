@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
 using System.IO.Compression;
 using Application.Constants;
 using Application.Helpers;
@@ -255,14 +256,30 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> InstallOrUpdateGame(GameServerLocal gameServer)
     {
-        // From Powershell server-watcher.ps1 script
-        // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
-        //
-        // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_status "443030" +quit
         // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
+        try
+        {
+            if (!Directory.Exists(gameServer.InstallDirectory))
+            {
+                Directory.CreateDirectory(gameServer.InstallDirectory);
+                _logger.Information("Created directory for gameserver install: {Directory}", gameServer.InstallDirectory);
+            }
+
+            var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer));
+            if (!installResult.Succeeded)
+            {
+                _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+                return installResult;
+            }
         
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
+            _logger.Information("Successfully installed/updated gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            return installResult;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to install gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            return await Result.FailAsync($"Failed to install gameserver: [{gameServer.Id}]{gameServer.ServerName}");
+        }
     }
 
     public async Task<IResult> InstallOrUpdateMod(GameServerLocal gameServer, Mod mod)
@@ -278,6 +295,17 @@ public class GameServerService : IGameServerService
     public async Task<IResult> UninstallGame(GameServerLocal gameServer)
     {
         // Delete game directory and cleanup GameServer object
+        try
+        {
+            _logger.Debug("Attempting to uninstall gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            Directory.Delete(gameServer.InstallDirectory, true);
+            _logger.Information("Successfully uninstalled gameserver[{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to uninstall gameserver: {Error}", ex.Message);
+            return await Result.FailAsync($"Failed to uninstall gameserver: {ex.Message}");
+        }
         
         // TODO: Update gameserver state to match post work state
         throw new NotImplementedException();
@@ -289,5 +317,28 @@ public class GameServerService : IGameServerService
         
         // TODO: Update gameserver state to match post work state
         throw new NotImplementedException();
+    }
+
+    public async Task<IResult> BackupGame(GameServerLocal gameServer)
+    {
+        try
+        {
+            var backupRootPath = Path.Combine(OsHelper.GetDefaultBackupPath(), gameServer.Id.ToString());
+            var backupTimestamp = _dateTimeService.NowDatabaseTime.ToString("yyyyMMdd_HHmm");
+            var backupIndex = 0;
+            foreach (var backupDirectory in gameServer.BackupDirectories)
+            {
+                var backupPath = Path.Combine(gameServer.InstallDirectory, backupDirectory);
+                var archivePath = Path.Combine(backupRootPath, backupTimestamp, $"{backupIndex}.zip");
+                ZipFile.CreateFromDirectory(backupPath, archivePath, CompressionLevel.Optimal, includeBaseDirectory: false);
+            }
+
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred backing up gameserver: {GameserverId} | {Error}", gameServer.Id, ex.Message);
+            return await Result.FailAsync($"Failure occurred backing up gameserver: {gameServer.Id} | {ex.Message}");
+        }
     }
 }

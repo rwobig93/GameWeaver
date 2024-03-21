@@ -33,6 +33,11 @@ public static class OsHelper
         return Path.Combine(GetServiceRootPath(), "GameServers");
     }
 
+    public static string GetDefaultBackupPath()
+    {
+        return Path.Combine(GetServiceRootPath(), "Backups");
+    }
+
     public static string GetSteamCmdDirectory()
     {
         return Path.Combine(GetServiceRootPath(), "Source", "SteamCmd");

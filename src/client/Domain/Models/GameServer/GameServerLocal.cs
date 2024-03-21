@@ -10,6 +10,8 @@ public class GameServerLocal
     public string SteamName { get; set; } = "";
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
+    public string InstallDirectory { get; set; } = "";
+    public List<string> BackupDirectories { get; set; } = new();
     public string ServerName { get; set; } = "";
     public string Password { get; set; } = "";
     public string PasswordRcon { get; set; } = "";

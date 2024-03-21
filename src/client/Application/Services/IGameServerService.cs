@@ -14,4 +14,5 @@ public interface IGameServerService
     Task<IResult> InstallOrUpdateMod(GameServerLocal gameServer, Mod mod);
     Task<IResult> UninstallGame(GameServerLocal gameServer);
     Task<IResult> UninstallMod(GameServerLocal gameServer, Mod mod);
+    Task<IResult> BackupGame(GameServerLocal gameServer);
 }
