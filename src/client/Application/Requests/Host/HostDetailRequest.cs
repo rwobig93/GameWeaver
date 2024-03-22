@@ -3,7 +3,7 @@
 namespace Application.Requests.Host;
 
 [MemoryPackable]
-public class HostDetailRequest
+public partial class HostDetailRequest
 {
     public List<HostCpu> Cpus { get; set; } = new();
 

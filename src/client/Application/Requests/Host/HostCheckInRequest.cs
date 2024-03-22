@@ -1,7 +1,7 @@
 namespace Application.Requests.Host;
 
 [MemoryPackable]
-public class HostCheckInRequest
+public partial class HostCheckInRequest
 {
     public DateTime SendTimestamp { get; set; }
     public double CpuUsage { get; set; }

@@ -1,8 +1,10 @@
 ﻿using System.Net;
+using MemoryPack;
 
 namespace Domain.Models.Host;
 
-public class HostNetworkInterface
+[MemoryPackable]
+public partial class HostNetworkInterface
 {
     public string Name { get; set; } = null!;
 

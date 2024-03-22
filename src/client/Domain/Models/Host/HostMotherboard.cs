@@ -1,6 +1,9 @@
-﻿namespace Domain.Models.Host;
+﻿using MemoryPack;
 
-public class HostMotherboard
+namespace Domain.Models.Host;
+
+[MemoryPackable]
+public partial class HostMotherboard
 {
     public string Product { get; set; } = null!;
 

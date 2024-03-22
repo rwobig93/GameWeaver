@@ -3,7 +3,7 @@ using Domain.Enums;
 namespace Application.Requests.Host;
 
 [MemoryPackable]
-public class WeaverWorkUpdateRequest
+public partial class WeaverWorkUpdateRequest
 {
     public int Id { get; set; }
     public HostWorkType Type { get; set; }

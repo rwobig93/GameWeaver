@@ -1,6 +1,9 @@
-﻿namespace Domain.Models.Host;
+﻿using MemoryPack;
 
-public class HostRam
+namespace Domain.Models.Host;
+
+[MemoryPackable]
+public partial class HostRam
 {
     public string Manufacturer { get; set; } = null!;
 

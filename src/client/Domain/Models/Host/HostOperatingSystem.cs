@@ -1,6 +1,9 @@
-﻿namespace Domain.Models.Host;
+﻿using MemoryPack;
 
-public class HostOperatingSystem
+namespace Domain.Models.Host;
+
+[MemoryPackable]
+public partial class HostOperatingSystem
 {
     public string Name { get; set; } = null!;
 

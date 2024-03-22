@@ -6,6 +6,7 @@ using Application.Helpers;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
+using Domain.Enums;
 using Domain.Models.GameServer;
 using Microsoft.Extensions.Options;
 
@@ -356,9 +357,9 @@ public class GameServerService : IGameServerService
             var backupRootPath = Path.Combine(OsHelper.GetDefaultBackupPath(), gameServer.Id.ToString());
             var backupTimestamp = _dateTimeService.NowDatabaseTime.ToString("yyyyMMdd_HHmm");
             var backupIndex = 0;
-            foreach (var backupDirectory in gameServer.BackupDirectories)
+            foreach (var backupDirectory in gameServer.Resources.Where(x => x.Type == LocationType.BackupPath))
             {
-                var backupPath = Path.Combine(gameServer.InstallDirectory, backupDirectory);
+                var backupPath = Path.Combine(gameServer.InstallDirectory, backupDirectory.Path);
                 var archivePath = Path.Combine(backupRootPath, backupTimestamp, $"{backupIndex}.zip");
                 ZipFile.CreateFromDirectory(backupPath, archivePath, CompressionLevel.Optimal, includeBaseDirectory: false);
                 backupIndex++;

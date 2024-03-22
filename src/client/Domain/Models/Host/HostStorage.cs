@@ -1,6 +1,9 @@
-﻿namespace Domain.Models.Host;
+﻿using MemoryPack;
 
-public class HostStorage
+namespace Domain.Models.Host;
+
+[MemoryPackable]
+public partial class HostStorage
 {
     public uint Index { get; set; }
 

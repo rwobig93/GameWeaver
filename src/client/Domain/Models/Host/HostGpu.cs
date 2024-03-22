@@ -1,6 +1,9 @@
-﻿namespace Domain.Models.Host;
+﻿using MemoryPack;
 
-public class HostGpu
+namespace Domain.Models.Host;
+
+[MemoryPackable]
+public partial class HostGpu
 {
     public string Name { get; set; } = null!;
 
