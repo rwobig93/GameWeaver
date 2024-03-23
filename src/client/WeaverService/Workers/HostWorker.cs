@@ -7,6 +7,7 @@ using Application.Settings;
 using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.Host;
+using MemoryPack;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -110,7 +111,7 @@ public class HostWorker : BackgroundService
             Id = work.Id,
             Type = HostWorkType.StatusUpdate,
             Status = WeaverWorkState.PickedUp,
-            WorkData = null,
+            WorkData = MemoryPackSerializer.Serialize(new HostWork()),
             AttemptCount = 0
         });
         
@@ -191,7 +192,7 @@ public class HostWorker : BackgroundService
             Id = 0,
             Type = HostWorkType.HostDetail,
             Status = WeaverWorkState.Completed,
-            WorkData = hostDetailRequest,
+            WorkData = _serializerService.SerializeMemory(hostDetailRequest),
             AttemptCount = 0
         });
     }
@@ -309,7 +310,7 @@ public class HostWorker : BackgroundService
                 Id = work.Id,
                 Type = HostWorkType.StatusUpdate,
                 Status = WeaverWorkState.InProgress,
-                WorkData = null,
+                WorkData = _serializerService.SerializeMemory(new HostWork()),
                 AttemptCount = 0
             });
             
@@ -330,27 +331,14 @@ public class HostWorker : BackgroundService
                         Id = work.Id,
                         Type = HostWorkType.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = new GameServerWork { Messages = new List<string> {"Host work data was invalid, please verify the payload"}},
+                        WorkData = _serializerService.SerializeMemory(
+                            new GameServerWork { Messages = new List<string> {"Host work data was invalid, please verify the payload"}}),
                         AttemptCount = 0
                     });
                     return;
             }
             
-            if (work.WorkData is null)
-            {
-                _logger.Error("Host work data is empty, no work to do? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
-                ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-                {
-                    Id = work.Id,
-                    Type = HostWorkType.StatusUpdate,
-                    Status = WeaverWorkState.Failed,
-                    WorkData = new GameServerWork { Messages = new List<string> {"Host work data was empty, nothing to work with"}},
-                    AttemptCount = 0
-                });
-                return;
-            }
-            
-            var workData = work.WorkData as HostWork;
+            var workData = _serializerService.DeserializeMemory<HostWork>(work.WorkData!);
             switch (workData!.Type)
             {
                 case HostWorkType.StatusUpdate:
@@ -366,7 +354,8 @@ public class HostWorker : BackgroundService
                         Id = work.Id,
                         Type = HostWorkType.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = new GameServerWork { Messages = new List<string> {$"Unsupported host work type asked for: {workData.Type}"}},
+                        WorkData = _serializerService.SerializeMemory(
+                            new GameServerWork { Messages = new List<string> {$"Unsupported host work type asked for: {workData.Type}"}}),
                         AttemptCount = 0
                     });
                     return;
@@ -377,7 +366,7 @@ public class HostWorker : BackgroundService
                 Id = work.Id,
                 Type = HostWorkType.StatusUpdate,
                 Status = WeaverWorkState.Completed,
-                WorkData = null,
+                WorkData = _serializerService.SerializeMemory(new HostWork()),
                 AttemptCount = 0
             });
             await Task.CompletedTask;
@@ -390,7 +379,8 @@ public class HostWorker : BackgroundService
                 Id = work.Id,
                 Type = HostWorkType.StatusUpdate,
                 Status = WeaverWorkState.Failed,
-                WorkData = new GameServerWork { Messages = new List<string> {$"Failure occurred handling host work: {ex.Message}"}},
+                WorkData = _serializerService.SerializeMemory(
+                    new GameServerWork { Messages = new List<string> {$"Failure occurred handling host work: {ex.Message}"}}),
                 AttemptCount = 0
             });
         }

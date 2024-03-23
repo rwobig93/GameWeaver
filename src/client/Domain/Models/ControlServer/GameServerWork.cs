@@ -4,7 +4,7 @@ using MemoryPack;
 namespace Domain.Models.ControlServer;
 
 [MemoryPackable]
-public class GameServerWork
+public partial class GameServerWork
 {
     public GameServerWorkType Type { get; set; }
     public List<string> Messages { get; set; } = new();

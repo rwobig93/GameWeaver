@@ -240,6 +240,7 @@ public class GameServerService : IGameServerService
         //  $timeUpdated = $jsonContent.data."$steamAppId".depots.branches.public.timeupdated
         //  $epoch = [DateTime]::new(1970, 1, 1, 0, 0, 0, [DateTimeKind]::Utc)
         //  $releaseDate = $epoch.AddSeconds($timeUpdated)
+        await Task.CompletedTask;
         
         // TODO: Update gameserver state to match post work state
         throw new NotImplementedException();
@@ -254,6 +255,7 @@ public class GameServerService : IGameServerService
         // response.publishedfiledetails.title
         // response.publishedfiledetails.time_created
         // response.publishedfiledetails.time_updated
+        await Task.CompletedTask;
         
         // TODO: Update gameserver state to match post work state
         throw new NotImplementedException();
@@ -292,6 +294,7 @@ public class GameServerService : IGameServerService
         // steamcmd.exe +login anonymous +workshop_download_item 346110 496735411 +quit
         // steamcmd.exe +login anonymous +workshop_download_item {steamGameId} {workshopItemId} +quit
         // See: https://steamcommunity.com/app/346110/discussions/10/530649887212662565/?l=hungarian#c521643320353037920
+        await Task.CompletedTask;
         
         // TODO: Update gameserver state to match post work state
         throw new NotImplementedException();
@@ -319,6 +322,7 @@ public class GameServerService : IGameServerService
     public async Task<IResult> UninstallMod(GameServerLocal gameServer, Mod mod)
     {
         // Delete mod directory and cleanup GameServer object
+        await Task.CompletedTask;
         
         // TODO: Update gameserver state to match post work state
         throw new NotImplementedException();

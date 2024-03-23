@@ -7,6 +7,7 @@ using Application.Settings;
 using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.GameServer;
+using MemoryPack;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -21,7 +22,7 @@ public class GameServerWorker : BackgroundService
     private readonly ISerializerService _serializerService;
 
     private static DateTime _lastRuntime;
-    private static DateTime? _lastBackupTime = null;
+    private static DateTime? _lastBackupTime;
     private static ConcurrentQueue<WeaverWorkClient> _workQueue = new();
     private static int _inProgressWorkCount;
 
@@ -142,7 +143,7 @@ public class GameServerWorker : BackgroundService
             Id = work.Id,
             Type = HostWorkType.StatusUpdate,
             Status = WeaverWorkState.PickedUp,
-            WorkData = null,
+            WorkData = MemoryPackSerializer.Serialize(new GameServerWork()),
             AttemptCount = 0
         });
         
@@ -200,7 +201,7 @@ public class GameServerWorker : BackgroundService
                 Id = work.Id,
                 Type = HostWorkType.StatusUpdate,
                 Status = WeaverWorkState.InProgress,
-                WorkData = null,
+                WorkData = _serializerService.SerializeMemory(new GameServerWork()),
                 AttemptCount = 0
             });
             
@@ -221,24 +222,11 @@ public class GameServerWorker : BackgroundService
                         Id = work.Id,
                         Type = HostWorkType.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = new GameServerWork { Messages = new List<string> {"Gameserver work data was invalid, please verify the payload"}},
+                        WorkData = _serializerService.SerializeMemory(
+                            new GameServerWork { Messages = new List<string> {"Gameserver work data was invalid, please verify the payload"}}),
                         AttemptCount = 0
                     });
                     return;
-            }
-            
-            if (work.WorkData is null)
-            {
-                _logger.Error("Gameserver work data is empty, no work to do? [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
-                ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-                {
-                    Id = work.Id,
-                    Type = HostWorkType.StatusUpdate,
-                    Status = WeaverWorkState.Failed,
-                    WorkData = new GameServerWork { Messages = new List<string> {"Gameserver work data was empty, nothing to work with"}},
-                    AttemptCount = 0
-                });
-                return;
             }
 
             var gameServerLocal = GameServers.FirstOrDefault(x => x.Id == work.GameServerId);
@@ -251,14 +239,15 @@ public class GameServerWorker : BackgroundService
                     Id = work.Id,
                     Type = HostWorkType.StatusUpdate,
                     Status = WeaverWorkState.Failed,
-                    WorkData = new GameServerWork { Messages = new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}},
+                    WorkData = _serializerService.SerializeMemory(
+                        new GameServerWork { Messages = new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}}),
                     AttemptCount = 0
                 });
                 return;
             }
             
             _logger.Information("Starting work for gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
-            var workData = work.WorkData as GameServerWork;
+            var workData = _serializerService.DeserializeMemory<GameServerWork>(work.WorkData!);
             switch (workData!.Type)
             {
                 case GameServerWorkType.Install:
@@ -281,7 +270,8 @@ public class GameServerWorker : BackgroundService
                         Id = work.Id,
                         Type = HostWorkType.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = new GameServerWork { Messages = new List<string> {$"Unsupported gameserver work type asked for: {workData.Type}"}},
+                        WorkData = _serializerService.SerializeMemory(
+                            new GameServerWork { Messages = new List<string> {$"Unsupported gameserver work type asked for: {workData.Type}"}}),
                         AttemptCount = 0
                     });
                     return;
@@ -292,7 +282,7 @@ public class GameServerWorker : BackgroundService
                 Id = work.Id,
                 Type = HostWorkType.StatusUpdate,
                 Status = WeaverWorkState.Completed,
-                WorkData = null,
+                WorkData = _serializerService.SerializeMemory(new GameServerWork()),
                 AttemptCount = 0
             });
         }
@@ -304,7 +294,8 @@ public class GameServerWorker : BackgroundService
                 Id = work.Id,
                 Type = HostWorkType.StatusUpdate,
                 Status = WeaverWorkState.Failed,
-                WorkData = new GameServerWork { Messages = new List<string> {$"Failure occurred handling gameserver work: {ex.Message}"}},
+                WorkData = _serializerService.SerializeMemory(
+                    new GameServerWork { Messages = new List<string> {$"Failure occurred handling gameserver work: {ex.Message}"}}),
                 AttemptCount = 0
             });
         }

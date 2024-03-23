@@ -20,6 +20,7 @@ public partial class HostNetworkInterface
     
     public List<IPAddress> DefaultGateways { get; set; } = new();
 
+    [MemoryPackAllowSerialize]
     public IPAddress DhcpServer { get; set; } = null!;
 
     public List<IPAddress> DnsServers { get; set; } = new();

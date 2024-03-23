@@ -9,7 +9,7 @@ public class WeaverWorkUpdate
     public Guid? GameServerId { get; set; }
     public WeaverWorkTarget? TargetType { get; set; }
     public WeaverWorkState? Status { get; set; }
-    public object? WorkData { get; set; }
+    public byte[]? WorkData { get; set; }
     public Guid? CreatedBy { get; set; }
     public DateTime? CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
