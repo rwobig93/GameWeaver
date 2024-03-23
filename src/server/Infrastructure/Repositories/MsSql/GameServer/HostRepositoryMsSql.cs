@@ -849,24 +849,6 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByGameServerIdAsync(Guid id)
-    {
-        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
-
-        try
-        {
-            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
-                WeaverWorksTableMsSql.GetByGameServerId, new {GameServerId = id});
-            actionReturn.Succeed(foundWork);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetByGameServerId.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
     public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target)
     {
         DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();

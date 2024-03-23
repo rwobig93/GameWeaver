@@ -508,5 +508,16 @@
             <param name="numberOfBytes">Desired token size in bytes, larger is more secure</param>
             <returns>An enumerable of generated URL friendly tokens</returns>
         </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.GameServerWork">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>Domain.Enums.WeaverWork.WeaverWorkTarget</b> Target<br/>
+            <b>System.Collections.Generic.List&lt;string&gt;</b> Messages<br/>
+            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>string</b> ServerVersion<br/>
+            </code>
+            </remarks>
+        </member>
     </members>
 </doc>

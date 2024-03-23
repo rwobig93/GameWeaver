@@ -23,7 +23,7 @@ public class GameServerWorker : BackgroundService
 
     private static DateTime _lastRuntime;
     private static DateTime? _lastBackupTime;
-    private static ConcurrentQueue<WeaverWorkClient> _workQueue = new();
+    private static ConcurrentQueue<WeaverWork> _workQueue = new();
     private static int _inProgressWorkCount;
 
     private static ConcurrentBag<GameServerLocal> GameServers { get; set; } = new();
@@ -125,14 +125,14 @@ public class GameServerWorker : BackgroundService
         _lastBackupTime = _dateTimeService.NowDatabaseTime;
     }
 
-    public static void AddWorkToQueue(WeaverWorkClient work)
+    public static void AddWorkToQueue(WeaverWork work)
     {
-        Log.Debug("Adding gameserver work to waiting queue: {Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
+        Log.Debug("Adding gameserver work to waiting queue: {Id} |{WorkType} | {Status}", work.Id, work.Type, work.Status);
         
+        // TODO: Need to check against work in progress as well, currently we aren't tracking that work, we need to for reliability
         if (_workQueue.Any(x => x.Id == work.Id))
         {
-            Log.Verbose("Work already exists in the queue, skipping duplicate: [{WorkId}]{GamerServerId} of type {WorkType}",
-                work.Id, work.GameServerId, work.TargetType);
+            Log.Verbose("Work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.Type);
             return;
         }
 
@@ -141,13 +141,13 @@ public class GameServerWorker : BackgroundService
         ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
         {
             Id = work.Id,
-            Type = HostWorkType.StatusUpdate,
+            Type = WeaverWorkTarget.StatusUpdate,
             Status = WeaverWorkState.PickedUp,
-            WorkData = MemoryPackSerializer.Serialize(new GameServerWork()),
+            WorkData = MemoryPackSerializer.Serialize(new List<string> { "Work has been picked up" }),
             AttemptCount = 0
         });
         
-        Log.Debug("Added gameserver work to queue:{Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
+        Log.Debug("Added gameserver work to queue:{Id} | {WorkType} | {Status}", work.Id, work.Type, work.Status);
     }
 
     private async Task SerializeGameServerState()
@@ -187,91 +187,73 @@ public class GameServerWorker : BackgroundService
         }
 
         var workQueue = await File.ReadAllTextAsync(GameServerConstants.WorkQueuePath);
-        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(workQueue);
+        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWork>>(workQueue);
         
         _logger.Information("Deserialized gameserver work queue");
     }
 
-    private async Task HandleWork(WeaverWorkClient work)
+    private async Task HandleWork(WeaverWork work)
     {
         try
         {
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
+                Type = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.InProgress,
-                WorkData = _serializerService.SerializeMemory(new GameServerWork()),
+                WorkData = MemoryPackSerializer.Serialize(new List<string> { "Work has is now in progress" }),
                 AttemptCount = 0
             });
             
-            switch (work.TargetType)
+            switch (work.Type)
             {
-                case WeaverWorkTarget.Host:
-                    _logger.Error("Host work somehow got into the GameServer work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
+                case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
+                    _logger.Error("Host work somehow got into the GameServer work queue: [{WorkId}]{WorkType}", work.Id, work.Type);
                     HostWorker.AddWorkToQueue(work);
-                    _logger.Warning("Gave host work to host worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
+                    _logger.Warning("Gave host work to host worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.Type);
                     return;
-                case WeaverWorkTarget.GameServer:
-                    _logger.Debug("Starting gameserver work from queue: [{WorkId}]{GamerServerId}", work.Id, work.GameServerId);
+                case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
+                    _logger.Debug("Starting gameserver work from queue: [{WorkId}]{WorkType}", work.Id, work.Type);
                     break;
                 default:
-                    _logger.Error("Invalid work type for work: [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
+                    _logger.Error("Invalid work type for work: [{WorkId}]{WorkType}", work.Id, work.Type);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
-                        Type = HostWorkType.StatusUpdate,
+                        Type = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = _serializerService.SerializeMemory(
-                            new GameServerWork { Messages = new List<string> {"Gameserver work data was invalid, please verify the payload"}}),
+                        WorkData = _serializerService.SerializeMemory(new List<string> {"Gameserver work data was invalid, please verify the payload"}),
                         AttemptCount = 0
                     });
                     return;
             }
 
-            var gameServerLocal = GameServers.FirstOrDefault(x => x.Id == work.GameServerId);
-            if (gameServerLocal is null)
+            switch (work.Type)
             {
-                _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}]{GamerServerId} of type {WorkType}",
-                    work.Id, work.GameServerId, work.TargetType);
-                ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-                {
-                    Id = work.Id,
-                    Type = HostWorkType.StatusUpdate,
-                    Status = WeaverWorkState.Failed,
-                    WorkData = _serializerService.SerializeMemory(
-                        new GameServerWork { Messages = new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}}),
-                    AttemptCount = 0
-                });
-                return;
-            }
-            
-            _logger.Information("Starting work for gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
-            var workData = _serializerService.DeserializeMemory<GameServerWork>(work.WorkData!);
-            switch (workData!.Type)
-            {
-                case GameServerWorkType.Install:
-                    await _gameServerService.InstallOrUpdateGame(gameServerLocal);
-                    _logger.Information("Finished installing gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+                case WeaverWorkTarget.GameServerInstall:
+                    await InstallGameServer(work);
                     break;
-                case GameServerWorkType.Update:
-                    await _gameServerService.InstallOrUpdateGame(gameServerLocal);
-                    _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+                case WeaverWorkTarget.GameServerUpdate:
+                    await UpdateGameServer(work);
                     break;
-                case GameServerWorkType.Uninstall:
-                    await _gameServerService.UninstallGame(gameServerLocal);
-                    _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+                case WeaverWorkTarget.GameServerUninstall:
+                    await UninstallGameServer(work);
                     break;
+                case WeaverWorkTarget.StatusUpdate:
+                case WeaverWorkTarget.Host:
+                case WeaverWorkTarget.HostStatusUpdate:
+                case WeaverWorkTarget.HostDetail:
+                case WeaverWorkTarget.GameServer:
+                case WeaverWorkTarget.CurrentEnd:
                 default:
-                    _logger.Error("Unsupported gameserver work type asked for: Asked {WorkType} for [{GameserverId}]{GameserverName}",
-                        workData.Type, gameServerLocal.Id, gameServerLocal.ServerName);
+                    _logger.Error("An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {WorkType}", work.Type);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
-                        Type = HostWorkType.StatusUpdate,
+                        Type = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
                         WorkData = _serializerService.SerializeMemory(
-                            new GameServerWork { Messages = new List<string> {$"Unsupported gameserver work type asked for: {workData.Type}"}}),
+                            new List<string> {$"An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {work.Type}"}),
                         AttemptCount = 0
                     });
                     return;
@@ -280,9 +262,9 @@ public class GameServerWorker : BackgroundService
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
+                Type = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.Completed,
-                WorkData = _serializerService.SerializeMemory(new GameServerWork()),
+                WorkData = _serializerService.SerializeMemory(new List<string> { "Work completed" }),
                 AttemptCount = 0
             });
         }
@@ -292,10 +274,9 @@ public class GameServerWorker : BackgroundService
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
+                Type = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.Failed,
-                WorkData = _serializerService.SerializeMemory(
-                    new GameServerWork { Messages = new List<string> {$"Failure occurred handling gameserver work: {ex.Message}"}}),
+                WorkData = _serializerService.SerializeMemory(new List<string> {$"Failure occurred handling gameserver work: {ex.Message}"}),
                 AttemptCount = 0
             });
         }
@@ -303,5 +284,101 @@ public class GameServerWorker : BackgroundService
         {
             _inProgressWorkCount--;
         }
+    }
+
+    private async Task UninstallGameServer(WeaverWork work)
+    {
+        if (work.WorkData is null)
+        {
+            _logger.Error("Gameserver uninstall request has an empty work data payload: {WorkId}", work.Id);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {$"Gameserver uninstall request has an empty work data payload: {work.Id}"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+        
+        var uninstallWork = _serializerService.DeserializeMemory<GameServerUninstallWork>(work.WorkData);
+        var gameServerLocal = GameServers.FirstOrDefault(x => x.Id == uninstallWork!.GameserverId);
+        if (gameServerLocal is null)
+        {
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.Type);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+
+        await _gameServerService.UninstallGame(gameServerLocal);
+        _logger.Information("Finished uninstalling gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+    }
+
+    private async Task UpdateGameServer(WeaverWork work)
+    {
+        if (work.WorkData is null)
+        {
+            _logger.Error("Gameserver update request has an empty work data payload: {WorkId}", work.Id);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {$"Gameserver update request has an empty work data payload: {work.Id}"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+        
+        var updateWork = _serializerService.DeserializeMemory<GameServerUpdateWork>(work.WorkData);
+        var gameServerLocal = GameServers.FirstOrDefault(x => x.Id == updateWork!.GameserverId);
+        if (gameServerLocal is null)
+        {
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.Type);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+
+        await _gameServerService.InstallOrUpdateGame(gameServerLocal);
+        _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+    }
+
+    private async Task InstallGameServer(WeaverWork work)
+    {
+        if (work.WorkData is null)
+        {
+            _logger.Error("Gameserver install request has an empty work data payload: {WorkId}", work.Id);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                Type = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {$"Gameserver install request has an empty work data payload: {work.Id}"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+        // TODO: Add converted gameserver to gameservers local list before install
+        
+        // TODO: Update placeholder to actual aggregated object
+        var gameServer = _serializerService.DeserializeMemory<GameServerLocal>(work.WorkData);
+        await _gameServerService.InstallOrUpdateGame(gameServer!);
+        _logger.Information("Finished installing gameserver: [{GameserverId}]{GameserverName}", gameServer!.Id, gameServer.ServerName);
+        throw new NotImplementedException();
     }
 }

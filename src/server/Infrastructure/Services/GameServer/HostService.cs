@@ -579,17 +579,6 @@ public class HostService : IHostService
         return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
     }
 
-    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByGameServerIdAsync(Guid id)
-    {
-        var foundHost = await _hostRepository.GetWeaverWorkByGameServerIdAsync(id);
-        if (!foundHost.Succeeded)
-            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHost.ErrorMessage);
-        if (foundHost.Result is null)
-            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
-
-        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
-    }
-
     public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target)
     {
         var foundHost = await _hostRepository.GetWeaverWorkByTargetTypeAsync(target);

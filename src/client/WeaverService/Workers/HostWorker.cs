@@ -23,7 +23,7 @@ public class HostWorker : BackgroundService
     private readonly IGameServerService _gameServerService;
     private readonly IHostApplicationLifetime _appLifetime;
 
-    private static ConcurrentQueue<WeaverWorkClient> _workQueue = new();
+    private static ConcurrentQueue<WeaverWork> _workQueue = new();
     private static DateTime _lastRuntime;
     private static Task? _pollerThread;
     private static int _inProgressWorkCount;
@@ -93,14 +93,13 @@ public class HostWorker : BackgroundService
         _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
     }
 
-    public static void AddWorkToQueue(WeaverWorkClient work)
+    public static void AddWorkToQueue(WeaverWork work)
     {
-        Log.Debug("Adding host work to waiting queue: {Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
+        Log.Debug("Adding host work to waiting queue: {Id} | {WorkType} | {Status}", work.Id, work.Type, work.Status);
         
         if (_workQueue.Any(x => x.Id == work.Id))
         {
-            Log.Verbose("Host work already exists in the queue, skipping duplicate: [{WorkId}]{GamerServerId} of type {WorkType}",
-                work.Id, work.GameServerId, work.TargetType);
+            Log.Verbose("Host work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.Type);
             return;
         }
 
@@ -109,13 +108,13 @@ public class HostWorker : BackgroundService
         ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
         {
             Id = work.Id,
-            Type = HostWorkType.StatusUpdate,
+            Type = WeaverWorkTarget.StatusUpdate,
             Status = WeaverWorkState.PickedUp,
-            WorkData = MemoryPackSerializer.Serialize(new HostWork()),
+            WorkData = MemoryPackSerializer.Serialize(new List<string> {"Work was picked up"}),
             AttemptCount = 0
         });
         
-        Log.Debug("Added host work to queue:{Id} | {GameServerId} | {WorkType} | {Status}", work.Id, work.GameServerId, work.TargetType, work.Status);
+        Log.Debug("Added host work to queue:{Id} | {WorkType} | {Status}", work.Id, work.Type, work.Status);
     }
 
     private void UpdateHostDetail()
@@ -190,7 +189,7 @@ public class HostWorker : BackgroundService
         ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
         {
             Id = 0,
-            Type = HostWorkType.HostDetail,
+            Type = WeaverWorkTarget.HostDetail,
             Status = WeaverWorkState.Completed,
             WorkData = _serializerService.SerializeMemory(hostDetailRequest),
             AttemptCount = 0
@@ -257,7 +256,7 @@ public class HostWorker : BackgroundService
         }
         
         var waitingQueue = await File.ReadAllTextAsync(HostConstants.WorkQueuePath);
-        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWorkClient>>(waitingQueue);
+        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWork>>(waitingQueue);
         
         _logger.Information("Deserialized host work queue");
     }
@@ -301,61 +300,65 @@ public class HostWorker : BackgroundService
         await Task.CompletedTask;
     }
 
-    private async Task HandleWork(WeaverWorkClient work)
+    private async Task HandleWork(WeaverWork work)
     {
         try
         {
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
+                Type = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.InProgress,
-                WorkData = _serializerService.SerializeMemory(new HostWork()),
+                WorkData = _serializerService.SerializeMemory(new List<string>{"Work is in progress"}),
                 AttemptCount = 0
             });
             
-            switch (work.TargetType)
+            switch (work.Type)
             {
-                case WeaverWorkTarget.Host:
-                    _logger.Debug("Starting host work from queue: [{WorkId}]", work.Id);
+                case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
+                    _logger.Debug("Starting host work from queue: [{WorkId}]{WorkType}", work.Id, work.Type);
                     return;
-                case WeaverWorkTarget.GameServer:
-                    _logger.Error("Gameserver work somehow got into the Host work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
+                case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
+                    _logger.Error("Gameserver work somehow got into the Host work queue: [{WorkId}]{WorkType}", work.Id, work.Type);
                     GameServerWorker.AddWorkToQueue(work);
-                    _logger.Warning("Gave gameserver work to gameserver worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
+                    _logger.Warning("Gave gameserver work to gameserver worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.Type);
                     break;
                 default:
-                    _logger.Error("Invalid work type for work: [{WorkId}]{GamerServerId} of type {WorkType}", work.Id, work.GameServerId, work.TargetType);
+                    _logger.Error("Invalid work type for work: [{WorkId}] of type {WorkType}", work.Id, work.Type);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
-                        Type = HostWorkType.StatusUpdate,
+                        Type = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = _serializerService.SerializeMemory(
-                            new GameServerWork { Messages = new List<string> {"Host work data was invalid, please verify the payload"}}),
+                        WorkData = _serializerService.SerializeMemory(new List<string> {"Host work data was invalid, please verify the payload"}),
                         AttemptCount = 0
                     });
                     return;
             }
             
-            var workData = _serializerService.DeserializeMemory<HostWork>(work.WorkData!);
-            switch (workData!.Type)
+            switch (work.Type)
             {
-                case HostWorkType.StatusUpdate:
+                case WeaverWorkTarget.HostStatusUpdate:
                     // TODO: Implement host status update
                     break;
-                case HostWorkType.HostDetail:
+                case WeaverWorkTarget.HostDetail:
                     UpdateHostDetail();
                     break;
+                case WeaverWorkTarget.StatusUpdate:
+                case WeaverWorkTarget.Host:
+                case WeaverWorkTarget.GameServer:
+                case WeaverWorkTarget.GameServerInstall:
+                case WeaverWorkTarget.GameServerUpdate:
+                case WeaverWorkTarget.GameServerUninstall:
+                case WeaverWorkTarget.CurrentEnd:
                 default:
-                    _logger.Error("Unsupported host work type asked for: Asked {WorkType}", workData.Type);
+                    _logger.Error("Unsupported host work type asked for: Asked {WorkType}", work.Type);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
-                        Type = HostWorkType.StatusUpdate,
+                        Type = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = _serializerService.SerializeMemory(
-                            new GameServerWork { Messages = new List<string> {$"Unsupported host work type asked for: {workData.Type}"}}),
+                        WorkData = _serializerService.SerializeMemory(new List<string> {$"Unsupported host work type asked for: {work.Type}"}),
                         AttemptCount = 0
                     });
                     return;
@@ -364,9 +367,9 @@ public class HostWorker : BackgroundService
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
+                Type = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.Completed,
-                WorkData = _serializerService.SerializeMemory(new HostWork()),
+                WorkData = _serializerService.SerializeMemory(new List<string>{"Work complete"}),
                 AttemptCount = 0
             });
             await Task.CompletedTask;
@@ -377,10 +380,9 @@ public class HostWorker : BackgroundService
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = HostWorkType.StatusUpdate,
+                Type = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.Failed,
-                WorkData = _serializerService.SerializeMemory(
-                    new GameServerWork { Messages = new List<string> {$"Failure occurred handling host work: {ex.Message}"}}),
+                WorkData = _serializerService.SerializeMemory(new List<string> {$"Failure occurred handling host work: {ex.Message}"}),
                 AttemptCount = 0
             });
         }

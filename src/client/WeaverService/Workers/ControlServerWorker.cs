@@ -95,21 +95,21 @@ public class ControlServerWorker : BackgroundService
             return;
         }
 
-        var deserializedNextWork = _serializerService.DeserializeMemory<IEnumerable<WeaverWorkClient>>(checkInResponse.Data);
+        var deserializedNextWork = _serializerService.DeserializeMemory<IEnumerable<WeaverWork>>(checkInResponse.Data);
         if (deserializedNextWork is not null)
         {
             foreach (var work in deserializedNextWork)
             {
-                switch (work.TargetType)
+                switch (work.Type)
                 {
-                    case WeaverWorkTarget.Host:
+                    case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
                         HostWorker.AddWorkToQueue(work);
                         break;
-                    case WeaverWorkTarget.GameServer:
+                    case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
                         GameServerWorker.AddWorkToQueue(work);
                         break;
                     default:
-                        _logger.Error("Working needing processed doesn't have a valid type provided: {WorkType}", work.TargetType);
+                        _logger.Error("Working needing processed doesn't have a valid type provided: {WorkType}", work.Type);
                         break;
                 }
             }

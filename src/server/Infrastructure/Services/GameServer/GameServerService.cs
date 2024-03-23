@@ -5,13 +5,17 @@ using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
+using Application.Models.GameServer.WeaverWork;
 using Application.Repositories.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.Enums.GameServer;
+using Domain.Enums.WeaverWork;
 using Microsoft.Extensions.Options;
+using WeaverWorkTarget = Domain.Enums.WeaverWork.WeaverWorkTarget;
 
 namespace Infrastructure.Services.GameServer;
 
@@ -21,12 +25,17 @@ public class GameServerService : IGameServerService
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly AppConfiguration _appConfig;
+    private readonly IHostRepository _hostRepository;
+    private readonly ISerializerService _serializerService;
 
-    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig)
+    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
+        IHostRepository hostRepository, ISerializerService serializerService)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
         _serverState = serverState;
+        _hostRepository = hostRepository;
+        _serializerService = serializerService;
         _appConfig = appConfig.Value;
     }
 
@@ -128,6 +137,26 @@ public class GameServerService : IGameServerService
         var request = await _gameServerRepository.CreateAsync(createObject);
         if (!request.Succeeded)
             return await Result<Guid>.FailAsync(request.ErrorMessage);
+
+        var createdGameserverRequest = await _gameServerRepository.GetByIdAsync(request.Result);
+        if (!createdGameserverRequest.Succeeded || createdGameserverRequest.Result is null)
+            return await Result<Guid>.FailAsync(createdGameserverRequest.ErrorMessage);
+
+        var hostInstallRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
+        {
+            HostId = createObject.HostId,
+            GameServerId = request.Result,
+            TargetType = Domain.Enums.GameServer.WeaverWorkTarget.GameServerInstall,
+            Status = WeaverWorkState.WaitingToBePickedUp,
+            // TODO: Serialize needed gameserver data to be given to the host to have the full state including profile overrides
+            WorkData = _serializerService.SerializeMemory(createdGameserverRequest.Result.ToSlim()),
+            CreatedBy = default,
+            CreatedOn = default,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        });
+        if (!hostInstallRequest.Succeeded)
+            return await Result<Guid>.FailAsync(hostInstallRequest.ErrorMessage);
 
         return await Result<Guid>.SuccessAsync(request.Result);
     }

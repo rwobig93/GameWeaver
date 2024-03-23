@@ -5,5 +5,5 @@ namespace Application.Responses.Host;
 
 public class HostCheckInResponse : Result
 {
-    public List<WeaverWorkClient> Data { get; set; } = new();
+    public List<WeaverWork> Data { get; set; } = new();
 }

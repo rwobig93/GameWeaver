@@ -11,7 +11,6 @@ public static class WeaverWorkMappers
         {
             Id = weaverWorkDb.Id,
             HostId = weaverWorkDb.HostId,
-            GameServerId = weaverWorkDb.GameServerId,
             TargetType = weaverWorkDb.TargetType,
             Status = weaverWorkDb.Status,
             WorkData = weaverWorkDb.WorkData,
@@ -33,7 +32,6 @@ public static class WeaverWorkMappers
         {
             Id = weaverWorkDb.Id,
             HostId = weaverWorkDb.HostId,
-            GameServerId = weaverWorkDb.GameServerId,
             TargetType = weaverWorkDb.TargetType,
             Status = weaverWorkDb.Status,
             WorkData = weaverWorkDb.WorkData,

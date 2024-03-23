@@ -20,7 +20,6 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] int IDENTITY(1,1) PRIMARY KEY,
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
-                    [GameServerId] UNIQUEIDENTIFIER NULL,
                     [TargetType] int NOT NULL,
                     [Status] int NOT NULL,
                     [WorkData] VARBINARY(MAX) NOT NULL,
@@ -169,22 +168,6 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
-    public static readonly SqlStoredProcedure GetByGameServerId = new()
-    {
-        Table = Table,
-        Action = "GetByGameServerId",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByGameServerId]
-                @GameServerId UNIQUEIDENTIFIER
-            AS
-            begin
-                SELECT w.*
-                FROM dbo.[{Table.TableName}] w
-                WHERE w.TargetType = 1 AND w.GameServerId = @GameServerId
-                ORDER BY w.Id;
-            end"
-    };
-    
     public static readonly SqlStoredProcedure GetByTargetType = new()
     {
         Table = Table,
@@ -241,7 +224,6 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @HostId UNIQUEIDENTIFIER,
-                @GameServerId UNIQUEIDENTIFIER,
                 @TargetType int,
                 @Status int,
                 @WorkData VARBINARY(MAX),
@@ -251,9 +233,9 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (HostId, GameServerId, TargetType, Status, WorkData, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (HostId, TargetType, Status, WorkData, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@HostId, @GameServerId, @TargetType, @Status, @WorkData, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                VALUES (@HostId, @TargetType, @Status, @WorkData, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -270,8 +252,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.HostId LIKE '%' + @SearchTerm + '%'
-                    OR w.GameServerId LIKE '%' + @SearchTerm + '%';
+                WHERE w.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -291,7 +272,6 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
                 WHERE w.HostId LIKE '%' + @SearchTerm + '%'
-                    OR w.GameServerId LIKE '%' + @SearchTerm + '%'
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -304,7 +284,6 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id int,
                 @HostId UNIQUEIDENTIFIER = null,
-                @GameServerId UNIQUEIDENTIFIER = null,
                 @TargetType int = null,
                 @Status int = null,
                 @WorkData VARBINARY(MAX) = null,
@@ -315,7 +294,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET HostId = COALESCE(@HostId, HostId), GameServerId = COALESCE(@GameServerId, GameServerId),
+                SET HostId = COALESCE(@HostId, HostId),
                     TargetType = COALESCE(@TargetType, TargetType), Status = COALESCE(@Status, Status), WorkData = COALESCE(@WorkData, WorkData),
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
                     LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)

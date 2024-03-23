@@ -8,7 +8,7 @@ public class WeaverWorkCreate
     public Guid? GameServerId { get; set; }
     public WeaverWorkTarget TargetType { get; set; }
     public WeaverWorkState Status { get; set; } = WeaverWorkState.WaitingToBePickedUp;
-    public string WorkData { get; set; } = "";
+    public byte[]? WorkData { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
