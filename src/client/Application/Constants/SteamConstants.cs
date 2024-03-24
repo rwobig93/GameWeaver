@@ -1,4 +1,5 @@
-﻿using Domain.Models.GameServer;
+﻿using Application.Helpers;
+using Domain.Models.GameServer;
 
 namespace Application.Constants;
 
@@ -10,7 +11,7 @@ public class SteamConstants
 
     public static string CommandInstallUpdateGame(GameServerLocal gameServer)
     {
-        return $"+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir \"{gameServer.InstallDirectory}\" +login anonymous" +
+        return $"+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir \"{gameServer.GetInstallDirectory()}\" +login anonymous" +
                $" +app_info_update 1 +app_update \"{gameServer.SteamToolId}\" +app_status {gameServer.SteamToolId} +quit";
     }
 }

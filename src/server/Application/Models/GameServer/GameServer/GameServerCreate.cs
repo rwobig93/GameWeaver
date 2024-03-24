@@ -20,11 +20,6 @@ public class GameServerCreate
     public int PortRcon { get; set; } = 0;
     public bool Modded { get; set; } = false;
     public bool Private { get; set; } = true;
-    public ConnectivityState ServerState { get; set; }
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
-    public Guid? LastModifiedBy { get; set; }
-    public DateTime? LastModifiedOn { get; set; }
-    public bool IsDeleted { get; set; }
-    public DateTime? DeletedOn { get; set; }
 }

@@ -1,12 +1,12 @@
-﻿using Domain.Enums;
+﻿using Application.Models.GameServer.LocalResource;
+using Application.Models.GameServer.Mod;
+using Domain.Enums.GameServer;
 
-namespace Domain.Models.GameServer;
+namespace Application.Models.GameServer.GameServer;
 
-public class GameServerLocal
+public class GameServerToHost
 {
     public Guid Id { get; set; }
-    public Guid GameDbId { get; set; }
-    public Guid GameProfileDbId { get; set; }
     public string SteamName { get; set; } = "";
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
@@ -23,10 +23,8 @@ public class GameServerLocal
     public bool Modded { get; set; }
     public string ManualRootUrl { get; set; } = "";
     public string ServerProcessName { get; set; } = "";
-    public DateTime LastStateUpdate { get; set; } = DateTime.Now.ToLocalTime();
-    public ServerState ServerState { get; set; } = ServerState.Unknown;
+    public ConnectivityState ServerState { get; set; }
     public GameSource Source { get; set; }
-    public List<Mod> ModList { get; set; } = new();
-    public List<LocationPointer> Resources { get; set; } = new();
-    public List<SoftwareUpdateStatus> UpdatesWaiting { get; set; } = new();
+    public List<ModSlim> ModList { get; set; } = new();
+    public List<LocalResourceSlim> Resources { get; set; } = new();
 }

@@ -29,9 +29,9 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> ValidateSteamCmdInstall()
     {
-        var steamCmdDir = OsHelper.GetSteamCmdDirectory();
-        var steamCmdPath = OsHelper.GetSteamCmdPath();
-        var steamCmdDownloadPath = Path.Combine(OsHelper.GetSteamCachePath(), "steamcmd.zip");
+        var steamCmdDir = OsHelpers.GetSteamCmdDirectory();
+        var steamCmdPath = OsHelpers.GetSteamCmdPath();
+        var steamCmdDownloadPath = Path.Combine(OsHelpers.GetSteamCachePath(), "steamcmd.zip");
         
         if (!File.Exists(steamCmdPath))
         {
@@ -69,14 +69,14 @@ public class GameServerService : IGameServerService
     public void ClearSteamCmdData()
     {
         SteamCmdUpdateInProgress = true;
-        var steamCmdDir = new DirectoryInfo(OsHelper.GetSteamCmdDirectory());
+        var steamCmdDir = new DirectoryInfo(OsHelpers.GetSteamCmdDirectory());
         _logger.Information("Clearing SteamCMD data at: {Directory}", steamCmdDir);
         
         foreach (var file in steamCmdDir.EnumerateFiles())
         {
             try
             {
-                if (file.FullName == OsHelper.GetSteamCmdPath())
+                if (file.FullName == OsHelpers.GetSteamCmdPath())
                 {
                     _logger.Verbose("Skipping steamcmd binary: {File}", file.FullName);
                     continue;
@@ -119,7 +119,7 @@ public class GameServerService : IGameServerService
                 File.Delete(downloadPath);
             }
 
-            var downloadDirectory = new FileInfo(downloadPath).DirectoryName ?? OsHelper.GetSteamCachePath();
+            var downloadDirectory = new FileInfo(downloadPath).DirectoryName ?? OsHelpers.GetSteamCachePath();
             Directory.CreateDirectory(downloadDirectory);
             _logger.Debug("SteamCMD download directory: {Directory}", downloadDirectory);
             using (var httpClient = new HttpClient())
@@ -168,7 +168,7 @@ public class GameServerService : IGameServerService
             {
                 StartInfo = new ProcessStartInfo()
                 {
-                    FileName = OsHelper.GetSteamCmdPath(),
+                    FileName = OsHelpers.GetSteamCmdPath(),
                     Arguments = command,
                     UseShellExecute = false,
                     CreateNoWindow = true,
@@ -266,10 +266,10 @@ public class GameServerService : IGameServerService
         // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
         try
         {
-            if (!Directory.Exists(gameServer.InstallDirectory))
+            if (!Directory.Exists(gameServer.GetInstallDirectory()))
             {
-                Directory.CreateDirectory(gameServer.InstallDirectory);
-                _logger.Information("Created directory for gameserver install: {Directory}", gameServer.InstallDirectory);
+                Directory.CreateDirectory(gameServer.GetInstallDirectory());
+                _logger.Information("Created directory for gameserver install: {Directory}", gameServer.GetInstallDirectory());
             }
 
             var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer));
@@ -306,7 +306,7 @@ public class GameServerService : IGameServerService
         try
         {
             _logger.Debug("Attempting to uninstall gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            Directory.Delete(gameServer.InstallDirectory, true);
+            Directory.Delete(gameServer.GetInstallDirectory(), true);
             _logger.Information("Successfully uninstalled gameserver[{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
         }
         catch (Exception ex)
@@ -358,12 +358,12 @@ public class GameServerService : IGameServerService
         {
             _logger.Debug("Starting backup for gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
             
-            var backupRootPath = Path.Combine(OsHelper.GetDefaultBackupPath(), gameServer.Id.ToString());
+            var backupRootPath = Path.Combine(OsHelpers.GetDefaultBackupPath(), gameServer.Id.ToString());
             var backupTimestamp = _dateTimeService.NowDatabaseTime.ToString("yyyyMMdd_HHmm");
             var backupIndex = 0;
             foreach (var backupDirectory in gameServer.Resources.Where(x => x.Type == LocationType.BackupPath))
             {
-                var backupPath = Path.Combine(gameServer.InstallDirectory, backupDirectory.Path);
+                var backupPath = Path.Combine(gameServer.GetInstallDirectory(), backupDirectory.Path);
                 var archivePath = Path.Combine(backupRootPath, backupTimestamp, $"{backupIndex}.zip");
                 ZipFile.CreateFromDirectory(backupPath, archivePath, CompressionLevel.Optimal, includeBaseDirectory: false);
                 backupIndex++;

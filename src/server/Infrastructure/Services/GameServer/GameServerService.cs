@@ -27,15 +27,17 @@ public class GameServerService : IGameServerService
     private readonly AppConfiguration _appConfig;
     private readonly IHostRepository _hostRepository;
     private readonly ISerializerService _serializerService;
+    private readonly IGameRepository _gameRepository;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
-        IHostRepository hostRepository, ISerializerService serializerService)
+        IHostRepository hostRepository, ISerializerService serializerService, IGameRepository gameRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
         _serverState = serverState;
         _hostRepository = hostRepository;
         _serializerService = serializerService;
+        _gameRepository = gameRepository;
         _appConfig = appConfig.Value;
     }
 
@@ -134,18 +136,45 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateAsync(GameServerCreate createObject)
     {
-        var request = await _gameServerRepository.CreateAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        var gameRequest = await _gameRepository.GetByIdAsync(createObject.GameId);
+        if (!gameRequest.Succeeded || gameRequest.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var createdGameserverRequest = await _gameServerRepository.GetByIdAsync(request.Result);
+        var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
+        if (!parentGameProfileRequest.Succeeded || parentGameProfileRequest.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        // TODO: Add a create game profile from parent method that duplicates all linked entities to the new profile
+        var createdGameProfileRequest = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
+        {
+            FriendlyName = $"{createObject.ServerName} Profile",
+            OwnerId = createObject.OwnerId,
+            GameId = gameRequest.Result.Id,
+            ServerProcessName = parentGameProfileRequest.Result.ServerProcessName,
+            CreatedBy = createObject.CreatedBy,
+            CreatedOn = createObject.CreatedOn,
+            LastModifiedBy = null,
+            LastModifiedOn = null,
+            IsDeleted = false,
+            DeletedOn = null
+        });
+        if (!createdGameProfileRequest.Succeeded)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+
+        createObject.GameProfileId = createdGameProfileRequest.Result;
+        
+        var gameServerRequest = await _gameServerRepository.CreateAsync(createObject);
+        if (!gameServerRequest.Succeeded)
+            return await Result<Guid>.FailAsync(gameServerRequest.ErrorMessage);
+
+        var createdGameserverRequest = await _gameServerRepository.GetByIdAsync(gameServerRequest.Result);
         if (!createdGameserverRequest.Succeeded || createdGameserverRequest.Result is null)
             return await Result<Guid>.FailAsync(createdGameserverRequest.ErrorMessage);
 
         var hostInstallRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
         {
             HostId = createObject.HostId,
-            GameServerId = request.Result,
+            GameServerId = gameServerRequest.Result,
             TargetType = Domain.Enums.GameServer.WeaverWorkTarget.GameServerInstall,
             Status = WeaverWorkState.WaitingToBePickedUp,
             // TODO: Serialize needed gameserver data to be given to the host to have the full state including profile overrides
@@ -158,7 +187,7 @@ public class GameServerService : IGameServerService
         if (!hostInstallRequest.Succeeded)
             return await Result<Guid>.FailAsync(hostInstallRequest.ErrorMessage);
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        return await Result<Guid>.SuccessAsync(gameServerRequest.Result);
     }
 
     public async Task<IResult> UpdateAsync(GameServerUpdate updateObject)

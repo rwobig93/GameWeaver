@@ -51,7 +51,7 @@ public class SerializerService : ISerializerService
         {
             // Load the file
             #if DEBUG
-                var filePath = Path.Combine(OsHelper.GetDebugSanitizedPath(AppContext.BaseDirectory), HostConstants.ConfigFile);
+                var filePath = Path.Combine(OsHelpers.GetDebugSanitizedPath(AppContext.BaseDirectory), HostConstants.ConfigFile);
             #else
                 var filePath = Path.Combine(AppContext.BaseDirectory, HostConstants.ConfigFile);
             #endif

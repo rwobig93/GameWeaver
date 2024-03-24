@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 
 namespace Application.Helpers;
 
-public static class OsHelper
+public static class OsHelpers
 {
     public static string GetServiceRootPath()
     {
