@@ -171,14 +171,19 @@ public class GameServerService : IGameServerService
         if (!createdGameserverRequest.Succeeded || createdGameserverRequest.Result is null)
             return await Result<Guid>.FailAsync(createdGameserverRequest.ErrorMessage);
 
+        var gameServerHost = createdGameserverRequest.Result.ToHost();
+        gameServerHost.ServerProcessName = parentGameProfileRequest.Result.ServerProcessName;
+        gameServerHost.SteamName = gameRequest.Result.SteamName;
+        gameServerHost.SteamGameId = gameRequest.Result.SteamGameId;
+        gameServerHost.SteamToolId = gameRequest.Result.SteamToolId;
+
         var hostInstallRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
         {
             HostId = createObject.HostId,
             GameServerId = gameServerRequest.Result,
             TargetType = Domain.Enums.GameServer.WeaverWorkTarget.GameServerInstall,
             Status = WeaverWorkState.WaitingToBePickedUp,
-            // TODO: Serialize needed gameserver data to be given to the host to have the full state including profile overrides
-            WorkData = _serializerService.SerializeMemory(createdGameserverRequest.Result.ToSlim()),
+            WorkData = _serializerService.SerializeMemory(gameServerHost),
             CreatedBy = default,
             CreatedOn = default,
             LastModifiedBy = null,

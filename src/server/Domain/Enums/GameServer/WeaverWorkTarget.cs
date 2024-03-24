@@ -10,5 +10,6 @@ public enum WeaverWorkTarget
     GameServerInstall = 201,
     GameServerUpdate = 202,
     GameServerUninstall = 203,
+    GameServerStateUpdate = 204,
     CurrentEnd = 300
 }

@@ -15,7 +15,7 @@ public class GeneralConfiguration : IAppSettingsSection
     [Range(0, 20)]
     public int MaxQueueAttempts { get; set; } = 5;
 
-    public int ControlServerWorkIntervalMs { get; set; } = 1000;
+    public int ControlServerWorkIntervalMs { get; set; } = 500;
 
     public int HostWorkIntervalMs { get; set; } = 1000;
 

@@ -508,14 +508,100 @@
             <param name="numberOfBytes">Desired token size in bytes, larger is more secure</param>
             <returns>An enumerable of generated URL friendly tokens</returns>
         </member>
-        <member name="T:Application.Models.GameServer.WeaverWork.GameServerWork">
+        <member name="T:Application.Models.GameServer.GameServer.GameServerToHost">
             <remarks>
             MemoryPack GenerateType: Object<br/>
             <code>
-            <b>Domain.Enums.WeaverWork.WeaverWorkTarget</b> Target<br/>
-            <b>System.Collections.Generic.List&lt;string&gt;</b> Messages<br/>
-            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>System.Guid</b> Id<br/>
+            <b>string</b> SteamName<br/>
+            <b>int</b> SteamGameId<br/>
+            <b>int</b> SteamToolId<br/>
+            <b>string</b> ServerName<br/>
+            <b>string</b> Password<br/>
+            <b>string</b> PasswordRcon<br/>
+            <b>string</b> PasswordAdmin<br/>
             <b>string</b> ServerVersion<br/>
+            <b>string</b> IpAddress<br/>
+            <b>string</b> ExtHostname<br/>
+            <b>int</b> PortGame<br/>
+            <b>int</b> PortQuery<br/>
+            <b>int</b> PortRcon<br/>
+            <b>bool</b> Modded<br/>
+            <b>string</b> ManualRootUrl<br/>
+            <b>string</b> ServerProcessName<br/>
+            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>Domain.Enums.GameServer.GameSource</b> Source<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.Mod.ModSlim&gt;</b> ModList<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.GameServerStateUpdate">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> Id<br/>
+            <b>string</b> ServerProcessName<br/>
+            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.WeaverWorkClient">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>int</b> Id<br/>
+            <b>System.Guid?</b> GameServerId<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkTarget</b> TargetType<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkState</b> Status<br/>
+            <b>byte[]</b> WorkData<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.WeaverWorkSlim">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>int</b> Id<br/>
+            <b>System.Guid</b> HostId<br/>
+            <b>System.Guid?</b> GameServerId<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkTarget</b> TargetType<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkState</b> Status<br/>
+            <b>byte[]</b> WorkData<br/>
+            <b>System.Guid</b> CreatedBy<br/>
+            <b>System.DateTime</b> CreatedOn<br/>
+            <b>System.Guid?</b> LastModifiedBy<br/>
+            <b>System.DateTime?</b> LastModifiedOn<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.WeaverWorkUpdate">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>int</b> Id<br/>
+            <b>System.Guid?</b> HostId<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkTarget?</b> TargetType<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkState?</b> Status<br/>
+            <b>byte[]</b> WorkData<br/>
+            <b>System.Guid?</b> CreatedBy<br/>
+            <b>System.DateTime?</b> CreatedOn<br/>
+            <b>System.Guid?</b> LastModifiedBy<br/>
+            <b>System.DateTime?</b> LastModifiedOn<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Requests.v1.GameServer.HostCheckInRequest">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.DateTime</b> SendTimestamp<br/>
+            <b>float</b> CpuUsage<br/>
+            <b>float</b> RamUsage<br/>
+            <b>float</b> Uptime<br/>
+            <b>int</b> NetworkOutMb<br/>
+            <b>int</b> NetworkInMb<br/>
             </code>
             </remarks>
         </member>

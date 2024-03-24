@@ -9,7 +9,9 @@ using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.System;
 using Domain.Contracts;
+using Domain.Enums.GameServer;
 using Microsoft.AspNetCore.Http;
+using Serilog;
 
 namespace Application.Api.v1.GameServer;
 
@@ -160,21 +162,12 @@ public static class HostEndpoints
             if (deserializedRequest is null)
                 return await Result<IEnumerable<WeaverWorkClient>>.FailAsync("Invalid work update request provided, please verify your payload");
 
-            var workUpdate = new WeaverWorkUpdate
-            {
-                Id = deserializedRequest.Id,
-                HostId = deserializedRequest.HostId,
-                GameServerId = deserializedRequest.GameServerId,
-                TargetType = deserializedRequest.TargetType,
-                Status = deserializedRequest.Status,
-                WorkData = deserializedRequest.WorkData,
-                CreatedBy = currentUserId,
-                CreatedOn = dateTimeService.NowDatabaseTime,
-                LastModifiedBy = currentUserId,
-                LastModifiedOn = dateTimeService.NowDatabaseTime
-            };
+            deserializedRequest.CreatedBy = null;
+            deserializedRequest.CreatedOn = null;
+            deserializedRequest.LastModifiedBy = currentUserId;
+            deserializedRequest.LastModifiedOn = dateTimeService.NowDatabaseTime;
 
-            var workUpdateResponse = await hostService.UpdateWeaverWorkAsync(workUpdate);
+            var workUpdateResponse = await hostService.UpdateWeaverWorkAsync(deserializedRequest);
             if (!workUpdateResponse.Succeeded)
                 return await Result.FailAsync(workUpdateResponse.Messages);
 

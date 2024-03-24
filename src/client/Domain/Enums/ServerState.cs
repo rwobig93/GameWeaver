@@ -12,5 +12,7 @@ public enum ServerState
     Unreachable = 7,
     Restarting = 8,
     Installing = 9,
-    Shutdown = 10
+    Shutdown = 10,
+    Uninstalling = 11,
+    Uninstalled = 12
 }
