@@ -1,7 +1,9 @@
 using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
+using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
+using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
 using Application.Requests.v1.GameServer;
 using Application.Responses.v1.GameServer;
@@ -26,11 +28,13 @@ public static class HostEndpoints
     /// <param name="app">Running application</param>
     public static void MapEndpointsHost(this IEndpointRouteBuilder app)
     {
-        app.MapPost(ApiRouteConstants.GameServer.Host.GetRegistration, RegistrationGenerateNew).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.CreateRegistration, RegistrationGenerateNew).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.RegistrationConfirm, RegistrationConfirm).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.GetToken, GetToken).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, Checkin).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWorkStatus, WorkStatusUpdate).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAll, GetAll).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrations, GetAllRegistrations).ApiVersionOne();
     }
 
     /// <summary>
@@ -176,6 +180,42 @@ public static class HostEndpoints
         catch (Exception ex)
         {
             return await Result.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Get all game server hosts
+    /// </summary>
+    /// <param name="hostService"></param>
+    /// <returns>List of game server hosts</returns>
+    private static async Task<IResult<IEnumerable<HostSlim>>> GetAll(IHostService hostService)
+    {
+        try
+        {
+            var allHosts = await hostService.GetAllAsync();
+            return await Result<IEnumerable<HostSlim>>.SuccessAsync(allHosts.Data);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<HostSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Get all game server hosts
+    /// </summary>
+    /// <param name="hostService"></param>
+    /// <returns>List of game server hosts</returns>
+    private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrations(IHostService hostService)
+    {
+        try
+        {
+            var allRegistrations = await hostService.GetAllRegistrationsAsync();
+            return await Result<IEnumerable<HostRegistrationFull>>.SuccessAsync(allRegistrations.Data);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(ex.Message);
         }
     }
 }

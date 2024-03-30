@@ -84,11 +84,13 @@ public static class ApiRouteConstants
     {
         public static class Host
         {
-            public const string GetRegistration = "/api/gameserver/host/get-registration";
+            public const string CreateRegistration = "/api/gameserver/host/create-registration";
             public const string RegistrationConfirm = "/api/gameserver/host/registration-confirm";
             public const string GetToken = "/api/gameserver/host/get-token";
             public const string CheckIn = "/api/gameserver/host/checkin";
             public const string UpdateWorkStatus = "/api/gameserver/host/work";
+            public const string GetAll = "/api/gameserver/host/get-all";
+            public const string GetAllRegistrations = "/api/gameserver/host/get-all-registrations";
         }
     }
 

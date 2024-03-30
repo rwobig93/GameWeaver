@@ -7,6 +7,7 @@ public static class ErrorMessageConstants
         public const string ContactAdmin = "An internal server error occurred, please contact the administrator";
         public const string InvalidValueError = "The value provided was invalid, please try again";
         public const string NotFound = "Was unable to find that resource, it doesn't exist";
+        public const string JsonInvalid = "The provided data is not a valid JSON serializable format, please verify your request body";
     }
 
     public static class Users
