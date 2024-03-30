@@ -81,5 +81,37 @@ public static class PermissionConstants
         public const string CreateRegistration = "Permissions.GameServer.Hosts.CreateRegistration";
         public const string Register = "Permissions.GameServer.Hosts.Register";
         public const string CheckIn = "Permissions.GameServer.Hosts.CheckIn";
+        public const string WorkUpdate = "Permissions.GameServer.Hosts.WorkUpdate";
+        public const string GetAll = "Permissions.GameServer.Hosts.GetAll";
+        public const string GetAllPaginated = "Permissions.GameServer.Hosts.GetAllPaginated";
+        public const string Get = "Permissions.GameServer.Hosts.Get";
+        public const string Create = "Permissions.GameServer.Hosts.Create";
+        public const string Update = "Permissions.GameServer.Hosts.Update";
+        public const string Delete = "Permissions.GameServer.Hosts.Delete";
+        public const string Search = "Permissions.GameServer.Hosts.Search";
+        public const string SearchPaginated = "Permissions.GameServer.Hosts.SearchPaginated";
+        public const string GetAllRegistrations = "Permissions.GameServer.Hosts.GetAllRegistrations";
+        public const string GetAllRegistrationsPaginated = "Permissions.GameServer.Hosts.GetAllRegistrationsPaginated";
+        public const string GetAllRegistrationsActive = "Permissions.GameServer.Hosts.GetAllRegistrationsActive";
+        public const string GetAllRegistrationsInActive = "Permissions.GameServer.Hosts.GetAllRegistrationsInActive";
+        public const string GetRegistrationsCount = "Permissions.GameServer.Hosts.GetRegistrationCount";
+        public const string UpdateRegistration = "Permissions.GameServer.Hosts.UpdateRegistration";
+        public const string SearchRegistrations = "Permissions.GameServer.Hosts.SearchRegistrations";
+        public const string SearchRegistrationsPaginated = "Permissions.GameServer.Hosts.SearchRegistrationsPaginated";
+        public const string GetAllCheckins = "Permissions.GameServer.Hosts.GetAllCheckins";
+        public const string GetAllCheckinsPaginated = "Permissions.GameServer.Hosts.GetAllCheckinsPaginated";
+        public const string GetCheckinCount = "Permissions.GameServer.Hosts.GetCheckinCount";
+        public const string GetCheckin = "Permissions.GameServer.Hosts.GetCheckin";
+        public const string DeleteOldCheckins = "Permissions.GameServer.Hosts.DeleteOldCheckins";
+        public const string SearchCheckins = "Permissions.GameServer.Hosts.SearchCheckins";
+        public const string SearchCheckinsPaginated = "Permissions.GameServer.Hosts.SearchCheckinsPaginated";
+        public const string GetAllWeaverWorkPaginated = "Permissions.GameServer.Hosts.GetAllWeaverWorkPaginated";
+        public const string GetWeaverWorkCount = "Permissions.GameServer.Hosts.GetWeaverWorkCount";
+        public const string GetWeaverWork = "Permissions.GameServer.Hosts.GetWeaverWork";
+        public const string CreateWeaverWork = "Permissions.GameServer.Hosts.CreateWeaverWork";
+        public const string UpdateWeaverWork = "Permissions.GameServer.Hosts.UpdateWeaverWork";
+        public const string DeleteWeaverWork = "Permissions.GameServer.Hosts.DeleteWeaverWork";
+        public const string SearchWeaverWork = "Permissions.GameServer.Hosts.SearchWeaverWork";
+        public const string SearchWeaverWorkPaginated = "Permissions.GameServer.Hosts.SearchWeaverWorkPaginated";
     }
 }
