@@ -40,7 +40,18 @@ public static class HostEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, Checkin).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWorkStatus, WorkStatusUpdate).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAll, GetAll).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetById, GetById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetByHostname, GetByHostname).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.Create, Create).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.Update, Update).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.Delete, Delete).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.Search, Search).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrations, GetAllRegistrations).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsPaginated, GetAllRegistrationsPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsActive, GetAllRegistrationsActive).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsInActive, GetAllRegistrationsInActive).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetRegistrationsCount, GetRegistrationsCount).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.UpdateRegistration, UpdateRegistration).ApiVersionOne();
     }
 
     /// <summary>

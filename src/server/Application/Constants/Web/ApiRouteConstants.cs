@@ -91,7 +91,8 @@ public static class ApiRouteConstants
             public const string UpdateWorkStatus = "/api/gameserver/host/work";
             public const string GetAll = "/api/gameserver/host/get-all";
             public const string GetAllPaginated = "/api/gameserver/host/get-all-paginated";
-            public const string Get = "/api/gameserver/host/get";
+            public const string GetById = "/api/gameserver/host/get-id";
+            public const string GetByHostname = "/api/gameserver/host/get-hostname";
             public const string Create = "/api/gameserver/host/create";
             public const string Update = "/api/gameserver/host/update";
             public const string Delete = "/api/gameserver/host/delete";
