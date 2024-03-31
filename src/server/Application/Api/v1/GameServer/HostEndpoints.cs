@@ -11,11 +11,14 @@ using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.Enums.GameServer;
+using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 namespace Application.Api.v1.GameServer;
@@ -207,11 +210,24 @@ public static class HostEndpoints
     
     
     [Authorize(PermissionConstants.Hosts.GetAllPaginated)]
-    private static async Task<IResult<IEnumerable<HostSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService)
+    private static async Task<IResult<IEnumerable<HostSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService, 
+        IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await hostService.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+
+            var result = await hostService.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!result.Succeeded)
+                return await Result<IEnumerable<HostSlim>>.FailAsync(result.Messages);
+            
+            var totalCountRequest = await hostService.GetCountAsync();
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllPaginated,
+                pageNumber, pageSize);
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllPaginated,
+                pageNumber, pageSize, totalCountRequest.Data);
+            
+            return await PaginatedResult<IEnumerable<HostSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
         }
         catch (Exception ex)
         {
@@ -304,21 +320,6 @@ public static class HostEndpoints
         }
     }
     
-    
-    [Authorize(PermissionConstants.Hosts.SearchPaginated)]
-    private static async Task<IResult<IEnumerable<HostSlim>>> SearchPaginated([FromQuery]string searchText, [FromQuery]int pageNumber,
-        [FromQuery]int pageSize, IHostService hostService)
-    {
-        try
-        {
-            return await hostService.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-        }
-        catch (Exception ex)
-        {
-            return await Result<IEnumerable<HostSlim>>.FailAsync(ex.Message);
-        }
-    }
-    
     /// <summary>
     /// Get all game server host registrations
     /// </summary>
@@ -340,11 +341,24 @@ public static class HostEndpoints
     
     
     [Authorize(PermissionConstants.Hosts.GetAllRegistrationsPaginated)]
-    private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService)
+    private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService,
+        IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await hostService.GetAllRegistrationsPaginatedAsync(pageNumber, pageSize);
+            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+
+            var result = await hostService.GetAllRegistrationsPaginatedAsync(pageNumber, pageSize);
+            if (!result.Succeeded)
+                return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(result.Messages);
+            
+            var totalCountRequest = await hostService.GetRegistrationCountAsync();
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllRegistrationsPaginated,
+                pageNumber, pageSize);
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllRegistrationsPaginated,
+                pageNumber, pageSize, totalCountRequest.Data);
+            
+            return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
         }
         catch (Exception ex)
         {
@@ -423,17 +437,304 @@ public static class HostEndpoints
     }
     
     
-    [Authorize(PermissionConstants.Hosts.SearchRegistrationsPaginated)]
-    private static async Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginated([FromQuery]string searchText, [FromQuery]int pageNumber,
-        [FromQuery]int pageSize, IHostService hostService)
+    [Authorize(PermissionConstants.Hosts.GetAllCheckins)]
+    private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckins(IHostService hostService)
     {
         try
         {
-            return await hostService.SearchRegistrationsPaginatedAsync(searchText, pageNumber, pageSize);
+            return await hostService.GetAllCheckInsAsync();
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(ex.Message);
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetAllCheckinsPaginated)]
+    private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckinsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IHostService hostService, IOptions<AppConfiguration> appConfig)
+    {
+        try
+        {
+            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            
+            var result = await hostService.GetAllCheckInsPaginatedAsync(pageNumber, pageSize);
+            if (!result.Succeeded)
+                return await Result<IEnumerable<HostCheckInFull>>.FailAsync(result.Messages);
+            
+            var totalCountRequest = await hostService.GetCheckInCountAsync();
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllCheckinsPaginated,
+                pageNumber, pageSize);
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllCheckinsPaginated,
+                pageNumber, pageSize, totalCountRequest.Data);
+            
+            return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetCheckinCount)]
+    private static async Task<IResult<int>> GetCheckinCount(IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetCheckInCountAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result<int>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetCheckin)]
+    private static async Task<IResult<HostCheckInFull>> GetCheckinById([FromQuery]int id, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetCheckInByIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            return await Result<HostCheckInFull>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetCheckinByHost)]
+    private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckinByHostId([FromQuery]Guid id, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetCheckInByHostIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.DeleteOldCheckins)]
+    private static async Task<IResult> DeleteOldCheckins([FromBody]CleanupTimeframe olderThan, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.DeleteAllOldCheckInsAsync(olderThan);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.SearchCheckins)]
+    private static async Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckins([FromQuery]string searchText, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.SearchCheckInsAsync(searchText);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetAllWeaverWorkPaginated)]
+    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IHostService hostService, IOptions<AppConfiguration> appConfig)
+    {
+        try
+        {
+            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            
+            var result = await hostService.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize);
+            if (!result.Succeeded)
+                return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(result.Messages);
+            
+            var totalCountRequest = await hostService.GetWeaverWorkCountAsync();
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllWeaverWorkPaginated,
+                pageNumber, pageSize);
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllWeaverWorkPaginated,
+                pageNumber, pageSize, totalCountRequest.Data);
+            
+            return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetWeaverWorkCount)]
+    private static async Task<IResult<int>> GetWeaverWorkCount(IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetWeaverWorkCountAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result<int>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    private static async Task<IResult<WeaverWorkSlim>> GetWeaverWorkById([FromQuery]int id, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetWeaverWorkByIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            return await Result<WeaverWorkSlim>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByStatus([FromQuery]WeaverWorkState status, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetWeaverWorkByStatusAsync(status);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByType([FromQuery]WeaverWorkTarget target, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetWeaverWorkByTargetTypeAsync(target);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Gets the 10 oldest waiting Weaver work jobs for a given host id
+    /// </summary>
+    /// <param name="id">Id of the host to get weaver work for</param>
+    /// <param name="hostService"></param>
+    /// <returns>Up to 10 of the latest weaver work jobs</returns>
+    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWaitingWeaverWorkForHost([FromQuery]Guid id, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetWeaverWaitingWorkByHostIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Gets all of the currently waiting weaver work jobs for a given host id
+    /// </summary>
+    /// <param name="id">Id of the host to get weaver work for</param>
+    /// <param name="hostService"></param>
+    /// <returns>All of the current waiting weaver work jobs</returns>
+    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWaitingWeaverWorkForHost([FromQuery]Guid id, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.GetWeaverAllWaitingWorkByHostIdAsync(id);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.CreateWeaverWork)]
+    private static async Task<IResult<int>> CreateWeaverWork([FromBody]WeaverWorkCreate request, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.CreateWeaverWorkAsync(request);
+        }
+        catch (Exception ex)
+        {
+            return await Result<int>.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.UpdateWeaverWork)]
+    private static async Task<IResult> UpdateWeaverWork([FromBody]WeaverWorkUpdate request, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.UpdateWeaverWorkAsync(request);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
+    private static async Task<IResult> DeleteWeaverWork([FromQuery]int id, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.DeleteWeaverWorkAsync(id);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
+    private static async Task<IResult> DeleteOldWeaverWork([FromQuery]DateTime olderThan, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.DeleteWeaverWorkOlderThanAsync(olderThan);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+    
+    
+    [Authorize(PermissionConstants.Hosts.SearchWeaverWork)]
+    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWork([FromQuery]string searchText, IHostService hostService)
+    {
+        try
+        {
+            return await hostService.SearchWeaverWorkAsync(searchText);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
         }
     }
 }

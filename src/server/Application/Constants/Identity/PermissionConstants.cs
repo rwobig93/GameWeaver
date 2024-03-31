@@ -102,6 +102,7 @@ public static class PermissionConstants
         public const string GetAllCheckinsPaginated = "Permissions.GameServer.Hosts.GetAllCheckinsPaginated";
         public const string GetCheckinCount = "Permissions.GameServer.Hosts.GetCheckinCount";
         public const string GetCheckin = "Permissions.GameServer.Hosts.GetCheckin";
+        public const string GetCheckinByHost = "Permissions.GameServer.Hosts.GetCheckinByHost";
         public const string DeleteOldCheckins = "Permissions.GameServer.Hosts.DeleteOldCheckins";
         public const string SearchCheckins = "Permissions.GameServer.Hosts.SearchCheckins";
         public const string SearchCheckinsPaginated = "Permissions.GameServer.Hosts.SearchCheckinsPaginated";

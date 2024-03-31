@@ -1,45 +1,118 @@
 ﻿namespace Domain.Contracts;
 
-public class PaginatedResult<T> : Result
+public class PaginatedResult<T> : Result<T>, IResult<T>
 {
-    public PaginatedResult(List<T> data)
-    {
-        Data = data;
-    }
-
-    public List<T> Data { get; set; }
-
+    public T Data { get; set; } = default!;
     public int CurrentPage { get; set; }
-
-    public int TotalPages { get; set; }
-
     public int TotalCount { get; set; }
     public int PageSize { get; set; }
+    public string? Previous { get; set; }
+    public string? Next { get; set; }
 
-    public bool HasPreviousPage => CurrentPage > 1;
-    // TODO: Implement 'Previous' property that returns the fulL URL w/ the query parameters needed to get the previous results, return null if there are no more results
-
-    public bool HasNextPage => CurrentPage < TotalPages;
-    // TODO: Implement 'Next' property that returns the fulL URL w/ the query parameters needed to get the next results, return null if there are no more results
-
-    internal PaginatedResult(bool succeeded, List<T> data = default!, List<string> messages = null!, int count = 0, int page = 1, int pageSize = 10)
+    public new static PaginatedResult<T> Fail()
     {
-        Data = data;
-        CurrentPage = page;
-        Succeeded = succeeded;
-        PageSize = pageSize;
-        TotalPages = (int)Math.Ceiling(count / (double)pageSize);
-        TotalCount = count;
-        Messages = messages;
+        return new PaginatedResult<T> { Succeeded = false };
     }
 
-    public static PaginatedResult<T> Failure(List<string> messages)
+    public new static PaginatedResult<T> Fail(string message)
     {
-        return new PaginatedResult<T>(false, default!, messages);
+        return new PaginatedResult<T> { Succeeded = false, Messages = new List<string> { message } };
     }
 
-    public static PaginatedResult<T> Success(List<T> data, int count, int page, int pageSize)
+    public new static PaginatedResult<T> Fail(List<string> messages)
     {
-        return new PaginatedResult<T>(true, data, null!, count, page, pageSize);
+        return new PaginatedResult<T> { Succeeded = false, Messages = messages };
+    }
+
+    public static PaginatedResult<T> Fail(T data, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null, string? next = null)
+    {
+        return new PaginatedResult<T> { Succeeded = false, Data = data, CurrentPage = currentPage, TotalCount = totalCount, PageSize = pageSize, Previous = previous, Next = next};
+    }
+
+    public static PaginatedResult<T> Fail(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
+        string? next = null)
+    {
+        return new PaginatedResult<T> { Succeeded = false, Data = data, Messages = new List<string> { message }, CurrentPage = currentPage, TotalCount = totalCount,
+            PageSize = pageSize, Previous = previous, Next = next };
+    }
+
+    public static PaginatedResult<T> Fail(T data, List<string> messages, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
+        string? next = null)
+    {
+        return new PaginatedResult<T> { Succeeded = false, Data = data, Messages = messages, CurrentPage = currentPage, TotalCount = totalCount, PageSize = pageSize,
+            Previous = previous, Next = next };
+    }
+
+    public new static Task<PaginatedResult<T>> FailAsync()
+    {
+        return Task.FromResult(Fail());
+    }
+
+    public new static Task<PaginatedResult<T>> FailAsync(string message)
+    {
+        return Task.FromResult(Fail(message));
+    }
+
+    public new static Task<PaginatedResult<T>> FailAsync(List<string> messages)
+    {
+        return Task.FromResult(Fail(messages));
+    }
+
+    public static Task<PaginatedResult<T>> FailAsync(T data, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null, string? next = null)
+    {
+        return Task.FromResult(Fail(data, currentPage, totalCount, pageSize, previous, next));
+    }
+
+    public static Task<PaginatedResult<T>> FailAsync(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
+        string? next = null)
+    {
+        return Task.FromResult(Fail(data, message, currentPage, totalCount, pageSize, previous, next));
+    }
+
+    public static Task<PaginatedResult<T>> FailAsync(T data, List<string> messages, int currentPage = 0, int totalCount = 0, int pageSize = 0,
+        string? previous = null, string? next = null)
+    {
+        return Task.FromResult(Fail(data, messages, currentPage, totalCount, pageSize, previous, next));
+    }
+
+    public new static PaginatedResult<T> Success()
+    {
+        return new PaginatedResult<T> { Succeeded = true };
+    }
+
+    public static PaginatedResult<T> Success(T data, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null, string? next = null)
+    {
+        return new PaginatedResult<T> { Succeeded = true, Data = data, CurrentPage = currentPage, TotalCount = totalCount, PageSize = pageSize, Previous = previous, Next = next };
+    }
+
+    public static PaginatedResult<T> Success(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
+        string? next = null)
+    {
+        return new PaginatedResult<T> { Succeeded = true, Data = data, Messages = new List<string> { message }, CurrentPage = currentPage, TotalCount = totalCount,
+            PageSize = pageSize, Previous = previous, Next = next };
+    }
+
+    public static PaginatedResult<T> Success(T data, List<string> messages, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
+        string? next = null)
+    {
+        return new PaginatedResult<T> { Succeeded = true, Data = data, Messages = messages, CurrentPage = currentPage, TotalCount = totalCount, PageSize = pageSize,
+            Previous = previous, Next = next };
+    }
+
+    public new static Task<PaginatedResult<T>> SuccessAsync()
+    {
+        return Task.FromResult(Success());
+    }
+
+    public static Task<PaginatedResult<T>> SuccessAsync(T data, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
+        string? next = null)
+    {
+        return Task.FromResult(Success(data, currentPage, totalCount, pageSize, previous, next));
+    }
+
+    public static Task<PaginatedResult<T>> SuccessAsync(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0,
+        string? previous = null, string? next = null)
+    {
+        return Task.FromResult(Success(data, message, currentPage, totalCount, pageSize, previous, next));
     }
 }

@@ -90,7 +90,37 @@ public static class ApiRouteConstants
             public const string CheckIn = "/api/gameserver/host/checkin";
             public const string UpdateWorkStatus = "/api/gameserver/host/work";
             public const string GetAll = "/api/gameserver/host/get-all";
+            public const string GetAllPaginated = "/api/gameserver/host/get-all-paginated";
+            public const string Get = "/api/gameserver/host/get";
+            public const string Create = "/api/gameserver/host/create";
+            public const string Update = "/api/gameserver/host/update";
+            public const string Delete = "/api/gameserver/host/delete";
+            public const string Search = "/api/gameserver/host/search";
+            public const string SearchPaginated = "/api/gameserver/host/search-paginated";
             public const string GetAllRegistrations = "/api/gameserver/host/get-all-registrations";
+            public const string GetAllRegistrationsPaginated = "/api/gameserver/host/get-all-registrations-paginated";
+            public const string GetAllRegistrationsActive = "/api/gameserver/host/get-all-registrations-active";
+            public const string GetAllRegistrationsInActive = "/api/gameserver/host/get-all-registrations-inactive";
+            public const string GetRegistrationsCount = "/api/gameserver/host/get-registrations-count";
+            public const string UpdateRegistration = "/api/gameserver/host/update-registration";
+            public const string SearchRegistrations = "/api/gameserver/host/search-registrations";
+            public const string SearchRegistrationsPaginated = "/api/gameserver/host/search-registrations-paginated";
+            public const string GetAllCheckins = "/api/gameserver/host/get-all-checkins";
+            public const string GetAllCheckinsPaginated = "/api/gameserver/host/get-all-checkins-paginated";
+            public const string GetCheckinCount = "/api/gameserver/host/get-checkin-count";
+            public const string GetCheckin = "/api/gameserver/host/get-checkin";
+            public const string GetCheckinByHost = "/api/gameserver/host/get-checkins-host";
+            public const string DeleteOldCheckins = "/api/gameserver/host/delete-old-checkins";
+            public const string SearchCheckins = "/api/gameserver/host/search-checkins";
+            public const string SearchCheckinsPaginated = "/api/gameserver/host/search-checkins-paginated";
+            public const string GetAllWeaverWorkPaginated = "/api/gameserver/host/get-all-weaverwork-paginated";
+            public const string GetWeaverWorkCount = "/api/gameserver/host/get-weaverwork-count";
+            public const string GetWeaverWork = "/api/gameserver/host/get-weaverwork";
+            public const string CreateWeaverWork = "/api/gameserver/host/create-weaverwork";
+            public const string UpdateWeaverWork = "/api/gameserver/host/update-weaverwork";
+            public const string DeleteWeaverWork = "/api/gameserver/host/delete-weaverwork";
+            public const string SearchWeaverWork = "/api/gameserver/host/search-weaverwork";
+            public const string SearchWeaverWorkPaginated = "/api/gameserver/host/search-weaverwork-paginated";
         }
     }
 
