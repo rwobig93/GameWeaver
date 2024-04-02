@@ -26,7 +26,7 @@ public class ErrorHandlerMiddleware
         {
             await _next(context);
         }
-        catch (JsonException jex)
+        catch (JsonException)
         {
             var response = context.Response;
             response.ContentType = "application/json";

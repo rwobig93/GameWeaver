@@ -44,7 +44,7 @@ public static class HostEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Host.GetByHostname, GetByHostname).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.Create, Create).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.Update, Update).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.Delete, Delete).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.Host.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.Search, Search).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrations, GetAllRegistrations).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsPaginated, GetAllRegistrationsPaginated).ApiVersionOne();
@@ -57,7 +57,7 @@ public static class HostEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinCount, GetCheckinCount).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinById, GetCheckinById).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinByHost, GetCheckinByHostId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.DeleteOldCheckins, DeleteOldCheckins).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.Host.DeleteOldCheckins, DeleteOldCheckins).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.SearchCheckins, SearchCheckins).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllWeaverWorkPaginated, GetAllWeaverWorkPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkCount, GetWeaverWorkCount).ApiVersionOne();
@@ -68,8 +68,8 @@ public static class HostEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllWaitingWeaverWorkForHost, GetAllWaitingWeaverWorkForHost).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.CreateWeaverWork, CreateWeaverWork).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWeaverWork, UpdateWeaverWork).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.DeleteWeaverWork, DeleteWeaverWork).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.DeleteOldWeaverWork, DeleteOldWeaverWork).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.Host.DeleteWeaverWork, DeleteWeaverWork).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.Host.DeleteOldWeaverWork, DeleteOldWeaverWork).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.SearchWeaverWork, SearchWeaverWork).ApiVersionOne();
     }
 
@@ -515,7 +515,13 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Search for registrations by properties
+    /// </summary>
+    /// <param name="searchText">Text to search by</param>
+    /// <param name="hostService"></param>
+    /// <returns>List of matching registrations</returns>
+    /// <remarks>Searches by HostId, Key, Description and Public Ip</remarks>
     [Authorize(PermissionConstants.Hosts.SearchRegistrations)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrations([FromQuery]string searchText, IHostService hostService)
     {
@@ -529,7 +535,14 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get all checkins with pagination
+    /// </summary>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="hostService"></param>
+    /// <param name="appConfig"></param>
+    /// <returns>List of host checkins</returns>
     [Authorize(PermissionConstants.Hosts.GetAllCheckinsPaginated)]
     private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckinsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IHostService hostService, IOptions<AppConfiguration> appConfig)
@@ -556,7 +569,11 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get total count of host checkins
+    /// </summary>
+    /// <param name="hostService"></param>
+    /// <returns>Count of host checkins</returns>
     [Authorize(PermissionConstants.Hosts.GetCheckinCount)]
     private static async Task<IResult<int>> GetCheckinCount(IHostService hostService)
     {
@@ -570,7 +587,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get a host checkin by id
+    /// </summary>
+    /// <param name="id">Id of the checkin</param>
+    /// <param name="hostService"></param>
+    /// <returns>Host checkin</returns>
     [Authorize(PermissionConstants.Hosts.GetCheckin)]
     private static async Task<IResult<HostCheckInFull>> GetCheckinById([FromQuery]int id, IHostService hostService)
     {
@@ -584,7 +606,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get a host checkins by the host Id
+    /// </summary>
+    /// <param name="id">Id of the host</param>
+    /// <param name="hostService"></param>
+    /// <returns>List of checkins for the host</returns>
     [Authorize(PermissionConstants.Hosts.GetCheckinByHost)]
     private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckinByHostId([FromQuery]Guid id, IHostService hostService)
     {
@@ -598,7 +625,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Delete host checkins older than the provided timeframe
+    /// </summary>
+    /// <param name="olderThan">0=OneMonth, 1=ThreeMonths, 2=SixMonths, 3=OneYear, 4=TenYears</param>
+    /// <param name="hostService"></param>
+    /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.DeleteOldCheckins)]
     private static async Task<IResult> DeleteOldCheckins([FromBody]CleanupTimeframe olderThan, IHostService hostService)
     {
@@ -612,7 +644,13 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Search for checkins by properties
+    /// </summary>
+    /// <param name="searchText">Text to search by</param>
+    /// <param name="hostService"></param>
+    /// <returns>List of matching host checkins</returns>
+    /// <remarks>Searches by: HostId</remarks>
     [Authorize(PermissionConstants.Hosts.SearchCheckins)]
     private static async Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckins([FromQuery]string searchText, IHostService hostService)
     {
@@ -626,7 +664,14 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get all weaver work with pagination
+    /// </summary>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="hostService"></param>
+    /// <param name="appConfig"></param>
+    /// <returns>List of weaver work</returns>
     [Authorize(PermissionConstants.Hosts.GetAllWeaverWorkPaginated)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IHostService hostService, IOptions<AppConfiguration> appConfig)
@@ -653,7 +698,11 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get count of total weaver work
+    /// </summary>
+    /// <param name="hostService"></param>
+    /// <returns>Weaver work count</returns>
     [Authorize(PermissionConstants.Hosts.GetWeaverWorkCount)]
     private static async Task<IResult<int>> GetWeaverWorkCount(IHostService hostService)
     {
@@ -667,7 +716,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get a unit of weaver work by id
+    /// </summary>
+    /// <param name="id">Id of the weaver work</param>
+    /// <param name="hostService"></param>
+    /// <returns>Weaver work object</returns>
     [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
     private static async Task<IResult<WeaverWorkSlim>> GetWeaverWorkById([FromQuery]int id, IHostService hostService)
     {
@@ -681,7 +735,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get weaver work by status
+    /// </summary>
+    /// <param name="status">0=Waiting, 1=PickedUp, 2=InProgress, 3=Completed, 4=Cancelled, 5=Failed</param>
+    /// <param name="hostService"></param>
+    /// <returns>List of weaver work matching the status</returns>
     [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByStatus([FromQuery]WeaverWorkState status, IHostService hostService)
     {
@@ -695,7 +754,13 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get weaver work by target type
+    /// </summary>
+    /// <param name="target">001=StatusUpdate, 100=Host, 101=HostStatusUpdate, 102=HostDetail, 200=GameServer, 201=GameServerInstall, 202=GameServerUpdate,
+    /// 203=GameServerUninstall, 204=GameServerStateUpdate</param>
+    /// <param name="hostService"></param>
+    /// <returns>List of weaver work matching the target type</returns>
     [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByType([FromQuery]WeaverWorkTarget target, IHostService hostService)
     {
@@ -747,7 +812,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Create weaver work for a host
+    /// </summary>
+    /// <param name="request">Required properties to create weaver work for a host</param>
+    /// <param name="hostService"></param>
+    /// <returns>Id of the weaver work created</returns>
     [Authorize(PermissionConstants.Hosts.CreateWeaverWork)]
     private static async Task<IResult<int>> CreateWeaverWork([FromBody]WeaverWorkCreate request, IHostService hostService)
     {
@@ -761,7 +831,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Update weaver work properties
+    /// </summary>
+    /// <param name="request">Weaver work properties to update</param>
+    /// <param name="hostService"></param>
+    /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.UpdateWeaverWork)]
     private static async Task<IResult> UpdateWeaverWork([FromBody]WeaverWorkUpdate request, IHostService hostService)
     {
@@ -775,7 +850,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Delete weaver work
+    /// </summary>
+    /// <param name="id">Id of a weaver work</param>
+    /// <param name="hostService"></param>
+    /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
     private static async Task<IResult> DeleteWeaverWork([FromQuery]int id, IHostService hostService)
     {
@@ -789,7 +869,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Delete weaver work older than a timeframe
+    /// </summary>
+    /// <param name="olderThan">Serializable DateTime, anything older than this datetime will be deleted</param>
+    /// <param name="hostService"></param>
+    /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
     private static async Task<IResult> DeleteOldWeaverWork([FromQuery]DateTime olderThan, IHostService hostService)
     {
@@ -803,7 +888,13 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Search for weaver work by properties
+    /// </summary>
+    /// <param name="searchText">Text to search for</param>
+    /// <param name="hostService"></param>
+    /// <returns>List of matching weaver work</returns>
+    /// <remarks>Search by: HostId</remarks>
     [Authorize(PermissionConstants.Hosts.SearchWeaverWork)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWork([FromQuery]string searchText, IHostService hostService)
     {

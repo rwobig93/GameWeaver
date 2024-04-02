@@ -103,12 +103,227 @@
             <param name="hostService"></param>
             <returns>List of game server hosts</returns>
         </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all game server hosts with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of game server hosts</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetById(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host by it's id
+            </summary>
+            <param name="id">Id of the host to retrieve</param>
+            <param name="hostService"></param>
+            <returns>Host object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetByHostname(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host by it's hostname
+            </summary>
+            <param name="hostname"></param>
+            <param name="hostService"></param>
+            <returns>Host object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Create(Application.Models.GameServer.Host.HostCreate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Create a host
+            </summary>
+            <param name="request">Required properties request to create a host</param>
+            <param name="hostService"></param>
+            <returns>Id of the host that was created</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Update(Application.Models.GameServer.Host.HostUpdate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Update the properties of a host
+            </summary>
+            <param name="request">Required properties to update a host</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with any context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Delete(System.Guid,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete a host by it's id
+            </summary>
+            <param name="id">Id of the host to delete</param>
+            <param name="hostService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Search(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for a host by properties
+            </summary>
+            <param name="searchText">Text to search by</param>
+            <param name="hostService"></param>
+            <returns>List of hosts matching the search criteria</returns>
+            <remarks>Search matches against FriendlyName, Description, PrivateIp and PublicIp</remarks>
+        </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrations(Application.Services.GameServer.IHostService)">
             <summary>
-            Get all game server hosts
+            Get all game server host registrations
             </summary>
             <param name="hostService"></param>
-            <returns>List of game server hosts</returns>
+            <returns>List of game server host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrationsPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all registrations with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrationsActive(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get active host registrations
+            </summary>
+            <param name="hostService"></param>
+            <returns>List of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrationsInActive(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get inactive host registrations
+            </summary>
+            <param name="hostService"></param>
+            <returns>List of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetRegistrationsCount(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get the count of all host registrations
+            </summary>
+            <param name="hostService"></param>
+            <returns>Count of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateRegistration(Application.Models.GameServer.HostRegistration.HostRegistrationUpdate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Update a host registration's properties
+            </summary>
+            <param name="request">Required properties to update a host registration</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchRegistrations(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for registrations by properties
+            </summary>
+            <param name="searchText">Text to search by</param>
+            <param name="hostService"></param>
+            <returns>List of matching registrations</returns>
+            <remarks>Searches by HostId, Key, Description and Public Ip</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllCheckinsPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all checkins with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of host checkins</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetCheckinCount(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get total count of host checkins
+            </summary>
+            <param name="hostService"></param>
+            <returns>Count of host checkins</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetCheckinById(System.Int32,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host checkin by id
+            </summary>
+            <param name="id">Id of the checkin</param>
+            <param name="hostService"></param>
+            <returns>Host checkin</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetCheckinByHostId(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host checkins by the host Id
+            </summary>
+            <param name="id">Id of the host</param>
+            <param name="hostService"></param>
+            <returns>List of checkins for the host</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldCheckins(Domain.Enums.Lifecycle.CleanupTimeframe,Application.Services.GameServer.IHostService)">
+            <summary>
+            Delete host checkins older than the provided timeframe
+            </summary>
+            <param name="olderThan">0=OneMonth, 1=ThreeMonths, 2=SixMonths, 3=OneYear, 4=TenYears</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchCheckins(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for checkins by properties
+            </summary>
+            <param name="searchText">Text to search by</param>
+            <param name="hostService"></param>
+            <returns>List of matching host checkins</returns>
+            <remarks>Searches by: HostId</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllWeaverWorkPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all weaver work with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of weaver work</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkCount(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get count of total weaver work
+            </summary>
+            <param name="hostService"></param>
+            <returns>Weaver work count</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkById(System.Int32,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a unit of weaver work by id
+            </summary>
+            <param name="id">Id of the weaver work</param>
+            <param name="hostService"></param>
+            <returns>Weaver work object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkByStatus(Domain.Enums.GameServer.WeaverWorkState,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get weaver work by status
+            </summary>
+            <param name="status">0=Waiting, 1=PickedUp, 2=InProgress, 3=Completed, 4=Cancelled, 5=Failed</param>
+            <param name="hostService"></param>
+            <returns>List of weaver work matching the status</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkByType(Domain.Enums.GameServer.WeaverWorkTarget,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get weaver work by target type
+            </summary>
+            <param name="target">001=StatusUpdate, 100=Host, 101=HostStatusUpdate, 102=HostDetail, 200=GameServer, 201=GameServerInstall</param>
+            <param name="hostService"></param>
+            <returns>List of weaver work matching the target type</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWaitingWeaverWorkForHost(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Gets the 10 oldest waiting Weaver work jobs for a given host id
+            </summary>
+            <param name="id">Id of the host to get weaver work for</param>
+            <param name="hostService"></param>
+            <returns>Up to 10 of the latest weaver work jobs</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllWaitingWeaverWorkForHost(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Gets all of the currently waiting weaver work jobs for a given host id
+            </summary>
+            <param name="id">Id of the host to get weaver work for</param>
+            <param name="hostService"></param>
+            <returns>All of the current waiting weaver work jobs</returns>
         </member>
         <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
             <summary>

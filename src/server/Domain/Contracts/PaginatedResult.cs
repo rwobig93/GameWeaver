@@ -1,8 +1,7 @@
 ﻿namespace Domain.Contracts;
 
-public class PaginatedResult<T> : Result<T>, IResult<T>
+public class PaginatedResult<T> : Result<T>
 {
-    public T Data { get; set; } = default!;
     public int CurrentPage { get; set; }
     public int TotalCount { get; set; }
     public int PageSize { get; set; }
