@@ -109,17 +109,22 @@ public static class ApiRouteConstants
             public const string GetAllCheckins = "/api/gameserver/host/get-all-checkins";
             public const string GetAllCheckinsPaginated = "/api/gameserver/host/get-all-checkins-paginated";
             public const string GetCheckinCount = "/api/gameserver/host/get-checkin-count";
-            public const string GetCheckin = "/api/gameserver/host/get-checkin";
+            public const string GetCheckinById = "/api/gameserver/host/get-checkin-id";
             public const string GetCheckinByHost = "/api/gameserver/host/get-checkins-host";
             public const string DeleteOldCheckins = "/api/gameserver/host/delete-old-checkins";
             public const string SearchCheckins = "/api/gameserver/host/search-checkins";
             public const string SearchCheckinsPaginated = "/api/gameserver/host/search-checkins-paginated";
             public const string GetAllWeaverWorkPaginated = "/api/gameserver/host/get-all-weaverwork-paginated";
             public const string GetWeaverWorkCount = "/api/gameserver/host/get-weaverwork-count";
-            public const string GetWeaverWork = "/api/gameserver/host/get-weaverwork";
+            public const string GetWeaverWorkById = "/api/gameserver/host/get-weaverwork-id";
+            public const string GetWeaverWorkByStatus = "/api/gameserver/host/get-weaverwork-status";
+            public const string GetWeaverWorkByType = "/api/gameserver/host/get-weaverwork-type";
+            public const string GetWaitingWeaverWorkForHost = "/api/gameserver/host/get-weaverwork-waiting";
+            public const string GetAllWaitingWeaverWorkForHost = "/api/gameserver/host/get-weaverwork-waiting-all";
             public const string CreateWeaverWork = "/api/gameserver/host/create-weaverwork";
             public const string UpdateWeaverWork = "/api/gameserver/host/update-weaverwork";
             public const string DeleteWeaverWork = "/api/gameserver/host/delete-weaverwork";
+            public const string DeleteOldWeaverWork = "/api/gameserver/host/delete-old-weaverwork";
             public const string SearchWeaverWork = "/api/gameserver/host/search-weaverwork";
             public const string SearchWeaverWorkPaginated = "/api/gameserver/host/search-weaverwork-paginated";
         }

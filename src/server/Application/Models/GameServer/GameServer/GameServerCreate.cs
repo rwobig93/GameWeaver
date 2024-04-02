@@ -1,6 +1,4 @@
-﻿using Domain.Enums.GameServer;
-
-namespace Application.Models.GameServer.GameServer;
+﻿namespace Application.Models.GameServer.GameServer;
 
 public class GameServerCreate
 {

@@ -19,7 +19,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using Serilog;
 
 namespace Application.Api.v1.GameServer;
 
@@ -40,6 +39,7 @@ public static class HostEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, Checkin).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWorkStatus, WorkStatusUpdate).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAll, GetAll).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllPaginated, GetAllPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetById, GetById).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetByHostname, GetByHostname).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.Create, Create).ApiVersionOne();
@@ -52,6 +52,25 @@ public static class HostEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsInActive, GetAllRegistrationsInActive).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetRegistrationsCount, GetRegistrationsCount).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.UpdateRegistration, UpdateRegistration).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.SearchRegistrations, SearchRegistrations).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllCheckinsPaginated, GetAllCheckinsPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinCount, GetCheckinCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinById, GetCheckinById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinByHost, GetCheckinByHostId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.DeleteOldCheckins, DeleteOldCheckins).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.SearchCheckins, SearchCheckins).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllWeaverWorkPaginated, GetAllWeaverWorkPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkCount, GetWeaverWorkCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkById, GetWeaverWorkById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkByStatus, GetWeaverWorkByStatus).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkByType, GetWeaverWorkByType).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetWaitingWeaverWorkForHost, GetWaitingWeaverWorkForHost).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllWaitingWeaverWorkForHost, GetAllWaitingWeaverWorkForHost).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.CreateWeaverWork, CreateWeaverWork).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWeaverWork, UpdateWeaverWork).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.DeleteWeaverWork, DeleteWeaverWork).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Host.DeleteOldWeaverWork, DeleteOldWeaverWork).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Host.SearchWeaverWork, SearchWeaverWork).ApiVersionOne();
     }
 
     /// <summary>
@@ -444,20 +463,6 @@ public static class HostEndpoints
         catch (Exception ex)
         {
             return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(ex.Message);
-        }
-    }
-    
-    
-    [Authorize(PermissionConstants.Hosts.GetAllCheckins)]
-    private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckins(IHostService hostService)
-    {
-        try
-        {
-            return await hostService.GetAllCheckInsAsync();
-        }
-        catch (Exception ex)
-        {
-            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ex.Message);
         }
     }
     

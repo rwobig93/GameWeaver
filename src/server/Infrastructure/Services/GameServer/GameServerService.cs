@@ -13,9 +13,7 @@ using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.Enums.GameServer;
-using Domain.Enums.WeaverWork;
 using Microsoft.Extensions.Options;
-using WeaverWorkTarget = Domain.Enums.WeaverWork.WeaverWorkTarget;
 
 namespace Infrastructure.Services.GameServer;
 

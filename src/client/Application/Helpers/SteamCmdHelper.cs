@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
-using System.Net;
 using Application.Constants;
 using Domain.Models.GameServer;
 using Domain.Models.Host;
