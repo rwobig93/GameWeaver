@@ -118,7 +118,59 @@ public static class PermissionConstants
 
     public static class Gameserver
     {
-        public const string GetAll = "Permissions.GameServer.GameServer.GetAll";
+        public const string GetAllPaginated = "PermissionConstants.Gameserver.Gameserver.GetAllPaginated";
+        public const string GetCount = "PermissionConstants.Gameserver.Gameserver.GetCount";
+        public const string GetById = "PermissionConstants.Gameserver.Gameserver.GetById";
+        public const string GetByServerName = "PermissionConstants.Gameserver.Gameserver.GetByServerName";
+        public const string GetByGameId = "PermissionConstants.Gameserver.Gameserver.GetByGameId";
+        public const string GetByGameProfileId = "PermissionConstants.Gameserver.Gameserver.GetByGameProfileId";
+        public const string GetByHostId = "PermissionConstants.Gameserver.Gameserver.GetByHostId";
+        public const string GetByOwnerId = "PermissionConstants.Gameserver.Gameserver.GetByOwnerId";
+        public const string Create = "PermissionConstants.Gameserver.Gameserver.Create";
+        public const string Update = "PermissionConstants.Gameserver.Gameserver.Update";
+        public const string Delete = "PermissionConstants.Gameserver.Gameserver.Delete";
+        public const string Search = "PermissionConstants.Gameserver.Gameserver.Search";
+        public const string GetAllConfigurationItemsPaginated = "PermissionConstants.Gameserver.Gameserver.GetAllConfigurationItemsPaginated";
+        public const string GetConfigurationItemsCount = "PermissionConstants.Gameserver.Gameserver.GetConfigurationItemsCount";
+        public const string GetConfigurationItemById = "PermissionConstants.Gameserver.Gameserver.GetConfigurationItemById";
+        public const string GetConfigurationItemsByGameProfileId = "PermissionConstants.Gameserver.Gameserver.GetConfigurationItemsByGameProfileId";
+        public const string CreateConfigurationItem = "PermissionConstants.Gameserver.Gameserver.CreateConfigurationItem";
+        public const string UpdateConfigurationItem = "PermissionConstants.Gameserver.Gameserver.UpdateConfigurationItem";
+        public const string DeleteConfigurationItem = "PermissionConstants.Gameserver.Gameserver.DeleteConfigurationItem";
+        public const string SearchConfigurationItems = "PermissionConstants.Gameserver.Gameserver.SearchConfigurationItems";
+        public const string GetAllLocalResourcesPaginated = "PermissionConstants.Gameserver.Gameserver.GetAllLocalResourcesPaginated";
+        public const string GetLocalResourcesCount = "PermissionConstants.Gameserver.Gameserver.GetLocalResourcesCount";
+        public const string GetLocalResourceById = "PermissionConstants.Gameserver.Gameserver.GetLocalResourceById";
+        public const string GetLocalResourcesByGameProfileId = "PermissionConstants.Gameserver.Gameserver.GetLocalResourcesByGameProfileId";
+        public const string GetLocalResourcesByGameServerId = "PermissionConstants.Gameserver.Gameserver.GetLocalResourcesByGameServerId";
+        public const string CreateLocalResource = "PermissionConstants.Gameserver.Gameserver.CreateLocalResource";
+        public const string UpdateLocalResource = "PermissionConstants.Gameserver.Gameserver.UpdateLocalResource";
+        public const string DeleteLocalResource = "PermissionConstants.Gameserver.Gameserver.DeleteLocalResource";
+        public const string SearchLocalResource = "PermissionConstants.Gameserver.Gameserver.SearchLocalResource";
+        public const string GetAllGameProfilesPaginated = "PermissionConstants.Gameserver.Gameserver.GetAllGameProfilesPaginated";
+        public const string GetGameProfileCount = "PermissionConstants.Gameserver.Gameserver.GetGameProfileCount";
+        public const string GetGameProfileById = "PermissionConstants.Gameserver.Gameserver.GetGameProfileById";
+        public const string GetGameProfileByFriendlyName = "PermissionConstants.Gameserver.Gameserver.GetGameProfileByFriendlyName";
+        public const string GetGameProfilesByGameId = "PermissionConstants.Gameserver.Gameserver.GetGameProfilesByGameId";
+        public const string GetGameProfilesByOwnerId = "PermissionConstants.Gameserver.Gameserver.GetGameProfilesByOwnerId";
+        public const string GetGameProfilesByServerProcessName = "PermissionConstants.Gameserver.Gameserver.GetGameProfilesByServerProcessName";
+        public const string CreateGameProfile = "PermissionConstants.Gameserver.Gameserver.CreateGameProfile";
+        public const string UpdateGameProfile = "PermissionConstants.Gameserver.Gameserver.UpdateGameProfile";
+        public const string DeleteGameProfile = "PermissionConstants.Gameserver.Gameserver.DeleteGameProfile";
+        public const string SearchGameProfiles = "PermissionConstants.Gameserver.Gameserver.SearchGameProfiles";
+        public const string GetAllModsPaginated = "PermissionConstants.Gameserver.Gameserver.GetAllModsPaginated";
+        public const string GetModCount = "PermissionConstants.Gameserver.Gameserver.GetModCount";
+        public const string GetModById = "PermissionConstants.Gameserver.Gameserver.GetModById";
+        public const string GetModByCurrentHash = "PermissionConstants.Gameserver.Gameserver.GetModByCurrentHash";
+        public const string GetModsByFriendlyName = "PermissionConstants.Gameserver.Gameserver.GetModsByFriendlyName";
+        public const string GetModsByGameId = "PermissionConstants.Gameserver.Gameserver.GetModsByGameId";
+        public const string GetModsBySteamGameId = "PermissionConstants.Gameserver.Gameserver.GetModsBySteamGameId";
+        public const string GetModBySteamId = "PermissionConstants.Gameserver.Gameserver.GetModBySteamId";
+        public const string GetModsBySteamToolId = "PermissionConstants.Gameserver.Gameserver.GetModsBySteamToolId";
+        public const string CreateMod = "PermissionConstants.Gameserver.Gameserver.CreateMod";
+        public const string UpdateMod = "PermissionConstants.Gameserver.Gameserver.UpdateMod";
+        public const string DeleteMod = "PermissionConstants.Gameserver.Gameserver.DeleteMod";
+        public const string SearchMods = "PermissionConstants.Gameserver.Gameserver.SearchMods";
     }
 
     public static class Network

@@ -33,6 +33,24 @@
             <param name="currentUserService"></param>
             <returns>Basic user information</returns>
         </member>
+        <member name="T:Application.Api.v1.GameServer.GameServerEndpoints">
+            <summary>
+            Endpoints dealing with game server operations
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.MapEndpointsGameserver(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Registers the API endpoints
+            </summary>
+            <param name="app">Running application</param>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAll(Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get all game server hosts
+            </summary>
+            <param name="gameServerService"></param>
+            <returns>List of game server hosts</returns>
+        </member>
         <member name="T:Application.Api.v1.GameServer.HostEndpoints">
             <summary>
             Endpoints dealing with game server host operations
@@ -305,7 +323,8 @@
             <summary>
             Get weaver work by target type
             </summary>
-            <param name="target">001=StatusUpdate, 100=Host, 101=HostStatusUpdate, 102=HostDetail, 200=GameServer, 201=GameServerInstall</param>
+            <param name="target">001=StatusUpdate, 100=Host, 101=HostStatusUpdate, 102=HostDetail, 200=GameServer, 201=GameServerInstall, 202=GameServerUpdate,
+            203=GameServerUninstall, 204=GameServerStateUpdate</param>
             <param name="hostService"></param>
             <returns>List of weaver work matching the target type</returns>
         </member>
@@ -324,6 +343,77 @@
             <param name="id">Id of the host to get weaver work for</param>
             <param name="hostService"></param>
             <returns>All of the current waiting weaver work jobs</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.CreateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkCreate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Create weaver work for a host
+            </summary>
+            <param name="request">Required properties to create weaver work for a host</param>
+            <param name="hostService"></param>
+            <returns>Id of the weaver work created</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Update weaver work properties
+            </summary>
+            <param name="request">Weaver work properties to update</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteWeaverWork(System.Int32,Application.Services.GameServer.IHostService)">
+            <summary>
+            Delete weaver work
+            </summary>
+            <param name="id">Id of a weaver work</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldWeaverWork(System.DateTime,Application.Services.GameServer.IHostService)">
+            <summary>
+            Delete weaver work older than a timeframe
+            </summary>
+            <param name="olderThan">Serializable DateTime, anything older than this datetime will be deleted</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchWeaverWork(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for weaver work by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="hostService"></param>
+            <returns>List of matching weaver work</returns>
+            <remarks>Search by: HostId</remarks>
+        </member>
+        <member name="T:Application.Api.v1.GameServer.NetworkEndpoints">
+            <summary>
+            Endpoints dealing with network operations
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.NetworkEndpoints.MapEndpointsNetwork(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Registers the API endpoints
+            </summary>
+            <param name="app">Running application</param>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.NetworkEndpoints.GameserverConnectable(Application.Models.GameServer.Network.GameServerConnectivityCheck,Application.Services.GameServer.INetworkService)">
+            <summary>
+            Get whether a game server is connectable
+            </summary>
+            <param name="check">Required parameters to check for game server connectivity</param>
+            <param name="networkService"></param>
+            <returns>Boolean indicating a game server is connectable</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.NetworkEndpoints.IsPortOpen(System.String,System.Int32,Domain.Enums.GameServer.NetworkProtocol,System.Int32,Application.Services.GameServer.INetworkService)">
+            <summary>
+            Get whether a port is open or gives a valid response
+            </summary>
+            <param name="ipAddress">Ip or hostname to send a check to</param>
+            <param name="port">Port to send a check to</param>
+            <param name="protocol">0=TCP, 1=UDP</param>
+            <param name="timeoutMilliseconds">Timeout in milliseconds</param>
+            <param name="networkService"></param>
+            <returns>Boolean indicating the port is open / responds</returns>
         </member>
         <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
             <summary>

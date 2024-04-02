@@ -131,7 +131,59 @@ public static class ApiRouteConstants
 
         public static class Gameserver
         {
-            public const string GetAll = "/api/gameserver/get-all";
+            public const string GetAllPaginated = "/api/gameserver/Get-All-Paginated";
+            public const string GetCount = "/api/gameserver/Get-Count";
+            public const string GetById = "/api/gameserver/Get-Id";
+            public const string GetByServerName = "/api/gameserver/Get-ServerName";
+            public const string GetByGameId = "/api/gameserver/Get-Game-Id";
+            public const string GetByGameProfileId = "/api/gameserver/Get-GameProfile-Id";
+            public const string GetByHostId = "/api/gameserver/Get-Host-Id";
+            public const string GetByOwnerId = "/api/gameserver/Get-Owner-Id";
+            public const string Create = "/api/gameserver/Create";
+            public const string Update = "/api/gameserver/Update";
+            public const string Delete = "/api/gameserver/Delete";
+            public const string Search = "/api/gameserver/Search";
+            public const string GetAllConfigurationItemsPaginated = "/api/gameserver/Get-All-ConfigurationItems-Paginated";
+            public const string GetConfigurationItemsCount = "/api/gameserver/Get-ConfigurationItems-Count";
+            public const string GetConfigurationItemById = "/api/gameserver/Get-ConfigurationItem-Id";
+            public const string GetConfigurationItemsByGameProfileId = "/api/gameserver/Get-ConfigurationItems-GameProfile-Id";
+            public const string CreateConfigurationItem = "/api/gameserver/Create-ConfigurationItem";
+            public const string UpdateConfigurationItem = "/api/gameserver/Update-ConfigurationItem";
+            public const string DeleteConfigurationItem = "/api/gameserver/Delete-ConfigurationItem";
+            public const string SearchConfigurationItems = "/api/gameserver/Search-ConfigurationItems";
+            public const string GetAllLocalResourcesPaginated = "/api/gameserver/Get-All-LocalResources-Paginated";
+            public const string GetLocalResourcesCount = "/api/gameserver/Get-LocalResources-Count";
+            public const string GetLocalResourceById = "/api/gameserver/Get-LocalResource-Id";
+            public const string GetLocalResourcesByGameProfileId = "/api/gameserver/Get-LocalResources-GameProfile-Id";
+            public const string GetLocalResourcesByGameServerId = "/api/gameserver/Get-LocalResources-GameServer-Id";
+            public const string CreateLocalResource = "/api/gameserver/Create-LocalResource";
+            public const string UpdateLocalResource = "/api/gameserver/Update-LocalResource";
+            public const string DeleteLocalResource = "/api/gameserver/Delete-LocalResource";
+            public const string SearchLocalResource = "/api/gameserver/Search-LocalResource";
+            public const string GetAllGameProfilesPaginated = "/api/gameserver/Get-All-GameProfiles-Paginated";
+            public const string GetGameProfileCount = "/api/gameserver/Get-GameProfile-Count";
+            public const string GetGameProfileById = "/api/gameserver/Get-GameProfile-Id";
+            public const string GetGameProfileByFriendlyName = "/api/gameserver/Get-GameProfile-FriendlyName";
+            public const string GetGameProfilesByGameId = "/api/gameserver/Get-GameProfiles-GameId";
+            public const string GetGameProfilesByOwnerId = "/api/gameserver/Get-GameProfiles-OwnerId";
+            public const string GetGameProfilesByServerProcessName = "/api/gameserver/Get-GameProfiles-ServerProcessName";
+            public const string CreateGameProfile = "/api/gameserver/Create-GameProfile";
+            public const string UpdateGameProfile = "/api/gameserver/Update-GameProfile";
+            public const string DeleteGameProfile = "/api/gameserver/Delete-GameProfile";
+            public const string SearchGameProfiles = "/api/gameserver/Search-GameProfiles";
+            public const string GetAllModsPaginated = "/api/gameserver/Get-All-Mods-Paginated";
+            public const string GetModCount = "/api/gameserver/Get-Mod-Count";
+            public const string GetModById = "/api/gameserver/Get-Mod-Id";
+            public const string GetModByCurrentHash = "/api/gameserver/Get-Mod-CurrentHash";
+            public const string GetModsByFriendlyName = "/api/gameserver/Get-Mods-FriendlyName";
+            public const string GetModsByGameId = "/api/gameserver/Get-Mods-GameId";
+            public const string GetModsBySteamGameId = "/api/gameserver/Get-Mods-SteamGameId";
+            public const string GetModBySteamId = "/api/gameserver/Get-Mod-SteamId";
+            public const string GetModsBySteamToolId = "/api/gameserver/Get-Mods-SteamToolId";
+            public const string CreateMod = "/api/gameserver/Create-Mod";
+            public const string UpdateMod = "/api/gameserver/Update-Mod";
+            public const string DeleteMod = "/api/gameserver/Delete-Mod";
+            public const string SearchMods = "/api/gameserver/Search-Mods";
         }
 
         public static class Network
