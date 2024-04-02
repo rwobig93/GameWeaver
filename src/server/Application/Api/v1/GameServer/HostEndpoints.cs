@@ -238,7 +238,14 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get all game server hosts with pagination
+    /// </summary>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="hostService"></param>
+    /// <param name="appConfig"></param>
+    /// <returns>List of game server hosts</returns>
     [Authorize(PermissionConstants.Hosts.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<HostSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService, 
         IOptions<AppConfiguration> appConfig)
@@ -265,7 +272,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get a host by it's id
+    /// </summary>
+    /// <param name="id">Id of the host to retrieve</param>
+    /// <param name="hostService"></param>
+    /// <returns>Host object</returns>
     [Authorize(PermissionConstants.Hosts.Get)]
     private static async Task<IResult<HostSlim>> GetById([FromQuery]Guid id, IHostService hostService)
     {
@@ -279,7 +291,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get a host by it's hostname
+    /// </summary>
+    /// <param name="hostname"></param>
+    /// <param name="hostService"></param>
+    /// <returns>Host object</returns>
     [Authorize(PermissionConstants.Hosts.Get)]
     private static async Task<IResult<HostSlim>> GetByHostname([FromQuery]string hostname, IHostService hostService)
     {
@@ -293,7 +310,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Create a host
+    /// </summary>
+    /// <param name="request">Required properties request to create a host</param>
+    /// <param name="hostService"></param>
+    /// <returns>Id of the host that was created</returns>
     [Authorize(PermissionConstants.Hosts.Create)]
     private static async Task<IResult<Guid>> Create([FromBody]HostCreate request, IHostService hostService)
     {
@@ -307,7 +329,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Update the properties of a host
+    /// </summary>
+    /// <param name="request">Required properties to update a host</param>
+    /// <param name="hostService"></param>
+    /// <returns>Success or failure with any context messages</returns>
     [Authorize(PermissionConstants.Hosts.Update)]
     private static async Task<IResult> Update([FromBody]HostUpdate request, IHostService hostService)
     {
@@ -321,7 +348,13 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Delete a host by it's id
+    /// </summary>
+    /// <param name="id">Id of the host to delete</param>
+    /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.Delete)]
     private static async Task<IResult> Delete([FromQuery]Guid id, IHostService hostService, ICurrentUserService currentUserService)
     {
@@ -336,7 +369,13 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Search for a host by properties
+    /// </summary>
+    /// <param name="searchText">Text to search by</param>
+    /// <param name="hostService"></param>
+    /// <returns>List of hosts matching the search criteria</returns>
+    /// <remarks>Search matches against FriendlyName, Description, PrivateIp and PublicIp</remarks>
     [Authorize(PermissionConstants.Hosts.Search)]
     private static async Task<IResult<IEnumerable<HostSlim>>> Search([FromQuery]string searchText, IHostService hostService)
     {
@@ -369,7 +408,14 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get all registrations with pagination
+    /// </summary>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="hostService"></param>
+    /// <param name="appConfig"></param>
+    /// <returns>List of host registrations</returns>
     [Authorize(PermissionConstants.Hosts.GetAllRegistrationsPaginated)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService,
         IOptions<AppConfiguration> appConfig)
@@ -396,7 +442,11 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get active host registrations
+    /// </summary>
+    /// <param name="hostService"></param>
+    /// <returns>List of host registrations</returns>
     [Authorize(PermissionConstants.Hosts.GetAllRegistrationsActive)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsActive(IHostService hostService)
     {
@@ -410,7 +460,11 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get inactive host registrations
+    /// </summary>
+    /// <param name="hostService"></param>
+    /// <returns>List of host registrations</returns>
     [Authorize(PermissionConstants.Hosts.GetAllRegistrationsInActive)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsInActive(IHostService hostService)
     {
@@ -424,7 +478,11 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Get the count of all host registrations
+    /// </summary>
+    /// <param name="hostService"></param>
+    /// <returns>Count of host registrations</returns>
     [Authorize(PermissionConstants.Hosts.GetRegistrationsCount)]
     private static async Task<IResult<int>> GetRegistrationsCount(IHostService hostService)
     {
@@ -438,7 +496,12 @@ public static class HostEndpoints
         }
     }
     
-    
+    /// <summary>
+    /// Update a host registration's properties
+    /// </summary>
+    /// <param name="request">Required properties to update a host registration</param>
+    /// <param name="hostService"></param>
+    /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.UpdateRegistration)]
     private static async Task<IResult> UpdateRegistration([FromBody]HostRegistrationUpdate request, IHostService hostService)
     {
