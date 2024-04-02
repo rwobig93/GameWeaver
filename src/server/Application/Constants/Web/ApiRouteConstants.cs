@@ -136,7 +136,7 @@ public static class ApiRouteConstants
             public const string GetById = "/api/gameserver/Get-Id";
             public const string GetByServerName = "/api/gameserver/Get-ServerName";
             public const string GetByGameId = "/api/gameserver/Get-Game-Id";
-            public const string GetByGameProfileId = "/api/gameserver/Get-GameProfile-Id";
+            public const string GetByGameProfileId = "/api/gameserver/Get-Game-GameProfile-Id";
             public const string GetByHostId = "/api/gameserver/Get-Host-Id";
             public const string GetByOwnerId = "/api/gameserver/Get-Owner-Id";
             public const string Create = "/api/gameserver/Create";

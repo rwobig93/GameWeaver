@@ -54,7 +54,7 @@ public static class NetworkEndpoints
     /// <param name="networkService"></param>
     /// <returns>Boolean indicating the port is open / responds</returns>
     [Authorize(PermissionConstants.Network.IsPortOpen)]
-    private static async Task<IResult<bool>> IsPortOpen([FromBody]string ipAddress, [FromBody]int port, [FromBody]NetworkProtocol protocol, [FromBody]int timeoutMilliseconds,
+    private static async Task<IResult<bool>> IsPortOpen([FromQuery]string ipAddress, [FromQuery]int port, [FromQuery]NetworkProtocol protocol, [FromQuery]int timeoutMilliseconds,
         INetworkService networkService)
     {
         try
