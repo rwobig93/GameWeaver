@@ -1,4 +1,5 @@
-﻿using Application.Api.v1.Api;
+﻿using System.Diagnostics.CodeAnalysis;
+using Application.Api.v1.Api;
 using Application.Api.v1.GameServer;
 using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
@@ -24,6 +25,7 @@ public static class WebServerConfiguration
     // Certificate loading via appsettings.json =>
     //   https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-6.0
     
+    [SuppressMessage("ReSharper.DPA", "DPA0008: Large number of DB connections")]
     public static void ConfigureWebServices(this WebApplication app)
     {
         app.ConfigureForEnvironment();
@@ -177,6 +179,8 @@ public static class WebServerConfiguration
         // Map all other endpoints for the application (not identity and not examples)
         app.MapEndpointsAudit();
         app.MapEndpointsHost();
+        app.MapEndpointsGameserver();
+        app.MapEndpointsNetwork();
     }
 
     private static void AddScheduledJobs(this IHost app)

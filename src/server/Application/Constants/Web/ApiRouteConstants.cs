@@ -128,6 +128,17 @@ public static class ApiRouteConstants
             public const string SearchWeaverWork = "/api/gameserver/host/search-weaverwork";
             public const string SearchWeaverWorkPaginated = "/api/gameserver/host/search-weaverwork-paginated";
         }
+
+        public static class Gameserver
+        {
+            public const string GetAll = "/api/gameserver/get-all";
+        }
+
+        public static class Network
+        {
+            public const string GameserverConnectable = "/api/network/gameserver-connectable";
+            public const string IsPortOpen = "/api/network/is-port-open";
+        }
     }
 
     public static class Example

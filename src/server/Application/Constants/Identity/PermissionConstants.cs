@@ -115,4 +115,15 @@ public static class PermissionConstants
         public const string SearchWeaverWork = "Permissions.GameServer.Hosts.SearchWeaverWork";
         public const string SearchWeaverWorkPaginated = "Permissions.GameServer.Hosts.SearchWeaverWorkPaginated";
     }
+
+    public static class Gameserver
+    {
+        public const string GetAll = "Permissions.GameServer.GameServer.GetAll";
+    }
+
+    public static class Network
+    {
+        public const string GameserverConnectable = "Permissions.GameServer.Network.GameserverConnectable";
+        public const string IsPortOpen = "Permissions.GameServer.Network.IsPortOpen";
+    }
 }
