@@ -28,6 +28,7 @@ public class GameCreate
     public string RequirementsLinuxRecommended { get; set; } = "";
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
+    public bool IsDeleted { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
 }
