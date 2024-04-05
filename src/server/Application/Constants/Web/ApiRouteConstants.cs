@@ -188,7 +188,6 @@ public static class ApiRouteConstants
 
         public static class Game
         {
-            public const string GetAll = "/api/gameserver/game/get-all";
             public const string GetAllPaginated = "/api/gameserver/game/get-all-paginated";
             public const string GetCount = "/api/gameserver/game/get-count";
             public const string GetById = "/api/gameserver/game/get-id";
@@ -200,7 +199,6 @@ public static class ApiRouteConstants
             public const string Update = "/api/gameserver/game/update";
             public const string Delete = "/api/gameserver/game/delete";
             public const string Search = "/api/gameserver/game/search";
-            public const string GetAllDevelopers = "/api/gameserver/game/get-all-developers";
             public const string GetAllDevelopersPaginated = "/api/gameserver/game/get-all-developers-paginated";
             public const string GetDevelopersCount = "/api/gameserver/game/get-developers-count";
             public const string GetDeveloperById = "/api/gameserver/game/get-developer-id";
@@ -209,7 +207,6 @@ public static class ApiRouteConstants
             public const string CreateDeveloper = "/api/gameserver/game/create-developer";
             public const string DeleteDeveloper = "/api/gameserver/game/delete-developer";
             public const string SearchDevelopers = "/api/gameserver/game/search-developers";
-            public const string GetAllPublishers = "/api/gameserver/game/get-all-publishers";
             public const string GetAllPublishersPaginated = "/api/gameserver/game/get-all-publishers-paginated";
             public const string GetPublishersCount = "/api/gameserver/game/get-publishers-count";
             public const string GetPublisherById = "/api/gameserver/game/get-publisher-id";
@@ -218,7 +215,6 @@ public static class ApiRouteConstants
             public const string CreatePublisher = "/api/gameserver/game/create-publisher";
             public const string DeletePublisher = "/api/gameserver/game/delete-publisher";
             public const string SearchPublishers = "/api/gameserver/game/search-publishers";
-            public const string GetAllGameGenres = "/api/gameserver/game/get-all-gamegenres";
             public const string GetAllGameGenresPaginated = "/api/gameserver/game/get-all-gamegenres-paginated";
             public const string GetGameGenresCount = "/api/gameserver/game/get-gamegenres-count";
             public const string GetGameGenreById = "/api/gameserver/game/get-gamegenre-id";

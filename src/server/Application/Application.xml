@@ -39,6 +39,294 @@
             </summary>
             <param name="app">Running application</param>
         </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all games with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of games</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get total game count
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total games</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by id
+            </summary>
+            <param name="id">Game Id</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetBySteamName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by steam name
+            </summary>
+            <param name="steamName">Game steam name</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetByFriendlyName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by friendly name
+            </summary>
+            <param name="friendlyName">Game friendly name</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetBySteamGameId(System.Int32,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by steam id
+            </summary>
+            <param name="id">Game steam id</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetBySteamToolId(System.Int32,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by steam tool id
+            </summary>
+            <param name="id">Game steam tool id</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Create(Application.Models.GameServer.Game.GameCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a game
+            </summary>
+            <param name="createObject">Required properties to create a game</param>
+            <param name="gameService"></param>
+            <returns>Id of the created game</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Update(Application.Models.GameServer.Game.GameUpdate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Update a game's properties
+            </summary>
+            <param name="updateObject"></param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Delete(System.Guid,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete a game
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Search(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search a game by it's properties
+            </summary>
+            <param name="searchText">Text to search with</param>
+            <param name="gameService"></param>
+            <returns>List of games</returns>
+            <remarks>Searches by: FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllDevelopersPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all developers with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDevelopersCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get count of total developers
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDeveloperById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a developers by id
+            </summary>
+            <param name="id">Developer id</param>
+            <param name="gameService"></param>
+            <returns>Developer object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDeveloperByName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a developer by name
+            </summary>
+            <param name="name">Developer name</param>
+            <param name="gameService"></param>
+            <returns>Developer object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDevelopersByGameId(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get developers by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <returns>List of developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateDeveloper(Application.Models.GameServer.Developers.DeveloperCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a developer
+            </summary>
+            <param name="createObject">Required properties to create a developer</param>
+            <param name="gameService"></param>
+            <returns>Id of the created developer</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteDeveloper(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Delete a developer
+            </summary>
+            <param name="id">Developer id</param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchDevelopers(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search developers by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameService"></param>
+            <returns>List of developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllPublishersPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all publishers with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of publishers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublishersCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get total count of publishers
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total publishers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublisherById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a publisher by id
+            </summary>
+            <param name="id">Publisher id</param>
+            <param name="gameService"></param>
+            <returns>Publisher object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublisherByName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a publisher by name
+            </summary>
+            <param name="name">Publisher name</param>
+            <param name="gameService"></param>
+            <returns>Publisher object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublishersByGameId(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get publishers by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <returns>List of publishers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreatePublisher(Application.Models.GameServer.Publishers.PublisherCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a publisher
+            </summary>
+            <param name="createObject">Required properties to create a publisher</param>
+            <param name="gameService"></param>
+            <returns>Id of the created publisher</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeletePublisher(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Delete a publisher
+            </summary>
+            <param name="id">Publisher id</param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchPublishers(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search for publishers by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameService"></param>
+            <returns>List of publishers</returns>
+            <remarks>Searches by: Name</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllGameGenresPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all game genres with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of game genres</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenresCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get total count of game genres
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total game genres</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenreById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game genre by id
+            </summary>
+            <param name="id">Game genre id</param>
+            <param name="gameService"></param>
+            <returns>Game genre object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenreByName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game genre by name
+            </summary>
+            <param name="name">Game genre name</param>
+            <param name="gameService"></param>
+            <returns>Game genre object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenresByGameId(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get game genres by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <returns>List of game genres</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateGameGenre(Application.Models.GameServer.GameGenre.GameGenreCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a game genre
+            </summary>
+            <param name="createObject">Requires properties to create a game genre</param>
+            <param name="gameService"></param>
+            <returns>Id of the created game genre</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteGameGenre(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Delete a game genre
+            </summary>
+            <param name="id">Game genre id</param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchGameGenres(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search game genres by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameService"></param>
+            <returns>List of game genres</returns>
+            <remarks>Searches by: Name, Description</remarks>
+        </member>
         <member name="T:Application.Api.v1.GameServer.GameServerEndpoints">
             <summary>
             Endpoints dealing with game server operations

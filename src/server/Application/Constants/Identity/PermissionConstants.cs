@@ -175,7 +175,6 @@ public static class PermissionConstants
 
     public static class Game
     {
-        public const string GetAll = "PermissionConstants.Gameserver.Game.GetAll";
         public const string GetAllPaginated = "PermissionConstants.Gameserver.Game.GetAllPaginated";
         public const string GetCount = "PermissionConstants.Gameserver.Game.GetCount";
         public const string Get = "PermissionConstants.Gameserver.Game.Get";
@@ -183,7 +182,6 @@ public static class PermissionConstants
         public const string Update = "PermissionConstants.Gameserver.Game.Update";
         public const string Delete = "PermissionConstants.Gameserver.Game.Delete";
         public const string Search = "PermissionConstants.Gameserver.Game.Search";
-        public const string GetAllDevelopers = "PermissionConstants.Gameserver.Game.GetAllDevelopers";
         public const string GetAllDevelopersPaginated = "PermissionConstants.Gameserver.Game.GetAllDevelopersPaginated";
         public const string GetDevelopersCount = "PermissionConstants.Gameserver.Game.GetDevelopersCount";
         public const string GetDeveloper = "PermissionConstants.Gameserver.Game.GetDeveloper";
@@ -191,7 +189,6 @@ public static class PermissionConstants
         public const string CreateDeveloper = "PermissionConstants.Gameserver.Game.CreateDeveloper";
         public const string DeleteDeveloper = "PermissionConstants.Gameserver.Game.DeleteDeveloper";
         public const string SearchDevelopers = "PermissionConstants.Gameserver.Game.SearchDevelopers";
-        public const string GetAllPublishers = "PermissionConstants.Gameserver.Game.GetAllPublishers";
         public const string GetAllPublishersPaginated = "PermissionConstants.Gameserver.Game.GetAllPublishersPaginated";
         public const string GetPublishersCount = "PermissionConstants.Gameserver.Game.GetPublishersCount";
         public const string GetPublisher = "PermissionConstants.Gameserver.Game.GetPublisher";
@@ -199,7 +196,6 @@ public static class PermissionConstants
         public const string CreatePublisher = "PermissionConstants.Gameserver.Game.CreatePublisher";
         public const string DeletePublisher = "PermissionConstants.Gameserver.Game.DeletePublisher";
         public const string SearchPublishers = "PermissionConstants.Gameserver.Game.SearchPublishers";
-        public const string GetAllGameGenres = "PermissionConstants.Gameserver.Game.GetAllGameGenres";
         public const string GetAllGameGenresPaginated = "PermissionConstants.Gameserver.Game.GetAllGameGenresPaginated";
         public const string GetGameGenresCount = "PermissionConstants.Gameserver.Game.GetGameGenresCount";
         public const string GetGameGenre = "PermissionConstants.Gameserver.Game.GetGameGenre";
