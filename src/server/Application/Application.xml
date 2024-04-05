@@ -33,6 +33,12 @@
             <param name="currentUserService"></param>
             <returns>Basic user information</returns>
         </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.MapEndpointsGame(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Registers the API endpoints
+            </summary>
+            <param name="app">Running application</param>
+        </member>
         <member name="T:Application.Api.v1.GameServer.GameServerEndpoints">
             <summary>
             Endpoints dealing with game server operations

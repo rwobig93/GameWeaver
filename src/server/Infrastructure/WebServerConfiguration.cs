@@ -179,7 +179,8 @@ public static class WebServerConfiguration
         // Map all other endpoints for the application (not identity and not examples)
         app.MapEndpointsAudit();
         app.MapEndpointsHost();
-        app.MapEndpointsGameserver();
+        // app.MapEndpointsGameserver();
+        // app.MapEndpointsGame();
         app.MapEndpointsNetwork();
     }
 

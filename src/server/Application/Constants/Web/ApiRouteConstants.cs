@@ -186,6 +186,49 @@ public static class ApiRouteConstants
             public const string SearchMods = "/api/gameserver/Search-Mods";
         }
 
+        public static class Game
+        {
+            public const string GetAll = "/api/gameserver/game/get-all";
+            public const string GetAllPaginated = "/api/gameserver/game/get-all-paginated";
+            public const string GetCount = "/api/gameserver/game/get-count";
+            public const string GetById = "/api/gameserver/game/get-id";
+            public const string GetBySteamName = "/api/gameserver/game/get-steamname";
+            public const string GetByFriendlyName = "/api/gameserver/game/get-friendlyname";
+            public const string GetBySteamGameId = "/api/gameserver/game/get-steamgameid";
+            public const string GetBySteamToolId = "/api/gameserver/game/get-steamtoolid";
+            public const string Create = "/api/gameserver/game/create";
+            public const string Update = "/api/gameserver/game/update";
+            public const string Delete = "/api/gameserver/game/delete";
+            public const string Search = "/api/gameserver/game/search";
+            public const string GetAllDevelopers = "/api/gameserver/game/get-all-developers";
+            public const string GetAllDevelopersPaginated = "/api/gameserver/game/get-all-developers-paginated";
+            public const string GetDevelopersCount = "/api/gameserver/game/get-developers-count";
+            public const string GetDeveloperById = "/api/gameserver/game/get-developer-id";
+            public const string GetDeveloperByName = "/api/gameserver/game/get-developer-name";
+            public const string GetDevelopersByGameId = "/api/gameserver/game/get-developers-gameid";
+            public const string CreateDeveloper = "/api/gameserver/game/create-developer";
+            public const string DeleteDeveloper = "/api/gameserver/game/delete-developer";
+            public const string SearchDevelopers = "/api/gameserver/game/search-developers";
+            public const string GetAllPublishers = "/api/gameserver/game/get-all-publishers";
+            public const string GetAllPublishersPaginated = "/api/gameserver/game/get-all-publishers-paginated";
+            public const string GetPublishersCount = "/api/gameserver/game/get-publishers-count";
+            public const string GetPublisherById = "/api/gameserver/game/get-publisher-id";
+            public const string GetPublisherByName = "/api/gameserver/game/get-publisher-name";
+            public const string GetPublishersByGameId = "/api/gameserver/game/get-publishers-gameid";
+            public const string CreatePublisher = "/api/gameserver/game/create-publisher";
+            public const string DeletePublisher = "/api/gameserver/game/delete-publisher";
+            public const string SearchPublishers = "/api/gameserver/game/search-publishers";
+            public const string GetAllGameGenres = "/api/gameserver/game/get-all-gamegenres";
+            public const string GetAllGameGenresPaginated = "/api/gameserver/game/get-all-gamegenres-paginated";
+            public const string GetGameGenresCount = "/api/gameserver/game/get-gamegenres-count";
+            public const string GetGameGenreById = "/api/gameserver/game/get-gamegenre-id";
+            public const string GetGameGenreByName = "/api/gameserver/game/get-gamegenre-name";
+            public const string GetGameGenresByGameId = "/api/gameserver/game/get-gamegenres-gameid";
+            public const string CreateGameGenre = "/api/gameserver/game/create-gamegenre";
+            public const string DeleteGameGenre = "/api/gameserver/game/delete-gamegenre";
+            public const string SearchGameGenres = "/api/gameserver/game/search-gamegenres";
+        }
+
         public static class Network
         {
             public const string GameserverConnectable = "/api/network/gameserver-connectable";
