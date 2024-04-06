@@ -103,7 +103,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="context"></param>
     /// <returns>Host ID and Host Token for use when authenticating the host</returns>
-    [Authorize(PermissionConstants.Hosts.Register)]
+    [AllowAnonymous]
     private static async Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, IHostService hostService, HttpContext context)
     {
         try

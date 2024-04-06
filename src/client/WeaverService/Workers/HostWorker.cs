@@ -1,9 +1,11 @@
 using System.Collections.Concurrent;
+using System.Net;
 using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
+using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.Host;
@@ -165,10 +167,10 @@ public class HostWorker : BackgroundService
             Type = adapter.NetConnectionID,
             TypeDetail = adapter.AdapterType,
             MacAddress = adapter.MACAddress,
-            IpAddresses = adapter.IPAddressList,
-            DefaultGateways = adapter.DefaultIPGatewayList,
+            IpAddresses = new SerializableList<IPAddress>(adapter.IPAddressList),
+            DefaultGateways = new SerializableList<IPAddress>(adapter.DefaultIPGatewayList),
             DhcpServer = adapter.DHCPServer,
-            DnsServers = adapter.DNSServerSearchOrderList
+            DnsServers = new SerializableList<IPAddress>(adapter.DNSServerSearchOrderList)
         }));
         
         currentHostInfo.MemoryList.ForEach(ramStick => hostDetailRequest.RamModules.Add(new HostRam

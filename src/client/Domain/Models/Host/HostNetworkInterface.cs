@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using Domain.Contracts;
 using MemoryPack;
 
 namespace Domain.Models.Host;
@@ -16,12 +17,12 @@ public partial class HostNetworkInterface
 
     public string MacAddress { get; set; } = null!;
 
-    public List<IPAddress> IpAddresses { get; set; } = new();
+    public SerializableList<IPAddress> IpAddresses { get; set; } = new();
     
-    public List<IPAddress> DefaultGateways { get; set; } = new();
+    public SerializableList<IPAddress> DefaultGateways { get; set; } = new();
 
     [MemoryPackAllowSerialize]
     public IPAddress DhcpServer { get; set; } = null!;
 
-    public List<IPAddress> DnsServers { get; set; } = new();
+    public SerializableList<IPAddress> DnsServers { get; set; } = new();
 }
