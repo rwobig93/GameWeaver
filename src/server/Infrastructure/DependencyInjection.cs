@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
+using Application.Constants.Communication;
 using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
@@ -354,13 +355,13 @@ public static class DependencyInjection
                         {
                             auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                             auth.Response.ContentType = "application/json";
-                            var authExpired = JsonConvert.SerializeObject(Result.Fail("Authentication Token has expired, please login again"));
+                            var authExpired = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Authentication.TokenExpiredError));
                             return auth.Response.WriteAsync(authExpired);
                         }
                         
                         auth.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
                         auth.Response.ContentType = "application/json";
-                        var generalError = JsonConvert.SerializeObject(Result.Fail("An unhandled error has occurred."));
+                        var generalError = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Generic.ContactAdmin));
                         return auth.Response.WriteAsync(generalError);
                     },
                     OnChallenge = context =>
@@ -370,16 +371,14 @@ public static class DependencyInjection
                         
                         context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                         context.Response.ContentType = "application/json";
-                        var permissionFailure = JsonConvert.SerializeObject(Result.Fail("You don't have permission to this resource"));
+                        var permissionFailure = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Permissions.PermissionError));
                         return context.Response.WriteAsync(permissionFailure);
-
                     },
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = (int) HttpStatusCode.Forbidden;
                         context.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(
-                            Result.Fail("You hath been forbidden, do thy bidding my masta, it's a disasta, skywalka we're afta!"));
+                        var result = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Permissions.Forbidden));
                         return context.Response.WriteAsync(result);
                     },
                 };

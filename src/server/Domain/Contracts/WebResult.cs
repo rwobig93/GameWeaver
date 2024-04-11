@@ -12,16 +12,17 @@ public class WebResult : IWebResult
 
     public async Task ExecuteAsync(HttpContext? httpContext)
     {
-        if (httpContext is null) return;
-        
-        // Only modify the response if it hasn't been modified already
-        // if (httpContext.Response.HasStarted) return;
-        
-        httpContext.Response.ContentType = "application/json";
-        httpContext.Response.StatusCode = StatusCode;
-
-        var response = JsonSerializer.Serialize(Result);
-        await httpContext.Response.WriteAsync(response);
+        // if (httpContext is null) return;
+        //
+        // // Only modify the response if it hasn't been modified already
+        // // if (httpContext.Response.HasStarted) return;
+        //
+        // httpContext.Response.ContentType = "application/json";
+        // httpContext.Response.StatusCode = StatusCode;
+        //
+        // var response = JsonSerializer.Serialize(Result);
+        // await httpContext.Response.WriteAsync(response);
+        await Task.CompletedTask;
     }
 
     private static IWebResult ResultGen(IResult result, int statusCode = 0)

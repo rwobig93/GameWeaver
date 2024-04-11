@@ -27,6 +27,7 @@ public static class ErrorMessageConstants
         public const string CredentialsInvalidError = "The username and password combination provided is invalid";
         public const string PasswordsNoMatchError = "Provided password and confirmation don't match, please try again";
         public const string TokenInvalidError = "The token provided is invalid";
+        public const string TokenExpiredError = "Your authentication token has expired, please remove your authorization header and login again";
         public const string UnauthenticatedError = "You are currently unauthenticated and connot do that action, please login and try again";
         public const string ExternalAuthNotLinked =
             "This external account is not linked to your internal account, please login and link this account in your account settings";
@@ -37,6 +38,7 @@ public static class ErrorMessageConstants
         public const string PermissionError = "You aren't authorized to do that, please go away";
         public const string CannotAdministrateMissingPermission =
             "You don't have the permission you are attempting to add/remove so you also can't administrate this permission";
+        public const string Forbidden = "You hath been forbidden, do thy bidding my masta, it's a disasta, skywalka we're afta!";
     }
 
     public static class Roles

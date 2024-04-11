@@ -13,6 +13,7 @@ namespace Application.Api.v1.Api;
 /// <summary>
 /// Endpoints dealing with overall API integration functionality
 /// </summary>
+[AllowAnonymous]
 public static class ApiEndpoints
 {
     /// <summary>

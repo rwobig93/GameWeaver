@@ -26,44 +26,48 @@ public class ErrorHandlerMiddleware
         {
             await _next(context);
         }
-        catch (JsonException)
-        {
-            var response = context.Response;
-            response.ContentType = "application/json";
-            var responseModel = await Result<string>.FailAsync(ErrorMessageConstants.Generic.JsonInvalid);
-
-            response.StatusCode = (int) HttpStatusCode.BadRequest;
-            var result = JsonSerializer.Serialize(responseModel);
-            await response.WriteAsync(result);
-        }
         catch (Exception error)
         {
-            
-            if (error.InnerException is not JsonException)
-                _logger.Error("Error occurred and handled by the middleware: {ErrorMessage}", error.Message);
-            
+            // If the response has already been set then the error has been handled / communicated so no further action is needed
+            if (context.Response.HasStarted) return;
+
             var response = context.Response;
             response.ContentType = "application/json";
-            var responseModel = error.InnerException switch
+            string errorMessage;
+            
+            switch (error)
             {
-                JsonException _ => await Result<string>.FailAsync(ErrorMessageConstants.Generic.JsonInvalid),
-                _ => await Result<string>.FailAsync(error.Message)
-            };
+                case ApiException:
+                case BadHttpRequestException:
+                    response.StatusCode = (int) HttpStatusCode.BadRequest;
+                    errorMessage = error.Message;
+                    break;
+                case SecurityTokenExpiredException:
+                    response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                    errorMessage = ErrorMessageConstants.Authentication.TokenExpiredError;
+                    break;
+                case AuthenticationException:
+                case SecurityTokenException:
+                    response.StatusCode = (int) HttpStatusCode.Forbidden;
+                    errorMessage = error.Message;
+                    break;
+                case KeyNotFoundException:
+                    response.StatusCode = (int) HttpStatusCode.NotFound;
+                    errorMessage = error.Message;
+                    break;
+                case not null when error.InnerException is JsonException:
+                    response.StatusCode = (int) HttpStatusCode.BadRequest;
+                    errorMessage = ErrorMessageConstants.Generic.JsonInvalid;
+                    break;
+                default:
+                    response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                    errorMessage = error.Message;
+                    _logger.Error("Error occurred and handled by the middleware: {ErrorMessage}", error.Message);
+                    break;
+            }
+            
+            var responseModel = await Result<string>.FailAsync(errorMessage);
 
-            response.StatusCode = error switch
-            {
-                BadHttpRequestException =>
-                    (int) HttpStatusCode.BadRequest,
-                ApiException =>
-                    (int) HttpStatusCode.BadRequest,
-                KeyNotFoundException =>
-                    (int) HttpStatusCode.NotFound,
-                SecurityTokenException =>
-                    (int) HttpStatusCode.Forbidden,
-                AuthenticationException =>
-                    (int) HttpStatusCode.Forbidden,
-                _ => (int) HttpStatusCode.InternalServerError
-            };
             var result = JsonSerializer.Serialize(responseModel);
             await response.WriteAsync(result);
         }
