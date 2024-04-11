@@ -212,18 +212,14 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @ServerState int,
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
-                @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn datetime2,
-                @IsDeleted BIT,
-                @DeletedOn datetime2
+                @IsDeleted BIT
             AS
             begin
                 INSERT into dbo.[{Table.TableName}]  (OwnerId, HostId, GameId, GameProfileId, ServerName, Password, PasswordRcon, PasswordAdmin, PublicIp, PrivateIp,
-                                                      ExternalHostname, PortGame, PortQuery, PortRcon, Modded, Private, ServerState, CreatedBy, CreatedOn, LastModifiedBy,
-                                                      LastModifiedOn, IsDeleted, DeletedOn)
+                                                      ExternalHostname, PortGame, PortQuery, PortRcon, Modded, Private, ServerState, CreatedBy, CreatedOn, IsDeleted)
                 OUTPUT INSERTED.Id
                 VALUES (@OwnerId, @HostId, @GameId, @GameProfileId, @ServerName, @Password, @PasswordRcon, @PasswordAdmin, @PublicIp, @PrivateIp, @ExternalHostname, @PortGame,
-                        @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                        @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @IsDeleted);
             end"
     };
     

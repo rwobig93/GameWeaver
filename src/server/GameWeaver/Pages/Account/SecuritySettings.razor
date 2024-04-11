@@ -71,7 +71,7 @@
                               Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
                               AdornmentAriaLabel="Show Desired Password"
                               Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordRequirements))"/>
-                <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
+                <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" AnchorOrigin="Origin.CenterLeft" Size="Size.Medium">
                     <MudText Align="Align.Left" Class="mx-4">Minimum Length: @_passwordRequirements.MinimumLength</MudText>
                     <MudText Align="Align.Left" Class="mx-4">Maximum Length: @_passwordRequirements.MaximumLength</MudText>
                     <MudText Align="Align.Left" Class="mx-4">Requires Special: @_passwordRequirements.RequiresSpecialCharacters</MudText>

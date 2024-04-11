@@ -33,14 +33,19 @@ public class ErrorHandlerMiddleware
 
             var response = context.Response;
             response.ContentType = "application/json";
-            string errorMessage;
+            // TODO: Configure error message based on environment - development should be error.Message and prod should be Generic internal error message
+            var errorMessage = error.Message;
             
             switch (error)
             {
+                case not null when error.InnerException is JsonException jsonException:
+                    response.StatusCode = (int) HttpStatusCode.BadRequest;
+                    errorMessage = jsonException.Message;
+                    break;
                 case ApiException:
                 case BadHttpRequestException:
                     response.StatusCode = (int) HttpStatusCode.BadRequest;
-                    errorMessage = error.Message;
+                    errorMessage = ErrorMessageConstants.Generic.InvalidValueError;
                     break;
                 case SecurityTokenExpiredException:
                     response.StatusCode = (int) HttpStatusCode.Unauthorized;
@@ -49,20 +54,13 @@ public class ErrorHandlerMiddleware
                 case AuthenticationException:
                 case SecurityTokenException:
                     response.StatusCode = (int) HttpStatusCode.Forbidden;
-                    errorMessage = error.Message;
                     break;
                 case KeyNotFoundException:
                     response.StatusCode = (int) HttpStatusCode.NotFound;
-                    errorMessage = error.Message;
-                    break;
-                case not null when error.InnerException is JsonException:
-                    response.StatusCode = (int) HttpStatusCode.BadRequest;
-                    errorMessage = ErrorMessageConstants.Generic.JsonInvalid;
                     break;
                 default:
                     response.StatusCode = (int) HttpStatusCode.InternalServerError;
-                    errorMessage = error.Message;
-                    _logger.Error("Error occurred and handled by the middleware: {ErrorMessage}", error.Message);
+                    _logger.Error("Error occurred and handled by the middleware: {ErrorMessage}", errorMessage);
                     break;
             }
             

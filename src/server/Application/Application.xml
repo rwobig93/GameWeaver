@@ -403,12 +403,13 @@
             <param name="gameServerService"></param>
             <returns>List of game servers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Create(Application.Models.GameServer.GameServer.GameServerCreate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Create(Application.Models.GameServer.GameServer.GameServerCreate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a game server
             </summary>
             <param name="createObject">Required properties to create a game server</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created game server</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Update(Application.Models.GameServer.GameServer.GameServerUpdate,Application.Services.GameServer.IGameServerService)">

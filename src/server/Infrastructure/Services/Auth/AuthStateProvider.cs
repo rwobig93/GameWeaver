@@ -46,6 +46,9 @@ public class AuthStateProvider : AuthenticationStateProvider
 
             if (currentPrincipal == UserConstants.ExpiredPrincipal)
                 return new AuthenticationState(UserConstants.ExpiredPrincipal);
+
+            if (string.IsNullOrWhiteSpace(_authToken))
+                return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
             
             // User is valid and not token isn't expired
             return GenerateNewAuthenticationState(_authToken);

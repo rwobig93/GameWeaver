@@ -248,18 +248,21 @@ public static class GameServerEndpoints
             return await Result<GameServerSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a game server
     /// </summary>
     /// <param name="createObject">Required properties to create a game server</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created game server</returns>
     [Authorize(PermissionConstants.Gameserver.Create)]
-    private static async Task<IResult<Guid>> Create([FromBody]GameServerCreate createObject, IGameServerService gameServerService)
+    private static async Task<IResult<Guid>> Create([FromBody]GameServerCreate createObject, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            createObject.CreatedBy = currentUserId;
             return await gameServerService.CreateAsync(createObject);
         }
         catch (Exception ex)

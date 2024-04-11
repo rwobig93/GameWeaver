@@ -71,11 +71,13 @@ public class ControlServerWorker : BackgroundService
         if (_serverService is {ServerIsUp: true, RegisteredWithServer: false})
             await _serverService.RegistrationConfirm();
         
-        _logger.Debug("Control Server is up: {ServerStatus}", serverIsUp);
+        _logger.Verbose("Control Server is up: {ServerStatus}", serverIsUp);
     }
 
     private async Task CheckInWithControlServer()
     {
+        if (!_serverService.ServerIsUp || !_serverService.RegisteredWithServer) { return; }
+        
         var currentResourceUsage = HostWorker.CurrentHostResourceUsage;
         
         var checkInRequest = new HostCheckInRequest
@@ -128,15 +130,15 @@ public class ControlServerWorker : BackgroundService
     {
         if (!_serverService.RegisteredWithServer) { return; }
         
-        if (!_serverService.ServerIsUp)
-        {
-            _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);
-            return;
-        }
-        
         if (WorkUpdateQueue.IsEmpty)
         {
             _logger.Verbose("Outgoing communication queue is empty, skipping...");
+            return;
+        }
+        
+        if (!_serverService.ServerIsUp)
+        {
+            _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);
             return;
         }
 

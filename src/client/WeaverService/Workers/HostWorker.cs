@@ -73,7 +73,8 @@ public class HostWorker : BackgroundService
         if (startupTimePassed < 3000)
             await Task.Delay(3000 - startupTimePassed, stoppingToken);
         
-        ThreadHelper.QueueWork(_ => UpdateHostDetail());
+        // TODO: IPAddress object isn't serializable, need to look into options beyond what has already been tried
+        // ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
         // TODO: Implement Sqlite for host work tracking, for now we'll serialize/deserialize a json file
         await DeserializeWorkQueues();

@@ -46,7 +46,7 @@ public class ControlServerService : IControlServerService
         try
         {
             // Hit the health monitoring endpoint of the control server to validate the server is up
-            var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
+            var httpClient = _httpClientFactory.CreateClient(HttpConstants.Unauthenticated);
             var response = await httpClient.GetAsync(ApiConstants.Monitoring.Health);
             ServerIsUp = response.IsSuccessStatusCode;
             if (!ServerIsUp)
@@ -79,9 +79,8 @@ public class ControlServerService : IControlServerService
     /// <returns>Host and key pair used to authenticate with the control server</returns>
     public async Task<IResult<HostRegisterResponse>> RegistrationConfirm()
     {
-        // Client should already be registered if there is no register URL and we have a valid Id and Key pair
-        var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out _);
-        if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl) && hostIdIsValid && !string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
+        // Client should already be registered if there is no register URL, and we have a valid id and Key pair
+        if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl))
             return await Result<HostRegisterResponse>.SuccessAsync();
         if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
             return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");

@@ -1,4 +1,6 @@
-﻿namespace Application.Models.GameServer.GameServer;
+﻿using Domain.Enums.GameServer;
+
+namespace Application.Models.GameServer.GameServer;
 
 public class GameServerCreate
 {
@@ -18,6 +20,8 @@ public class GameServerCreate
     public int PortRcon { get; set; } = 0;
     public bool Modded { get; set; } = false;
     public bool Private { get; set; } = true;
+    public ConnectivityState ServerState { get; set; } = ConnectivityState.Uninstalled;
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
+    public bool IsDeleted { get; set; } = false;
 }

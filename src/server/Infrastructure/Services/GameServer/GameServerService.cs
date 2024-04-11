@@ -179,7 +179,7 @@ public class GameServerService : IGameServerService
         {
             HostId = createObject.HostId,
             GameServerId = gameServerRequest.Result,
-            TargetType = Domain.Enums.GameServer.WeaverWorkTarget.GameServerInstall,
+            TargetType = WeaverWorkTarget.GameServerInstall,
             Status = WeaverWorkState.WaitingToBePickedUp,
             WorkData = _serializerService.SerializeMemory(gameServerHost),
             CreatedBy = default,
@@ -579,7 +579,7 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var request = await _gameServerRepository.DeleteAsync(id, modifyingUserId);
+        var request = await _gameServerRepository.DeleteGameProfileAsync(id, modifyingUserId);
         if (!request.Succeeded)
             return await Result.FailAsync(request.ErrorMessage);
 
