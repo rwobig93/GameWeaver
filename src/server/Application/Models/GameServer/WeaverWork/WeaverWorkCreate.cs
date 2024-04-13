@@ -5,7 +5,6 @@ namespace Application.Models.GameServer.WeaverWork;
 public class WeaverWorkCreate
 {
     public Guid HostId { get; set; }
-    public Guid? GameServerId { get; set; }
     public WeaverWorkTarget TargetType { get; set; }
     public WeaverWorkState Status { get; set; } = WeaverWorkState.WaitingToBePickedUp;
     public byte[]? WorkData { get; set; }

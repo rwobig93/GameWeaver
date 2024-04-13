@@ -58,7 +58,9 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT g.*
-                FROM dbo.[{Table.TableName}] g;
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
+                ORDER BY g.Id;
             end"
     };
 
@@ -74,6 +76,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -195,10 +198,11 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
-                    OR g.ServerProcessName LIKE '%' + @SearchTerm + '%';
+                    OR g.ServerProcessName LIKE '%' + @SearchTerm + '%'
+                ORDER BY g.Id;
             end"
     };
     
@@ -217,7 +221,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND  g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.ServerProcessName LIKE '%' + @SearchTerm + '%'

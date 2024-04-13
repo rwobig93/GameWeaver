@@ -71,7 +71,9 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT g.*
-                FROM dbo.[{Table.TableName}] g;
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
+                ORDER BY g.Id;
             end"
     };
 
@@ -87,6 +89,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -236,7 +239,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.OwnerId LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.HostId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.GameProfileId LIKE '%' + @SearchTerm + '%'
@@ -262,7 +265,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.OwnerId LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.HostId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.GameProfileId LIKE '%' + @SearchTerm + '%'

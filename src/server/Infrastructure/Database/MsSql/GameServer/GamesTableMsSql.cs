@@ -78,7 +78,9 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT g.*
-                FROM dbo.[{Table.TableName}] g;
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
+                ORDER BY g.Id;
             end"
     };
 
@@ -94,6 +96,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -241,7 +244,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
@@ -264,7 +267,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'

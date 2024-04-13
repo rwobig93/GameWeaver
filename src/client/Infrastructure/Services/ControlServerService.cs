@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Net.Http.Headers;
+using System.Text;
 using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;
@@ -7,6 +8,7 @@ using Application.Responses.Monitoring;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
+using Domain.Models.ControlServer;
 using Domain.Models.Host;
 using Microsoft.Extensions.Options;
 
@@ -75,13 +77,21 @@ public class ControlServerService : IControlServerService
     /// <remarks>
     ///   - Register URL is cleared in the settings file when a successful registration completes
     ///   - Will always do a new registration confirmation if Register URL is valid and isn't empty
+    ///   - Will attempt to get a token if register url is empty
     /// </remarks>
     /// <returns>Host and key pair used to authenticate with the control server</returns>
     public async Task<IResult<HostRegisterResponse>> RegistrationConfirm()
     {
-        // Client should already be registered if there is no register URL, and we have a valid id and Key pair
+        // Client should already be registered if there is no register URL, and we have a valid id and Key pair, so we'll attempt to get a token
         if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl))
+        {
+            var tokenResult = await GetToken();
+            if (!tokenResult.Succeeded)
+                return await Result<HostRegisterResponse>.FailAsync(tokenResult.Messages);
+            
             return await Result<HostRegisterResponse>.SuccessAsync();
+        }
+        
         if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
             return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");
 
@@ -119,6 +129,12 @@ public class ControlServerService : IControlServerService
     /// <returns>Token, Refresh Token and Token Expiration in UTC/GMT</returns>
     public async Task<IResult<HostAuthResponse>> GetToken()
     {
+        if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Host) && string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
+        {
+            _logger.Verbose("HostId and key is empty so we haven't registered yet, waiting for registration");
+            return await Result<HostAuthResponse>.SuccessAsync();
+        }
+        
         var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out var parsedHostId);
         if (!hostIdIsValid || string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
             return await Result<HostAuthResponse>.FailAsync("HostId or key is invalid, please fix the host/key pair or do a new registration");
@@ -163,7 +179,7 @@ public class ControlServerService : IControlServerService
             return await Result.SuccessAsync();
         }
         
-        // Token is expired or within expiration threshold so we'll get a new token
+        // Token is expired or within expiration threshold, so we'll get a new token
         var updateTokenRequest = await GetToken();
         if (!updateTokenRequest.Succeeded)
             return await Result.FailAsync(updateTokenRequest.Messages);
@@ -171,24 +187,36 @@ public class ControlServerService : IControlServerService
         return await Result.SuccessAsync();
     }
 
+    public class JsonGenericRequest
+    {
+        public JsonGenericRequest(object request)
+        {
+            this.Request = request;
+        }
+
+        public object Request { get; set; }
+    }
+
     /// <summary>
     /// Send check-in and host statistics to the control server, also get back any host work to be done
     /// </summary>
     /// <param name="request">Host statistics to be sent to the control server</param>
     /// <returns></returns>
-    public async Task<IResult<byte[]>> Checkin(HostCheckInRequest request)
+    public async Task<IResult<IEnumerable<WeaverWork>>> Checkin(HostCheckInRequest request)
     {
-        if (!RegisteredWithServer) { return await Result<byte[]>.SuccessAsync(); }
+        if (!RegisteredWithServer) { return await Result<IEnumerable<WeaverWork>>.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new ByteArrayContent(_serializerService.SerializeMemory(request));
+        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
 
+        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
-            return await Result<byte[]>.FailAsync(responseContent);
+            return await Result<IEnumerable<WeaverWork>>.FailAsync(responseContent);
 
-        return await Result<byte[]>.SuccessAsync();
+        var deserializedResponse = _serializerService.DeserializeJson<HostCheckInResponse>(responseContent);
+        return await Result<IEnumerable<WeaverWork>>.SuccessAsync(deserializedResponse.Data);
     }
 
     /// <summary>
@@ -201,8 +229,9 @@ public class ControlServerService : IControlServerService
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new ByteArrayContent(_serializerService.SerializeMemory(request));
-
+        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
+        
+        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)

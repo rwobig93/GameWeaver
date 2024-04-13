@@ -15,6 +15,7 @@ public interface IHostService
     Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(string description, Guid requestingUserId, Guid hostOwnerId);
     Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, string registrationIp);
     Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
+    Task<IResult> IsProvidedKeyCorrect(Guid hostId, string key);
     Task<IResult<IEnumerable<HostSlim>>> GetAllAsync();
     Task<IResult<IEnumerable<HostSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();

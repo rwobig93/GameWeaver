@@ -21,22 +21,18 @@ public class GameServerService : IGameServerService
 {
     private readonly IGameServerRepository _gameServerRepository;
     private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
-    private readonly AppConfiguration _appConfig;
     private readonly IHostRepository _hostRepository;
     private readonly ISerializerService _serializerService;
     private readonly IGameRepository _gameRepository;
 
-    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
-        IHostRepository hostRepository, ISerializerService serializerService, IGameRepository gameRepository)
+    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository,
+        ISerializerService serializerService, IGameRepository gameRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
-        _serverState = serverState;
         _hostRepository = hostRepository;
         _serializerService = serializerService;
         _gameRepository = gameRepository;
-        _appConfig = appConfig.Value;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -178,7 +174,6 @@ public class GameServerService : IGameServerService
         var hostInstallRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
         {
             HostId = createObject.HostId,
-            GameServerId = gameServerRequest.Result,
             TargetType = WeaverWorkTarget.GameServerInstall,
             Status = WeaverWorkState.WaitingToBePickedUp,
             WorkData = _serializerService.SerializeMemory(gameServerHost),
@@ -538,7 +533,7 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject)
     {
-        // Game profiles shouldn't have matching friendly names so we'll enforce that 
+        // Game profiles shouldn't have matching friendly names, so we'll enforce that 
         var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(createObject.FriendlyName);
         if (matchingUsernameRequest.Result is not null)
             createObject.FriendlyName = $"{createObject.FriendlyName} - {Guid.NewGuid()}";
@@ -558,7 +553,7 @@ public class GameServerService : IGameServerService
 
         if (!string.IsNullOrWhiteSpace(updateObject.FriendlyName))
         {
-            // Game profiles shouldn't have matching friendly names so we'll enforce that 
+            // Game profiles shouldn't have matching friendly names, so we'll enforce that 
             var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(updateObject.FriendlyName);
             if (matchingUsernameRequest.Result is not null)
                 return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);

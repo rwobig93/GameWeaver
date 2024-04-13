@@ -60,7 +60,7 @@ public class HostService : IHostService
             return await Result<HostNewRegisterResponse>.FailAsync(matchingDescriptionRequest.ErrorMessage);
         if (matchingDescriptionRequest.Result is null || matchingDescriptionRequest.Result.Any())
             return await Result<HostNewRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.MatchingRegistrationExists);
-
+        
         // Create host to get the GUID to bind the request to for registering this host
         var newHostRequest = await _hostRepository.CreateAsync(new HostCreate
         {
@@ -171,6 +171,13 @@ public class HostService : IHostService
     {
         try
         {
+            var foundHost = await GetByIdAsync(request.HostId);
+            if (!foundHost.Succeeded)
+                return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+            var keyIsCorrect = await IsProvidedKeyCorrect(foundHost.Data.Id, request.HostToken);
+            if (!keyIsCorrect.Succeeded)
+                return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+            
             var token = JwtHelpers.GenerateApiJwtEncryptedToken(GetHostClaims(request.HostId), _dateTime, _securityConfig, _appConfig);
 
             var tokenExpiration = JwtHelpers.GetJwtExpirationTime(token);
@@ -190,6 +197,21 @@ public class HostService : IHostService
         }
     }
 
+    public async Task<IResult> IsProvidedKeyCorrect(Guid hostId, string key)
+    {
+        var foundHost = await _hostRepository.GetByIdAsync(hostId);
+        if (!foundHost.Succeeded)
+            return await Result.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result.FailAsync(foundHost.ErrorMessage);
+
+        var keyIsCorrect = AccountHelpers.IsPasswordCorrect(key, foundHost.Result.PasswordSalt, HostConstants.HostPepper, foundHost.Result.PasswordHash);
+        if (!keyIsCorrect)
+            return await Result.FailAsync();
+
+        return await Result.SuccessAsync();
+    }
+
     private static IEnumerable<Claim> GetHostClaims(Guid hostId)
     {
         return new List<Claim>()
@@ -197,7 +219,8 @@ public class HostService : IHostService
             new(ClaimTypes.NameIdentifier, hostId.ToString()),
             new(ClaimTypes.Email, $"{hostId.ToString()}@host.game.weaver"),
             new(ClaimTypes.Name, $"{hostId.ToString()}@host.game.weaver"),
-            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.CheckIn)
+            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.CheckIn),
+            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.WorkUpdate)
         };
     }
 

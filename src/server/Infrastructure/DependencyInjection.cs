@@ -346,6 +346,9 @@ public static class DependencyInjection
                 bearer.RequireHttpsMetadata = true;
                 bearer.SaveToken = true;
                 bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
+                bearer.AutomaticRefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
+                bearer.RefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
+                bearer.SaveToken = true;
 
                 bearer.Events = new JwtBearerEvents
                 {
@@ -362,6 +365,7 @@ public static class DependencyInjection
                         auth.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
                         auth.Response.ContentType = "application/json";
                         var generalError = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Generic.ContactAdmin));
+                        Log.Warning("JWT authentication failed generically: {Error}", auth.Exception.Message);
                         return auth.Response.WriteAsync(generalError);
                     },
                     OnChallenge = context =>

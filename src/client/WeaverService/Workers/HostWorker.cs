@@ -98,11 +98,11 @@ public class HostWorker : BackgroundService
 
     public static void AddWorkToQueue(WeaverWork work)
     {
-        Log.Debug("Adding host work to waiting queue: {Id} | {WorkType} | {Status}", work.Id, work.Type, work.Status);
+        Log.Debug("Adding host work to waiting queue: {Id} | {WorkType} | {Status}", work.Id, work.TargetType, work.Status);
         
         if (_workQueue.Any(x => x.Id == work.Id))
         {
-            Log.Verbose("Host work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.Type);
+            Log.Verbose("Host work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
             return;
         }
 
@@ -117,7 +117,7 @@ public class HostWorker : BackgroundService
             AttemptCount = 0
         });
         
-        Log.Debug("Added host work to queue:{Id} | {WorkType} | {Status}", work.Id, work.Type, work.Status);
+        Log.Debug("Added host work to queue:{Id} | {WorkType} | {Status}", work.Id, work.TargetType, work.Status);
     }
 
     private void UpdateHostDetail()
@@ -316,18 +316,18 @@ public class HostWorker : BackgroundService
                 AttemptCount = 0
             });
             
-            switch (work.Type)
+            switch (work.TargetType)
             {
                 case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
-                    _logger.Debug("Starting host work from queue: [{WorkId}]{WorkType}", work.Id, work.Type);
+                    _logger.Debug("Starting host work from queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     return;
                 case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
-                    _logger.Error("Gameserver work somehow got into the Host work queue: [{WorkId}]{WorkType}", work.Id, work.Type);
+                    _logger.Error("Gameserver work somehow got into the Host work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     GameServerWorker.AddWorkToQueue(work);
-                    _logger.Warning("Gave gameserver work to gameserver worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.Type);
+                    _logger.Warning("Gave gameserver work to gameserver worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     break;
                 default:
-                    _logger.Error("Invalid work type for work: [{WorkId}] of type {WorkType}", work.Id, work.Type);
+                    _logger.Error("Invalid work type for work: [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
@@ -339,7 +339,7 @@ public class HostWorker : BackgroundService
                     return;
             }
             
-            switch (work.Type)
+            switch (work.TargetType)
             {
                 case WeaverWorkTarget.HostStatusUpdate:
                     // TODO: Implement host status update
@@ -355,13 +355,13 @@ public class HostWorker : BackgroundService
                 case WeaverWorkTarget.GameServerUninstall:
                 case WeaverWorkTarget.CurrentEnd:
                 default:
-                    _logger.Error("Unsupported host work type asked for: Asked {WorkType}", work.Type);
+                    _logger.Error("Unsupported host work type asked for: Asked {WorkType}", work.TargetType);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
                         Type = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
-                        WorkData = _serializerService.SerializeMemory(new List<string> {$"Unsupported host work type asked for: {work.Type}"}),
+                        WorkData = _serializerService.SerializeMemory(new List<string> {$"Unsupported host work type asked for: {work.TargetType}"}),
                         AttemptCount = 0
                     });
                     return;

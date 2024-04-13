@@ -17,7 +17,7 @@ public class SerializerService : ISerializerService
     private readonly JsonSerializerOptions _options = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-        NumberHandling = JsonNumberHandling.Strict,
+        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
         IgnoreReadOnlyProperties = false,
         IgnoreReadOnlyFields = false,
         IncludeFields = false,

@@ -141,7 +141,7 @@ public class SqlDatabaseSeederService : IHostedService
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        // We don't have any cleanup required so we'll just return a completed task
+        // We don't have any cleanup required, so we'll just return a completed task
         await Task.CompletedTask;
     }
 

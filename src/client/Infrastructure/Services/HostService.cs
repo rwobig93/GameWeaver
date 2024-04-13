@@ -77,7 +77,7 @@ public class HostService : IHostService
             hostResourceUsage.NetworkInBytes = totalNetworkInBytes;
             hostResourceUsage.TimeStamp = _dateTimeService.NowDatabaseTime;
             
-            _logger.Debug("Successfully gathered host resource usage: {CpuUsage} | {RamUsage} | {Uptime} | {NetInMb} | {NetOutMb}",
+            _logger.Verbose("Successfully gathered host resource usage: {CpuUsage} | {RamUsage} | {Uptime} | {NetInMb} | {NetOutMb}",
                 hostResourceUsage.CpuUsage, hostResourceUsage.RamUsage, TimeSpan.FromMilliseconds(hostResourceUsage.Uptime), hostResourceUsage.NetworkInBytes, hostResourceUsage.NetworkOutBytes);
         }
         catch (Exception ex)

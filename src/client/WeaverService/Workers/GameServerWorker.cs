@@ -108,6 +108,31 @@ public class GameServerWorker : BackgroundService
             
             _inProgressWorkCount++;
             work.Status = WeaverWorkState.InProgress;
+            // TODO: RunSynchronously may not be called on a task that has already completed
+            // Location: %USERPROFILE%\RiderProjects\GameWeaver\src\client\WeaverService\_dev-WeaverApp
+            // 04/13/2024 16:30:23 -05:00 [Debug] Adding gameserver work to waiting queue: 3 |GameServerInstall | WaitingToBePickedUp
+            // 04/13/2024 16:30:23 -05:00 [Debug] Adding weaver work update: [3]PickedUp
+            // 04/13/2024 16:30:23 -05:00 [Debug] Added gameserver work to queue:3 | GameServerInstall | PickedUp
+            // 04/13/2024 16:30:23 -05:00 [Debug] Sending outgoing communication => 3
+            // 04/13/2024 16:30:23 -05:00 [Debug] Server successfully processed outgoing communication: 3
+            // 04/13/2024 16:30:23 -05:00 [Debug] Finished parsing outgoing weaver communication queue, current items waiting: 0
+            // 04/13/2024 16:30:24 -05:00 [Debug] Queuing work "work" to the thread pool
+            // 04/13/2024 16:30:24 -05:00 [Error] Unable to dequeue next item in the gameserver work queue, quiting cycle queue processing
+            // 04/13/2024 16:30:24 -05:00 [Debug] Adding weaver work update: [3]InProgress
+            // 04/13/2024 16:30:24 -05:00 [Debug] Starting gameserver work from queue: [3]GameServerInstall
+            // 04/13/2024 16:30:24 -05:00 [Debug] Adding weaver work update: [3]InProgress
+            // 04/13/2024 16:30:24 -05:00 [Information] Created directory for gameserver install: "C:\\Users\\rickw\\RiderProjects\\GameWeaver\\src\\client\\WeaverService\\_dev-WeaverApp\\GameServers\\e8000000-ffff-17ff-0000-00576f726b20"
+            // 04/13/2024 16:30:24 -05:00 [Debug] Running SteamCMD command: [Maintenance:False]"+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir \"C:\\Users\\rickw\\RiderProjects\\GameWeaver\\src\\client\\WeaverService\\_dev-WeaverApp\\GameServers\\e8000000-ffff-17ff-0000-00576f726b20\" +login anonymous +app_info_update 1 +app_update \"0\" +app_status 0 +quit"
+            // 04/13/2024 16:30:24 -05:00 [Debug] Sending outgoing communication => 3
+            // 04/13/2024 16:30:24 -05:00 [Debug] Server successfully processed outgoing communication: 3
+            // 04/13/2024 16:30:24 -05:00 [Debug] Sending outgoing communication => 3
+            // 04/13/2024 16:30:24 -05:00 [Debug] Server successfully processed outgoing communication: 3
+            // 04/13/2024 16:30:24 -05:00 [Debug] Finished parsing outgoing weaver communication queue, current items waiting: 0
+            // 04/13/2024 16:30:29 -05:00 [Debug] Finished running SteamCMD command: "+@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir \"C:\\Users\\rickw\\RiderProjects\\GameWeaver\\src\\client\\WeaverService\\_dev-WeaverApp\\GameServers\\e8000000-ffff-17ff-0000-00576f726b20\" +login anonymous +app_info_update 1 +app_update \"0\" +app_status 0 +quit"
+            // 04/13/2024 16:30:29 -05:00 [Information] Successfully installed/updated gameserver: [e8000000-ffff-17ff-0000-00576f726b20]null
+            // 04/13/2024 16:30:29 -05:00 [Information] Finished installing gameserver: [e8000000-ffff-17ff-0000-00576f726b20]null
+            // 04/13/2024 16:30:29 -05:00 [Debug] Adding weaver work update: [3]InProgress
+            // 04/13/2024 16:30:29 -05:00 [Debug] Adding weaver work update: [3]Completed
             ThreadHelper.QueueWork(_ => HandleWork(work).RunSynchronously());
         }
 
@@ -128,12 +153,12 @@ public class GameServerWorker : BackgroundService
 
     public static void AddWorkToQueue(WeaverWork work)
     {
-        Log.Debug("Adding gameserver work to waiting queue: {Id} |{WorkType} | {Status}", work.Id, work.Type, work.Status);
+        Log.Debug("Adding gameserver work to waiting queue: {Id} |{WorkType} | {Status}", work.Id, work.TargetType, work.Status);
         
         // TODO: Need to check against work in progress as well, currently we aren't tracking that work, we need to for reliability
         if (_workQueue.Any(x => x.Id == work.Id))
         {
-            Log.Verbose("Work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.Type);
+            Log.Verbose("Work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
             return;
         }
 
@@ -148,7 +173,7 @@ public class GameServerWorker : BackgroundService
             AttemptCount = 0
         });
         
-        Log.Debug("Added gameserver work to queue:{Id} | {WorkType} | {Status}", work.Id, work.Type, work.Status);
+        Log.Debug("Added gameserver work to queue:{Id} | {WorkType} | {Status}", work.Id, work.TargetType, work.Status);
     }
 
     private async Task SerializeGameServerState()
@@ -206,18 +231,18 @@ public class GameServerWorker : BackgroundService
                 AttemptCount = 0
             });
             
-            switch (work.Type)
+            switch (work.TargetType)
             {
                 case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
-                    _logger.Error("Host work somehow got into the GameServer work queue: [{WorkId}]{WorkType}", work.Id, work.Type);
+                    _logger.Error("Host work somehow got into the GameServer work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     HostWorker.AddWorkToQueue(work);
-                    _logger.Warning("Gave host work to host worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.Type);
+                    _logger.Warning("Gave host work to host worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     return;
                 case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
-                    _logger.Debug("Starting gameserver work from queue: [{WorkId}]{WorkType}", work.Id, work.Type);
+                    _logger.Debug("Starting gameserver work from queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     break;
                 default:
-                    _logger.Error("Invalid work type for work: [{WorkId}]{WorkType}", work.Id, work.Type);
+                    _logger.Error("Invalid work type for work: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
@@ -229,7 +254,7 @@ public class GameServerWorker : BackgroundService
                     return;
             }
 
-            switch (work.Type)
+            switch (work.TargetType)
             {
                 case WeaverWorkTarget.GameServerInstall:
                     await InstallGameServer(work);
@@ -248,14 +273,14 @@ public class GameServerWorker : BackgroundService
                 case WeaverWorkTarget.CurrentEnd:
                 case WeaverWorkTarget.GameServerStateUpdate:
                 default:
-                    _logger.Error("An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {WorkType}", work.Type);
+                    _logger.Error("An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {WorkType}", work.TargetType);
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
                         Type = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
                         WorkData = _serializerService.SerializeMemory(
-                            new List<string> {$"An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {work.Type}"}),
+                            new List<string> {$"An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {work.TargetType}"}),
                         AttemptCount = 0
                     });
                     return;
@@ -308,7 +333,7 @@ public class GameServerWorker : BackgroundService
         var gotGameServer = GameServers.TryGetValue(uninstallWork!.GameserverId, out var gameServerLocal);
         if (!gotGameServer || gameServerLocal is null)
         {
-            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.Type);
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
@@ -378,7 +403,7 @@ public class GameServerWorker : BackgroundService
         var gotGameServer = GameServers.TryGetValue(updateWork!.GameserverId, out var gameServerLocal);
         if (!gotGameServer || gameServerLocal is null)
         {
-            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.Type);
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,

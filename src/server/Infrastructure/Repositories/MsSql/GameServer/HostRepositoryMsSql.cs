@@ -625,7 +625,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            await _database.SaveDataReturnId(HostCheckInTableMsSql.Insert, createObject);
+            await _database.SaveDataReturnIntId(HostCheckInTableMsSql.Insert, createObject);
 
             actionReturn.Succeed();
         }

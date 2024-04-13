@@ -817,7 +817,7 @@
             - Expiration time returned is in GMT/UTC
             </remarks>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Checkin(System.Byte[],Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Checkin(Application.Requests.v1.GameServer.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
             <summary>
             Inject a valid host check-in status
             </summary>
@@ -828,7 +828,7 @@
             <param name="serializerService"></param>
             <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.WorkStatusUpdate(System.Byte[],Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.WorkStatusUpdate(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
             <summary>
             Update the status of requested weaver work from the host
             </summary>
