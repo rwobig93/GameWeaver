@@ -8,7 +8,7 @@ public partial class WeaverWorkUpdateRequest
     [MemoryPackOrder(0)]
     public int Id { get; set; }
     [MemoryPackOrder(1)]
-    public WeaverWorkTarget Type { get; set; }
+    public WeaverWorkTarget TargetType { get; set; }
     [MemoryPackOrder(2)]
     public WeaverWorkState Status { get; set; }
     [MemoryPackOrder(3)]

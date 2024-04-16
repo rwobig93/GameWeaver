@@ -1,9 +1,5 @@
-﻿using System.Security.Claims;
-using Application.Constants.Identity;
+﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
-using Application.Services.Identity;
-using Domain.Models.Identity;
-using Microsoft.AspNetCore.Components;
 
 namespace GameWeaver.Shared;
 

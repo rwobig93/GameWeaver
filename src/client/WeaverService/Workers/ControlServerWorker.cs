@@ -4,7 +4,6 @@ using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
 using Domain.Enums;
-using Domain.Models.ControlServer;
 using Microsoft.Extensions.Options;
 using Serilog;
 

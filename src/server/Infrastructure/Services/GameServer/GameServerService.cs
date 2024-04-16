@@ -8,12 +8,9 @@ using Application.Models.GameServer.Mod;
 using Application.Models.GameServer.WeaverWork;
 using Application.Repositories.GameServer;
 using Application.Services.GameServer;
-using Application.Services.Lifecycle;
 using Application.Services.System;
-using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.Enums.GameServer;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;
 
@@ -139,6 +136,7 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
         // TODO: Add a create game profile from parent method that duplicates all linked entities to the new profile
+        // TODO: Allow empty game profile creation w/o parent, then prevent running w/o required properties
         var createdGameProfileRequest = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
             FriendlyName = $"{createObject.ServerName} Profile",
@@ -177,8 +175,8 @@ public class GameServerService : IGameServerService
             TargetType = WeaverWorkTarget.GameServerInstall,
             Status = WeaverWorkState.WaitingToBePickedUp,
             WorkData = _serializerService.SerializeMemory(gameServerHost),
-            CreatedBy = default,
-            CreatedOn = default,
+            CreatedBy = createObject.CreatedBy,
+            CreatedOn = createObject.CreatedOn,
             LastModifiedBy = null,
             LastModifiedOn = null
         });
@@ -209,9 +207,19 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var request = await _gameServerRepository.DeleteAsync(id, modifyingUserId);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var hostDeleteRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
+        {
+            HostId = findRequest.Result.HostId,
+            TargetType = WeaverWorkTarget.GameServerUninstall,
+            Status = WeaverWorkState.WaitingToBePickedUp,
+            WorkData = _serializerService.SerializeMemory(findRequest.Result.Id),
+            CreatedBy = modifyingUserId,
+            CreatedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        });
+        if (!hostDeleteRequest.Succeeded)
+            return await Result<Guid>.FailAsync(hostDeleteRequest.ErrorMessage);
 
         return await Result.SuccessAsync();
     }

@@ -666,8 +666,8 @@ public class HostService : IHostService
                 var result = await HandleUpdateGameServerState(updateObject);
                 if (!result.Succeeded)
                     _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", updateObject.Id, updateObject.TargetType, result.Messages);
+                updateObject.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
                 break;
-            case null:
             case WeaverWorkTarget.StatusUpdate:
             case WeaverWorkTarget.Host:
             case WeaverWorkTarget.HostStatusUpdate:
@@ -677,6 +677,7 @@ public class HostService : IHostService
             case WeaverWorkTarget.GameServerUpdate:
             case WeaverWorkTarget.GameServerUninstall:
             case WeaverWorkTarget.CurrentEnd:
+            case null:
             default:
                 _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
                     updateObject.Id, updateObject.TargetType);
@@ -711,7 +712,7 @@ public class HostService : IHostService
 
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             
-            // State update is uninstalled so we'll wrap up by deleting the game server
+            // State update is uninstalled, so we'll wrap up by deleting the game server
             var deleteServerRequest = await _gameServerRepository.DeleteAsync(deserializedData.Id, updateObject.LastModifiedBy ?? Guid.Empty);
             if (!deleteServerRequest.Succeeded)
                 return await Result.FailAsync(deleteServerRequest.ErrorMessage);

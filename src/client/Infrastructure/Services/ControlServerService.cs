@@ -1,5 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Text;
+﻿using System.Text;
 using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;

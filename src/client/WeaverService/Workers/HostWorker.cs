@@ -111,7 +111,7 @@ public class HostWorker : BackgroundService
         ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
         {
             Id = work.Id,
-            Type = WeaverWorkTarget.StatusUpdate,
+            TargetType = WeaverWorkTarget.StatusUpdate,
             Status = WeaverWorkState.PickedUp,
             WorkData = MemoryPackSerializer.Serialize(new List<string> {"Work was picked up"}),
             AttemptCount = 0
@@ -192,7 +192,7 @@ public class HostWorker : BackgroundService
         ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
         {
             Id = 0,
-            Type = WeaverWorkTarget.HostDetail,
+            TargetType = WeaverWorkTarget.HostDetail,
             Status = WeaverWorkState.Completed,
             WorkData = _serializerService.SerializeMemory(hostDetailRequest),
             AttemptCount = 0
@@ -310,7 +310,7 @@ public class HostWorker : BackgroundService
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = WeaverWorkTarget.StatusUpdate,
+                TargetType = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.InProgress,
                 WorkData = _serializerService.SerializeMemory(new List<string>{"Work is in progress"}),
                 AttemptCount = 0
@@ -331,7 +331,7 @@ public class HostWorker : BackgroundService
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
-                        Type = WeaverWorkTarget.StatusUpdate,
+                        TargetType = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
                         WorkData = _serializerService.SerializeMemory(new List<string> {"Host work data was invalid, please verify the payload"}),
                         AttemptCount = 0
@@ -359,7 +359,7 @@ public class HostWorker : BackgroundService
                     ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
                     {
                         Id = work.Id,
-                        Type = WeaverWorkTarget.StatusUpdate,
+                        TargetType = WeaverWorkTarget.StatusUpdate,
                         Status = WeaverWorkState.Failed,
                         WorkData = _serializerService.SerializeMemory(new List<string> {$"Unsupported host work type asked for: {work.TargetType}"}),
                         AttemptCount = 0
@@ -370,7 +370,7 @@ public class HostWorker : BackgroundService
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = WeaverWorkTarget.StatusUpdate,
+                TargetType = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.Completed,
                 WorkData = _serializerService.SerializeMemory(new List<string>{"Work complete"}),
                 AttemptCount = 0
@@ -383,7 +383,7 @@ public class HostWorker : BackgroundService
             ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
             {
                 Id = work.Id,
-                Type = WeaverWorkTarget.StatusUpdate,
+                TargetType = WeaverWorkTarget.StatusUpdate,
                 Status = WeaverWorkState.Failed,
                 WorkData = _serializerService.SerializeMemory(new List<string> {$"Failure occurred handling host work: {ex.Message}"}),
                 AttemptCount = 0

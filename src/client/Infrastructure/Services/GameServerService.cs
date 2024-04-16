@@ -301,21 +301,18 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> UninstallGame(GameServerLocal gameServer)
     {
-        // Delete game directory and cleanup GameServer object
         try
         {
             _logger.Debug("Attempting to uninstall gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
             Directory.Delete(gameServer.GetInstallDirectory(), true);
             _logger.Information("Successfully uninstalled gameserver[{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
             _logger.Error(ex, "Failed to uninstall gameserver: {Error}", ex.Message);
             return await Result.FailAsync($"Failed to uninstall gameserver: {ex.Message}");
         }
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
     }
 
     public async Task<IResult> UninstallMod(GameServerLocal gameServer, Mod mod)

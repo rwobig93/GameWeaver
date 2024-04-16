@@ -1,19 +1,12 @@
 ﻿using System.Security.Claims;
 using Application.Constants.Identity;
-using Application.Constants.Web;
-using Application.Mappers.Identity;
 using Application.Models.Identity.User;
-using Application.Services.Identity;
 using Application.Services.Lifecycle;
-using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.Enums.Identity;
 using Infrastructure.Services.Auth;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 
 namespace GameWeaver.Shared;
 
