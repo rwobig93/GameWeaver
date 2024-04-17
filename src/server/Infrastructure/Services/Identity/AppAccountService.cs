@@ -1029,7 +1029,7 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken) ?? string.Empty;
         }
         catch
         {

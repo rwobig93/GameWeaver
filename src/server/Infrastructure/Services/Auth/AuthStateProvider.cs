@@ -110,11 +110,11 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         try
         {
-            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken) ?? string.Empty;
         }
         catch
         {
-            // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
+            // Since Blazor Server pre-rendering has the state received twice, and we can't have JSInterop run while rendering is occurring
             //   we have to do this to keep our sanity, would love to find a working solution to this at some point
             return "";
         }

@@ -79,6 +79,9 @@ public class ControlServerWorker : BackgroundService
         
         var currentResourceUsage = HostWorker.CurrentHostResourceUsage;
         
+        if (currentResourceUsage is {CpuUsage: 0, RamUsage: 0, Uptime: 0})
+            return;
+        
         var checkInRequest = new HostCheckInRequest
         {
             SendTimestamp = _dateTimeService.NowDatabaseTime,
@@ -93,13 +96,6 @@ public class ControlServerWorker : BackgroundService
         if (!checkInResponse.Succeeded)
         {
             _logger.Error("Failed to check in with the control server: {Error}", checkInResponse.Messages);
-            return;
-        }
-        
-        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-        if (checkInResponse.Data is null)
-        {
-            _logger.Warning("checkInResponse.Data was null when it shouldn't be: {Messages}", checkInResponse.Messages);
             return;
         }
 

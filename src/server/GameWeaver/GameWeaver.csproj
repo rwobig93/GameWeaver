@@ -17,17 +17,17 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Hangfire" Version="1.8.3" />
-      <PackageReference Include="Hangfire.Core" Version="1.8.3" />
-      <PackageReference Include="MemoryPack" Version="1.20.5" />
+      <PackageReference Include="Hangfire" Version="1.8.12" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.12" />
+      <PackageReference Include="MemoryPack" Version="1.21.1" />
       <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
-      <PackageReference Include="MudBlazor" Version="6.7.0" />
+      <PackageReference Include="MudBlazor" Version="6.19.1" />
       <PackageReference Include="OAuth2" Version="0.10.3" />
-      <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
-      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
+      <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
       <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-      <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
