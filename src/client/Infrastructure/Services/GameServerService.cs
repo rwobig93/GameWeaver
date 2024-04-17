@@ -352,6 +352,13 @@ public class GameServerService : IGameServerService
     {
         try
         {
+            if (gameServer.Resources.All(x => x.Type != LocationType.BackupPath))
+            {
+                _logger.Debug("Gameserver doesn't have a backup path configured, skipping: [{GameserverId}]{GameserverName}",
+                    gameServer.Id, gameServer.ServerName);
+                return await Result.SuccessAsync();
+            }
+            
             _logger.Debug("Starting backup for gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
             
             var backupRootPath = Path.Combine(OsHelpers.GetDefaultBackupPath(), gameServer.Id.ToString());
@@ -377,5 +384,15 @@ public class GameServerService : IGameServerService
             _logger.Error(ex, "Failure occurred backing up gameserver: {GameserverId} | {Error}", gameServer.Id, ex.Message);
             return await Result.FailAsync($"Failure occurred backing up gameserver: {gameServer.Id} | {ex.Message}");
         }
+    }
+
+    public async Task<IResult> StartServer(GameServerLocal gameServer)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IResult> StopServer(GameServerLocal gameServer)
+    {
+        throw new NotImplementedException();
     }
 }
