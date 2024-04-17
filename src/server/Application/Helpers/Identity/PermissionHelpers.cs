@@ -57,8 +57,6 @@ public static class PermissionHelpers
     {
         return new List<string>()
         {
-            PermissionConstants.Example.Counter,
-            PermissionConstants.Example.Weather,
             PermissionConstants.Preferences.ChangeTheme,
             PermissionConstants.Jobs.View,
             PermissionConstants.Permissions.View,
@@ -97,8 +95,6 @@ public static class PermissionHelpers
     {
         return new List<string>()
         {
-            PermissionConstants.Example.Counter,
-            PermissionConstants.Example.Weather,
             PermissionConstants.Preferences.ChangeTheme,
             PermissionConstants.Users.ChangeEmail
         };

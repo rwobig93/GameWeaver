@@ -1,4 +1,4 @@
-﻿using Application.Models.Web;
+﻿using Domain.Contracts;
 
 namespace Application.Services.System;
 

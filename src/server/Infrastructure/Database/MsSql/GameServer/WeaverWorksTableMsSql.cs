@@ -18,12 +18,11 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] int IDENTITY(1,1) PRIMARY KEY,
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
-                    [GameServerId] UNIQUEIDENTIFIER NULL,
                     [TargetType] int NOT NULL,
                     [Status] int NOT NULL,
-                    [WorkData] NVARCHAR(2048) NOT NULL,
+                    [WorkData] VARBINARY(MAX) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -38,11 +37,41 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
-                @Id UNIQUEIDENTIFIER
+                @Id int
             AS
             begin
                 DELETE FROM dbo.[{Table.TableName}]
                 WHERE Id = @Id;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure DeleteAllForHostId = new()
+    {
+        Table = Table,
+        Action = "DeleteAllForHostId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteAllForHostId]
+                @HostId UNIQUEIDENTIFIER
+            AS
+            begin
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE HostId = @HostId;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure DeleteOlderThan = new()
+    {
+        Table = Table,
+        Action = "DeleteOlderThan",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteOlderThan]
+                @OlderThan DATETIME2
+            AS
+            begin
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE CreatedOn < @OlderThan;
             end"
     };
     
@@ -81,7 +110,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
         Action = "GetById",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
-                @Id UNIQUEIDENTIFIER
+                @Id int
             AS
             begin
                 SELECT TOP 1 w.*
@@ -107,18 +136,34 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
-    public static readonly SqlStoredProcedure GetByGameServerId = new()
+    public static readonly SqlStoredProcedure GetTenWaitingByHostId = new()
     {
         Table = Table,
-        Action = "GetByGameServerId",
+        Action = "GetWaitingByHostId",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByGameServerId]
-                @GameServerId UNIQUEIDENTIFIER
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetWaitingByHostId]
+                @HostId UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT TOP 10 w.*
+                FROM dbo.[{Table.TableName}] w
+                WHERE w.HostId = @HostId AND w.Status = 0
+                ORDER BY w.Id;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure GetAllWaitingByHostId = new()
+    {
+        Table = Table,
+        Action = "GetAllWaitingByHostId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllWaitingByHostId]
+                @HostId UNIQUEIDENTIFIER
             AS
             begin
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.TargetType = 1 AND w.GameServerId = @GameServerId
+                WHERE w.HostId = @HostId AND w.Status = 0
                 ORDER BY w.Id;
             end"
     };
@@ -155,6 +200,23 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetAllCreatedWithin = new()
+    {
+        Table = Table,
+        Action = "GetAllCreatedWithin",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllCreatedWithin]
+                @From DATETIME2,
+                @Until DATETIME2
+            AS
+            begin
+                SELECT w.*
+                FROM dbo.[{Table.TableName}] w
+                WHERE w.CreatedOn > @From AND w.CreatedOn < @Until
+                ORDER BY w.Id;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -162,19 +224,18 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @HostId UNIQUEIDENTIFIER,
-                @GameServerId UNIQUEIDENTIFIER,
                 @TargetType int,
                 @Status int,
-                @WorkData NVARCHAR(2048),
+                @WorkData VARBINARY(MAX),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (HostId, GameServerId, TargetType, Status, WorkData, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (HostId, TargetType, Status, WorkData, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@HostId, @GameServerId, @TargetType, @Status, @WorkData, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                VALUES (@HostId, @TargetType, @Status, @WorkData, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -191,9 +252,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.HostId LIKE '%' + @SearchTerm + '%'
-                    OR w.GameServerId LIKE '%' + @SearchTerm + '%'
-                    OR w.WorkData LIKE '%' + @SearchTerm + '%';
+                WHERE w.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -213,8 +272,6 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
                 WHERE w.HostId LIKE '%' + @SearchTerm + '%'
-                    OR w.GameServerId LIKE '%' + @SearchTerm + '%'
-                    OR w.WorkData LIKE '%' + @SearchTerm + '%'
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -225,12 +282,11 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
         Action = "Update",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
-                @Id UNIQUEIDENTIFIER,
+                @Id int,
                 @HostId UNIQUEIDENTIFIER = null,
-                @GameServerId UNIQUEIDENTIFIER = null,
                 @TargetType int = null,
                 @Status int = null,
-                @WorkData NVARCHAR(2048) = null,
+                @WorkData VARBINARY(MAX) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn datetime2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
@@ -238,7 +294,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET Id = COALESCE(@Id, Id), HostId = COALESCE(@HostId, HostId), GameServerId = COALESCE(@GameServerId, GameServerId),
+                SET HostId = COALESCE(@HostId, HostId),
                     TargetType = COALESCE(@TargetType, TargetType), Status = COALESCE(@Status, Status), WorkData = COALESCE(@WorkData, WorkData),
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
                     LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)

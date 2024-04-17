@@ -1,16 +1,15 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
+using Application.Constants.Communication;
 using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
-using Application.Models.Web;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
-using Application.Services.Example;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.Integrations;
@@ -19,6 +18,7 @@ using Application.Services.System;
 using Application.Settings.AppSettings;
 using Asp.Versioning;
 using Blazored.LocalStorage;
+using Domain.Contracts;
 using Domain.Enums.Database;
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -28,7 +28,6 @@ using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
-using Infrastructure.Services.Example;
 using Infrastructure.Services.GameServer;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
@@ -119,11 +118,11 @@ public static class DependencyInjection
                     break;
                 case DatabaseProviderType.Postgresql:
                     // Need to add database support for application before we can fully support Postgresql
-                    x.UsePostgreSqlStorage(databaseSettings.MsSql);
+                    x.UsePostgreSqlStorage(options => options.UseNpgsqlConnection(databaseSettings.Postgres));
                     throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
                 case DatabaseProviderType.Sqlite:
                     // Need to add database support for application before we can fully support Sqlite
-                    x.UsePostgreSqlStorage(databaseSettings.Sqlite);
+                    x.UsePostgreSqlStorage(options => options.UseNpgsqlConnection(databaseSettings.Sqlite));
                     throw new Exception("Sqlite Database Provider isn't supported, please enter a supported provider in appsettings.json!");
                 default:
                     throw new Exception("Configured Database Provider isn't supported, please enter a supported provider in appsettings.json!");
@@ -153,7 +152,7 @@ public static class DependencyInjection
             .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
         
         services.AddSingleton<IRunningServerState, RunningServerState>();
-        services.AddSingleton<ISerializerService, JsonSerializerService>();
+        services.AddSingleton<ISerializerService, SerializerService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
         services.AddScoped<IWebClientService, WebClientService>();
     }
@@ -225,9 +224,6 @@ public static class DependencyInjection
         services.AddSingleton<IGameService, GameService>();
         services.AddSingleton<IGameServerService, GameServerService>();
         services.AddSingleton<INetworkService, NetworkService>();
-        
-        // Example services
-        services.AddSingleton<IWeatherService, WeatherForecastService>();
     }
 
     private static void AddApiServices(this IServiceCollection services)
@@ -350,23 +346,34 @@ public static class DependencyInjection
                 bearer.RequireHttpsMetadata = true;
                 bearer.SaveToken = true;
                 bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
+                bearer.AutomaticRefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
+                bearer.RefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
+                bearer.SaveToken = true;
 
                 bearer.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = auth =>
                     {
-                        if (auth.Exception is SecurityTokenExpiredException)
+                        var errorMessage = ErrorMessageConstants.Generic.ContactAdmin;
+                        switch (auth.Exception)
                         {
-                            auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
-                            auth.Response.ContentType = "application/json";
-                            var authExpired = JsonConvert.SerializeObject(Result.Fail("Authentication Token has expired, please login again"));
-                            return auth.Response.WriteAsync(authExpired);
+                            case SecurityTokenExpiredException:
+                                auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                                errorMessage = ErrorMessageConstants.Authentication.TokenExpiredError;
+                                break;
+                            case SecurityTokenMalformedException sec:
+                                auth.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                                errorMessage = ErrorMessageConstants.Authentication.TokenMalformedError;
+                                break;
+                            default:
+                                auth.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                                Log.Warning("JWT authentication failed generically: {Error}", auth.Exception.Message);
+                                break;
                         }
-                        
-                        auth.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+
                         auth.Response.ContentType = "application/json";
-                        var generalError = JsonConvert.SerializeObject(Result.Fail("An unhandled error has occurred."));
-                        return auth.Response.WriteAsync(generalError);
+                        var errorResult = JsonConvert.SerializeObject(Result.Fail(errorMessage));
+                        return auth.Response.WriteAsync(errorResult);
                     },
                     OnChallenge = context =>
                     {
@@ -375,16 +382,14 @@ public static class DependencyInjection
                         
                         context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                         context.Response.ContentType = "application/json";
-                        var permissionFailure = JsonConvert.SerializeObject(Result.Fail("You don't have permission to this resource"));
+                        var permissionFailure = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Permissions.PermissionError));
                         return context.Response.WriteAsync(permissionFailure);
-
                     },
                     OnForbidden = context =>
                     {
                         context.Response.StatusCode = (int) HttpStatusCode.Forbidden;
                         context.Response.ContentType = "application/json";
-                        var result = JsonConvert.SerializeObject(
-                            Result.Fail("You hath been forbidden, do thy bidding my masta, it's a disasta, skywalka we're afta!"));
+                        var result = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Permissions.Forbidden));
                         return context.Response.WriteAsync(result);
                     },
                 };

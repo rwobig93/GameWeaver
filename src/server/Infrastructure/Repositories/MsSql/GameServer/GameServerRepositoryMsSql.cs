@@ -1,4 +1,5 @@
-﻿using Application.Helpers.Lifecycle;
+﻿using Application.Constants.Communication;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigurationItem;
@@ -258,7 +259,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var foundGameServer = await GetByIdAsync(id);
             if (!foundGameServer.Succeeded || foundGameServer.Result is null)
-                throw new Exception(foundGameServer.ErrorMessage);
+                throw new Exception(ErrorMessageConstants.Generic.NotFound);
             var gameServerUpdate = foundGameServer.Result.ToUpdate();
             
             // Update user w/ a property that is modified so we get the last updated on/by for the deleting user

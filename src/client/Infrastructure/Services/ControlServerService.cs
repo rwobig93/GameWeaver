@@ -1,14 +1,13 @@
-﻿using System.Net.Http.Headers;
-using System.Text;
+﻿using System.Text;
 using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;
 using Application.Responses.Host;
 using Application.Responses.Monitoring;
 using Application.Services;
-using Application.Services.System;
 using Application.Settings;
 using Domain.Contracts;
+using Domain.Models.ControlServer;
 using Domain.Models.Host;
 using Microsoft.Extensions.Options;
 
@@ -31,7 +30,6 @@ public class ControlServerService : IControlServerService
         _dateTimeService = dateTimeService;
         _logger = logger;
         _generalConfig = generalConfig.Value;
-        // TODO: _authConfig isn't being updated when the file is being changed
         _authConfig = authConfig;
     }
 
@@ -49,7 +47,7 @@ public class ControlServerService : IControlServerService
         try
         {
             // Hit the health monitoring endpoint of the control server to validate the server is up
-            var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
+            var httpClient = _httpClientFactory.CreateClient(HttpConstants.Unauthenticated);
             var response = await httpClient.GetAsync(ApiConstants.Monitoring.Health);
             ServerIsUp = response.IsSuccessStatusCode;
             if (!ServerIsUp)
@@ -59,7 +57,7 @@ public class ControlServerService : IControlServerService
             }
 
             // Since the control server is up we'll parse the response and indicate if the server is reporting an unhealthy state for troubleshooting
-            var convertedResponse = _serializerService.Deserialize<HealthCheckResponse>(await response.Content.ReadAsStringAsync());
+            var convertedResponse = _serializerService.DeserializeJson<HealthCheckResponse>(await response.Content.ReadAsStringAsync());
             if (convertedResponse.status != "Healthy")
                 _logger.Warning("Control Server is up but is in an unhealthy state");
         }
@@ -78,26 +76,33 @@ public class ControlServerService : IControlServerService
     /// <remarks>
     ///   - Register URL is cleared in the settings file when a successful registration completes
     ///   - Will always do a new registration confirmation if Register URL is valid and isn't empty
+    ///   - Will attempt to get a token if register url is empty
     /// </remarks>
     /// <returns>Host and key pair used to authenticate with the control server</returns>
     public async Task<IResult<HostRegisterResponse>> RegistrationConfirm()
     {
-        // Client should already be registered if there is no register URL and we have a valid Id and Key pair
-        var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out _);
-        if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl) && hostIdIsValid && !string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
+        // Client should already be registered if there is no register URL, and we have a valid id and Key pair, so we'll attempt to get a token
+        if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl))
+        {
+            var tokenResult = await GetToken();
+            if (!tokenResult.Succeeded)
+                return await Result<HostRegisterResponse>.FailAsync(tokenResult.Messages);
+            
             return await Result<HostRegisterResponse>.SuccessAsync();
+        }
+        
         if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
             return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");
 
         // Prep confirmation request
         var confirmRequest = ApiHelpers.GetRequestFromUrl(_authConfig.CurrentValue.RegisterUrl);
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.Serialize(confirmRequest), Encoding.UTF8, "application/json");
+        var payload = new StringContent(_serializerService.SerializeJson(confirmRequest), Encoding.UTF8, "application/json");
 
         // Handle registration confirmation to the control server
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.RegistrationConfirm, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
-        var convertedResponse = _serializerService.Deserialize<HostRegisterResponse>(responseContent);
+        var convertedResponse = _serializerService.DeserializeJson<HostRegisterResponse>(responseContent);
         if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
             return await Result<HostRegisterResponse>.FailAsync(convertedResponse.Messages);
 
@@ -123,6 +128,12 @@ public class ControlServerService : IControlServerService
     /// <returns>Token, Refresh Token and Token Expiration in UTC/GMT</returns>
     public async Task<IResult<HostAuthResponse>> GetToken()
     {
+        if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Host) && string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
+        {
+            _logger.Verbose("HostId and key is empty so we haven't registered yet, waiting for registration");
+            return await Result<HostAuthResponse>.SuccessAsync();
+        }
+        
         var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out var parsedHostId);
         if (!hostIdIsValid || string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
             return await Result<HostAuthResponse>.FailAsync("HostId or key is invalid, please fix the host/key pair or do a new registration");
@@ -135,12 +146,12 @@ public class ControlServerService : IControlServerService
         };
         // We must use an unauthenticated client to prevent a stack overflow as the token delegate handler runs with an authenticated client
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.Unauthenticated);
-        var payload = new StringContent(_serializerService.Serialize(tokenRequest), Encoding.UTF8, "application/json");
+        var payload = new StringContent(_serializerService.SerializeJson(tokenRequest), Encoding.UTF8, "application/json");
 
         // Handle the token response
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.GetToken, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
-        var convertedResponse = _serializerService.Deserialize<HostAuthResponse>(responseContent);
+        var convertedResponse = _serializerService.DeserializeJson<HostAuthResponse>(responseContent);
         if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
             return await Result<HostAuthResponse>.FailAsync(convertedResponse.Messages);
 
@@ -167,7 +178,7 @@ public class ControlServerService : IControlServerService
             return await Result.SuccessAsync();
         }
         
-        // Token is expired or within expiration threshold so we'll get a new token
+        // Token is expired or within expiration threshold, so we'll get a new token
         var updateTokenRequest = await GetToken();
         if (!updateTokenRequest.Succeeded)
             return await Result.FailAsync(updateTokenRequest.Messages);
@@ -175,19 +186,52 @@ public class ControlServerService : IControlServerService
         return await Result.SuccessAsync();
     }
 
+    public class JsonGenericRequest
+    {
+        public JsonGenericRequest(object request)
+        {
+            this.Request = request;
+        }
+
+        public object Request { get; set; }
+    }
+
     /// <summary>
     /// Send check-in and host statistics to the control server, also get back any host work to be done
     /// </summary>
     /// <param name="request">Host statistics to be sent to the control server</param>
     /// <returns></returns>
-    public async Task<IResult> Checkin(HostCheckInRequest request)
+    public async Task<IResult<IEnumerable<WeaverWork>>> Checkin(HostCheckInRequest request)
+    {
+        if (!RegisteredWithServer) { return await Result<IEnumerable<WeaverWork>>.SuccessAsync(); }
+        
+        var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
+        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
+
+        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+            return await Result<IEnumerable<WeaverWork>>.FailAsync(responseContent);
+
+        var deserializedResponse = _serializerService.DeserializeJson<HostCheckInResponse>(responseContent);
+        return await Result<IEnumerable<WeaverWork>>.SuccessAsync(deserializedResponse.Data);
+    }
+
+    /// <summary>
+    /// Send status update to the control server for the given work
+    /// </summary>
+    /// <param name="request">Update request with details regarding the work needing a status update</param>
+    /// <returns></returns>
+    public async Task<IResult> WorkStatusUpdate(WeaverWorkUpdateRequest request)
     {
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
         
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
-        var payload = new StringContent(_serializerService.Serialize(request), Encoding.UTF8, "application/json");
-
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
+        var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
+        
+        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             return await Result.FailAsync(responseContent);

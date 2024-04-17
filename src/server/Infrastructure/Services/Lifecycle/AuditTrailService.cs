@@ -1,9 +1,9 @@
 ﻿using Application.Mappers.Lifecycle;
 using Application.Models.Lifecycle;
-using Application.Models.Web;
 using Application.Repositories.Lifecycle;
 using Application.Services.Lifecycle;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Newtonsoft.Json;
@@ -35,7 +35,7 @@ public class AuditTrailService : IAuditTrailService
             convertedTrail.Before = string.IsNullOrWhiteSpace(auditTrailDb.Before)
                 ? new Dictionary<string, string>()
                 : _serializer
-                    .Deserialize<Dictionary<string, string>>(auditTrailDb.Before);
+                    .DeserializeJson<Dictionary<string, string>>(auditTrailDb.Before);
             convertedTrail.After = JsonConvert.DeserializeObject<Dictionary<string, string>>(auditTrailDb.After) ??
                                    new Dictionary<string, string>();
         }

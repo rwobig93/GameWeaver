@@ -46,6 +46,9 @@ public class AuthStateProvider : AuthenticationStateProvider
 
             if (currentPrincipal == UserConstants.ExpiredPrincipal)
                 return new AuthenticationState(UserConstants.ExpiredPrincipal);
+
+            if (string.IsNullOrWhiteSpace(_authToken))
+                return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
             
             // User is valid and not token isn't expired
             return GenerateNewAuthenticationState(_authToken);
@@ -93,11 +96,9 @@ public class AuthStateProvider : AuthenticationStateProvider
         try
         {
             var headerHasValue = _contextAccessor.HttpContext!.Request.Headers.TryGetValue("Authorization", out var bearer);
-            if (!headerHasValue)
-                return "";
-            
-            // Authorization header should always be: <scheme> <token>, which in our case is: Bearer JWT
-            return bearer.ToString().Split(' ')[1];
+            return !headerHasValue ? "" :
+                // Authorization header should always be: <scheme> <token>, which in our case is: Bearer JWT
+                bearer.ToString().Split(' ')[1];
         }
         catch
         {
@@ -109,11 +110,11 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         try
         {
-            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken) ?? string.Empty;
         }
         catch
         {
-            // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
+            // Since Blazor Server pre-rendering has the state received twice, and we can't have JSInterop run while rendering is occurring
             //   we have to do this to keep our sanity, would love to find a working solution to this at some point
             return "";
         }
@@ -121,20 +122,7 @@ public class AuthStateProvider : AuthenticationStateProvider
 
     public ClaimsPrincipal AuthenticationStateUser { get; private set; } = null!;
 
-    public void IndicateUserAuthenticationSuccess(string userName)
-    {
-        var authenticatedUser = new ClaimsPrincipal(
-            new ClaimsIdentity(new[]
-            {
-                new Claim(ClaimTypes.Name, userName)
-            }, JwtBearerDefaults.AuthenticationScheme));
-
-        Task.FromResult(new AuthenticationState(authenticatedUser));
-
-        // NotifyAuthenticationStateChanged(authState);
-    }
-
-    public void DeauthenticateUser()
+    public void DeAuthenticateUser()
     {
         try
         {
@@ -143,7 +131,7 @@ public class AuthStateProvider : AuthenticationStateProvider
         }
         catch (Exception ex)
         {
-            _logger.Warning("Error occurred attempting to deauthenticate user: {ErrorMessage}", ex.Message);
+            _logger.Warning("Error occurred attempting to de-authenticate user: {ErrorMessage}", ex.Message);
         }
 
         // NotifyAuthenticationStateChanged(authState);

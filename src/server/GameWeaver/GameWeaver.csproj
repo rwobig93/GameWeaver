@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net7.0</TargetFramework>
-        <LangVersion>11</LangVersion>
+        <TargetFramework>net8.0</TargetFramework>
+        <LangVersion>default</LangVersion>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
@@ -17,17 +17,17 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Blazorade.Core" Version="3.0.0" />
-      <PackageReference Include="Hangfire" Version="1.8.3" />
-      <PackageReference Include="Hangfire.Core" Version="1.8.3" />
-      <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.9" />
-      <PackageReference Include="MudBlazor" Version="6.7.0" />
+      <PackageReference Include="Hangfire" Version="1.8.12" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.12" />
+      <PackageReference Include="MemoryPack" Version="1.21.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.4" />
+      <PackageReference Include="MudBlazor" Version="6.19.1" />
       <PackageReference Include="OAuth2" Version="0.10.3" />
-      <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
-      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0" />
+      <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
       <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
       <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-      <PackageReference Include="Serilog.Sinks.Seq" Version="5.2.2" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -41,6 +41,8 @@
       <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\ICON-LICENSE" />
       <_ContentIncludedByDefault Remove="wwwroot\css\open-iconic\README.md" />
       <_ContentIncludedByDefault Remove="Components\Example\SurveyPromptComponent.razor" />
+      <_ContentIncludedByDefault Remove="Pages\Example\Counter.razor" />
+      <_ContentIncludedByDefault Remove="Pages\Example\WeatherData.razor" />
     </ItemGroup>
 
     <ItemGroup>

@@ -65,7 +65,9 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT h.*
-                FROM dbo.[{Table.TableName}] h;
+                FROM dbo.[{Table.TableName}] h
+                WHERE h.IsDeleted = 0
+                ORDER BY h.Id;
             end"
     };
 
@@ -81,6 +83,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
+                WHERE h.IsDeleted = 0
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -163,11 +166,12 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.Hostname LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0 AND h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
-                    OR h.PublicIp LIKE '%' + @SearchTerm + '%';
+                    OR h.PublicIp LIKE '%' + @SearchTerm + '%'
+                ORDER BY h.Id;
             end"
     };
     
@@ -186,7 +190,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.Hostname LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0 AND h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'

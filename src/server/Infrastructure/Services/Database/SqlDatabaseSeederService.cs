@@ -1,5 +1,4 @@
 using System.Data;
-using System.Data.SqlClient;
 using Application.Constants.Identity;
 using Application.Database;
 using Application.Database.MsSql;
@@ -27,6 +26,7 @@ using Domain.Models.Database;
 using Domain.Models.Identity;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Data.SqlClient;
 
 namespace Infrastructure.Services.Database;
 
@@ -141,7 +141,7 @@ public class SqlDatabaseSeederService : IHostedService
 
     public async Task StopAsync(CancellationToken cancellationToken)
     {
-        // We don't have any cleanup required so we'll just return a completed task
+        // We don't have any cleanup required, so we'll just return a completed task
         await Task.CompletedTask;
     }
 

@@ -4,10 +4,10 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Models.Web;
 using Application.Requests.v1.Identity.User;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
+using Domain.Contracts;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -51,17 +51,17 @@ public static class UserEndpoints
     /// <param name="accountService"></param>
     /// <returns></returns>
     [AllowAnonymous]
-    private static async Task<IResult> Register(UserRegisterRequest registerRequest, IAppAccountService accountService)
+    private static async Task<IWebResult> Register(UserRegisterRequest registerRequest, IAppAccountService accountService)
     {
         try
         {
             var request = await accountService.RegisterAsync(registerRequest);
-            if (!request.Succeeded) return await Result.FailAsync(request.Messages);
-            return await Result.SuccessAsync("Successfully registered, please check the email provided for details!");
+            if (!request.Succeeded) return await WebResult.ResultAsync(await Result.FailAsync(request.Messages));
+            return await WebResult.ResultAsync(await Result.SuccessAsync("Successfully registered, please check the email provided for details!"));
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync(ex.Message);
+            return await WebResult.FailureAsync(await Result.FailAsync(ex.Message));
         }
     }
 

@@ -2,7 +2,9 @@
 
 public interface ISerializerService
 {
-    string Serialize<T>(T rawObject);
-    T Deserialize<T>(string rawJson);
-    T Deserialize<T>(byte[] rawJson);
+    string SerializeJson<T>(T rawObject);
+    T DeserializeJson<T>(string rawJson);
+    T DeserializeJson<T>(byte[] rawJson);
+    byte[] SerializeMemory<T>(T rawObject);
+    T? DeserializeMemory<T>(byte[] rawMemory);
 }

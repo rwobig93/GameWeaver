@@ -1,5 +1,5 @@
 ﻿using Application.Models.GameServer.Network;
-using Application.Models.Web;
+using Domain.Contracts;
 using Domain.Enums.GameServer;
 
 namespace Application.Services.GameServer;

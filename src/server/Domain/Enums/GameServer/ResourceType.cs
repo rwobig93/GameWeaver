@@ -10,5 +10,6 @@ public enum ResourceType
     ScriptFile = 5,
     Executable = 6,
     SaveData = 7,
-    SavePathRoot = 8
+    SavePathRoot = 8,
+    BackupPath = 9
 }

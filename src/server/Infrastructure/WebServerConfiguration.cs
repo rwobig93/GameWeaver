@@ -1,5 +1,5 @@
-﻿using Application.Api.v1.Api;
-using Application.Api.v1.Example;
+﻿using System.Diagnostics.CodeAnalysis;
+using Application.Api.v1.Api;
 using Application.Api.v1.GameServer;
 using Application.Api.v1.Identity;
 using Application.Api.v1.Lifecycle;
@@ -25,6 +25,7 @@ public static class WebServerConfiguration
     // Certificate loading via appsettings.json =>
     //   https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-6.0
     
+    [SuppressMessage("ReSharper.DPA", "DPA0008: Large number of DB connections")]
     public static void ConfigureWebServices(this WebApplication app)
     {
         app.ConfigureForEnvironment();
@@ -36,7 +37,6 @@ public static class WebServerConfiguration
         app.ConfigureApiServices();
         app.ConfigureIdentityServices();
         
-        app.MapExampleApiEndpoints();
         app.MapApplicationApiEndpoints();
         
         app.AddScheduledJobs();
@@ -74,6 +74,13 @@ public static class WebServerConfiguration
             app.UseDeveloperExceptionPage();
             return;
         }
+        
+        // TODO: Register headers and trusted proxies from general configuration
+        // app.UseForwardedHeaders(new ForwardedHeadersOptions
+        // {
+        //     ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+        //                        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+        // });
         
         app.UseExceptionHandler("/Error");
         app.UseHsts();
@@ -167,17 +174,14 @@ public static class WebServerConfiguration
         app.MapEndpointsApi();
     }
 
-    private static void MapExampleApiEndpoints(this IEndpointRouteBuilder app)
-    {
-        // Map all example API endpoints
-        app.MapEndpointsWeather();
-    }
-
     private static void MapApplicationApiEndpoints(this IEndpointRouteBuilder app)
     {
         // Map all other endpoints for the application (not identity and not examples)
         app.MapEndpointsAudit();
         app.MapEndpointsHost();
+        app.MapEndpointsGameserver();
+        app.MapEndpointsGame();
+        app.MapEndpointsNetwork();
     }
 
     private static void AddScheduledJobs(this IHost app)

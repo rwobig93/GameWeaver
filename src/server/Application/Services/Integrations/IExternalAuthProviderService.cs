@@ -1,5 +1,5 @@
 ﻿using Application.Models.Identity.External;
-using Application.Models.Web;
+using Domain.Contracts;
 using Domain.Enums.Integration;
 
 namespace Application.Services.Integrations;

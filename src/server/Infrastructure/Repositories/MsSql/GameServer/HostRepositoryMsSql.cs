@@ -625,7 +625,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            await _database.SaveDataReturnId(HostCheckInTableMsSql.Insert, createObject);
+            await _database.SaveDataReturnIntId(HostCheckInTableMsSql.Insert, createObject);
 
             actionReturn.Succeed();
         }
@@ -777,7 +777,7 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(int id)
     {
         DatabaseActionResult<WeaverWorkDb> actionReturn = new();
 
@@ -813,19 +813,37 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByGameServerIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWaitingWorkByHostIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
 
         try
         {
             var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
-                WeaverWorksTableMsSql.GetByGameServerId, new {GameServerId = id});
+                WeaverWorksTableMsSql.GetTenWaitingByHostId, new {HostId = id});
             actionReturn.Succeed(foundWork);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetByGameServerId.Path, ex.Message);
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetTenWaitingByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverAllWaitingWorkByHostIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetAllWaitingByHostId, new {HostId = id});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetAllWaitingByHostId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -867,20 +885,33 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateWeaverWorkAsync(WeaverWorkCreate createObject)
+    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkCreatedWithinAsync(DateTime from, DateTime until)
     {
-        DatabaseActionResult<Guid> actionReturn = new();
+        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+
+        try
+        {
+            var foundWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+                WeaverWorksTableMsSql.GetByStatus, new {From = from, Until = until});
+            actionReturn.Succeed(foundWork);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.GetByStatus.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> CreateWeaverWorkAsync(WeaverWorkCreate createObject)
+    {
+        DatabaseActionResult<int> actionReturn = new();
 
         try
         {
             createObject.CreatedOn = _dateTime.NowDatabaseTime;
 
-            var createdId = await _database.SaveDataReturnId(WeaverWorksTableMsSql.Insert, createObject);
-
-            var foundWork = await GetWeaverWorkByIdAsync(createdId);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundWork.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundWork.Result!.ToSlim());
+            var createdId = await _database.SaveDataReturnIntId(WeaverWorksTableMsSql.Insert, createObject);
 
             actionReturn.Succeed(createdId);
         }
@@ -905,6 +936,57 @@ public class HostRepositoryMsSql : IHostRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, WeaverWorksTableMsSql.Update.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteWeaverWorkAsync(int id)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowsDeleted = await _database.SaveData(WeaverWorksTableMsSql.Delete, new {Id = id});
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.Delete.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteWeaverWorkForHostAsync(Guid hostId)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowsDeleted = await _database.SaveData(WeaverWorksTableMsSql.DeleteAllForHostId, new {HostId = hostId});
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.DeleteAllForHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowsDeleted = await _database.SaveData(WeaverWorksTableMsSql.DeleteOlderThan, new {OlderThan = olderThan});
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.DeleteOlderThan.Path, ex.Message);
         }
 
         return actionReturn;

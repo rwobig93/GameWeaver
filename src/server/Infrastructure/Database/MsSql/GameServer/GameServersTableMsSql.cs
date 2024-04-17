@@ -71,7 +71,9 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT g.*
-                FROM dbo.[{Table.TableName}] g;
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
+                ORDER BY g.Id;
             end"
     };
 
@@ -87,6 +89,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
+                WHERE g.IsDeleted = 0
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -212,18 +215,14 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @ServerState int,
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
-                @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn datetime2,
-                @IsDeleted BIT,
-                @DeletedOn datetime2
+                @IsDeleted BIT
             AS
             begin
                 INSERT into dbo.[{Table.TableName}]  (OwnerId, HostId, GameId, GameProfileId, ServerName, Password, PasswordRcon, PasswordAdmin, PublicIp, PrivateIp,
-                                                      ExternalHostname, PortGame, PortQuery, PortRcon, Modded, Private, ServerState, CreatedBy, CreatedOn, LastModifiedBy,
-                                                      LastModifiedOn, IsDeleted, DeletedOn)
+                                                      ExternalHostname, PortGame, PortQuery, PortRcon, Modded, Private, ServerState, CreatedBy, CreatedOn, IsDeleted)
                 OUTPUT INSERTED.Id
                 VALUES (@OwnerId, @HostId, @GameId, @GameProfileId, @ServerName, @Password, @PasswordRcon, @PasswordAdmin, @PublicIp, @PrivateIp, @ExternalHostname, @PortGame,
-                        @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                        @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @IsDeleted);
             end"
     };
     
@@ -240,7 +239,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.OwnerId LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.HostId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.GameProfileId LIKE '%' + @SearchTerm + '%'
@@ -266,7 +265,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.OwnerId LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0 AND g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.HostId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.GameProfileId LIKE '%' + @SearchTerm + '%'

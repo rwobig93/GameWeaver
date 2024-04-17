@@ -1,7 +1,8 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
-using System.Net;
-using Domain.Models;
+using Application.Constants;
+using Domain.Models.GameServer;
+using Domain.Models.Host;
 using Serilog;
 
 namespace Application.Helpers;
@@ -67,7 +68,7 @@ public static class SteamCmdHelper
             {
                 StartInfo = new ProcessStartInfo()
                 {
-                    FileName = OsHelper.GetSteamCmdPath(),
+                    FileName = OsHelpers.GetSteamCmdPath(),
                     Arguments = command,
                     UseShellExecute = false,
                     CreateNoWindow = true,
@@ -104,7 +105,7 @@ public static class SteamCmdHelper
         {
             StartInfo = new ProcessStartInfo()
             {
-                FileName = OsHelper.GetSteamCmdPath(),
+                FileName = OsHelpers.GetSteamCmdPath(),
                 Arguments = runSteamDto.Command,
                 UseShellExecute = false,
                 CreateNoWindow = true,
@@ -184,7 +185,7 @@ public static class SteamCmdHelper
     public static void ResetSteamCmdToFresh()
     {
         Log.Verbose("Starting ResetSteamCMDToFresh()");
-        var steamDir = new DirectoryInfo(OsHelper.GetSteamCmdDirectory());
+        var steamDir = new DirectoryInfo(OsHelpers.GetSteamCmdDirectory());
         foreach (var file in steamDir.EnumerateFiles())
         {
             try
@@ -212,14 +213,14 @@ public static class SteamCmdHelper
         }
 
         // TODO: Validate Log for static class usage vs. service that would be called by a Singleton service
-        Log.Information($"Finished resetting steam directory to fresh: {OsHelper.GetSteamCmdDirectory()}");
+        Log.Information($"Finished resetting steam directory to fresh: {OsHelpers.GetSteamCmdDirectory()}");
     }
 
     public static void CleanupCache()
     {
         // TODO: Remap paths based on instance, validate source or aggregation
-        Log.Verbose($"Starting CleanupCache() at {OsHelper.GetSteamCachePath()}");
-        DirectoryInfo cacheFolder = new DirectoryInfo(OsHelper.GetSteamCachePath());
+        Log.Verbose($"Starting CleanupCache() at {OsHelpers.GetSteamCachePath()}");
+        DirectoryInfo cacheFolder = new DirectoryInfo(OsHelpers.GetSteamCachePath());
         foreach (FileInfo file in cacheFolder.EnumerateFiles())
         {
             Log.Debug($"Deleting file: {file.FullName}");
@@ -232,13 +233,13 @@ public static class SteamCmdHelper
             dir.Delete(true);
         }
 
-        Log.Information($"Finished cleaning up cache folder: {OsHelper.GetSteamCachePath()}");
+        Log.Information($"Finished cleaning up cache folder: {OsHelpers.GetSteamCachePath()}");
     }
 
     public static void ExtractSteamCmd()
     {
         Log.Verbose("Starting ExtractSteamCMD()");
-        var steamCmdDir = OsHelper.GetSteamCmdDirectory();
+        var steamCmdDir = OsHelpers.GetSteamCmdDirectory();
         if (Directory.Exists(steamCmdDir))
         {
             try
@@ -270,7 +271,7 @@ public static class SteamCmdHelper
 
         try
         {
-            ZipFile.ExtractToDirectory(Path.Combine(OsHelper.GetSteamCachePath(), "steamcmd.zip"), steamCmdDir);
+            ZipFile.ExtractToDirectory(Path.Combine(OsHelpers.GetSteamCachePath(), "steamcmd.zip"), steamCmdDir);
         }
         catch (Exception ex)
         {
@@ -280,23 +281,15 @@ public static class SteamCmdHelper
         Log.Information("Finished extracting SteamCMD to source folder");
     }
 
-    public static void DownloadSteamCmd()
+    public static async Task DownloadSteamCmd()
     {
         Log.Verbose("Starting DownloadSteamCMD()");
-        // TODO: Convert stack methods to async and move to HttpClient instead of WebClient
-        // using (var httpClient = new HttpClient())
-        // {
-        //     var responseStream = await httpClient.GetStreamAsync(Constants.URLSteamCMDDownload);
-        //     using var fileStream = new FileStream(Path.Combine(Constants.PathCache, "steamcmd.zip"), FileMode.Create);
-        //     await responseStream.CopyToAsync(fileStream);
-        // }
-#pragma warning disable SYSLIB0014
-        using (var webClient = new WebClient())
-#pragma warning restore SYSLIB0014
+
+        using (var httpClient = new HttpClient())
         {
-            // webClient.DownloadProgressChanged += Events.WebClient_DownloadProgressChanged;
-            // webClient.DownloadFileCompleted += Events.WebClient_DownloadFileCompleted;
-            webClient.DownloadFile(OsHelper.GetDownloadDirectory(), Path.Combine(OsHelper.GetSteamCachePath(), "steamcmd.zip"));
+            var responseStream = await httpClient.GetStreamAsync(SteamConstants.SteamCmdDownloadUrl);
+            await using var fileStream = new FileStream(Path.Combine(OsHelpers.GetSteamCachePath(), "steamcmd.zip"), FileMode.Create);
+            await responseStream.CopyToAsync(fileStream);
         }
 
         Log.Debug("Finished downloading SteamCMD");

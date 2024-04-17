@@ -33,25 +33,748 @@
             <param name="currentUserService"></param>
             <returns>Basic user information</returns>
         </member>
-        <member name="T:Application.Api.v1.Example.WeatherEndpoints">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.MapEndpointsGame(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
-            API endpoints for the example weather service
+            Registers the API endpoints
+            </summary>
+            <param name="app">Running application</param>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all games with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of games</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get total game count
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total games</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by id
+            </summary>
+            <param name="id">Game Id</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetBySteamName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by steam name
+            </summary>
+            <param name="steamName">Game steam name</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetByFriendlyName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by friendly name
+            </summary>
+            <param name="friendlyName">Game friendly name</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetBySteamGameId(System.Int32,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by steam id
+            </summary>
+            <param name="id">Game steam id</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetBySteamToolId(System.Int32,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game by steam tool id
+            </summary>
+            <param name="id">Game steam tool id</param>
+            <param name="gameService"></param>
+            <returns>Game object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Create(Application.Models.GameServer.Game.GameCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a game
+            </summary>
+            <param name="createObject">Required properties to create a game</param>
+            <param name="gameService"></param>
+            <returns>Id of the created game</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Update(Application.Models.GameServer.Game.GameUpdate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Update a game's properties
+            </summary>
+            <param name="updateObject"></param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Delete(System.Guid,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete a game
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Search(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search a game by it's properties
+            </summary>
+            <param name="searchText">Text to search with</param>
+            <param name="gameService"></param>
+            <returns>List of games</returns>
+            <remarks>Searches by: FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllDevelopersPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all developers with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDevelopersCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get count of total developers
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDeveloperById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a developers by id
+            </summary>
+            <param name="id">Developer id</param>
+            <param name="gameService"></param>
+            <returns>Developer object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDeveloperByName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a developer by name
+            </summary>
+            <param name="name">Developer name</param>
+            <param name="gameService"></param>
+            <returns>Developer object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetDevelopersByGameId(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get developers by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <returns>List of developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateDeveloper(Application.Models.GameServer.Developers.DeveloperCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a developer
+            </summary>
+            <param name="createObject">Required properties to create a developer</param>
+            <param name="gameService"></param>
+            <returns>Id of the created developer</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteDeveloper(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Delete a developer
+            </summary>
+            <param name="id">Developer id</param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchDevelopers(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search developers by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameService"></param>
+            <returns>List of developers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllPublishersPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all publishers with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of publishers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublishersCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get total count of publishers
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total publishers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublisherById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a publisher by id
+            </summary>
+            <param name="id">Publisher id</param>
+            <param name="gameService"></param>
+            <returns>Publisher object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublisherByName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a publisher by name
+            </summary>
+            <param name="name">Publisher name</param>
+            <param name="gameService"></param>
+            <returns>Publisher object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetPublishersByGameId(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get publishers by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <returns>List of publishers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreatePublisher(Application.Models.GameServer.Publishers.PublisherCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a publisher
+            </summary>
+            <param name="createObject">Required properties to create a publisher</param>
+            <param name="gameService"></param>
+            <returns>Id of the created publisher</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeletePublisher(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Delete a publisher
+            </summary>
+            <param name="id">Publisher id</param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchPublishers(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search for publishers by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameService"></param>
+            <returns>List of publishers</returns>
+            <remarks>Searches by: Name</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetAllGameGenresPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all game genres with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameService"></param>
+            <param name="appConfig"></param>
+            <returns>List of game genres</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenresCount(Application.Services.GameServer.IGameService)">
+            <summary>
+            Get total count of game genres
+            </summary>
+            <param name="gameService"></param>
+            <returns>Count of total game genres</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenreById(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game genre by id
+            </summary>
+            <param name="id">Game genre id</param>
+            <param name="gameService"></param>
+            <returns>Game genre object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenreByName(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get a game genre by name
+            </summary>
+            <param name="name">Game genre name</param>
+            <param name="gameService"></param>
+            <returns>Game genre object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.GetGameGenresByGameId(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Get game genres by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameService"></param>
+            <returns>List of game genres</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateGameGenre(Application.Models.GameServer.GameGenre.GameGenreCreate,Application.Services.GameServer.IGameService)">
+            <summary>
+            Create a game genre
+            </summary>
+            <param name="createObject">Requires properties to create a game genre</param>
+            <param name="gameService"></param>
+            <returns>Id of the created game genre</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteGameGenre(System.Guid,Application.Services.GameServer.IGameService)">
+            <summary>
+            Delete a game genre
+            </summary>
+            <param name="id">Game genre id</param>
+            <param name="gameService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchGameGenres(System.String,Application.Services.GameServer.IGameService)">
+            <summary>
+            Search game genres by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameService"></param>
+            <returns>List of game genres</returns>
+            <remarks>Searches by: Name, Description</remarks>
+        </member>
+        <member name="T:Application.Api.v1.GameServer.GameServerEndpoints">
+            <summary>
+            Endpoints dealing with game server operations
             </summary>
         </member>
-        <member name="M:Application.Api.v1.Example.WeatherEndpoints.MapEndpointsWeather(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.MapEndpointsGameserver(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
-            Registers the example weather endpoints
+            Registers the API endpoints
             </summary>
-            <param name="app"></param>
+            <param name="app">Running application</param>
         </member>
-        <member name="M:Application.Api.v1.Example.WeatherEndpoints.GetForecastAsync(System.Nullable{System.DateOnly},System.Nullable{System.Int32},Application.Services.Example.IWeatherService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
-            Get randomly generated example weather data
+            Get all game servers with pagination
             </summary>
-            <param name="startDate">Inclusive date to start with for weather retrieval</param>
-            <param name="weatherCount">Number of days to get weather data for</param>
-            <param name="weatherForecast"></param>
-            <returns>List of weather data for each day</returns>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameServerService"></param>
+            <param name="appConfig"></param>
+            <returns>List of game servers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetCount(Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get the total game server count
+            </summary>
+            <param name="gameServerService"></param>
+            <returns>Count of total game servers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetById(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a game server by id
+            </summary>
+            <param name="id">Id of the game server</param>
+            <param name="gameServerService"></param>
+            <returns>Game server object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByServerName(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a game server by name
+            </summary>
+            <param name="serverName">Game server name</param>
+            <param name="gameServerService"></param>
+            <returns>Game server object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameId(System.Int32,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get game servers by game id
+            </summary>
+            <param name="id">Id of a game</param>
+            <param name="gameServerService"></param>
+            <returns>List of game servers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameProfileId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get game servers by game profile id
+            </summary>
+            <param name="id">Game profile id</param>
+            <param name="gameServerService"></param>
+            <returns>List of game servers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByHostId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get game servers by host id
+            </summary>
+            <param name="id">Host id</param>
+            <param name="gameServerService"></param>
+            <returns>List of game servers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByOwnerId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get game servers by the owner id
+            </summary>
+            <param name="id">Id of the owner</param>
+            <param name="gameServerService"></param>
+            <returns>List of game servers</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Create(Application.Models.GameServer.GameServer.GameServerCreate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Create a game server
+            </summary>
+            <param name="createObject">Required properties to create a game server</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns>Id of the created game server</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Update(Application.Models.GameServer.GameServer.GameServerUpdate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Update a game server's properties
+            </summary>
+            <param name="updateObject">Required properties to update a game server</param>
+            <param name="gameServerService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Delete(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete a game server
+            </summary>
+            <param name="id">Id of the game server</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Search(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Search for game servers
+            </summary>
+            <param name="searchText">Text to search</param>
+            <param name="gameServerService"></param>
+            <returns>List of matching game servers</returns>
+            <remarks>Searches by: OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAllConfigurationItemsPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all configuration items with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameServerService"></param>
+            <param name="appConfig"></param>
+            <returns>List of configuration items</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetConfigurationItemsCount(Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get total configuration items count
+            </summary>
+            <param name="gameServerService"></param>
+            <returns>Count of configuration items</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetConfigurationItemById(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a configuration item by id
+            </summary>
+            <param name="id">Configuration item id</param>
+            <param name="gameServerService"></param>
+            <returns>Configuration item object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetConfigurationItemsByGameProfileId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get configuration times by game profile id
+            </summary>
+            <param name="id">Game profile id</param>
+            <param name="gameServerService"></param>
+            <returns>List of configuration items</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateConfigurationItem(Application.Models.GameServer.ConfigurationItem.ConfigurationItemCreate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Create a configuration item
+            </summary>
+            <param name="createObject">Required properties to create a configuration item</param>
+            <param name="gameServerService"></param>
+            <returns>Id of the created configuration item</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateConfigurationItem(Application.Models.GameServer.ConfigurationItem.ConfigurationItemUpdate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Update a configuration items properties
+            </summary>
+            <param name="updateObject">Required properties to update a configuration item</param>
+            <param name="gameServerService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteConfigurationItem(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Delete a configuration item
+            </summary>
+            <param name="id">Configuration item id</param>
+            <param name="gameServerService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchConfigurationItems(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Search for configuration items by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameServerService"></param>
+            <returns>List of matching configuration items</returns>
+            <remarks>Searches by: GameProfileId, Path, Category, Key, Value</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAllLocalResourcesPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all local resources with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameServerService"></param>
+            <param name="appConfig"></param>
+            <returns>List of local resources</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetLocalResourcesCount(Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get total local resources count
+            </summary>
+            <param name="gameServerService"></param>
+            <returns>Count of total resources</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetLocalResourceById(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a local resource by id
+            </summary>
+            <param name="id">Local resource id</param>
+            <param name="gameServerService"></param>
+            <returns>Local resource object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetLocalResourcesByGameProfileId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get local resources by game profile id
+            </summary>
+            <param name="id">Game profile id</param>
+            <param name="gameServerService"></param>
+            <returns>List of local resources</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetLocalResourcesByGameServerId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get local resources by game server id
+            </summary>
+            <param name="id">Game server id</param>
+            <param name="gameServerService"></param>
+            <returns>List of local resources</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceCreate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Create a local resource
+            </summary>
+            <param name="createObject"></param>
+            <param name="gameServerService"></param>
+            <returns>Id of the created local resource</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceUpdate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Update a local resources properties
+            </summary>
+            <param name="updateObject">Required properties to update a local resource</param>
+            <param name="gameServerService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteLocalResource(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Delete a local resource
+            </summary>
+            <param name="id">Local resource id</param>
+            <param name="gameServerService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchLocalResource(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Search local resources by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameServerService"></param>
+            <returns>List of matching local resources</returns>
+            <remarks>Searches by: GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAllGameProfilesPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all game profiles with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameServerService"></param>
+            <param name="appConfig"></param>
+            <returns>List of game profiles</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfileCount(Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get total game profile count
+            </summary>
+            <param name="gameServerService"></param>
+            <returns>Count of total game profiles</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfileById(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a game profile by id
+            </summary>
+            <param name="id">Game profile Id</param>
+            <param name="gameServerService"></param>
+            <returns>Game profile object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfileByFriendlyName(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a game profile by friendly name
+            </summary>
+            <param name="friendlyName">Game profile friendly name</param>
+            <param name="gameServerService"></param>
+            <returns>Game profile object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfilesByGameId(System.Int32,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get list of game profiles by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameServerService"></param>
+            <returns>List of game profiles</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfilesByOwnerId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get game profiles by owner id
+            </summary>
+            <param name="id">Owner account id</param>
+            <param name="gameServerService"></param>
+            <returns>List of game profiles</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfilesByServerProcessName(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get game profiles by server process name
+            </summary>
+            <param name="serverProcessName">Executable / Binary game server process name</param>
+            <param name="gameServerService"></param>
+            <returns>List of game profiles</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateGameProfile(Application.Models.GameServer.GameProfile.GameProfileCreate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Create a game profile
+            </summary>
+            <param name="createObject">Required properties to create a game profile</param>
+            <param name="gameServerService"></param>
+            <returns>Id of the created game profile</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateGameProfile(Application.Models.GameServer.GameProfile.GameProfileUpdate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Update a game profiles properties
+            </summary>
+            <param name="updateObject">Required properties to update a game profile</param>
+            <param name="gameServerService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteGameProfile(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete a game profile
+            </summary>
+            <param name="id">Game profile id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchGameProfiles(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Search game profiles by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="gameServerService"></param>
+            <returns>List of matching game profiles</returns>
+            <remarks>Searches by: FriendlyName, OwnerId, GameId, ServerProcessName</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAllModsPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all mods with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="gameServerService"></param>
+            <param name="appConfig"></param>
+            <returns>List of mods</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModCount(Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get total mod count
+            </summary>
+            <param name="gameServerService"></param>
+            <returns>Count of total mods</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModById(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a mod by id
+            </summary>
+            <param name="id">Mod id</param>
+            <param name="gameServerService"></param>
+            <returns>Mod object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModByCurrentHash(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get a mod by it's integrity hash
+            </summary>
+            <param name="hash">Mod hash</param>
+            <param name="gameServerService"></param>
+            <returns>Mod object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModsByFriendlyName(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get mods by their friendly name
+            </summary>
+            <param name="friendlyName">Mod friendly name</param>
+            <param name="gameServerService"></param>
+            <returns>List of mods</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModsByGameId(System.Guid,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get mods by game id
+            </summary>
+            <param name="id">Game id</param>
+            <param name="gameServerService"></param>
+            <returns>List of mods</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModsBySteamGameId(System.Int32,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get mods by steam game id
+            </summary>
+            <param name="id">Steam Game Id</param>
+            <param name="gameServerService"></param>
+            <returns>List of mods</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModBySteamId(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get mod by steam id
+            </summary>
+            <param name="id">Mod steam id</param>
+            <param name="gameServerService"></param>
+            <returns>Mod object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetModsBySteamToolId(System.Int32,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Get mods by steam tool id
+            </summary>
+            <param name="id">Steam tool id</param>
+            <param name="gameServerService"></param>
+            <returns>List of mods</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateMod(Application.Models.GameServer.Mod.ModCreate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Create a mod
+            </summary>
+            <param name="createObject">Required properties to create a mod</param>
+            <param name="gameServerService"></param>
+            <returns>Id of the created mod</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateMod(Application.Models.GameServer.Mod.ModUpdate,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Update a mod's properties
+            </summary>
+            <param name="updateObject">Required properties to update a mod</param>
+            <param name="gameServerService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteMod(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete a mod
+            </summary>
+            <param name="id">Mod id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchMods(System.String,Application.Services.GameServer.IGameServerService)">
+            <summary>
+            Search mods by properties
+            </summary>
+            <param name="searchText">Text to search</param>
+            <param name="gameServerService"></param>
+            <returns>List of matching mods</returns>
+            <remarks>Searches by: GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
         </member>
         <member name="T:Application.Api.v1.GameServer.HostEndpoints">
             <summary>
@@ -74,12 +797,13 @@
             <param name="currentUserService"></param>
             <returns>Host ID, Key and full registration confirmation URI for the new host to complete registration</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationConfirm(Application.Requests.v1.GameServer.HostRegisterRequest,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationConfirm(Application.Requests.v1.GameServer.HostRegisterRequest,Application.Services.GameServer.IHostService,Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
             Confirms and completes an active registration
             </summary>
             <param name="request">Host ID and Key of a valid and active registration</param>
             <param name="hostService"></param>
+            <param name="context"></param>
             <returns>Host ID and Host Token for use when authenticating the host</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetToken(Application.Requests.v1.GameServer.HostAuthRequest,Application.Services.GameServer.IHostService)">
@@ -93,7 +817,7 @@
             - Expiration time returned is in GMT/UTC
             </remarks>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Checkin(Application.Requests.v1.GameServer.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Checkin(Application.Requests.v1.GameServer.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
             <summary>
             Inject a valid host check-in status
             </summary>
@@ -101,7 +825,320 @@
             <param name="hostService"></param>
             <param name="currentUserService"></param>
             <param name="dateTimeService"></param>
-            <returns>Success or Failure with no return payload</returns>
+            <param name="serializerService"></param>
+            <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.WorkStatusUpdate(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
+            <summary>
+            Update the status of requested weaver work from the host
+            </summary>
+            <param name="request">Work status update from the host</param>
+            <param name="hostService"></param>
+            <param name="currentUserService"></param>
+            <param name="dateTimeService"></param>
+            <param name="serializerService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAll(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get all game server hosts
+            </summary>
+            <param name="hostService"></param>
+            <returns>List of game server hosts</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all game server hosts with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of game server hosts</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetById(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host by it's id
+            </summary>
+            <param name="id">Id of the host to retrieve</param>
+            <param name="hostService"></param>
+            <returns>Host object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetByHostname(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host by it's hostname
+            </summary>
+            <param name="hostname"></param>
+            <param name="hostService"></param>
+            <returns>Host object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Create(Application.Models.GameServer.Host.HostCreate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Create a host
+            </summary>
+            <param name="request">Required properties request to create a host</param>
+            <param name="hostService"></param>
+            <returns>Id of the host that was created</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Update(Application.Models.GameServer.Host.HostUpdate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Update the properties of a host
+            </summary>
+            <param name="request">Required properties to update a host</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with any context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Delete(System.Guid,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Delete a host by it's id
+            </summary>
+            <param name="id">Id of the host to delete</param>
+            <param name="hostService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Search(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for a host by properties
+            </summary>
+            <param name="searchText">Text to search by</param>
+            <param name="hostService"></param>
+            <returns>List of hosts matching the search criteria</returns>
+            <remarks>Search matches against FriendlyName, Description, PrivateIp and PublicIp</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrations(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get all game server host registrations
+            </summary>
+            <param name="hostService"></param>
+            <returns>List of game server host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrationsPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all registrations with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrationsActive(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get active host registrations
+            </summary>
+            <param name="hostService"></param>
+            <returns>List of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrationsInActive(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get inactive host registrations
+            </summary>
+            <param name="hostService"></param>
+            <returns>List of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetRegistrationsCount(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get the count of all host registrations
+            </summary>
+            <param name="hostService"></param>
+            <returns>Count of host registrations</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateRegistration(Application.Models.GameServer.HostRegistration.HostRegistrationUpdate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Update a host registration's properties
+            </summary>
+            <param name="request">Required properties to update a host registration</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchRegistrations(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for registrations by properties
+            </summary>
+            <param name="searchText">Text to search by</param>
+            <param name="hostService"></param>
+            <returns>List of matching registrations</returns>
+            <remarks>Searches by HostId, Key, Description and Public Ip</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllCheckinsPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all checkins with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of host checkins</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetCheckinCount(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get total count of host checkins
+            </summary>
+            <param name="hostService"></param>
+            <returns>Count of host checkins</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetCheckinById(System.Int32,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host checkin by id
+            </summary>
+            <param name="id">Id of the checkin</param>
+            <param name="hostService"></param>
+            <returns>Host checkin</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetCheckinByHostId(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a host checkins by the host Id
+            </summary>
+            <param name="id">Id of the host</param>
+            <param name="hostService"></param>
+            <returns>List of checkins for the host</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldCheckins(Domain.Enums.Lifecycle.CleanupTimeframe,Application.Services.GameServer.IHostService)">
+            <summary>
+            Delete host checkins older than the provided timeframe
+            </summary>
+            <param name="olderThan">0=OneMonth, 1=ThreeMonths, 2=SixMonths, 3=OneYear, 4=TenYears</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchCheckins(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for checkins by properties
+            </summary>
+            <param name="searchText">Text to search by</param>
+            <param name="hostService"></param>
+            <returns>List of matching host checkins</returns>
+            <remarks>Searches by: HostId</remarks>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllWeaverWorkPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+            <summary>
+            Get all weaver work with pagination
+            </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="hostService"></param>
+            <param name="appConfig"></param>
+            <returns>List of weaver work</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkCount(Application.Services.GameServer.IHostService)">
+            <summary>
+            Get count of total weaver work
+            </summary>
+            <param name="hostService"></param>
+            <returns>Weaver work count</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkById(System.Int32,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get a unit of weaver work by id
+            </summary>
+            <param name="id">Id of the weaver work</param>
+            <param name="hostService"></param>
+            <returns>Weaver work object</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkByStatus(Domain.Enums.GameServer.WeaverWorkState,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get weaver work by status
+            </summary>
+            <param name="status">0=Waiting, 1=PickedUp, 2=InProgress, 3=Completed, 4=Cancelled, 5=Failed</param>
+            <param name="hostService"></param>
+            <returns>List of weaver work matching the status</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWeaverWorkByType(Domain.Enums.GameServer.WeaverWorkTarget,Application.Services.GameServer.IHostService)">
+            <summary>
+            Get weaver work by target type
+            </summary>
+            <param name="target">001=StatusUpdate, 100=Host, 101=HostStatusUpdate, 102=HostDetail, 200=GameServer, 201=GameServerInstall, 202=GameServerUpdate,
+            203=GameServerUninstall, 204=GameServerStateUpdate</param>
+            <param name="hostService"></param>
+            <returns>List of weaver work matching the target type</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetWaitingWeaverWorkForHost(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Gets the 10 oldest waiting Weaver work jobs for a given host id
+            </summary>
+            <param name="id">Id of the host to get weaver work for</param>
+            <param name="hostService"></param>
+            <returns>Up to 10 of the latest weaver work jobs</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllWaitingWeaverWorkForHost(System.Guid,Application.Services.GameServer.IHostService)">
+            <summary>
+            Gets all of the currently waiting weaver work jobs for a given host id
+            </summary>
+            <param name="id">Id of the host to get weaver work for</param>
+            <param name="hostService"></param>
+            <returns>All of the current waiting weaver work jobs</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.CreateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkCreate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Create weaver work for a host
+            </summary>
+            <param name="request">Required properties to create weaver work for a host</param>
+            <param name="hostService"></param>
+            <returns>Id of the weaver work created</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService)">
+            <summary>
+            Update weaver work properties
+            </summary>
+            <param name="request">Weaver work properties to update</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteWeaverWork(System.Int32,Application.Services.GameServer.IHostService)">
+            <summary>
+            Delete weaver work
+            </summary>
+            <param name="id">Id of a weaver work</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldWeaverWork(System.DateTime,Application.Services.GameServer.IHostService)">
+            <summary>
+            Delete weaver work older than a timeframe
+            </summary>
+            <param name="olderThan">Serializable DateTime, anything older than this datetime will be deleted</param>
+            <param name="hostService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchWeaverWork(System.String,Application.Services.GameServer.IHostService)">
+            <summary>
+            Search for weaver work by properties
+            </summary>
+            <param name="searchText">Text to search for</param>
+            <param name="hostService"></param>
+            <returns>List of matching weaver work</returns>
+            <remarks>Search by: HostId</remarks>
+        </member>
+        <member name="T:Application.Api.v1.GameServer.NetworkEndpoints">
+            <summary>
+            Endpoints dealing with network operations
+            </summary>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.NetworkEndpoints.MapEndpointsNetwork(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
+            <summary>
+            Registers the API endpoints
+            </summary>
+            <param name="app">Running application</param>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.NetworkEndpoints.GameserverConnectable(Application.Models.GameServer.Network.GameServerConnectivityCheck,Application.Services.GameServer.INetworkService)">
+            <summary>
+            Get whether a game server is connectable
+            </summary>
+            <param name="check">Required parameters to check for game server connectivity</param>
+            <param name="networkService"></param>
+            <returns>Boolean indicating a game server is connectable</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.NetworkEndpoints.IsPortOpen(System.String,System.Int32,Domain.Enums.GameServer.NetworkProtocol,System.Int32,Application.Services.GameServer.INetworkService)">
+            <summary>
+            Get whether a port is open or gives a valid response
+            </summary>
+            <param name="ipAddress">Ip or hostname to send a check to</param>
+            <param name="port">Port to send a check to</param>
+            <param name="protocol">0=TCP, 1=UDP</param>
+            <param name="timeoutMilliseconds">Timeout in milliseconds</param>
+            <param name="networkService"></param>
+            <returns>Boolean indicating the port is open / responds</returns>
         </member>
         <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
             <summary>
@@ -514,6 +1551,103 @@
             <param name="tokenCount">Number of tokens to generate and return</param>
             <param name="numberOfBytes">Desired token size in bytes, larger is more secure</param>
             <returns>An enumerable of generated URL friendly tokens</returns>
+        </member>
+        <member name="T:Application.Models.GameServer.GameServer.GameServerToHost">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> Id<br/>
+            <b>string</b> SteamName<br/>
+            <b>int</b> SteamGameId<br/>
+            <b>int</b> SteamToolId<br/>
+            <b>string</b> ServerName<br/>
+            <b>string</b> Password<br/>
+            <b>string</b> PasswordRcon<br/>
+            <b>string</b> PasswordAdmin<br/>
+            <b>string</b> ServerVersion<br/>
+            <b>string</b> IpAddress<br/>
+            <b>string</b> ExtHostname<br/>
+            <b>int</b> PortGame<br/>
+            <b>int</b> PortQuery<br/>
+            <b>int</b> PortRcon<br/>
+            <b>bool</b> Modded<br/>
+            <b>string</b> ManualRootUrl<br/>
+            <b>string</b> ServerProcessName<br/>
+            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>Domain.Enums.GameServer.GameSource</b> Source<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.Mod.ModSlim&gt;</b> ModList<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.GameServerStateUpdate">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> Id<br/>
+            <b>string</b> ServerProcessName<br/>
+            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.WeaverWorkClient">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>int</b> Id<br/>
+            <b>System.Guid?</b> GameServerId<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkTarget</b> TargetType<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkState</b> Status<br/>
+            <b>byte[]</b> WorkData<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.WeaverWorkSlim">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>int</b> Id<br/>
+            <b>System.Guid</b> HostId<br/>
+            <b>System.Guid?</b> GameServerId<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkTarget</b> TargetType<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkState</b> Status<br/>
+            <b>byte[]</b> WorkData<br/>
+            <b>System.Guid</b> CreatedBy<br/>
+            <b>System.DateTime</b> CreatedOn<br/>
+            <b>System.Guid?</b> LastModifiedBy<br/>
+            <b>System.DateTime?</b> LastModifiedOn<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.WeaverWorkUpdate">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>int</b> Id<br/>
+            <b>System.Guid?</b> HostId<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkTarget?</b> TargetType<br/>
+            <b>Domain.Enums.GameServer.WeaverWorkState?</b> Status<br/>
+            <b>byte[]</b> WorkData<br/>
+            <b>System.Guid?</b> CreatedBy<br/>
+            <b>System.DateTime?</b> CreatedOn<br/>
+            <b>System.Guid?</b> LastModifiedBy<br/>
+            <b>System.DateTime?</b> LastModifiedOn<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Requests.v1.GameServer.HostCheckInRequest">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.DateTime</b> SendTimestamp<br/>
+            <b>float</b> CpuUsage<br/>
+            <b>float</b> RamUsage<br/>
+            <b>float</b> Uptime<br/>
+            <b>int</b> NetworkOutMb<br/>
+            <b>int</b> NetworkInMb<br/>
+            </code>
+            </remarks>
         </member>
     </members>
 </doc>

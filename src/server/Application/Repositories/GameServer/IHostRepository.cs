@@ -48,14 +48,18 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkAsync();
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetWeaverWorkCountAsync();
-    Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(Guid id);
+    Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(int id);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByHostIdAsync(Guid id);
-    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByGameServerIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWaitingWorkByHostIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverAllWaitingWorkByHostIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByStatusAsync(WeaverWorkState status);
-    Task<DatabaseActionResult<Guid>> CreateWeaverWorkAsync(WeaverWorkCreate createObject);
+    Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkCreatedWithinAsync(DateTime from, DateTime until);
+    Task<DatabaseActionResult<int>> CreateWeaverWorkAsync(WeaverWorkCreate createObject);
     Task<DatabaseActionResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject);
-    Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id);
+    Task<DatabaseActionResult> DeleteWeaverWorkAsync(int id);
+    Task<DatabaseActionResult> DeleteWeaverWorkForHostAsync(Guid hostId);
+    Task<DatabaseActionResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

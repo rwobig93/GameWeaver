@@ -7,11 +7,12 @@ using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
+using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
+using Application.Models.GameServer.WeaverWork;
 using Application.Models.Identity.Permission;
-using Application.Models.Web;
 using Application.Repositories.GameServer;
 using Application.Requests.v1.GameServer;
 using Application.Responses.v1.GameServer;
@@ -19,6 +20,7 @@ using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using Domain.Contracts;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.WebUtilities;
@@ -33,12 +35,19 @@ public class HostService : IHostService
     private readonly IRunningServerState _serverState;
     private readonly AppConfiguration _appConfig;
     private readonly SecurityConfiguration _securityConfig;
+    private readonly ILogger _logger;
+    private readonly IGameServerRepository _gameServerRepository;
+    private readonly ISerializerService _serializerService;
 
-    public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig, IOptions<SecurityConfiguration> securityConfig)
+    public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
+        IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService)
     {
         _hostRepository = hostRepository;
         _dateTime = dateTime;
         _serverState = serverState;
+        _logger = logger;
+        _gameServerRepository = gameServerRepository;
+        _serializerService = serializerService;
         _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
     }
@@ -51,7 +60,7 @@ public class HostService : IHostService
             return await Result<HostNewRegisterResponse>.FailAsync(matchingDescriptionRequest.ErrorMessage);
         if (matchingDescriptionRequest.Result is null || matchingDescriptionRequest.Result.Any())
             return await Result<HostNewRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.MatchingRegistrationExists);
-
+        
         // Create host to get the GUID to bind the request to for registering this host
         var newHostRequest = await _hostRepository.CreateAsync(new HostCreate
         {
@@ -162,6 +171,13 @@ public class HostService : IHostService
     {
         try
         {
+            var foundHost = await GetByIdAsync(request.HostId);
+            if (!foundHost.Succeeded)
+                return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+            var keyIsCorrect = await IsProvidedKeyCorrect(foundHost.Data.Id, request.HostToken);
+            if (!keyIsCorrect.Succeeded)
+                return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+            
             var token = JwtHelpers.GenerateApiJwtEncryptedToken(GetHostClaims(request.HostId), _dateTime, _securityConfig, _appConfig);
 
             var tokenExpiration = JwtHelpers.GetJwtExpirationTime(token);
@@ -181,6 +197,21 @@ public class HostService : IHostService
         }
     }
 
+    public async Task<IResult> IsProvidedKeyCorrect(Guid hostId, string key)
+    {
+        var foundHost = await _hostRepository.GetByIdAsync(hostId);
+        if (!foundHost.Succeeded)
+            return await Result.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result.FailAsync(foundHost.ErrorMessage);
+
+        var keyIsCorrect = AccountHelpers.IsPasswordCorrect(key, foundHost.Result.PasswordSalt, HostConstants.HostPepper, foundHost.Result.PasswordHash);
+        if (!keyIsCorrect)
+            return await Result.FailAsync();
+
+        return await Result.SuccessAsync();
+    }
+
     private static IEnumerable<Claim> GetHostClaims(Guid hostId)
     {
         return new List<Claim>()
@@ -188,7 +219,8 @@ public class HostService : IHostService
             new(ClaimTypes.NameIdentifier, hostId.ToString()),
             new(ClaimTypes.Email, $"{hostId.ToString()}@host.game.weaver"),
             new(ClaimTypes.Name, $"{hostId.ToString()}@host.game.weaver"),
-            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.CheckIn)
+            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.CheckIn),
+            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.WorkUpdate)
         };
     }
 
@@ -505,5 +537,240 @@ public class HostService : IHostService
             return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckIns.ErrorMessage);
 
         return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckIns.Result?.ToFulls() ?? new List<HostCheckInFull>());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkAsync()
+    {
+        var hosts = await _hostRepository.GetAllWeaverWorkAsync();
+        if (!hosts.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(hosts.ErrorMessage);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(hosts.Result?.ToSlims() ?? new List<WeaverWorkSlim>());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize)
+    {
+        var hosts = await _hostRepository.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize);
+        if (!hosts.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(hosts.ErrorMessage);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(hosts.Result?.ToSlims() ?? new List<WeaverWorkSlim>());
+    }
+
+    public async Task<IResult<int>> GetWeaverWorkCountAsync()
+    {
+        var hostCount = await _hostRepository.GetWeaverWorkCountAsync();
+        if (!hostCount.Succeeded)
+            return await Result<int>.FailAsync(hostCount.ErrorMessage);
+
+        return await Result<int>.SuccessAsync(hostCount.Result);
+    }
+
+    public async Task<IResult<WeaverWorkSlim>> GetWeaverWorkByIdAsync(int id)
+    {
+        var foundHost = await _hostRepository.GetWeaverWorkByIdAsync(id);
+        if (!foundHost.Succeeded)
+            return await Result<WeaverWorkSlim>.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result<WeaverWorkSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<WeaverWorkSlim>.SuccessAsync(foundHost.Result.ToSlim());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByHostIdAsync(Guid id)
+    {
+        var foundHost = await _hostRepository.GetWeaverWorkByHostIdAsync(id);
+        if (!foundHost.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWaitingWorkByHostIdAsync(Guid id)
+    {
+        var foundHost = await _hostRepository.GetWeaverWaitingWorkByHostIdAsync(id);
+        if (!foundHost.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverAllWaitingWorkByHostIdAsync(Guid id)
+    {
+        var foundHost = await _hostRepository.GetWeaverAllWaitingWorkByHostIdAsync(id);
+        if (!foundHost.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target)
+    {
+        var foundHost = await _hostRepository.GetWeaverWorkByTargetTypeAsync(target);
+        if (!foundHost.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByStatusAsync(WeaverWorkState status)
+    {
+        var foundHost = await _hostRepository.GetWeaverWorkByStatusAsync(status);
+        if (!foundHost.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkCreatedWithinAsync(DateTime from, DateTime until)
+    {
+        var foundHost = await _hostRepository.GetWeaverWorkCreatedWithinAsync(from, until);
+        if (!foundHost.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHost.ErrorMessage);
+        if (foundHost.Result is null)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
+    }
+
+    public async Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreate createObject)
+    {
+        var createHostRequest = await _hostRepository.CreateWeaverWorkAsync(createObject);
+        if (!createHostRequest.Succeeded)
+            return await Result<int>.FailAsync(createHostRequest.ErrorMessage);
+
+        return await Result<int>.SuccessAsync(createHostRequest.Result);
+    }
+
+    public async Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject)
+    {
+        var foundHostRequest = await _hostRepository.GetWeaverWorkByIdAsync(updateObject.Id);
+        if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+        switch (updateObject.TargetType)
+        {
+            case WeaverWorkTarget.GameServerStateUpdate:
+                var result = await HandleUpdateGameServerState(updateObject);
+                if (!result.Succeeded)
+                    _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", updateObject.Id, updateObject.TargetType, result.Messages);
+                updateObject.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
+                break;
+            case WeaverWorkTarget.StatusUpdate:
+            case WeaverWorkTarget.Host:
+            case WeaverWorkTarget.HostStatusUpdate:
+            case WeaverWorkTarget.HostDetail:
+            case WeaverWorkTarget.GameServer:
+            case WeaverWorkTarget.GameServerInstall:
+            case WeaverWorkTarget.GameServerUpdate:
+            case WeaverWorkTarget.GameServerUninstall:
+            case WeaverWorkTarget.CurrentEnd:
+            case null:
+            default:
+                _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
+                    updateObject.Id, updateObject.TargetType);
+                break;
+        }
+        
+        var updateWorkRequest = await _hostRepository.UpdateWeaverWorkAsync(updateObject);
+        if (!updateWorkRequest.Succeeded)
+            return await Result.FailAsync(updateWorkRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    private async Task<IResult> HandleUpdateGameServerState(WeaverWorkUpdate updateObject)
+    {
+        try
+        {
+            if (updateObject.WorkData is null)
+                return await Result.FailAsync("Game server state update work data is null, unable to update state");
+        
+            var deserializedData = _serializerService.DeserializeMemory<GameServerStateUpdate>(updateObject.WorkData);
+            if (deserializedData is null)
+                return await Result.FailAsync("Deserialized game server state update work data is null, unable to update state");
+
+            var result = await _gameServerRepository.UpdateAsync(new GameServerUpdate
+            {
+                Id = deserializedData.Id,
+                ServerState = deserializedData.ServerState
+            });
+            if (!result.Succeeded)
+                return await Result.FailAsync(result.ErrorMessage);
+
+            if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
+            
+            // State update is uninstalled, so we'll wrap up by deleting the game server
+            var deleteServerRequest = await _gameServerRepository.DeleteAsync(deserializedData.Id, updateObject.LastModifiedBy ?? Guid.Empty);
+            if (!deleteServerRequest.Succeeded)
+                return await Result.FailAsync(deleteServerRequest.ErrorMessage);
+
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync($"Failure occurred working with deserialized game server state update: {ex.Message}");
+        }
+    }
+
+    public async Task<IResult> DeleteWeaverWorkAsync(int id)
+    {
+        var foundHostRequest = await _hostRepository.GetWeaverWorkByIdAsync(id);
+        if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        var deleteHostRequest = await _hostRepository.DeleteWeaverWorkAsync(id);
+        if (!deleteHostRequest.Succeeded)
+            return await Result.FailAsync(deleteHostRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> DeleteWeaverWorkForHostAsync(Guid hostId)
+    {
+        var deleteHostRequest = await _hostRepository.DeleteWeaverWorkForHostAsync(hostId);
+        if (!deleteHostRequest.Succeeded)
+            return await Result.FailAsync(deleteHostRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan)
+    {
+        var deleteHostRequest = await _hostRepository.DeleteWeaverWorkOlderThanAsync(olderThan);
+        if (!deleteHostRequest.Succeeded)
+            return await Result.FailAsync(deleteHostRequest.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkAsync(string searchText)
+    {
+        var foundHosts = await _hostRepository.SearchWeaverWorkAsync(searchText);
+        if (!foundHosts.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHosts.ErrorMessage);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHosts.Result?.ToSlims() ?? new List<WeaverWorkSlim>());
+    }
+
+    public async Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        var foundHosts = await _hostRepository.SearchWeaverWorkPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!foundHosts.Succeeded)
+            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHosts.ErrorMessage);
+
+        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHosts.Result?.ToSlims() ?? new List<WeaverWorkSlim>());
     }
 }

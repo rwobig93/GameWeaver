@@ -1,17 +1,19 @@
 ﻿using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Models.Web;
 using Application.Requests.v1.Api;
 using Application.Responses.v1.Api;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
+using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Application.Api.v1.Api;
 
 /// <summary>
 /// Endpoints dealing with overall API integration functionality
 /// </summary>
+[AllowAnonymous]
 public static class ApiEndpoints
 {
     /// <summary>
@@ -34,11 +36,12 @@ public static class ApiEndpoints
     /// - Expiration time returned is in GMT/UTC
     /// </remarks>
     [AllowAnonymous]
-    private static async Task<IResult<ApiTokenResponse>> GetToken(ApiGetTokenRequest tokenRequest, IAppAccountService accountService)
+    private static async Task<IResult<ApiTokenResponse>> GetToken([FromBody]ApiGetTokenRequest tokenRequest, IAppAccountService accountService)
     {
         try
         {
-            return await accountService.GetApiAuthToken(tokenRequest);
+            var response = await accountService.GetApiAuthToken(tokenRequest); 
+            return response;
         }
         catch (Exception ex)
         {

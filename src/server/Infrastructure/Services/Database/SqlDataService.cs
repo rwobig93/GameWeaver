@@ -1,5 +1,4 @@
 using System.Data;
-using System.Data.SqlClient;
 using Application.Database;
 using Application.Database.MsSql;
 using Application.Database.Postgres;
@@ -9,6 +8,7 @@ using Application.Settings.AppSettings;
 using Dapper;
 using Domain.Enums.Database;
 using Microsoft.Extensions.Options;
+using Microsoft.Data.SqlClient;
 
 namespace Infrastructure.Services.Database;
 
@@ -52,6 +52,15 @@ public class SqlDataService : ISqlDataService
         using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
 
         return await connection.ExecuteScalarAsync<Guid>(
+            script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
+    }
+
+    public async Task<int> SaveDataReturnIntId<TParameters>(
+        ISqlDatabaseScript script, TParameters parameters, string connectionId = "DefaultConnection", int timeoutSeconds = 5)
+    {
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
+
+        return await connection.ExecuteScalarAsync<int>(
             script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 

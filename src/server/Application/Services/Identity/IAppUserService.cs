@@ -1,6 +1,6 @@
 ﻿using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
-using Application.Models.Web;
+using Domain.Contracts;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
 

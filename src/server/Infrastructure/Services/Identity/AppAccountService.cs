@@ -9,7 +9,6 @@ using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.UserExtensions;
-using Application.Models.Web;
 using Application.Repositories.Identity;
 using Application.Requests.v1.Api;
 using Application.Requests.v1.Identity.User;
@@ -21,6 +20,7 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Database;
 using Domain.Enums.Identity;
@@ -34,7 +34,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using IResult = Application.Models.Web.IResult;
+using IResult = Domain.Contracts.IResult;
 
 namespace Infrastructure.Services.Identity;
 
@@ -47,7 +47,6 @@ public class AppAccountService : IAppAccountService
     private readonly AppConfiguration _appConfig;
     private readonly ILocalStorageService _localStorage;
     private readonly AuthStateProvider _authProvider;
-    private readonly HttpClient _httpClient;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly IAuditTrailService _auditService;
@@ -58,7 +57,7 @@ public class AppAccountService : IAppAccountService
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
-        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider, IHttpClientFactory httpClientFactory,
+        IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider,
         IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState,
         IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
         ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig)
@@ -69,7 +68,6 @@ public class AppAccountService : IAppAccountService
         _userRepository = userRepository;
         _localStorage = localStorage;
         _authProvider = authProvider;
-        _httpClient = httpClientFactory.CreateClient("Default");
         _mailService = mailService;
         _dateTime = dateTime;
         _serverState = serverState;
@@ -375,7 +373,7 @@ public class AppAccountService : IAppAccountService
             return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.Users.AccountLockedOutError);
         }
 
-        // Entered password is correct so we reset previous bad password attempts
+        // Entered password is correct, so we reset previous bad password attempts
         userSecurity.BadPasswordAttempts = 0;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
@@ -415,8 +413,7 @@ public class AppAccountService : IAppAccountService
             // Remove client id and tokens from local client storage and de-authenticate
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
-            _authProvider.DeauthenticateUser();
-            _httpClient.DefaultRequestHeaders.Authorization = null;
+            _authProvider.DeAuthenticateUser();
             
             if (!_lifecycleConfig.AuditLoginLogout) return await Result.SuccessAsync();
             
@@ -1032,7 +1029,7 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
-            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
+            return await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken) ?? string.Empty;
         }
         catch
         {

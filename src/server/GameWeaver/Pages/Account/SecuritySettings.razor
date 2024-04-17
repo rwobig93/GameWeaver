@@ -71,7 +71,7 @@
                               Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
                               AdornmentAriaLabel="Show Desired Password"
                               Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordRequirements))"/>
-                <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" Direction="Direction.Left" Size="Size.Medium">
+                <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" AnchorOrigin="Origin.CenterLeft" Size="Size.Medium">
                     <MudText Align="Align.Left" Class="mx-4">Minimum Length: @_passwordRequirements.MinimumLength</MudText>
                     <MudText Align="Align.Left" Class="mx-4">Maximum Length: @_passwordRequirements.MaximumLength</MudText>
                     <MudText Align="Align.Left" Class="mx-4">Requires Special: @_passwordRequirements.RequiresSpecialCharacters</MudText>
@@ -101,7 +101,8 @@
                 @if (ExternalAuthService.ProviderEnabledDiscord)
                 {
                     <MudItem xs="12" sm="12" md="12" Class="justify-center">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Surface" Size="Size.Medium" FullWidth="true"
+                        <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                   Color="@(_linkedAuthDiscord ? Color.Success : Color.Surface)"
                                    StartIcon="@Icons.Custom.Brands.Discord"
                                    OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Discord, _linkedAuthDiscord))">
                             @if (_linkedAuthDiscord) { @("Unlink Discord Account") } else { @("Link Discord Account") }
@@ -111,7 +112,8 @@
                 @if (ExternalAuthService.ProviderEnabledGoogle)
                 {
                     <MudItem xs="12" sm="12" md="12" Class="justify-center">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Surface" Size="Size.Medium" FullWidth="true"
+                        <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                   Color="@(_linkedAuthGoogle ? Color.Success : Color.Surface)"
                                    StartIcon="@Icons.Custom.Brands.Google"
                                    OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Google, _linkedAuthGoogle))">
                             @if (_linkedAuthGoogle) { @("Unlink Google Account") } else { @("Link Google Account") }
@@ -121,7 +123,8 @@
                 @if (ExternalAuthService.ProviderEnabledSpotify)
                 {
                     <MudItem xs="12" sm="12" md="12" Class="justify-center">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Surface" Size="Size.Medium" FullWidth="true"
+                        <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                   Color="@(_linkedAuthSpotify ? Color.Success : Color.Surface)"
                                    StartIcon="@Icons.Material.Filled.LibraryMusic"
                                    OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Spotify, _linkedAuthSpotify))">
                             @if (_linkedAuthSpotify) { @("Unlink Spotify Account") } else { @("Link Spotify Account") }

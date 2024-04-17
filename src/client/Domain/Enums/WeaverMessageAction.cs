@@ -2,5 +2,10 @@ namespace Domain.Enums;
 
 public enum WeaverMessageAction
 {
-    Unknown
+    Unknown,
+    Create,
+    Update,
+    Delete,
+    Synchronize,
+    StatusUpdate
 }

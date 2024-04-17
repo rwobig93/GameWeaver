@@ -2,6 +2,6 @@
 
 public enum GameSource
 {
-    Steam,
-    Manual
+    Steam = 0,
+    Manual = 1
 }

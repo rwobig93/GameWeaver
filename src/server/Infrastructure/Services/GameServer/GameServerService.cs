@@ -5,13 +5,12 @@ using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
-using Application.Models.Web;
+using Application.Models.GameServer.WeaverWork;
 using Application.Repositories.GameServer;
 using Application.Services.GameServer;
-using Application.Services.Lifecycle;
 using Application.Services.System;
-using Application.Settings.AppSettings;
-using Microsoft.Extensions.Options;
+using Domain.Contracts;
+using Domain.Enums.GameServer;
 
 namespace Infrastructure.Services.GameServer;
 
@@ -19,15 +18,18 @@ public class GameServerService : IGameServerService
 {
     private readonly IGameServerRepository _gameServerRepository;
     private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
-    private readonly AppConfiguration _appConfig;
+    private readonly IHostRepository _hostRepository;
+    private readonly ISerializerService _serializerService;
+    private readonly IGameRepository _gameRepository;
 
-    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig)
+    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository,
+        ISerializerService serializerService, IGameRepository gameRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
-        _serverState = serverState;
-        _appConfig = appConfig.Value;
+        _hostRepository = hostRepository;
+        _serializerService = serializerService;
+        _gameRepository = gameRepository;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -125,11 +127,63 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateAsync(GameServerCreate createObject)
     {
-        var request = await _gameServerRepository.CreateAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        var gameRequest = await _gameRepository.GetByIdAsync(createObject.GameId);
+        if (!gameRequest.Succeeded || gameRequest.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
+        if (!parentGameProfileRequest.Succeeded || parentGameProfileRequest.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        // TODO: Add a create game profile from parent method that duplicates all linked entities to the new profile
+        // TODO: Allow empty game profile creation w/o parent, then prevent running w/o required properties
+        var createdGameProfileRequest = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
+        {
+            FriendlyName = $"{createObject.ServerName} Profile",
+            OwnerId = createObject.OwnerId,
+            GameId = gameRequest.Result.Id,
+            ServerProcessName = parentGameProfileRequest.Result.ServerProcessName,
+            CreatedBy = createObject.CreatedBy,
+            CreatedOn = createObject.CreatedOn,
+            LastModifiedBy = null,
+            LastModifiedOn = null,
+            IsDeleted = false,
+            DeletedOn = null
+        });
+        if (!createdGameProfileRequest.Succeeded)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+
+        createObject.GameProfileId = createdGameProfileRequest.Result;
+        
+        var gameServerRequest = await _gameServerRepository.CreateAsync(createObject);
+        if (!gameServerRequest.Succeeded)
+            return await Result<Guid>.FailAsync(gameServerRequest.ErrorMessage);
+
+        var createdGameserverRequest = await _gameServerRepository.GetByIdAsync(gameServerRequest.Result);
+        if (!createdGameserverRequest.Succeeded || createdGameserverRequest.Result is null)
+            return await Result<Guid>.FailAsync(createdGameserverRequest.ErrorMessage);
+
+        var gameServerHost = createdGameserverRequest.Result.ToHost();
+        gameServerHost.ServerProcessName = parentGameProfileRequest.Result.ServerProcessName;
+        gameServerHost.SteamName = gameRequest.Result.SteamName;
+        gameServerHost.SteamGameId = gameRequest.Result.SteamGameId;
+        gameServerHost.SteamToolId = gameRequest.Result.SteamToolId;
+
+        var hostInstallRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
+        {
+            HostId = createObject.HostId,
+            TargetType = WeaverWorkTarget.GameServerInstall,
+            Status = WeaverWorkState.WaitingToBePickedUp,
+            WorkData = _serializerService.SerializeMemory(gameServerHost),
+            CreatedBy = createObject.CreatedBy,
+            CreatedOn = createObject.CreatedOn,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        });
+        if (!hostInstallRequest.Succeeded)
+            return await Result<Guid>.FailAsync(hostInstallRequest.ErrorMessage);
+
+        return await Result<Guid>.SuccessAsync(gameServerRequest.Result);
     }
 
     public async Task<IResult> UpdateAsync(GameServerUpdate updateObject)
@@ -153,9 +207,19 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var request = await _gameServerRepository.DeleteAsync(id, modifyingUserId);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var hostDeleteRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
+        {
+            HostId = findRequest.Result.HostId,
+            TargetType = WeaverWorkTarget.GameServerUninstall,
+            Status = WeaverWorkState.WaitingToBePickedUp,
+            WorkData = _serializerService.SerializeMemory(findRequest.Result.Id),
+            CreatedBy = modifyingUserId,
+            CreatedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        });
+        if (!hostDeleteRequest.Succeeded)
+            return await Result<Guid>.FailAsync(hostDeleteRequest.ErrorMessage);
 
         return await Result.SuccessAsync();
     }
@@ -477,7 +541,7 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject)
     {
-        // Game profiles shouldn't have matching friendly names so we'll enforce that 
+        // Game profiles shouldn't have matching friendly names, so we'll enforce that 
         var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(createObject.FriendlyName);
         if (matchingUsernameRequest.Result is not null)
             createObject.FriendlyName = $"{createObject.FriendlyName} - {Guid.NewGuid()}";
@@ -497,7 +561,7 @@ public class GameServerService : IGameServerService
 
         if (!string.IsNullOrWhiteSpace(updateObject.FriendlyName))
         {
-            // Game profiles shouldn't have matching friendly names so we'll enforce that 
+            // Game profiles shouldn't have matching friendly names, so we'll enforce that 
             var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(updateObject.FriendlyName);
             if (matchingUsernameRequest.Result is not null)
                 return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
@@ -518,7 +582,7 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var request = await _gameServerRepository.DeleteAsync(id, modifyingUserId);
+        var request = await _gameServerRepository.DeleteGameProfileAsync(id, modifyingUserId);
         if (!request.Succeeded)
             return await Result.FailAsync(request.ErrorMessage);
 

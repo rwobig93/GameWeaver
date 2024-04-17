@@ -2,6 +2,7 @@
 appsettings.Development.json
 **/.idea/dataSources/
 **/.idea/discord.xml
+**/_dev-WeaverApp
 
 # User-specific files
 *.rsuser
@@ -396,3 +397,5 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/.idea/.idea.GameWeaver/.idea/dataSources.xml
+/.idea/.idea.GameWeaver/.idea/encodings.xml

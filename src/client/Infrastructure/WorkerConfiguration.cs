@@ -1,6 +1,5 @@
 using Application.Constants;
 using Application.Services;
-using Application.Services.System;
 using Application.Settings;
 using Infrastructure.Handlers;
 using Infrastructure.Services;
@@ -59,6 +58,6 @@ public static class WorkerConfiguration
             .AddHttpMessageHandler<AuthTokenDelegatingHandler>();
 
         services.AddSingleton<IDateTimeService, DateTimeService>();
-        services.AddSingleton<ISerializerService, JsonSerializerService>();
+        services.AddSingleton<ISerializerService, SerializerService>();
     }
 }

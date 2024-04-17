@@ -1,5 +1,9 @@
 using Application.Models.GameServer.GameServer;
+using Application.Models.GameServer.LocalResource;
+using Application.Models.GameServer.Mod;
+using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
@@ -100,6 +104,34 @@ public static class GameServerMappers
             LastModifiedOn = gameServerDb.LastModifiedOn,
             IsDeleted = gameServerDb.IsDeleted,
             DeletedOn = gameServerDb.DeletedOn
+        };
+    }
+
+    public static GameServerToHost ToHost(this GameServerDb gameServerDb)
+    {
+        return new GameServerToHost
+        {
+            Id = gameServerDb.Id,
+            SteamName = gameServerDb.ServerName,
+            SteamGameId = 0,
+            SteamToolId = 0,
+            ServerName = gameServerDb.ServerName,
+            Password = gameServerDb.Password,
+            PasswordRcon = gameServerDb.PasswordRcon,
+            PasswordAdmin = gameServerDb.PasswordAdmin,
+            ServerVersion = "Unknown",
+            IpAddress = gameServerDb.PrivateIp,
+            ExtHostname = gameServerDb.PublicIp,
+            PortGame = gameServerDb.PortGame,
+            PortQuery = gameServerDb.PortQuery,
+            PortRcon = gameServerDb.PortRcon,
+            Modded = gameServerDb.Modded,
+            ManualRootUrl = "",
+            ServerProcessName = "",
+            ServerState = ConnectivityState.Unknown,
+            Source = GameSource.Steam,
+            ModList = new SerializableList<ModSlim>(),
+            Resources = new SerializableList<LocalResourceSlim>()
         };
     }
 }

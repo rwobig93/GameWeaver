@@ -1,6 +1,7 @@
 ﻿using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
+using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
 
 namespace Application.Mappers.GameServer;
@@ -120,5 +121,22 @@ public static class HostMappers
     public static IEnumerable<HostCheckInFull> ToFulls(this IEnumerable<HostCheckInDb> checkInDbs)
     {
         return checkInDbs.Select(x => x.ToFull()).ToList();
+    }
+
+    public static WeaverWorkClient ToClientWork(this WeaverWorkSlim workSlim)
+    {
+        return new WeaverWorkClient
+        {
+            Id = workSlim.Id,
+            GameServerId = workSlim.GameServerId,
+            TargetType = workSlim.TargetType,
+            Status = workSlim.Status,
+            WorkData = workSlim.WorkData
+        };
+    }
+
+    public static IEnumerable<WeaverWorkClient> ToClientWorks(this IEnumerable<WeaverWorkSlim> workSlims)
+    {
+        return workSlims.Select(x => x.ToClientWork()).ToList();
     }
 }
