@@ -28,6 +28,8 @@ public static class ErrorMessageConstants
         public const string PasswordsNoMatchError = "Provided password and confirmation don't match, please try again";
         public const string TokenInvalidError = "The token provided is invalid";
         public const string TokenExpiredError = "Your authentication token has expired, please remove your authorization header and login again";
+        public const string TokenMalformedError =
+            "Your token is malformed, please remove the token and grab a new one. If you are trying to get a token please remove any existing token from your headers";
         public const string UnauthenticatedError = "You are currently unauthenticated and connot do that action, please login and try again";
         public const string ExternalAuthNotLinked =
             "This external account is not linked to your internal account, please login and link this account in your account settings";

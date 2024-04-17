@@ -20,7 +20,6 @@ public partial class AuditTrailAdmin
     private string _searchString = "";
     private int _totalTrails;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private bool _loading = true;
 
     private bool _dense = true;
     private bool _hover = true;
@@ -67,7 +66,6 @@ public partial class AuditTrailAdmin
             _ => _pagedData
         };
 
-        _loading = false;
         return new TableData<AuditTrailSlim>() {TotalItems = _totalTrails, Items = _pagedData};
     }
 

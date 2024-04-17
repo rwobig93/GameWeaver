@@ -95,6 +95,13 @@ public class ControlServerWorker : BackgroundService
             _logger.Error("Failed to check in with the control server: {Error}", checkInResponse.Messages);
             return;
         }
+        
+        // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+        if (checkInResponse.Data is null)
+        {
+            _logger.Warning("checkInResponse.Data was null when it shouldn't be: {Messages}", checkInResponse.Messages);
+            return;
+        }
 
         foreach (var work in checkInResponse.Data)
         {

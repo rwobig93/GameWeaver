@@ -354,19 +354,26 @@ public static class DependencyInjection
                 {
                     OnAuthenticationFailed = auth =>
                     {
-                        if (auth.Exception is SecurityTokenExpiredException)
+                        var errorMessage = ErrorMessageConstants.Generic.ContactAdmin;
+                        switch (auth.Exception)
                         {
-                            auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
-                            auth.Response.ContentType = "application/json";
-                            var authExpired = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Authentication.TokenExpiredError));
-                            return auth.Response.WriteAsync(authExpired);
+                            case SecurityTokenExpiredException:
+                                auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
+                                errorMessage = ErrorMessageConstants.Authentication.TokenExpiredError;
+                                break;
+                            case SecurityTokenMalformedException sec:
+                                auth.Response.StatusCode = (int) HttpStatusCode.BadRequest;
+                                errorMessage = ErrorMessageConstants.Authentication.TokenMalformedError;
+                                break;
+                            default:
+                                auth.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+                                Log.Warning("JWT authentication failed generically: {Error}", auth.Exception.Message);
+                                break;
                         }
-                        
-                        auth.Response.StatusCode = (int) HttpStatusCode.InternalServerError;
+
                         auth.Response.ContentType = "application/json";
-                        var generalError = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Generic.ContactAdmin));
-                        Log.Warning("JWT authentication failed generically: {Error}", auth.Exception.Message);
-                        return auth.Response.WriteAsync(generalError);
+                        var errorResult = JsonConvert.SerializeObject(Result.Fail(errorMessage));
+                        return auth.Response.WriteAsync(errorResult);
                     },
                     OnChallenge = context =>
                     {

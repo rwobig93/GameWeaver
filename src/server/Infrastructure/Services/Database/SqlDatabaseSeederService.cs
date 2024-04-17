@@ -1,5 +1,4 @@
 using System.Data;
-using System.Data.SqlClient;
 using Application.Constants.Identity;
 using Application.Database;
 using Application.Database.MsSql;
@@ -27,6 +26,7 @@ using Domain.Models.Database;
 using Domain.Models.Identity;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Microsoft.Data.SqlClient;
 
 namespace Infrastructure.Services.Database;
 

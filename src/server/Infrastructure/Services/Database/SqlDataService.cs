@@ -1,5 +1,4 @@
 using System.Data;
-using System.Data.SqlClient;
 using Application.Database;
 using Application.Database.MsSql;
 using Application.Database.Postgres;
@@ -9,6 +8,7 @@ using Application.Settings.AppSettings;
 using Dapper;
 using Domain.Enums.Database;
 using Microsoft.Extensions.Options;
+using Microsoft.Data.SqlClient;
 
 namespace Infrastructure.Services.Database;
 
