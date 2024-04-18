@@ -139,16 +139,6 @@ public static class HostEndpoints
         }
     }
 
-    public class JsonGenericRequest
-    {
-        public JsonGenericRequest(object request)
-        {
-            this.Request = request;
-        }
-
-        public object Request { get; set; }
-    }
-
     /// <summary>
     /// Inject a valid host check-in status
     /// </summary>
@@ -316,7 +306,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="request">Required properties request to create a host</param>
     /// <param name="hostService"></param>
-    /// <returns>Id of the host that was created</returns>
+    /// <returns>ID of the host that was created</returns>
     [Authorize(PermissionConstants.Hosts.Create)]
     private static async Task<IResult<Guid>> Create([FromBody]HostCreate request, IHostService hostService)
     {
@@ -799,7 +789,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="id">Id of the host to get weaver work for</param>
     /// <param name="hostService"></param>
-    /// <returns>All of the current waiting weaver work jobs</returns>
+    /// <returns>All the current waiting weaver work jobs</returns>
     [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWaitingWeaverWorkForHost([FromQuery]Guid id, IHostService hostService)
     {
@@ -818,7 +808,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="request">Required properties to create weaver work for a host</param>
     /// <param name="hostService"></param>
-    /// <returns>Id of the weaver work created</returns>
+    /// <returns>ID of the weaver work created</returns>
     [Authorize(PermissionConstants.Hosts.CreateWeaverWork)]
     private static async Task<IResult<int>> CreateWeaverWork([FromBody]WeaverWorkCreate request, IHostService hostService)
     {

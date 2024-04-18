@@ -32,10 +32,14 @@ public class ControlServerWorker : BackgroundService
         _serializerService = serializerService;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(ControlServerWorker));
-        
+        await Task.CompletedTask;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -52,11 +56,16 @@ public class ControlServerWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop", nameof(ControlServerWorker));
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop: {ErrorMessage}",
+                    nameof(ControlServerWorker), ex.Message);
             }
         }
-        
-        _logger.Debug("Stopping {ServiceName} service", nameof(ControlServerWorker));
+    }
+
+    public override async Task StopAsync(CancellationToken stoppingToken)
+    {
+        _logger.Debug("Stopped {ServiceName} service", nameof(ControlServerWorker));
+        await Task.CompletedTask;
     }
 
     private async Task ValidateServerStatus()

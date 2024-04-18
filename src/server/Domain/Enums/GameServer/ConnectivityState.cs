@@ -14,5 +14,6 @@ public enum ConnectivityState
     Installing = 9,
     Shutdown = 10,
     Uninstalling = 11,
-    Uninstalled = 12
+    Uninstalled = 12,
+    ShuttingDown = 13
 }

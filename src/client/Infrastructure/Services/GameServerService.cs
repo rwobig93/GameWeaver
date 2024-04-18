@@ -425,6 +425,8 @@ public class GameServerService : IGameServerService
                     failures.Add($"Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{gameServer.Id}]{gameServer.ServerName}");
                     continue;
                 }
+
+                startedProcess.PriorityClass = ProcessPriorityClass.High;
             
                 _logger.Information("Started process for gameserver: [{GameserverId}]{GameserverName}: {ProcessId}",
                     gameServer.Id, gameServer.ServerName, startedProcess.Id);
@@ -463,6 +465,8 @@ public class GameServerService : IGameServerService
             var waitCheckCount = 0;
             while (true)
             {
+                await Task.Delay(500);
+
                 var notExitedProcesses = gameserverProcesses.Where(x => !x.HasExited).ToList();
                 if (notExitedProcesses.Count <= 0)
                 {
@@ -478,7 +482,8 @@ public class GameServerService : IGameServerService
                     {
                         try
                         {
-                            process.Kill();
+                            if (!process.HasExited)
+                                process.Kill();
                         }
                         catch (Exception ex)
                         {
@@ -493,7 +498,6 @@ public class GameServerService : IGameServerService
                     return await Result.SuccessAsync();
                 }
 
-                await Task.Delay(500);
                 waitCheckCount++;
             }
         }

@@ -47,7 +47,7 @@ public class HostWorker : BackgroundService
         _appLifetime = appLifetime;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(HostWorker));
         Directory.CreateDirectory(_generalConfig.Value.AppDirectory);
@@ -78,22 +78,38 @@ public class HostWorker : BackgroundService
         
         // TODO: Implement Sqlite for host work tracking, for now we'll serialize/deserialize a json file
         await DeserializeWorkQueues();
-        
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
         while (!stoppingToken.IsCancellationRequested)
         {
-            _lastRuntime = _dateTimeService.NowDatabaseTime;
-            await UpdateCurrentResourceUsage();
+            try
+            {
+                _lastRuntime = _dateTimeService.NowDatabaseTime;
+                await UpdateCurrentResourceUsage();
             
-            await ProcessWorkQueue();
+                await ProcessWorkQueue();
 
-            var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
-            if (millisecondsPassed < _generalConfig.Value.HostWorkIntervalMs)
-                await Task.Delay(_generalConfig.Value.HostWorkIntervalMs - millisecondsPassed, stoppingToken);
+                var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
+                if (millisecondsPassed < _generalConfig.Value.HostWorkIntervalMs)
+                    await Task.Delay(_generalConfig.Value.HostWorkIntervalMs - millisecondsPassed, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop: {ErrorMessage}",
+                    nameof(HostWorker), ex.Message);
+            }
         }
+    }
 
+    public override async Task StopAsync(CancellationToken stoppingToken)
+    {
+        _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
+        
         await SerializeWorkQueues();
         
-        _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
+        _logger.Debug("Stopped {ServiceName} service", nameof(HostWorker));
     }
 
     public static void AddWorkToQueue(WeaverWork work)

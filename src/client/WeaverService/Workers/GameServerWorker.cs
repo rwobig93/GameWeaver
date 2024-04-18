@@ -42,14 +42,17 @@ public class GameServerWorker : BackgroundService
         _serializerService = serializerService;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(GameServerWorker));
-
+        
         // TODO: Implement Sqlite for game server state tracking, for now we'll serialize/deserialize a json file
         await DeserializeGameServerState();
         await DeserializeWorkQueues();
-        
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -65,14 +68,20 @@ public class GameServerWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop", nameof(GameServerWorker));
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop: {ErrorMessage}",
+                    nameof(GameServerWorker), ex.Message);
             }
         }
+    }
+
+    public override async Task StopAsync(CancellationToken stoppingToken)
+    {
+        _logger.Debug("Stopping {ServiceName} service", nameof(GameServerWorker));
 
         await SerializeGameServerState();
         await SerializeWorkQueues();
         
-        _logger.Debug("Stopping {ServiceName} service", nameof(GameServerWorker));
+        _logger.Debug("Stopped {ServiceName} service", nameof(GameServerWorker));
     }
 
     private async Task ProcessWorkQueue()
@@ -110,9 +119,6 @@ public class GameServerWorker : BackgroundService
             
             _inProgressWorkCount++;
             work.Status = WeaverWorkState.InProgress;
-            // TODO: RunSynchronously may not be called on a task that has already completed
-            // Location: %USERPROFILE%\RiderProjects\GameWeaver\src\client\WeaverService\_dev-WeaverApp
-            // ThreadHelper.QueueWork(_ => Task.Run(() => HandleWork(work)));
             // ReSharper disable once AsyncVoidLambda
             ThreadHelper.QueueWork(async _ => await HandleWork(work));
         }
@@ -246,6 +252,12 @@ public class GameServerWorker : BackgroundService
                 case WeaverWorkTarget.GameServerUninstall:
                     await UninstallGameServer(work);
                     break;
+                case WeaverWorkTarget.GameServerStart:
+                    await StartGameServer(work);
+                    break;
+                case WeaverWorkTarget.GameServerStop:
+                    await StopGameServer(work);
+                    break;
                 case WeaverWorkTarget.StatusUpdate:
                 case WeaverWorkTarget.Host:
                 case WeaverWorkTarget.HostStatusUpdate:
@@ -283,6 +295,170 @@ public class GameServerWorker : BackgroundService
         {
             _inProgressWorkCount--;
         }
+    }
+
+    private async Task StartGameServer(WeaverWork work)
+    {
+        if (work.WorkData is null)
+        {
+            _logger.Error("Gameserver start request has an empty work data payload: {WorkId}", work.Id);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                TargetType = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {$"Gameserver start request has an empty work data payload: {work.Id}"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+        
+        var gameServerId = _serializerService.DeserializeMemory<Guid>(work.WorkData);
+        var gotGameServer = GameServers.TryGetValue(gameServerId, out var gameServerLocal);
+        if (!gotGameServer || gameServerLocal is null)
+        {
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                TargetType = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+
+        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+        {
+            Id = work.Id,
+            TargetType = WeaverWorkTarget.GameServerStateUpdate,
+            Status = WeaverWorkState.InProgress,
+            WorkData = _serializerService.SerializeMemory(new GameServerStateUpdate
+            {
+                Id = gameServerLocal.Id,
+                ServerProcessName = null,
+                ServerState = ServerState.Unknown,
+                Resources = null
+            }),
+            AttemptCount = 0
+        });
+        
+        var startResult = await _gameServerService.StartServer(gameServerLocal);
+        if (!startResult.Succeeded)
+        {
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                TargetType = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(startResult.Messages),
+                AttemptCount = 0
+            });
+            return;
+        }
+        
+        _logger.Information("Started gameserver processes: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+        
+        // TODO: Update gameserver local status on each modification
+        
+        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+        {
+            Id = work.Id,
+            TargetType = WeaverWorkTarget.GameServerStateUpdate,
+            Status = WeaverWorkState.Completed,
+            WorkData = _serializerService.SerializeMemory(new GameServerStateUpdate
+            {
+                Id = gameServerLocal.Id,
+                ServerProcessName = null,
+                ServerState = ServerState.SpinningUp,
+                Resources = null
+            }),
+            AttemptCount = 0
+        });
+        
+        // TODO: Add thread task to pool to indicate when server is up
+    }
+
+    private async Task StopGameServer(WeaverWork work)
+    {
+        if (work.WorkData is null)
+        {
+            _logger.Error("Gameserver stop request has an empty work data payload: {WorkId}", work.Id);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                TargetType = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {$"Gameserver stop request has an empty work data payload: {work.Id}"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+        
+        var gameServerId = _serializerService.DeserializeMemory<Guid>(work.WorkData);
+        var gotGameServer = GameServers.TryGetValue(gameServerId, out var gameServerLocal);
+        if (!gotGameServer || gameServerLocal is null)
+        {
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                TargetType = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(new List<string> {"Gameserver id doesn't match an active gameserver this host manages"}),
+                AttemptCount = 0
+            });
+            return;
+        }
+
+        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+        {
+            Id = work.Id,
+            TargetType = WeaverWorkTarget.GameServerStateUpdate,
+            Status = WeaverWorkState.InProgress,
+            WorkData = _serializerService.SerializeMemory(new GameServerStateUpdate
+            {
+                Id = gameServerLocal.Id,
+                ServerProcessName = null,
+                ServerState = ServerState.ShuttingDown,
+                Resources = null
+            }),
+            AttemptCount = 0
+        });
+        
+        var stopResult = await _gameServerService.StopServer(gameServerLocal);
+        if (!stopResult.Succeeded)
+        {
+            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+            {
+                Id = work.Id,
+                TargetType = WeaverWorkTarget.StatusUpdate,
+                Status = WeaverWorkState.Failed,
+                WorkData = _serializerService.SerializeMemory(stopResult.Messages),
+                AttemptCount = 0
+            });
+            return;
+        }
+        
+        _logger.Information("Stopped gameserver processes: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+        
+        // TODO: Update gameserver local status on each modification
+        
+        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
+        {
+            Id = work.Id,
+            TargetType = WeaverWorkTarget.GameServerStateUpdate,
+            Status = WeaverWorkState.Completed,
+            WorkData = _serializerService.SerializeMemory(new GameServerStateUpdate
+            {
+                Id = gameServerLocal.Id,
+                ServerProcessName = null,
+                ServerState = ServerState.Shutdown,
+                Resources = null
+            }),
+            AttemptCount = 0
+        });
     }
 
     private async Task UninstallGameServer(WeaverWork work)
