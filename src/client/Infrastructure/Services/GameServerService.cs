@@ -352,7 +352,8 @@ public class GameServerService : IGameServerService
     {
         try
         {
-            if (gameServer.Resources.All(x => x.Type != LocationType.BackupPath))
+            var backupPaths = gameServer.Resources.Where(x => x.Type == LocationType.BackupPath).ToList();
+            if (backupPaths.Count == 0)
             {
                 _logger.Debug("Gameserver doesn't have a backup path configured, skipping: [{GameserverId}]{GameserverName}",
                     gameServer.Id, gameServer.ServerName);
@@ -364,7 +365,7 @@ public class GameServerService : IGameServerService
             var backupRootPath = Path.Combine(OsHelpers.GetDefaultBackupPath(), gameServer.Id.ToString());
             var backupTimestamp = _dateTimeService.NowDatabaseTime.ToString("yyyyMMdd_HHmm");
             var backupIndex = 0;
-            foreach (var backupDirectory in gameServer.Resources.Where(x => x.Type == LocationType.BackupPath))
+            foreach (var backupDirectory in backupPaths)
             {
                 var backupPath = Path.Combine(gameServer.GetInstallDirectory(), backupDirectory.Path);
                 var archivePath = Path.Combine(backupRootPath, backupTimestamp, $"{backupIndex}.zip");
@@ -388,11 +389,119 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> StartServer(GameServerLocal gameServer)
     {
-        throw new NotImplementedException();
+        var startupBinaries = gameServer.Resources.Where(x => x.Startup).ToList();
+        var failures = new List<string>();
+
+        foreach (var binary in startupBinaries)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(binary.Path))
+                {
+                    _logger.Error("Startup resource for gameserver has an empty path, I don't know what to start!: [{GameserverId}]{GameserverName}",
+                        gameServer.Id, gameServer.ServerName);
+                    failures.Add("Startup resource for gameserver has an empty path, I don't know what to start!");
+                    continue;
+                }
+                
+                var gameServerDirectory = gameServer.GetInstallDirectory();
+                var fullPath = Path.Combine(gameServerDirectory, binary.Path);
+                if (!fullPath.EndsWith(binary.Extension) && !string.IsNullOrWhiteSpace(binary.Extension))
+                    fullPath = $"{fullPath}{binary.Extension}";
+            
+                var startedProcess = Process.Start(new ProcessStartInfo
+                {
+                    Arguments = binary.Args,
+                    CreateNoWindow = true,
+                    FileName = fullPath,
+                    UseShellExecute = false,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    WorkingDirectory = gameServerDirectory
+                });
+                if (startedProcess is null)
+                {
+                    _logger.Error("Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{GameserverId}]{GameserverName}",
+                        gameServer.Id, gameServer.ServerName);
+                    failures.Add($"Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{gameServer.Id}]{gameServer.ServerName}");
+                    continue;
+                }
+            
+                _logger.Information("Started process for gameserver: [{GameserverId}]{GameserverName}: {ProcessId}",
+                    gameServer.Id, gameServer.ServerName, startedProcess.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failure occurred starting gameserver process [{GameserverId}]{GameserverName}: {ErrorMessage}",
+                    gameServer.Id, gameServer.ServerName, ex.Message);
+                failures.Add($"Failure occurred starting gameserver process [{gameServer.Id}]{gameServer.ServerName}: {ex.Message}");
+            }
+        }
+
+        if (failures.Count != 0)
+            return await Result.FailAsync(failures);
+
+        return await Result.SuccessAsync();
     }
 
     public async Task<IResult> StopServer(GameServerLocal gameServer)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
+            if (gameserverProcesses.Count == 0)
+            {
+                _logger.Debug("Found no running processes from the gameserver directory to stop: [{GameserverId}]{GameserverName}",
+                    gameServer.Id, gameServer.ServerName);
+                return await Result.SuccessAsync();
+            }
+
+            // Politely close the processes first to allow them to clean up after themselves
+            foreach (var process in gameserverProcesses)
+                process.Close();
+
+            // Ensure processes have closed, if not we will wait a bit and forcefully close them if not
+            var waitCheckCount = 0;
+            while (true)
+            {
+                var notExitedProcesses = gameserverProcesses.Where(x => !x.HasExited).ToList();
+                if (notExitedProcesses.Count <= 0)
+                {
+                    _logger.Debug("All gameserver processes have stopped running: [{GameserverId}]{GameserverName}",
+                        gameServer.Id, gameServer.ServerName);
+                    return await Result.SuccessAsync();
+                }
+                
+                // If all processes haven't exited by 5 seconds we'll force close them
+                if (waitCheckCount >= 10)
+                {
+                    foreach (var process in notExitedProcesses)
+                    {
+                        try
+                        {
+                            process.Kill();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.Error("Failed to close or kill all gameserver processes [{GameserverId}]{GameserverName}: {ErrorMessage}",
+                                gameServer.Id, gameServer.ServerName, ex.Message);
+                            return await Result.FailAsync($"Failed to close or kill all gameserver processes [{gameServer.Id}]{gameServer.ServerName}: {ex.Message}");
+                        }
+                    }
+                    
+                    _logger.Debug("All gameserver processes have stopped running: [{GameserverId}]{GameserverName}",
+                        gameServer.Id, gameServer.ServerName);
+                    return await Result.SuccessAsync();
+                }
+
+                await Task.Delay(500);
+                waitCheckCount++;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to stop gameserver processes [{GameserverId}]{GameserverName}: {ErrorMessage}",
+                gameServer.Id, gameServer.ServerName, ex.Message);
+            return await Result.FailAsync($"Failed to stop gameserver processes [{gameServer.Id}]{gameServer.ServerName}: {ex.Message}");
+        }
     }
 }
