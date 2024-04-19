@@ -677,6 +677,9 @@ public class HostService : IHostService
             case WeaverWorkTarget.GameServerUpdate:
             case WeaverWorkTarget.GameServerUninstall:
             case WeaverWorkTarget.CurrentEnd:
+            case WeaverWorkTarget.GameServerStart:
+            case WeaverWorkTarget.GameServerStop:
+            case WeaverWorkTarget.GameServerRestart:
             case null:
             default:
                 _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
@@ -702,9 +705,13 @@ public class HostService : IHostService
             if (deserializedData is null)
                 return await Result.FailAsync("Deserialized game server state update work data is null, unable to update state");
 
+            var gameServer = await _gameServerRepository.GetByIdAsync(deserializedData.Id);
+            if (!gameServer.Succeeded || gameServer.Result is null)
+                return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            
             var result = await _gameServerRepository.UpdateAsync(new GameServerUpdate
             {
-                Id = deserializedData.Id,
+                Id = gameServer.Result.Id,
                 ServerState = deserializedData.ServerState
             });
             if (!result.Succeeded)
@@ -713,9 +720,18 @@ public class HostService : IHostService
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             
             // State update is uninstalled, so we'll wrap up by deleting the game server
-            var deleteServerRequest = await _gameServerRepository.DeleteAsync(deserializedData.Id, updateObject.LastModifiedBy ?? Guid.Empty);
+            var deleteServerRequest = await _gameServerRepository.DeleteAsync(gameServer.Result.Id, updateObject.LastModifiedBy ?? Guid.Empty);
             if (!deleteServerRequest.Succeeded)
                 return await Result.FailAsync(deleteServerRequest.ErrorMessage);
+
+            var serverGameProfile = await _gameServerRepository.GetGameProfileByIdAsync(gameServer.Result.GameProfileId);
+            if (!serverGameProfile.Succeeded || serverGameProfile.Result is null)
+                return await Result.FailAsync(serverGameProfile.ErrorMessage);
+
+            var deleteProfileRequest =
+                await _gameServerRepository.DeleteGameProfileAsync(serverGameProfile.Result.Id, updateObject.LastModifiedBy ?? Guid.Empty);
+            if (!deleteProfileRequest.Succeeded)
+                return await Result.FailAsync(deleteProfileRequest.ErrorMessage);
 
             return await Result.SuccessAsync();
         }

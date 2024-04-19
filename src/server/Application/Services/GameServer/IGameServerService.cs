@@ -72,7 +72,7 @@ public interface IGameServerService
     Task<IResult> DeleteModAsync(Guid id, Guid modifyingUserId);
     Task<IResult<IEnumerable<ModSlim>>> SearchModsAsync(string searchText);
     Task<IResult<IEnumerable<ModSlim>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize);
-    Task<IResult> StartServerAsync(Guid id);
-    Task<IResult> StopServerAsync(Guid id);
-    Task<IResult> RestartServerAsync(Guid id);
+    Task<IResult> StartServerAsync(Guid id, Guid modifyingUserId);
+    Task<IResult> StopServerAsync(Guid id, Guid modifyingUserId);
+    Task<IResult> RestartServerAsync(Guid id, Guid modifyingUserId);
 }

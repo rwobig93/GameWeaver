@@ -878,7 +878,7 @@
             </summary>
             <param name="request">Required properties request to create a host</param>
             <param name="hostService"></param>
-            <returns>Id of the host that was created</returns>
+            <returns>ID of the host that was created</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.Update(Application.Models.GameServer.Host.HostUpdate,Application.Services.GameServer.IHostService)">
             <summary>
@@ -1067,7 +1067,7 @@
             </summary>
             <param name="id">Id of the host to get weaver work for</param>
             <param name="hostService"></param>
-            <returns>All of the current waiting weaver work jobs</returns>
+            <returns>All the current waiting weaver work jobs</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.CreateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkCreate,Application.Services.GameServer.IHostService)">
             <summary>
@@ -1075,7 +1075,7 @@
             </summary>
             <param name="request">Required properties to create weaver work for a host</param>
             <param name="hostService"></param>
-            <returns>Id of the weaver work created</returns>
+            <returns>ID of the weaver work created</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService)">
             <summary>

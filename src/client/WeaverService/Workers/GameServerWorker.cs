@@ -236,6 +236,9 @@ public class GameServerWorker : BackgroundService
                 case WeaverWorkTarget.GameServerStop:
                     await StopGameServer(work);
                     break;
+                case WeaverWorkTarget.GameServerRestart:
+                    await RestartGameServer(work);
+                    break;
                 case WeaverWorkTarget.StatusUpdate:
                 case WeaverWorkTarget.Host:
                 case WeaverWorkTarget.HostStatusUpdate:
@@ -310,7 +313,7 @@ public class GameServerWorker : BackgroundService
         // TODO: Add thread task to pool to indicate when server is up | Check for listening port of gameserver, once listening we know it's up w/ timeout
     }
 
-    private async Task StopGameServer(WeaverWork work)
+    private async Task StopGameServer(WeaverWork work, bool sendCompletion = true)
     {
         if (work.WorkData is null)
         {
@@ -352,14 +355,21 @@ public class GameServerWorker : BackgroundService
         _logger.Information("Stopped gameserver processes: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
         
         // TODO: Update gameserver local status on each modification
-        
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+
+        var finalStatus = sendCompletion ? WeaverWorkState.Completed : WeaverWorkState.InProgress;
+        work.SendGameServerUpdate(finalStatus, new GameServerStateUpdate
         {
             Id = gameServerLocal.Id,
             ServerProcessName = null,
             ServerState = ServerState.Shutdown,
             Resources = null
         });
+    }
+
+    private async Task RestartGameServer(WeaverWork work)
+    {
+        await StopGameServer(work, false);
+        await StartGameServer(work);
     }
 
     private async Task UninstallGameServer(WeaverWork work)

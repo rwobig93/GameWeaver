@@ -766,18 +766,72 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
     }
 
-    public async Task<IResult> StartServerAsync(Guid id)
+    public async Task<IResult> StartServerAsync(Guid id, Guid modifyingUserId)
     {
-        throw new NotImplementedException();
+        var foundServer = await _gameServerRepository.GetByIdAsync(id);
+        if (!foundServer.Succeeded || foundServer.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        
+        var startRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
+        {
+            HostId = foundServer.Result.HostId,
+            TargetType = WeaverWorkTarget.GameServerStart,
+            Status = WeaverWorkState.WaitingToBePickedUp,
+            WorkData = _serializerService.SerializeMemory(foundServer.Result.ToHost()),
+            CreatedBy = modifyingUserId,
+            CreatedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        });
+        if (!startRequest.Succeeded)
+            return await Result<Guid>.FailAsync(startRequest.ErrorMessage);
+
+        return await Result<Guid>.SuccessAsync();
     }
 
-    public async Task<IResult> StopServerAsync(Guid id)
+    public async Task<IResult> StopServerAsync(Guid id, Guid modifyingUserId)
     {
-        throw new NotImplementedException();
+        var foundServer = await _gameServerRepository.GetByIdAsync(id);
+        if (!foundServer.Succeeded || foundServer.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        
+        var stopRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
+        {
+            HostId = foundServer.Result.HostId,
+            TargetType = WeaverWorkTarget.GameServerStop,
+            Status = WeaverWorkState.WaitingToBePickedUp,
+            WorkData = _serializerService.SerializeMemory(foundServer.Result.ToHost()),
+            CreatedBy = modifyingUserId,
+            CreatedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        });
+        if (!stopRequest.Succeeded)
+            return await Result<Guid>.FailAsync(stopRequest.ErrorMessage);
+
+        return await Result<Guid>.SuccessAsync();
     }
 
-    public async Task<IResult> RestartServerAsync(Guid id)
+    public async Task<IResult> RestartServerAsync(Guid id, Guid modifyingUserId)
     {
-        throw new NotImplementedException();
+        var foundServer = await _gameServerRepository.GetByIdAsync(id);
+        if (!foundServer.Succeeded || foundServer.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        
+        var restartRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
+        {
+            HostId = foundServer.Result.HostId,
+            TargetType = WeaverWorkTarget.GameServerRestart,
+            Status = WeaverWorkState.WaitingToBePickedUp,
+            WorkData = _serializerService.SerializeMemory(foundServer.Result.ToHost()),
+            CreatedBy = modifyingUserId,
+            CreatedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        });
+        if (!restartRequest.Succeeded)
+            return await Result<Guid>.FailAsync(restartRequest.ErrorMessage);
+
+        return await Result<Guid>.SuccessAsync();
     }
 }

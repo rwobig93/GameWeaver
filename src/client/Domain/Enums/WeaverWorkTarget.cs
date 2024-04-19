@@ -13,5 +13,6 @@ public enum WeaverWorkTarget
     GameServerStateUpdate = 204,
     GameServerStart = 205,
     GameServerStop = 206,
+    GameServerRestart = 207,
     CurrentEnd = 300
 }
