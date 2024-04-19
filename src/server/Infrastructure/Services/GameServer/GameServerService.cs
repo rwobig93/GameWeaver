@@ -765,4 +765,19 @@ public class GameServerService : IGameServerService
 
         return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
     }
+
+    public async Task<IResult> StartServerAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IResult> StopServerAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<IResult> RestartServerAsync(Guid id)
+    {
+        throw new NotImplementedException();
+    }
 }
