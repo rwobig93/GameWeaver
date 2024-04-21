@@ -389,7 +389,7 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> StartServer(GameServerLocal gameServer)
     {
-        var startupBinaries = gameServer.Resources.Where(x => x.Startup).ToList();
+        var startupBinaries = gameServer.Resources.Where(x => x is {Startup: true, Type: LocationType.Executable}).ToList();
         var failures = new List<string>();
 
         foreach (var binary in startupBinaries)
@@ -407,7 +407,7 @@ public class GameServerService : IGameServerService
                 var gameServerDirectory = gameServer.GetInstallDirectory();
                 var fullPath = Path.Combine(gameServerDirectory, binary.Path);
                 if (!fullPath.EndsWith(binary.Extension) && !string.IsNullOrWhiteSpace(binary.Extension))
-                    fullPath = $"{fullPath}{binary.Extension}";
+                    fullPath = $"{fullPath}.{binary.Extension}";
             
                 var startedProcess = Process.Start(new ProcessStartInfo
                 {
@@ -457,49 +457,10 @@ public class GameServerService : IGameServerService
                 return await Result.SuccessAsync();
             }
 
-            // Politely close the processes first to allow them to clean up after themselves
             foreach (var process in gameserverProcesses)
-                process.Close();
+                process.Kill();
 
-            // Ensure processes have closed, if not we will wait a bit and forcefully close them if not
-            var waitCheckCount = 0;
-            while (true)
-            {
-                await Task.Delay(500);
-
-                var notExitedProcesses = gameserverProcesses.Where(x => !x.HasExited).ToList();
-                if (notExitedProcesses.Count <= 0)
-                {
-                    _logger.Debug("All gameserver processes have stopped running: [{GameserverId}]{GameserverName}",
-                        gameServer.Id, gameServer.ServerName);
-                    return await Result.SuccessAsync();
-                }
-                
-                // If all processes haven't exited by 5 seconds we'll force close them
-                if (waitCheckCount >= 10)
-                {
-                    foreach (var process in notExitedProcesses)
-                    {
-                        try
-                        {
-                            if (!process.HasExited)
-                                process.Kill();
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.Error("Failed to close or kill all gameserver processes [{GameserverId}]{GameserverName}: {ErrorMessage}",
-                                gameServer.Id, gameServer.ServerName, ex.Message);
-                            return await Result.FailAsync($"Failed to close or kill all gameserver processes [{gameServer.Id}]{gameServer.ServerName}: {ex.Message}");
-                        }
-                    }
-                    
-                    _logger.Debug("All gameserver processes have stopped running: [{GameserverId}]{GameserverName}",
-                        gameServer.Id, gameServer.ServerName);
-                    return await Result.SuccessAsync();
-                }
-
-                waitCheckCount++;
-            }
+            return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {

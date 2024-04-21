@@ -272,7 +272,7 @@ public class AppUserService : IAppUserService
                 return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
             }
 
-            List<string> errorMessages = new();
+            List<string> errorMessages = [];
             
             foreach (var permission in serviceAccountPermissions.Result)
             {

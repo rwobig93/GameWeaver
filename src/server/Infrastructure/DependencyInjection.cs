@@ -361,7 +361,7 @@ public static class DependencyInjection
                                 auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                                 errorMessage = ErrorMessageConstants.Authentication.TokenExpiredError;
                                 break;
-                            case SecurityTokenMalformedException sec:
+                            case SecurityTokenMalformedException:
                                 auth.Response.StatusCode = (int) HttpStatusCode.BadRequest;
                                 errorMessage = ErrorMessageConstants.Authentication.TokenMalformedError;
                                 break;

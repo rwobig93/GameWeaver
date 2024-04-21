@@ -496,6 +496,9 @@ public class HostService : IHostService
 
     public async Task<IResult> CreateCheckInAsync(HostCheckInCreate createObject)
     {
+        if (!float.IsNormal(createObject.CpuUsage) || !float.IsNormal(createObject.RamUsage) || !float.IsNormal(createObject.Uptime))
+            return await Result.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
+        
         var createRequest = await _hostRepository.CreateCheckInAsync(createObject);
         if (!createRequest.Succeeded)
             return await Result.FailAsync(createRequest.ErrorMessage);

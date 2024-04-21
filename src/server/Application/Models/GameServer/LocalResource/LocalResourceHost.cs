@@ -1,11 +1,12 @@
-﻿using Domain.Contracts;
-using Domain.Enums;
+﻿using Application.Models.GameServer.ConfigurationItem;
+using Domain.Contracts;
+using Domain.Enums.GameServer;
 using MemoryPack;
 
-namespace Domain.Models.GameServer;
+namespace Application.Models.GameServer.LocalResource;
 
 [MemoryPackable(SerializeLayout.Explicit)]
-public partial class LocationPointer
+public partial class LocalResourceHost
 {
     [MemoryPackOrder(0)]
     public string Name { get; set; } = "";
@@ -14,11 +15,11 @@ public partial class LocationPointer
     [MemoryPackOrder(2)]
     public bool Startup { get; set; } = false;
     [MemoryPackOrder(3)]
-    public LocationType Type { get; set; }
+    public ResourceType Type { get; set; }
     [MemoryPackOrder(4)]
     public string Extension { get; set; } = "";
     [MemoryPackOrder(5)]
     public string Args { get; set; } = "";
     [MemoryPackOrder(6)]
-    public SerializableList<ConfigurationSet> ConfigSets { get; set; } = [];
+    public SerializableList<ConfigurationItemSlim> ConfigSets { get; set; } = [];
 }

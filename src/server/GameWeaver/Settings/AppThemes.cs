@@ -196,12 +196,12 @@ public static class AppThemes
 
     public static List<AppThemeId> GetCustomThemeIds()
     {
-        return new List<AppThemeId>()
-        {
+        return
+        [
             AppThemeId.CustomOne,
             AppThemeId.CustomTwo,
             AppThemeId.CustomThree
-        };
+        ];
     }
 
     public static AppThemeCustom GetPreferenceCustomThemeFromId(AppUserPreferenceFull userPreference, AppThemeId themeId)

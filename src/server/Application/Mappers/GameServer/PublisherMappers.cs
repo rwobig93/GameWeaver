@@ -28,7 +28,7 @@ public static class PublisherMappers
             Id = publisherDb.Id,
             GameId = publisherDb.GameId,
             Name = publisherDb.Name,
-            Games = new List<GameSlim>()
+            Games = []
         };
     }
     

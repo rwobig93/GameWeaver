@@ -2,7 +2,7 @@
 
 public class Result : IResult
 {
-    public List<string> Messages { get; set; } = new ();
+    public List<string> Messages { get; set; } = [];
 
     public bool Succeeded { get; set; }
     
@@ -14,7 +14,7 @@ public class Result : IResult
 
     public static IResult Fail(string message)
     {
-        return new Result { Succeeded = false, Messages = new List<string> { message } };
+        return new Result { Succeeded = false, Messages = [message]};
     }
 
     public static IResult Fail(List<string> messages)
@@ -44,7 +44,7 @@ public class Result : IResult
 
     public static IResult Success(string message)
     {
-        return new Result { Succeeded = true, Messages = new List<string> { message } };
+        return new Result { Succeeded = true, Messages = [message]};
     }
 
     public static Task<IResult> SuccessAsync()
@@ -70,7 +70,7 @@ public class Result<T> : Result, IResult<T>
 
     public new static Result<T> Fail(string message)
     {
-        return new Result<T> { Succeeded = false, Messages = new List<string> { message } };
+        return new Result<T> { Succeeded = false, Messages = [message]};
     }
 
     public new static Result<T> Fail(List<string> messages)
@@ -85,7 +85,7 @@ public class Result<T> : Result, IResult<T>
 
     public static Result<T> Fail(T data, string message)
     {
-        return new Result<T> { Succeeded = false, Data = data, Messages = new List<string> { message } };
+        return new Result<T> { Succeeded = false, Data = data, Messages = [message]};
     }
 
     public static Result<T> Fail(T data, List<string> messages)
@@ -135,7 +135,7 @@ public class Result<T> : Result, IResult<T>
 
     public static Result<T> Success(T data, string message)
     {
-        return new Result<T> { Succeeded = true, Data = data, Messages = new List<string> { message } };
+        return new Result<T> { Succeeded = true, Data = data, Messages = [message]};
     }
 
     public static Result<T> Success(T data, List<string> messages)

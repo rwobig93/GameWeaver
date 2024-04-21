@@ -1,9 +1,9 @@
 ﻿using MemoryPack;
 
-namespace Domain.Models.GameServer;
+namespace Application.Models.GameServer.Mod;
 
 [MemoryPackable(SerializeLayout.Explicit)]
-public partial class Mod
+public partial class ModHost
 {
     [MemoryPackOrder(0)]
     public int GameId { get; set; }

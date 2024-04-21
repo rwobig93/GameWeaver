@@ -85,6 +85,7 @@ public static class JwtHelpers
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+            LifetimeValidator = (nbf, exp, _, _) => nbf < DateTime.UtcNow && exp > DateTime.UtcNow,
             RoleClaimType = ClaimTypes.Role,
             NameClaimType = ClaimTypes.Name,
             ClockSkew = TimeSpan.FromSeconds(5)

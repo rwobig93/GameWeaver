@@ -56,9 +56,9 @@ public partial class SecuritySettings
     private bool QrCodeGenerating { get; set; }
     
     // User API Tokens
-    private List<AppUserExtendedAttributeSlim> _userApiTokens = new();
+    private List<AppUserExtendedAttributeSlim> _userApiTokens = [];
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = new();
+    private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = [];
     
     // External Auth
     private bool _linkedAuthGoogle;

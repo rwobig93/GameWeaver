@@ -8,5 +8,5 @@ public class GameGenreFull
     public Guid GameId { get; set; }
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
-    public List<GameSlim> Games { get; set; } = new();
+    public List<GameSlim> Games { get; set; } = [];
 }

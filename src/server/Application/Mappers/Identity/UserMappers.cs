@@ -110,9 +110,9 @@ public static class UserMappers
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
             AccountType = appUser.AccountType,
-            Roles = new List<AppRoleSlim>(),
-            ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
-            Permissions = new List<AppPermissionSlim>(),
+            Roles = [],
+            ExtendedAttributes = [],
+            Permissions = [],
             AuthState = appUser.AuthState,
             Notes = appUser.Notes
         };
@@ -135,9 +135,9 @@ public static class UserMappers
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
             AccountType = appUser.AccountType,
-            Roles = new List<AppRoleSlim>(),
-            ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
-            Permissions = new List<AppPermissionSlim>(),
+            Roles = [],
+            ExtendedAttributes = [],
+            Permissions = [],
             AuthState = appUser.AuthState,
             Notes = appUser.Notes
         };
@@ -663,9 +663,9 @@ public static class UserMappers
             IsDeleted = userDb.IsDeleted,
             DeletedOn = userDb.DeletedOn,
             AccountType = userDb.AccountType,
-            Roles = new List<AppRoleSlim>(),
-            ExtendedAttributes = new List<AppUserExtendedAttributeSlim>(),
-            Permissions = new List<AppPermissionSlim>(),
+            Roles = [],
+            ExtendedAttributes = [],
+            Permissions = [],
             AuthState = userDb.AuthState,
             Notes = userDb.Notes
         };
@@ -691,9 +691,9 @@ public static class UserMappers
             IsDeleted = userDb.IsDeleted,
             DeletedOn = userDb.DeletedOn,
             AccountType = userDb.AccountType,
-            Roles = new List<AppRoleDb>(),
-            ExtendedAttributes = new List<AppUserExtendedAttributeDb>(),
-            Permissions = new List<AppPermissionDb>(),
+            Roles = [],
+            ExtendedAttributes = [],
+            Permissions = [],
             AuthState = AuthState.Unknown,
             Notes = userDb.Notes
         };

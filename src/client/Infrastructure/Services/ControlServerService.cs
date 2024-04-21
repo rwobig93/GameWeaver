@@ -201,7 +201,7 @@ public class ControlServerService : IControlServerService
     /// </summary>
     /// <param name="request">Host statistics to be sent to the control server</param>
     /// <returns></returns>
-    public async Task<IResult<IEnumerable<WeaverWork>>> Checkin(HostCheckInRequest request)
+    public async Task<IResult<IEnumerable<WeaverWork>?>> Checkin(HostCheckInRequest request)
     {
         if (!RegisteredWithServer) { return await Result<IEnumerable<WeaverWork>>.SuccessAsync(); }
         
@@ -212,7 +212,7 @@ public class ControlServerService : IControlServerService
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
-            return await Result<IEnumerable<WeaverWork>>.FailAsync(responseContent);
+            return await Result<IEnumerable<WeaverWork>>.FailAsync(new List<WeaverWork>(), responseContent);
 
         var deserializedResponse = _serializerService.DeserializeJson<HostCheckInResponse>(responseContent);
         return await Result<IEnumerable<WeaverWork>>.SuccessAsync(deserializedResponse.Data);

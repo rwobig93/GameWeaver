@@ -138,7 +138,7 @@ public static class OsHelpers
             catch (Exception ex)
             {
                 // Exceptions are expected when accessing certain process properties (e.g., access denied)
-                Log.Error("Could not access path for process [{ProcessId}]{ProcessName}: {ErrorMessage}",
+                Log.Debug("Could not access path for process [{ProcessId}]{ProcessName}: {ErrorMessage}",
                     process.Id, process.ProcessName, ex.Message);
             }
         }

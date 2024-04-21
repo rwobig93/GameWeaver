@@ -179,6 +179,9 @@ public static class ApiRouteConstants
             public const string UpdateMod = "/api/gameserver/gameserver/update-mod";
             public const string DeleteMod = "/api/gameserver/gameserver/delete-mod";
             public const string SearchMods = "/api/gameserver/gameserver/search-mods";
+            public const string StartServer = "/api/gameserver/gameserver/start-server";
+            public const string StopServer = "/api/gameserver/gameserver/stop-server";
+            public const string RestartServer = "/api/gameserver/gameserver/restart-server";
         }
 
         public static class Game

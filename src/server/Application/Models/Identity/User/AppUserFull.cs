@@ -22,9 +22,9 @@ public class AppUserFull
     public AccountType AccountType { get; set; } = AccountType.User;
     public string? Notes { get; set; }
     // Entities from other tables
-    public List<AppRoleSlim> Roles { get; set; } = new();
-    public List<AppUserExtendedAttributeSlim> ExtendedAttributes { get; set; } = new();
-    public List<AppPermissionSlim> Permissions { get; set; } = new();
+    public List<AppRoleSlim> Roles { get; set; } = [];
+    public List<AppUserExtendedAttributeSlim> ExtendedAttributes { get; set; } = [];
+    public List<AppPermissionSlim> Permissions { get; set; } = [];
     // Security Attributes
     public AuthState AuthState { get; set; }
 }

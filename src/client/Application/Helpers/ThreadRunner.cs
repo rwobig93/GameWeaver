@@ -48,7 +48,7 @@ public class ThreadRunner
     private static void InitializeQueueGameRunner()
     {
         Log.Debug("Running InitializeQueueGameRunner()");
-        QueueGameRunner = new List<RunSteamThreadDto>();
+        QueueGameRunner = [];
         Log.Information("Initialized new GameRunner Queue");
     }
 

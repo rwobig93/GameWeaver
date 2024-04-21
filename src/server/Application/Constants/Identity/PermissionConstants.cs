@@ -171,6 +171,9 @@ public static class PermissionConstants
         public const string UpdateMod = "PermissionConstants.Gameserver.Gameserver.UpdateMod";
         public const string DeleteMod = "PermissionConstants.Gameserver.Gameserver.DeleteMod";
         public const string SearchMods = "PermissionConstants.Gameserver.Gameserver.SearchMods";
+        public const string StartServer = "PermissionConstants.Gameserver.Gameserver.StartServer";
+        public const string StopServer = "PermissionConstants.Gameserver.Gameserver.StopServer";
+        public const string RestartServer = "PermissionConstants.Gameserver.Gameserver.RestartServer";
     }
 
     public static class Game

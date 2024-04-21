@@ -36,6 +36,7 @@ public class ControlServerWorker : BackgroundService
     {
         _logger.Debug("Started {ServiceName} service", nameof(ControlServerWorker));
         await Task.CompletedTask;
+        await base.StartAsync(stoppingToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -66,6 +67,7 @@ public class ControlServerWorker : BackgroundService
     {
         _logger.Debug("Stopped {ServiceName} service", nameof(ControlServerWorker));
         await Task.CompletedTask;
+        await base.StopAsync(stoppingToken);
     }
 
     private async Task ValidateServerStatus()
@@ -107,6 +109,7 @@ public class ControlServerWorker : BackgroundService
             _logger.Error("Failed to check in with the control server: {Error}", checkInResponse.Messages);
             return;
         }
+        if (checkInResponse.Data is null) return;
 
         foreach (var work in checkInResponse.Data)
         {

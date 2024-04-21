@@ -63,5 +63,16 @@ public static class ErrorMessageConstants
     {
         public const string MatchingName =
             "The friendly name you provided already matches an existing profile, please provide a different friendly name for this profile";
+        public const string NotFound = "Was unable to find a game profile using the information provided";
+    }
+
+    public static class GameServers
+    {
+        public const string NotFound = "Was unable to find a game server using the information provided";
+    }
+
+    public static class LocalResources
+    {
+        public const string DuplicateResource = "The provided resource information matches an already existing resource, please verify you aren't duplicating a resource";
     }
 }

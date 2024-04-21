@@ -37,7 +37,7 @@ public partial class Login
     private string RefreshToken { get; set; } = "";
     private DateTime Expiration { get; set; }
     private bool ShowAuth { get; set; } = false;
-    private List<string> AuthResults { get; set; } = new();
+    private List<string> AuthResults { get; set; } = [];
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     

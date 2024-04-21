@@ -130,8 +130,8 @@ public static class GameServerMappers
             ServerProcessName = "",
             ServerState = ConnectivityState.Unknown,
             Source = GameSource.Steam,
-            ModList = new SerializableList<ModSlim>(),
-            Resources = new SerializableList<LocalResourceSlim>()
+            ModList = [],
+            Resources = []
         };
     }
 }

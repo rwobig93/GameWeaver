@@ -79,6 +79,7 @@ public class HostWorker : BackgroundService
         
         // TODO: Implement Sqlite for host work tracking, for now we'll serialize/deserialize a json file
         await DeserializeWorkQueues();
+        await base.StartAsync(stoppingToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -111,6 +112,7 @@ public class HostWorker : BackgroundService
         await SerializeWorkQueues();
         
         _logger.Debug("Stopped {ServiceName} service", nameof(HostWorker));
+        await base.StopAsync(stoppingToken);
     }
 
     public static void AddWorkToQueue(WeaverWork work)

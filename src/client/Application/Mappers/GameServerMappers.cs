@@ -32,7 +32,7 @@ public static class GameServerMappers
             Source = gameServerToHost.Source,
             ModList = gameServerToHost.ModList,
             Resources = gameServerToHost.Resources,
-            UpdatesWaiting = new SerializableList<SoftwareUpdateStatus>()
+            UpdatesWaiting = []
         };
     }
 }

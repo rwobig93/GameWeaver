@@ -30,7 +30,7 @@ public static class GameGenreMappers
             GameId = genreDb.GameId,
             Name = genreDb.Name,
             Description = genreDb.Description,
-            Games = new List<GameSlim>()
+            Games = []
         };
     }
 }

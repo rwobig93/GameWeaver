@@ -28,7 +28,7 @@ public static class DeveloperMappers
             Id = developerDb.Id,
             GameId = developerDb.GameId,
             Name = developerDb.Name,
-            Games = new List<GameSlim>()
+            Games = []
         };
     }
     

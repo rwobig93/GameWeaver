@@ -7,6 +7,6 @@ public class UserFullResponse
     public DateTime CreatedOn { get; set; }
     public string AuthState { get; set; } = null!;
     public string AccountType { get; init; } = null!;
-    public List<ExtendedAttributeResponse> ExtendedAttributes { get; set; } = new();
-    public List<PermissionResponse> Permissions { get; set; } = new();
+    public List<ExtendedAttributeResponse> ExtendedAttributes { get; set; } = [];
+    public List<PermissionResponse> Permissions { get; set; } = [];
 }

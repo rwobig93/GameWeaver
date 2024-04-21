@@ -115,9 +115,9 @@ public static class GameMappers
             CreatedOn = gameDb.CreatedOn,
             LastModifiedBy = gameDb.LastModifiedBy,
             LastModifiedOn = gameDb.LastModifiedOn,
-            Genres = new List<GameGenreSlim>(),
-            Publishers = new List<PublisherSlim>(),
-            Developers = new List<DeveloperSlim>()
+            Genres = [],
+            Publishers = [],
+            Developers = []
         };
     }
 }

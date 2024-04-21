@@ -66,8 +66,8 @@ public static class RoleMappers
             CreatedOn = appRoleSlim.CreatedOn,
             LastModifiedBy = appRoleSlim.LastModifiedBy,
             LastModifiedOn = appRoleSlim.LastModifiedOn,
-            Users = new List<AppUserSlim>(),
-            Permissions = new List<AppPermissionSlim>()
+            Users = [],
+            Permissions = []
         };
     }
     
@@ -112,7 +112,7 @@ public static class RoleMappers
             Id = appRole.Id,
             Name = appRole.Name,
             Description = appRole.Description,
-            Permissions = new List<PermissionResponse>()
+            Permissions = []
         };
     }
     

@@ -1,15 +1,16 @@
 ﻿using Application.Constants.Communication;
+using Application.Helpers.GameServer;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
-using Application.Models.GameServer.WeaverWork;
 using Application.Repositories.GameServer;
 using Application.Services.GameServer;
 using Application.Services.System;
 using Domain.Contracts;
+using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 
 namespace Infrastructure.Services.GameServer;
@@ -168,18 +169,9 @@ public class GameServerService : IGameServerService
         gameServerHost.SteamName = gameRequest.Result.SteamName;
         gameServerHost.SteamGameId = gameRequest.Result.SteamGameId;
         gameServerHost.SteamToolId = gameRequest.Result.SteamToolId;
-
-        var hostInstallRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
-        {
-            HostId = createObject.HostId,
-            TargetType = WeaverWorkTarget.GameServerInstall,
-            Status = WeaverWorkState.WaitingToBePickedUp,
-            WorkData = _serializerService.SerializeMemory(gameServerHost),
-            CreatedBy = createObject.CreatedBy,
-            CreatedOn = createObject.CreatedOn,
-            LastModifiedBy = null,
-            LastModifiedOn = null
-        });
+        
+        var hostInstallRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerInstall, createObject.HostId,
+            gameServerHost, createObject.CreatedBy, _dateTime.NowDatabaseTime);
         if (!hostInstallRequest.Succeeded)
             return await Result<Guid>.FailAsync(hostInstallRequest.ErrorMessage);
 
@@ -207,17 +199,8 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var hostDeleteRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
-        {
-            HostId = findRequest.Result.HostId,
-            TargetType = WeaverWorkTarget.GameServerUninstall,
-            Status = WeaverWorkState.WaitingToBePickedUp,
-            WorkData = _serializerService.SerializeMemory(findRequest.Result.Id),
-            CreatedBy = modifyingUserId,
-            CreatedOn = _dateTime.NowDatabaseTime,
-            LastModifiedBy = null,
-            LastModifiedOn = null
-        });
+        var hostDeleteRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUninstall, findRequest.Result.HostId,
+            findRequest.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);
         if (!hostDeleteRequest.Succeeded)
             return await Result<Guid>.FailAsync(hostDeleteRequest.ErrorMessage);
 
@@ -404,11 +387,49 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject)
+    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject, Guid modifyingUserId)
     {
+        var foundServer = await _gameServerRepository.GetByIdAsync(createObject.GameServerId);
+        if (!foundServer.Succeeded || foundServer.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+
+        var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
+        if (!foundProfile.Succeeded || foundProfile.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
+        
+        var currentResources = await _gameServerRepository.GetLocalResourcesByGameServerIdAsync(foundServer.Result.Id);
+        if (!currentResources.Succeeded)
+            return await Result<Guid>.FailAsync(currentResources.ErrorMessage);
+        currentResources.Result ??= new List<LocalResourceDb>();
+        
+        // Ensure we aren't creating a duplicate resource
+        var duplicateResources = currentResources.Result.Where(x =>
+            x.Type == createObject.Type &&
+            x.Path == createObject.Path &&
+            x.Args == createObject.Args &&
+            x.Extension == createObject.Extension);
+        if (duplicateResources.Any())
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
+        
+        // TODO: Decide on data validation framework / method
+        createObject.Extension = createObject.Extension.Replace(".", "");
+        
         var request = await _gameServerRepository.CreateLocalResourceAsync(createObject);
         if (!request.Succeeded)
             return await Result<Guid>.FailAsync(request.ErrorMessage);
+
+        var newLocalResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.Result);
+        if (!newLocalResource.Succeeded || newLocalResource.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+
+        var serverToHost = foundServer.Result.ToHost();
+        serverToHost.Resources = new SerializableList<LocalResourceHost>(currentResources.Result.ToHosts()) {newLocalResource.Result.ToHost()};
+
+        // Send state update to game server on the host, so it knows about all of it's resources
+        var hostGameserverUpdateRequest =
+            await _hostRepository.SendGameserverStateUpdate(foundServer.Result.HostId, serverToHost, modifyingUserId, _dateTime.NowDatabaseTime);
+        if (!hostGameserverUpdateRequest.Succeeded)
+            return await Result<Guid>.FailAsync(hostGameserverUpdateRequest.ErrorMessage);
 
         return await Result<Guid>.SuccessAsync(request.Result);
     }
@@ -771,18 +792,10 @@ public class GameServerService : IGameServerService
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
         if (!foundServer.Succeeded || foundServer.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
-        
-        var startRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
-        {
-            HostId = foundServer.Result.HostId,
-            TargetType = WeaverWorkTarget.GameServerStart,
-            Status = WeaverWorkState.WaitingToBePickedUp,
-            WorkData = _serializerService.SerializeMemory(foundServer.Result.ToHost()),
-            CreatedBy = modifyingUserId,
-            CreatedOn = _dateTime.NowDatabaseTime,
-            LastModifiedBy = null,
-            LastModifiedOn = null
-        });
+
+        var startRequest =
+            await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerStart, foundServer.Result.HostId, foundServer.Result.Id,
+                modifyingUserId, _dateTime.NowDatabaseTime);
         if (!startRequest.Succeeded)
             return await Result<Guid>.FailAsync(startRequest.ErrorMessage);
 
@@ -794,18 +807,10 @@ public class GameServerService : IGameServerService
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
         if (!foundServer.Succeeded || foundServer.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
-        
-        var stopRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
-        {
-            HostId = foundServer.Result.HostId,
-            TargetType = WeaverWorkTarget.GameServerStop,
-            Status = WeaverWorkState.WaitingToBePickedUp,
-            WorkData = _serializerService.SerializeMemory(foundServer.Result.ToHost()),
-            CreatedBy = modifyingUserId,
-            CreatedOn = _dateTime.NowDatabaseTime,
-            LastModifiedBy = null,
-            LastModifiedOn = null
-        });
+
+        var stopRequest =
+            await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerStop, foundServer.Result.HostId, foundServer.Result.Id,
+                modifyingUserId, _dateTime.NowDatabaseTime);
         if (!stopRequest.Succeeded)
             return await Result<Guid>.FailAsync(stopRequest.ErrorMessage);
 
@@ -817,18 +822,9 @@ public class GameServerService : IGameServerService
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
         if (!foundServer.Succeeded || foundServer.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
-        
-        var restartRequest = await _hostRepository.CreateWeaverWorkAsync(new WeaverWorkCreate
-        {
-            HostId = foundServer.Result.HostId,
-            TargetType = WeaverWorkTarget.GameServerRestart,
-            Status = WeaverWorkState.WaitingToBePickedUp,
-            WorkData = _serializerService.SerializeMemory(foundServer.Result.ToHost()),
-            CreatedBy = modifyingUserId,
-            CreatedOn = _dateTime.NowDatabaseTime,
-            LastModifiedBy = null,
-            LastModifiedOn = null
-        });
+
+        var restartRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerRestart, foundServer.Result.HostId,
+            foundServer.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);
         if (!restartRequest.Succeeded)
             return await Result<Guid>.FailAsync(restartRequest.ErrorMessage);
 
