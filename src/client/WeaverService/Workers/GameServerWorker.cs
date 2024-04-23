@@ -4,6 +4,7 @@ using Application.Helpers;
 using Application.Mappers;
 using Application.Services;
 using Application.Settings;
+using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.GameServer;
@@ -155,6 +156,44 @@ public class GameServerWorker : BackgroundService
         work.SendStatusUpdate(WeaverWorkState.PickedUp, "Work has been picked up");
         
         Log.Debug("Added gameserver work to queue:{Id} | {WorkType} | {Status}", work.Id, work.TargetType, work.Status);
+    }
+
+    public static GameServerLocal AddLocalGameserver(GameServerLocal gameServerLocal)
+    {
+        var gameServer = GameServers.GetOrAdd(gameServerLocal.Id, gameServerLocal);
+        Log.Information("Added local gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+        return gameServer;
+    }
+
+    public static async Task<IResult> RemoveLocalGameserver(GameServerLocal gameServerLocal)
+    {
+        var removedGameServer = GameServers.TryRemove(new KeyValuePair<Guid, GameServerLocal>(gameServerLocal.Id, gameServerLocal));
+        if (!removedGameServer)
+        {
+            Log.Error("Gameserver removal failure, local gameserver not found: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+            return await Result.FailAsync($"Gameserver removal failure, local gameserver not found: [{gameServerLocal.Id}]{gameServerLocal.ServerName}");
+        }
+        
+        Log.Information("Removed local gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+        return await Result.SuccessAsync();
+    }
+
+    public static async Task<IResult> UpdateLocalGameserver(GameServerLocal updatedGameServer, GameServerLocal gameServerLocal)
+    {
+        if (GameServers.TryUpdate(gameServerLocal.Id, updatedGameServer, gameServerLocal))
+            return await Result.SuccessAsync();
+        
+        Log.Error("Failed to update server locally with new state from server: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
+        return await Result.FailAsync($"Failed to update server locally with new state from server: [{gameServerLocal.Id}]{gameServerLocal.ServerName}");
+    }
+
+    public static async Task<IResult> UpdateLocalGameserver(GameServerLocal updatedGameServer)
+    {
+        var gotGameServer = GameServers.TryGetValue(updatedGameServer.Id, out var gameServerLocal);
+        if (!gotGameServer || gameServerLocal is null)
+            return await Result.FailAsync($"Gameserver with Id {updatedGameServer.Id} wasn't found");
+
+        return await UpdateLocalGameserver(updatedGameServer, gameServerLocal);
     }
 
     private async Task SerializeGameServerState()
@@ -409,6 +448,8 @@ public class GameServerWorker : BackgroundService
             ServerState = ServerState.ShuttingDown,
             Resources = null
         });
+        gameServerLocal.ServerState = ServerState.ShuttingDown;
+        await UpdateLocalGameserver(gameServerLocal);
         
         var stopResult = await _gameServerService.StopServer(gameServerLocal);
         if (!stopResult.Succeeded)
@@ -420,6 +461,8 @@ public class GameServerWorker : BackgroundService
                 ServerState = ServerState.Unknown,
                 Resources = null
             });
+            gameServerLocal.ServerState = ServerState.Unknown;
+            await UpdateLocalGameserver(gameServerLocal);
             return;
         }
         
@@ -455,6 +498,8 @@ public class GameServerWorker : BackgroundService
             ServerState = ServerState.Uninstalling,
             Resources = null
         });
+        gameServerLocal.ServerState = ServerState.Uninstalling;
+        await UpdateLocalGameserver(gameServerLocal);
         
         await _gameServerService.UninstallGame(gameServerLocal);
         _logger.Information("Finished uninstalling gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
@@ -467,8 +512,8 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
 
-        var removedGameServer = GameServers.TryRemove(new KeyValuePair<Guid, GameServerLocal>(gameServerLocal.Id, gameServerLocal));
-        if (!removedGameServer)
+        var removedGameServer = await RemoveLocalGameserver(gameServerLocal);
+        if (!removedGameServer.Succeeded)
             _logger.Error("Failed to remove local game server: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
     }
 
@@ -485,6 +530,9 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
         
+        gameServerLocal.ServerState = ServerState.Updating;
+        await UpdateLocalGameserver(gameServerLocal);
+        
         await _gameServerService.InstallOrUpdateGame(gameServerLocal);
         _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Id, gameServerLocal.ServerName);
         
@@ -495,6 +543,8 @@ public class GameServerWorker : BackgroundService
             ServerState = ServerState.Shutdown,
             Resources = null
         });
+        gameServerLocal.ServerState = ServerState.Shutdown;
+        await UpdateLocalGameserver(gameServerLocal);
     }
 
     private async Task InstallGameServer(WeaverWork work)
@@ -503,7 +553,8 @@ public class GameServerWorker : BackgroundService
         if (gameServerLocal is null) return;
 
         gameServerLocal.LastStateUpdate = _dateTimeService.NowDatabaseTime;
-        var gameServer = GameServers.GetOrAdd(gameServerLocal.Id, gameServerLocal);
+        gameServerLocal.ServerState = ServerState.Installing;
+        var gameServer = AddLocalGameserver(gameServerLocal);
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Id,
@@ -514,7 +565,9 @@ public class GameServerWorker : BackgroundService
 
         await _gameServerService.InstallOrUpdateGame(gameServer);
         _logger.Information("Finished installing gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-        
+
+        gameServer.ServerState = ServerState.Shutdown;
+        await UpdateLocalGameserver(gameServer);
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
         {
             Id = gameServerLocal.Id,
