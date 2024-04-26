@@ -530,4 +530,62 @@ public class GameServerService : IGameServerService
     {
         return await _gameServerRepository.SaveAsync();
     }
+
+    public async Task<IResult<bool>> IsServerStateAsExpected(Guid id)
+    {
+        try
+        {
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result<bool>.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
+            var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
+            
+            // TODO: Find a cross platform way to get listening TCP & UDP connections and their processes, only current way I could find is using per OS binaries
+            // State.InternallyConnectable | Check for process listening on gameserver ports and verify the running directory for those processes
+            
+            // State.Shutdown | Check if any processes are running from directory
+            if (gameServer.ServerState is ServerState.Shutdown or ServerState.Uninstalling && gameserverProcesses.Count == 0)
+            {
+                _logger.Verbose("Gameserver matches it's shutdown state: [{GameserverId}]{GameserverState}", gameServer.Id, gameServer.ServerState);
+                return await Result<bool>.SuccessAsync(true);
+            }
+            
+            if (gameServer.ServerState is ServerState.Shutdown or ServerState.Uninstalling && gameserverProcesses.Count != 0)
+            {
+                await UpdateState(gameServer.Id, ServerState.SpinningUp);
+                _logger.Verbose("Gameserver doesn't matches it's shutdown state: [{GameserverId}]{GameserverState}", gameServer.Id, ServerState.SpinningUp);
+                return await Result<bool>.SuccessAsync(false);
+            }
+            
+            if (gameServer.ServerState is ServerState.Connectable or
+                ServerState.Installing or
+                ServerState.Restarting or
+                ServerState.Updating or
+                ServerState.InternallyConnectable or
+                ServerState.SpinningUp)
+            {
+                
+            }
+            
+            // State.Installing-or-Updating-or-Restarting | Verify processes are running from directory
+            if (gameserverProcesses.Count == 0)
+            {
+                await UpdateState(gameServer.Id, ServerState.Shutdown);
+                _logger.Verbose("Gameserver doesn't matches it's running state: [{GameserverId}]{GameserverState}", gameServer.Id, ServerState.Shutdown);
+                return await Result<bool>.SuccessAsync(false);
+            }
+            
+            // State.Stalled | If was connectable before and now is running while not listening
+            // TODO: State.Stalled | Set spin up time limit for stall and if it was connectable before and now is running while not listening, stalled is conveyed
+            
+            return await Result<bool>.SuccessAsync(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred checking on local game server state [{GameserverId}]: {Error}", id, ex.Message);
+            return await Result<bool>.FailAsync($"Failure occurred checking on local game server state [{id}]: {ex.Message}");
+        }
+    }
 }
