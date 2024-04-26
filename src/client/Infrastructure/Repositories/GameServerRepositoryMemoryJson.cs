@@ -7,13 +7,13 @@ using Domain.Models.GameServer;
 
 namespace Infrastructure.Repositories;
 
-public class GameServerRepositoryMemory : IGameServerRepository
+public class GameServerRepositoryMemoryJson : IGameServerRepository
 {
     private readonly ISerializerService _serializerService;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTimeService;
 
-    public GameServerRepositoryMemory(ISerializerService serializerService, ILogger logger, IDateTimeService dateTimeService)
+    public GameServerRepositoryMemoryJson(ISerializerService serializerService, ILogger logger, IDateTimeService dateTimeService)
     {
         _serializerService = serializerService;
         _logger = logger;
@@ -87,8 +87,8 @@ public class GameServerRepositoryMemory : IGameServerRepository
         try
         {
             var serializedGameserverState = _serializerService.SerializeJson(_gameServers);
-            await File.WriteAllTextAsync(GameServerConstants.GameServerStatePath, serializedGameserverState);
-            _logger.Information("Serialized gameserver state file: {FilePath}", GameServerConstants.GameServerStatePath);
+            await File.WriteAllTextAsync(SerializerConstants.GameServerStatePath, serializedGameserverState);
+            _logger.Information("Serialized gameserver state file: {FilePath}", SerializerConstants.GameServerStatePath);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -100,15 +100,15 @@ public class GameServerRepositoryMemory : IGameServerRepository
 
     public async Task<IResult> LoadAsync()
     {
-        if (!File.Exists(GameServerConstants.GameServerStatePath))
+        if (!File.Exists(SerializerConstants.GameServerStatePath))
         {
-            _logger.Debug("Gameserver state file doesn't exist, creating... [{FilePath}]", GameServerConstants.GameServerStatePath);
+            _logger.Debug("Gameserver state file doesn't exist, creating... [{FilePath}]", SerializerConstants.GameServerStatePath);
             await SaveAsync();
         }
 
         try
         {
-            var gameServerState = await File.ReadAllTextAsync(GameServerConstants.GameServerStatePath);
+            var gameServerState = await File.ReadAllTextAsync(SerializerConstants.GameServerStatePath);
             _gameServers = _serializerService.DeserializeJson<List<GameServerLocal>>(gameServerState);
             _logger.Information("Deserialized gameserver state");
             return await Result.SuccessAsync();

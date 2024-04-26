@@ -46,7 +46,8 @@ public static class WorkerConfiguration
 
     private static void AddHostedRepositories(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSingleton<IGameServerRepository, GameServerRepositoryMemory>();
+        services.AddSingleton<IGameServerRepository, GameServerRepositoryMemoryJson>();
+        services.AddSingleton<IWeaverWorkRepository, WeaverWorkRepositoryMemoryJson>();
     }
 
     private static void AddHostedServices(this IServiceCollection services, IConfiguration configuration)
@@ -54,6 +55,7 @@ public static class WorkerConfiguration
         services.AddSingleton<IControlServerService, ControlServerService>();
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IGameServerService, GameServerService>();
+        services.AddSingleton<IWeaverWorkService, WeaverWorkService>();
     }
 
     private static void AddClientServices(this IServiceCollection services, IConfiguration configuration)

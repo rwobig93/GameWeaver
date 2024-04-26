@@ -21,31 +21,30 @@ public class GameServerWorker : BackgroundService
     private readonly IGameServerService _gameServerService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly ISerializerService _serializerService;
-
-    private static DateTime _lastRuntime;
-    private static DateTime? _lastBackupTime;
-    private static ConcurrentQueue<WeaverWork> _workQueue = new();
-    private static int _inProgressWorkCount;
+    private readonly IWeaverWorkService _weaverWorkService;
 
     /// <summary>
     /// Handles Gameserver work including updates, configuration and per server IO
     /// </summary>
     public GameServerWorker(ILogger logger, IDateTimeService dateTimeService, IGameServerService gameServerService, IOptions<GeneralConfiguration> generalConfig,
-        ISerializerService serializerService)
+        ISerializerService serializerService, IWeaverWorkService weaverWorkService)
     {
         _logger = logger;
         _dateTimeService = dateTimeService;
         _gameServerService = gameServerService;
         _generalConfig = generalConfig;
         _serializerService = serializerService;
+        _weaverWorkService = weaverWorkService;
     }
+
+    private static DateTime _lastRuntime;
+    private static DateTime? _lastBackupTime;
 
     public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(GameServerWorker));
         
         // TODO: Implement Sqlite for game server state tracking, for now we'll serialize/deserialize a json file
-        await DeserializeWorkQueues();
         await base.StartAsync(stoppingToken);
     }
 
@@ -77,7 +76,6 @@ public class GameServerWorker : BackgroundService
         _logger.Debug("Stopping {ServiceName} service", nameof(GameServerWorker));
 
         await _gameServerService.Housekeeping();
-        await SerializeWorkQueues();
         
         _logger.Debug("Stopped {ServiceName} service", nameof(GameServerWorker));
         await base.StopAsync(stoppingToken);
@@ -85,41 +83,57 @@ public class GameServerWorker : BackgroundService
 
     private async Task ProcessWorkQueue()
     {
-        if (_inProgressWorkCount >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        var inProgressCount = await _weaverWorkService.GetCountInProgressGameserverAsync();
+        var waitingCount = await _weaverWorkService.GetCountWaitingGameserverAsync();
+        
+        if (inProgressCount.Data >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
-            _logger.Verbose("In progress gameserver work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}", _inProgressWorkCount,
-                _generalConfig.Value.SimultaneousQueueWorkCountMax, _workQueue.Count);
+            _logger.Verbose("In progress gameserver work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}",
+                inProgressCount.Data, _generalConfig.Value.SimultaneousQueueWorkCountMax, waitingCount.Data);
             return;
         }
         
-        if (_workQueue.IsEmpty)
+        if (waitingCount.Data < 1)
         {
-            _logger.Verbose("No work waiting, moving on");
+            _logger.Verbose("No gameserver work waiting, moving on");
             return;
         }
+        
+        // TODO: Add checking on in progress weaver work that hasn't had a heartbeat / update in awhile
         
         // Work is waiting, and we have available queue space, adding next work to the thread pool
         var attemptCount = 0;
-        while (_inProgressWorkCount < _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        while (inProgressCount.Data < _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
-            if (_workQueue.IsEmpty) break;
+            inProgressCount = await _weaverWorkService.GetCountInProgressGameserverAsync();
+            waitingCount = await _weaverWorkService.GetCountWaitingGameserverAsync();
+            if (waitingCount.Data < 1) break;
             
             if (attemptCount >= 5)
             {
-                _logger.Error("Unable to dequeue next item in the gameserver work queue, quiting cycle queue processing");
+                _logger.Error("Reached max attempt count in the gameserver work queue, quiting cycle queue processing");
                 return;
             }
-            
-            if (!_workQueue.TryDequeue(out var work))
+
+            var nextWork = await _weaverWorkService.GetNextWaitingGameserverAsync();
+            if (!nextWork.Succeeded || nextWork.Data is null)
             {
+                _logger.Error("Failure occurred getting next gameserver work from service: {Error}", nextWork.Messages);
                 attemptCount++;
                 continue;
             }
+
+            var updateRequest = await _weaverWorkService.UpdateStatusAsync(nextWork.Data.Id, WeaverWorkState.InProgress);
+            if (!updateRequest.Succeeded)
+            {
+                _logger.Error("Failure occurred updating gameserver work from service: [{WeaverworkId}]{Error}", nextWork.Data.Id, updateRequest.Messages);
+                attemptCount++;
+                continue;
+            }
+            nextWork.Data.SendStatusUpdate(WeaverWorkState.InProgress, "Work is now in progress");
             
-            _inProgressWorkCount++;
-            work.Status = WeaverWorkState.InProgress;
             // ReSharper disable once AsyncVoidLambda
-            ThreadHelper.QueueWork(async _ => await HandleWork(work));
+            ThreadHelper.QueueWork(async _ => await HandleWork(nextWork.Data));
         }
 
         await Task.CompletedTask;
@@ -139,64 +153,18 @@ public class GameServerWorker : BackgroundService
         _lastBackupTime = _dateTimeService.NowDatabaseTime;
     }
 
-    public static void AddWorkToQueue(WeaverWork work)
-    {
-        Log.Debug("Adding gameserver work to waiting queue: {Id} |{WorkType} | {Status}", work.Id, work.TargetType, work.Status);
-        
-        // TODO: Need to check against work in progress as well, currently we aren't tracking that work, we need to for reliability
-        if (_workQueue.Any(x => x.Id == work.Id))
-        {
-            Log.Verbose("Work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
-            return;
-        }
-
-        work.Status = WeaverWorkState.PickedUp;
-        _workQueue.Enqueue(work);
-        work.SendStatusUpdate(WeaverWorkState.PickedUp, "Work has been picked up");
-        
-        Log.Debug("Added gameserver work to queue:{Id} | {WorkType} | {Status}", work.Id, work.TargetType, work.Status);
-    }
-
-    private async Task SerializeWorkQueues()
-    {
-        var serializedWorkQueue = _serializerService.SerializeJson(_workQueue);
-        await File.WriteAllTextAsync(GameServerConstants.WorkQueuePath, serializedWorkQueue);
-        
-        _logger.Information("Serialized gameserver work queue file: {FilePath}", GameServerConstants.WorkQueuePath);
-    }
-
-    private async Task DeserializeWorkQueues()
-    {
-        if (!File.Exists(GameServerConstants.WorkQueuePath))
-        {
-            _logger.Debug("Gameserver work queue file doesn't exist, creating... [{FilePath}]", GameServerConstants.WorkQueuePath);
-            await SerializeWorkQueues();
-        }
-
-        var workQueue = await File.ReadAllTextAsync(GameServerConstants.WorkQueuePath);
-        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWork>>(workQueue);
-        
-        _logger.Information("Deserialized gameserver work queue");
-    }
-
     private async Task HandleWork(WeaverWork work)
     {
         try
         {
-            work.SendStatusUpdate(WeaverWorkState.InProgress, "Work has is now in progress");
-            
             switch (work.TargetType)
             {
-                case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
-                    _logger.Error("Host work somehow got into the GameServer work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
-                    HostWorker.AddWorkToQueue(work);
-                    _logger.Warning("Gave host work to host worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
-                    return;
                 case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
                     _logger.Debug("Starting gameserver work from queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     break;
                 default:
                     _logger.Error("Invalid work type for work: [{WorkId}]{WorkType}", work.Id, work.TargetType);
+                    await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
                     work.SendStatusUpdate(WeaverWorkState.Failed, "Gameserver work data was invalid, please verify the payload");
                     return;
             }
@@ -233,6 +201,7 @@ public class GameServerWorker : BackgroundService
                 default:
                     _logger.Error(
                         "An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {WorkType}", work.TargetType);
+                    await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
                     work.SendStatusUpdate(WeaverWorkState.Failed,
                         $"An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {work.TargetType}");
                     return;
@@ -241,11 +210,8 @@ public class GameServerWorker : BackgroundService
         catch (Exception ex)
         {
             _logger.Error(ex, "Failure occurred handling gameserver work: {Error}", ex.Message);
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Failure occurred handling gameserver work: {ex.Message}");
-        }
-        finally
-        {
-            _inProgressWorkCount--;
         }
     }
 
@@ -254,6 +220,7 @@ public class GameServerWorker : BackgroundService
         if (work.WorkData is null)
         {
             _logger.Error("Gameserver {WorkType} request has an empty work data payload: {WorkId}", work.TargetType, work.Id);
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return await Result<GameServerLocal?>.FailAsync($"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
         }
@@ -264,6 +231,7 @@ public class GameServerWorker : BackgroundService
             return await Result<GameServerLocal?>.SuccessAsync(gameServerRequest.Data);
 
         _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+        await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
         work.SendStatusUpdate(WeaverWorkState.Failed, "Gameserver id doesn't match an active gameserver this host manages");
         return await Result<GameServerLocal?>.FailAsync("Gameserver id doesn't match an active gameserver this host manages");
     }
@@ -273,6 +241,7 @@ public class GameServerWorker : BackgroundService
         if (work.WorkData is null)
         {
             _logger.Error("Gameserver {WorkType} request has an empty work data payload: {WorkId}", work.TargetType, work.Id);
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return await Result<GameServerLocal?>.FailAsync($"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
         }
@@ -281,6 +250,7 @@ public class GameServerWorker : BackgroundService
         if (deserializedGameServer is null)
         {
             _logger.Error("Gameserver wasn't deserializable from work data payload: {WorkId}", work.Id);
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver wasn't deserializable from work data payload: {work.Id}");
             return await Result<GameServerLocal?>.FailAsync($"Gameserver wasn't deserializable from work data payload: {work.Id}");
         }
@@ -290,15 +260,17 @@ public class GameServerWorker : BackgroundService
             return await Result<GameServerLocal?>.SuccessAsync(gameServerRequest.Data);
         
         _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+        await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
         work.SendStatusUpdate(WeaverWorkState.Failed, "Gameserver id doesn't match an active gameserver this host manages");
         return await Result<GameServerLocal?>.FailAsync("Gameserver id doesn't match an active gameserver this host manages");
     }
 
-    private GameServerLocal? ExtractGameServerFromWorkData(WeaverWork work)
+    private async Task<GameServerLocal?> ExtractGameServerFromWorkData(WeaverWork work)
     {
         if (work.WorkData is null)
         {
             _logger.Error("Gameserver {WorkType} request has an empty work data payload: {WorkId}", work.TargetType, work.Id);
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return null;
         }
@@ -306,6 +278,7 @@ public class GameServerWorker : BackgroundService
         if (deserializedServer is not null) return deserializedServer.ToLocal();
         
         _logger.Error("Unable to deserialize work data payload: {WorkId}", work.Id);
+        await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
         work.SendStatusUpdate(WeaverWorkState.Failed, $"Unable to deserialize work data payload: {work.Id}");
         return deserializedServer?.ToLocal();
     }
@@ -323,7 +296,7 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
 
-        var gameServerFromHost = ExtractGameServerFromWorkData(work);
+        var gameServerFromHost = await ExtractGameServerFromWorkData(work);
         if (gameServerFromHost is null) return;
 
         var gameServerUpdate = gameServerFromHost.ToUpdate();
@@ -331,10 +304,12 @@ public class GameServerWorker : BackgroundService
         if (!updateRequest.Succeeded)
         {
             _logger.Error("Failed to update server locally with new state from server [{WorkId}]: {GameserverId}", work.Id, gameServerLocal.Data.Id);
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Failed to update server locally with new state from server [{work.Id}]: {gameServerLocal.Data.Id}");
             return;
         }
         
+        await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Completed);
         work.SendStatusUpdate(WeaverWorkState.Completed, "Local gameserver state updated");
         await Task.CompletedTask;
     }
@@ -355,6 +330,7 @@ public class GameServerWorker : BackgroundService
         var startResult = await _gameServerService.StartServer(gameServerLocal.Data.Id);
         if (!startResult.Succeeded)
         {
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
             work.SendStatusUpdate(WeaverWorkState.Failed, startResult.Messages);
             return;
         }
@@ -479,7 +455,7 @@ public class GameServerWorker : BackgroundService
 
     private async Task InstallGameServer(WeaverWork work)
     {
-        var deserializedGameServer = ExtractGameServerFromWorkData(work);
+        var deserializedGameServer = await ExtractGameServerFromWorkData(work);
         if (deserializedGameServer is null) return;
 
         var createServerRequest = await _gameServerService.Create(deserializedGameServer);

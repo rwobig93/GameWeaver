@@ -15,22 +15,23 @@ public class ControlServerWorker : BackgroundService
     private readonly IControlServerService _serverService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IDateTimeService _dateTimeService;
-    private readonly ISerializerService _serializerService;
-
-    private static DateTime _lastRuntime;
-    private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
+    private readonly IWeaverWorkService _weaverWorkService;
 
     /// <summary>
     /// Handles control server communication
     /// </summary>
-    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig, IDateTimeService dateTimeService, ISerializerService serializerService)
+    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig, IDateTimeService dateTimeService,
+        IWeaverWorkService weaverWorkService)
     {
         _logger = logger;
         _serverService = serverService;
         _generalConfig = generalConfig;
         _dateTimeService = dateTimeService;
-        _serializerService = serializerService;
+        _weaverWorkService = weaverWorkService;
     }
+
+    private static DateTime _lastRuntime;
+    private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
 
     public override async Task StartAsync(CancellationToken stoppingToken)
     {
@@ -113,18 +114,14 @@ public class ControlServerWorker : BackgroundService
 
         foreach (var work in checkInResponse.Data)
         {
-            switch (work.TargetType)
+            var createRequest = await _weaverWorkService.CreateAsync(work);
+            if (!createRequest.Succeeded)
             {
-                case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
-                    HostWorker.AddWorkToQueue(work);
-                    break;
-                case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
-                    GameServerWorker.AddWorkToQueue(work);
-                    break;
-                default:
-                    _logger.Error("Work needing processed doesn't have a valid type provided: {WorkType}", work.TargetType);
-                    break;
+                _logger.Error("Failure occurred creating weaver work: {Error}", createRequest.Messages);
+                continue;
             }
+            
+            _logger.Verbose("Successfully added weaver work: [{WeaverworkId}]{WeaverworkTarget}", work.Id, work.TargetType);
         }
         
         _logger.Verbose("Successfully checked in with the control server");
