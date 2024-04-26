@@ -2,6 +2,8 @@
 using System.IO.Compression;
 using Application.Constants;
 using Application.Helpers;
+using Application.Models;
+using Application.Repositories;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
@@ -16,12 +18,14 @@ public class GameServerService : IGameServerService
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTimeService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
+    private readonly IGameServerRepository _gameServerRepository;
 
-    public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig)
+    public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig, IGameServerRepository gameServerRepository)
     {
         _logger = logger;
         _dateTimeService = dateTimeService;
         _generalConfig = generalConfig;
+        _gameServerRepository = gameServerRepository;
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
@@ -225,7 +229,7 @@ public class GameServerService : IGameServerService
         }
     }
     
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(GameServerLocal gameServer)
+    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(Guid id)
     {
         // From Powershell server-watcher.ps1 script
         // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
@@ -245,7 +249,7 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(GameServerLocal gameServer, Mod mod)
+    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(Guid id, Mod mod)
     {
         // https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?itemcount=1&publishedfileids%5B0%5D=3120364390
         // See: https://www.reddit.com/r/Steam/comments/30l5au/web_api_for_workshop_items/
@@ -260,11 +264,35 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> InstallOrUpdateGame(GameServerLocal gameServer)
+    public async Task<IResult<Guid>> Create(GameServerLocal gameServer)
+    {
+        var createRequest = await _gameServerRepository.CreateAsync(gameServer);
+        if (!createRequest.Succeeded)
+            return await Result<Guid>.FailAsync(createRequest.Messages);
+        
+        return await Result<Guid>.SuccessAsync(gameServer.Id);
+    }
+
+    public async Task<IResult<GameServerLocal?>> GetById(Guid id)
+    {
+        return await _gameServerRepository.GetByIdAsync(id);
+    }
+
+    public async Task<IResult<List<GameServerLocal>>> GetAll()
+    {
+        return await _gameServerRepository.GetAll();
+    }
+
+    public async Task<IResult> InstallOrUpdateGame(Guid id)
     {
         // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
         try
         {
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
             if (!Directory.Exists(gameServer.GetInstallDirectory()))
             {
                 Directory.CreateDirectory(gameServer.GetInstallDirectory());
@@ -283,12 +311,12 @@ public class GameServerService : IGameServerService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to install gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            return await Result.FailAsync($"Failed to install gameserver: [{gameServer.Id}]{gameServer.ServerName}");
+            _logger.Error(ex, "Failed to install gameserver: {GameserverId}", id);
+            return await Result.FailAsync($"Failed to install gameserver: {id}");
         }
     }
 
-    public async Task<IResult> InstallOrUpdateMod(GameServerLocal gameServer, Mod mod)
+    public async Task<IResult> InstallOrUpdateMod(Guid id, Mod mod)
     {
         // steamcmd.exe +login anonymous +workshop_download_item 346110 496735411 +quit
         // steamcmd.exe +login anonymous +workshop_download_item {steamGameId} {workshopItemId} +quit
@@ -299,14 +327,18 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> UninstallGame(GameServerLocal gameServer)
+    public async Task<IResult> UninstallGame(Guid id)
     {
         try
         {
-            _logger.Debug("Attempting to uninstall gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            Directory.Delete(gameServer.GetInstallDirectory(), true);
-            _logger.Information("Successfully uninstalled gameserver[{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            return await Result.SuccessAsync();
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            _logger.Debug("Attempting to uninstall gameserver: {GameserverId}", id);
+            Directory.Delete(gameServerRequest.Data.GetInstallDirectory(), true);
+            _logger.Information("Successfully uninstalled gameserver: {GameserverId}", id);
+            return await _gameServerRepository.DeleteAsync(gameServerRequest.Data.Id);
         }
         catch (Exception ex)
         {
@@ -315,7 +347,7 @@ public class GameServerService : IGameServerService
         }
     }
 
-    public async Task<IResult> UninstallMod(GameServerLocal gameServer, Mod mod)
+    public async Task<IResult> UninstallMod(Guid id, Mod mod)
     {
         // Delete mod directory and cleanup GameServer object
         await Task.CompletedTask;
@@ -348,10 +380,15 @@ public class GameServerService : IGameServerService
         }
     }
 
-    public async Task<IResult> BackupGame(GameServerLocal gameServer)
+    public async Task<IResult> BackupGame(Guid id)
     {
         try
         {
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
             var backupPaths = gameServer.Resources.Where(x => x.Type == LocationType.BackupPath).ToList();
             if (backupPaths.Count == 0)
             {
@@ -382,13 +419,18 @@ public class GameServerService : IGameServerService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failure occurred backing up gameserver: {GameserverId} | {Error}", gameServer.Id, ex.Message);
-            return await Result.FailAsync($"Failure occurred backing up gameserver: {gameServer.Id} | {ex.Message}");
+            _logger.Error(ex, "Failure occurred backing up gameserver: {GameserverId} | {Error}", id, ex.Message);
+            return await Result.FailAsync($"Failure occurred backing up gameserver: {id} | {ex.Message}");
         }
     }
 
-    public async Task<IResult> StartServer(GameServerLocal gameServer)
+    public async Task<IResult> StartServer(Guid id)
     {
+        var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            return await Result.FailAsync(gameServerRequest.Messages);
+            
+        var gameServer = gameServerRequest.Data;
         var startupBinaries = gameServer.Resources.Where(x => x is {Startup: true, Type: LocationType.Executable}).ToList();
         var failures = new List<string>();
 
@@ -445,10 +487,15 @@ public class GameServerService : IGameServerService
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> StopServer(GameServerLocal gameServer)
+    public async Task<IResult> StopServer(Guid id)
     {
         try
         {
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
             var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
             if (gameserverProcesses.Count == 0)
             {
@@ -464,9 +511,23 @@ public class GameServerService : IGameServerService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to stop gameserver processes [{GameserverId}]{GameserverName}: {ErrorMessage}",
-                gameServer.Id, gameServer.ServerName, ex.Message);
-            return await Result.FailAsync($"Failed to stop gameserver processes [{gameServer.Id}]{gameServer.ServerName}: {ex.Message}");
+            _logger.Error(ex, "Failed to stop gameserver processes [{GameserverId}]: {ErrorMessage}", id, ex.Message);
+            return await Result.FailAsync($"Failed to stop gameserver processes [{id}]: {ex.Message}");
         }
+    }
+
+    public async Task<IResult> Update(GameServerLocalUpdate gameServerUpdate)
+    {
+        return await _gameServerRepository.UpdateAsync(gameServerUpdate);
+    }
+
+    public async Task<IResult> UpdateState(Guid id, ServerState state)
+    {
+        return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate {Id = id, ServerState = state});
+    }
+
+    public async Task<IResult> Housekeeping()
+    {
+        return await _gameServerRepository.SaveAsync();
     }
 }

@@ -1,6 +1,4 @@
-﻿using Application.Models.Identity.Permission;
-using Application.Models.Identity.Role;
-using Application.Models.Identity.User;
+﻿using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
 using Application.Requests.v1.Identity.User;
 using Application.Responses.v1.Identity;

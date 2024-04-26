@@ -9,7 +9,6 @@ using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.Host;
-using MemoryPack;
 using Microsoft.Extensions.Options;
 using Serilog;
 using WeaverService.Helpers;

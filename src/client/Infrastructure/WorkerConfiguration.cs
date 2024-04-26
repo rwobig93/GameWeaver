@@ -1,7 +1,9 @@
 using Application.Constants;
+using Application.Repositories;
 using Application.Services;
 using Application.Settings;
 using Infrastructure.Handlers;
+using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +23,9 @@ public static class WorkerConfiguration
         builder.ConfigureServices((context, services) =>
             {
                 services.AddSettings(context.Configuration);
-                services.AddHostedServices(context.Configuration);
                 services.AddClientServices(context.Configuration);
+                services.AddHostedRepositories(context.Configuration);
+                services.AddHostedServices(context.Configuration);
             }
         );
 
@@ -39,6 +42,11 @@ public static class WorkerConfiguration
             .Bind(configuration.GetRequiredSection(AuthConfiguration.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+    }
+
+    private static void AddHostedRepositories(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<IGameServerRepository, GameServerRepositoryMemory>();
     }
 
     private static void AddHostedServices(this IServiceCollection services, IConfiguration configuration)
