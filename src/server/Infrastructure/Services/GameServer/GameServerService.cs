@@ -293,8 +293,11 @@ public class GameServerService : IGameServerService
         if (!getConfigRequest.Succeeded || getConfigRequest.Result is null)
             return await Result<Guid>.FailAsync(getConfigRequest.ErrorMessage);
 
+        var hostResource = getConfigRequest.Result.ToHostResource();
+        hostResource.GameserverId = gameServer.Id;
+
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigNew, gameServer.HostId,
-            getConfigRequest.Result.ToHostResource(), createObject.ModifyingUserId, _dateTime.NowDatabaseTime);
+            hostResource, createObject.ModifyingUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
             return await Result<Guid>.FailAsync(configUpdateRequest.ErrorMessage);
 
@@ -324,8 +327,11 @@ public class GameServerService : IGameServerService
         if (!getConfigRequest.Succeeded || getConfigRequest.Result is null)
             return await Result.FailAsync(getConfigRequest.ErrorMessage);
 
+        var hostResource = getConfigRequest.Result.ToHostResource();
+        hostResource.GameserverId = gameServer.Id;
+
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdate, gameServer.HostId,
-            getConfigRequest.Result.ToHostResource(), updateObject.ModifyingUserId, _dateTime.NowDatabaseTime);
+            hostResource, updateObject.ModifyingUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
             return await Result.FailAsync(configUpdateRequest.ErrorMessage);
 
@@ -351,8 +357,11 @@ public class GameServerService : IGameServerService
         if (!deleteRequest.Succeeded)
             return await Result.FailAsync(deleteRequest.ErrorMessage);
 
+        var hostResource = findRequest.Result.ToHostResource();
+        hostResource.GameserverId = gameServer.Id;
+        
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigDelete, gameServer.HostId,
-            findRequest.Result.ToHostResource(), modifyingUserId, _dateTime.NowDatabaseTime);
+            hostResource, modifyingUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
             return await Result.FailAsync(configUpdateRequest.ErrorMessage);
 

@@ -75,6 +75,7 @@ public static class ConfigurationItemMappers
     {
         return new LocalResourceHost
         {
+            GameserverId = new Guid(),
             Path = configDb.Path,
             Startup = false,
             Extension = Path.GetExtension(configDb.Path),

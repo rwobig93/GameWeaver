@@ -8,17 +8,19 @@ namespace Domain.Models.GameServer;
 public partial class LocationPointer
 {
     [MemoryPackOrder(0)]
-    public string Name { get; set; } = "";
+    public Guid GameserverId { get; set; }
     [MemoryPackOrder(1)]
-    public string Path { get; set; } = "";
+    public string Name { get; set; } = "";
     [MemoryPackOrder(2)]
-    public bool Startup { get; set; }
+    public string Path { get; set; } = "";
     [MemoryPackOrder(3)]
-    public LocationType Type { get; set; }
+    public bool Startup { get; set; }
     [MemoryPackOrder(4)]
-    public string Extension { get; set; } = "";
+    public LocationType Type { get; set; }
     [MemoryPackOrder(5)]
-    public string Args { get; set; } = "";
+    public string Extension { get; set; } = "";
     [MemoryPackOrder(6)]
+    public string Args { get; set; } = "";
+    [MemoryPackOrder(7)]
     public SerializableList<ConfigurationSet> ConfigSets { get; set; } = [];
 }
