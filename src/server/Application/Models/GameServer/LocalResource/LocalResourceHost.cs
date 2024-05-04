@@ -13,7 +13,7 @@ public partial class LocalResourceHost
     [MemoryPackOrder(1)]
     public string Path { get; set; } = "";
     [MemoryPackOrder(2)]
-    public bool Startup { get; set; } = false;
+    public bool Startup { get; set; }
     [MemoryPackOrder(3)]
     public ResourceType Type { get; set; }
     [MemoryPackOrder(4)]
@@ -21,5 +21,5 @@ public partial class LocalResourceHost
     [MemoryPackOrder(5)]
     public string Args { get; set; } = "";
     [MemoryPackOrder(6)]
-    public SerializableList<ConfigurationItemSlim> ConfigSets { get; set; } = [];
+    public SerializableList<ConfigurationItemHost> ConfigSets { get; set; } = [];
 }

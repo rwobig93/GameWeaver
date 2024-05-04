@@ -12,7 +12,7 @@ public partial class LocationPointer
     [MemoryPackOrder(1)]
     public string Path { get; set; } = "";
     [MemoryPackOrder(2)]
-    public bool Startup { get; set; } = false;
+    public bool Startup { get; set; }
     [MemoryPackOrder(3)]
     public LocationType Type { get; set; }
     [MemoryPackOrder(4)]

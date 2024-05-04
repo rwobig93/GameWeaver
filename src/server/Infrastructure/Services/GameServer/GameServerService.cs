@@ -276,11 +276,29 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate createObject)
     {
-        var request = await _gameServerRepository.CreateConfigurationItemAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
+        if (!gameProfileRequest.Succeeded || gameProfileRequest.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        var gameServerRequest = await _gameServerRepository.GetByGameProfileIdAsync(gameProfileRequest.Result.Id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var gameServer = gameServerRequest.Result;
+
+        var createRequest = await _gameServerRepository.CreateConfigurationItemAsync(createObject);
+        if (!createRequest.Succeeded)
+            return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
+
+        var getConfigRequest = await _gameServerRepository.GetConfigurationItemByIdAsync(createRequest.Result);
+        if (!getConfigRequest.Succeeded || getConfigRequest.Result is null)
+            return await Result<Guid>.FailAsync(getConfigRequest.ErrorMessage);
+
+        var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigNew, gameServer.HostId,
+            getConfigRequest.Result.ToHostResource(), createObject.ModifyingUserId, _dateTime.NowDatabaseTime);
+        if (!configUpdateRequest.Succeeded)
+            return await Result<Guid>.FailAsync(configUpdateRequest.ErrorMessage);
+
+        return await Result<Guid>.SuccessAsync(createRequest.Result);
     }
 
     public async Task<IResult> UpdateConfigurationItemAsync(ConfigurationItemUpdate updateObject)
@@ -288,23 +306,55 @@ public class GameServerService : IGameServerService
         var findRequest = await _gameServerRepository.GetConfigurationItemByIdAsync(updateObject.Id);
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        
+        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(findRequest.Result.GameProfileId);
+        if (!gameProfileRequest.Succeeded || gameProfileRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var request = await _gameServerRepository.UpdateConfigurationItemAsync(findRequest.Result.ToUpdate());
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var gameServerRequest = await _gameServerRepository.GetByGameProfileIdAsync(gameProfileRequest.Result.Id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var gameServer = gameServerRequest.Result;
+
+        var updateRequest = await _gameServerRepository.UpdateConfigurationItemAsync(findRequest.Result.ToUpdate());
+        if (!updateRequest.Succeeded)
+            return await Result.FailAsync(updateRequest.ErrorMessage);
+
+        var getConfigRequest = await _gameServerRepository.GetConfigurationItemByIdAsync(findRequest.Result.Id);
+        if (!getConfigRequest.Succeeded || getConfigRequest.Result is null)
+            return await Result.FailAsync(getConfigRequest.ErrorMessage);
+
+        var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdate, gameServer.HostId,
+            getConfigRequest.Result.ToHostResource(), updateObject.ModifyingUserId, _dateTime.NowDatabaseTime);
+        if (!configUpdateRequest.Succeeded)
+            return await Result.FailAsync(configUpdateRequest.ErrorMessage);
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteConfigurationItemAsync(Guid id)
+    public async Task<IResult> DeleteConfigurationItemAsync(Guid id, Guid modifyingUserId)
     {
         var findRequest = await _gameServerRepository.GetConfigurationItemByIdAsync(id);
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        
+        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(findRequest.Result.GameProfileId);
+        if (!gameProfileRequest.Succeeded || gameProfileRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var request = await _gameServerRepository.DeleteConfigurationItemAsync(id);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var gameServerRequest = await _gameServerRepository.GetByGameProfileIdAsync(gameProfileRequest.Result.Id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var gameServer = gameServerRequest.Result;
+
+        var deleteRequest = await _gameServerRepository.DeleteConfigurationItemAsync(id);
+        if (!deleteRequest.Succeeded)
+            return await Result.FailAsync(deleteRequest.ErrorMessage);
+
+        var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigDelete, gameServer.HostId,
+            findRequest.Result.ToHostResource(), modifyingUserId, _dateTime.NowDatabaseTime);
+        if (!configUpdateRequest.Succeeded)
+            return await Result.FailAsync(configUpdateRequest.ErrorMessage);
 
         return await Result.SuccessAsync();
     }

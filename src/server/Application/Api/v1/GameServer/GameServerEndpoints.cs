@@ -461,19 +461,21 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a configuration item
     /// </summary>
     /// <param name="id">Configuration item id</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Gameserver.DeleteConfigurationItem)]
-    private static async Task<IResult> DeleteConfigurationItem([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult> DeleteConfigurationItem([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.DeleteConfigurationItemAsync(id);
+            var userId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.DeleteConfigurationItemAsync(id, userId);
         }
         catch (Exception ex)
         {

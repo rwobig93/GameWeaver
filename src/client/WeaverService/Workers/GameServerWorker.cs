@@ -1,8 +1,5 @@
-﻿using System.Collections.Concurrent;
-using Application.Constants;
-using Application.Helpers;
+﻿using Application.Helpers;
 using Application.Mappers;
-using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
@@ -10,7 +7,6 @@ using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.GameServer;
 using Microsoft.Extensions.Options;
-using Serilog;
 using WeaverService.Helpers;
 
 namespace WeaverService.Workers;
@@ -247,6 +243,10 @@ public class GameServerWorker : BackgroundService
                 case WeaverWorkTarget.HostDetail:
                 case WeaverWorkTarget.GameServer:
                 case WeaverWorkTarget.CurrentEnd:
+                case WeaverWorkTarget.GameServerConfigNew:
+                case WeaverWorkTarget.GameServerConfigUpdate:
+                case WeaverWorkTarget.GameServerConfigDelete:
+                case WeaverWorkTarget.GameServerConfigUpdateFull:
                 default:
                     _logger.Error(
                         "An impossible event occurred, we hit a switch statement that shouldn't be possible for gameserver work: {WorkType}", work.TargetType);

@@ -1,10 +1,9 @@
 ﻿using MemoryPack;
 
-namespace Domain.Models.GameServer;
-
+namespace Application.Models.GameServer.ConfigurationItem;
 
 [MemoryPackable(SerializeLayout.Explicit)]
-public class ConfigurationSet
+public class ConfigurationItemHost
 {
     [MemoryPackOrder(0)]
     public Guid Id { get; set; }

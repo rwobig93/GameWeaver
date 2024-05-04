@@ -20,6 +20,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [GameProfileId] UNIQUEIDENTIFIER NOT NULL,
+                    [DuplicateKey] BIT NOT NULL,
                     [Path] NVARCHAR(128) NOT NULL,
                     [Category] NVARCHAR(128) NOT NULL,
                     [Key] NVARCHAR(128) NOT NULL,
@@ -110,15 +111,16 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @GameProfileId UNIQUEIDENTIFIER,
+                @DuplicateKey BIT,
                 @Path NVARCHAR(128),
                 @Category NVARCHAR(128),
                 @Key NVARCHAR(128),
                 @Value NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, Path, Category, [Key], Value)
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, DuplicateKey, Path, Category, [Key], Value)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @Path, @Category, @Key, @Value);
+                VALUES (@GameProfileId, @DuplicateKey, @Path, @Category, @Key, @Value);
             end"
     };
     
@@ -175,6 +177,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @GameProfileId UNIQUEIDENTIFIER = null,
+                @DuplicateKey BIT = null,
                 @Path NVARCHAR(128) = null,
                 @Category NVARCHAR(128) = null,
                 @Key NVARCHAR(128) = null,
@@ -182,8 +185,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Path = COALESCE(@Path, Path), Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]),
-                    Value = COALESCE(@Value, Value)
+                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), DuplicateKey = COALESCE(@DuplicateKey, DuplicateKey), Path = COALESCE(@Path, Path),
+                    Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]), Value = COALESCE(@Value, Value)
                 WHERE Id = @Id;
             end"
     };

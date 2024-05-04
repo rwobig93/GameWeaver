@@ -30,7 +30,7 @@ public interface IGameServerService
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByGameProfileIdAsync(Guid id);
     Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate createObject);
     Task<IResult> UpdateConfigurationItemAsync(ConfigurationItemUpdate updateObject);
-    Task<IResult> DeleteConfigurationItemAsync(Guid id);
+    Task<IResult> DeleteConfigurationItemAsync(Guid id, Guid modifyingUserId);
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsAsync(string searchText);
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesAsync();
