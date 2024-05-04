@@ -238,8 +238,6 @@ public class GameServerWorker : BackgroundService
                     await UpdateGameServerState(work);
                     break;
                 case WeaverWorkTarget.GameServerConfigNew:
-                    await ConfigureGameServerNew(work);
-                    break;
                 case WeaverWorkTarget.GameServerConfigUpdate:
                     await ConfigureGameServerUpdate(work);
                     break;
@@ -247,7 +245,7 @@ public class GameServerWorker : BackgroundService
                     await ConfigureGameServerDelete(work);
                     break;
                 case WeaverWorkTarget.GameServerConfigUpdateFull:
-                    await ConfigureGameServerFull(work);
+                    await ConfigureGameServerUpdateFull(work);
                     break;
                 case WeaverWorkTarget.StatusUpdate:
                 case WeaverWorkTarget.Host:
@@ -637,7 +635,7 @@ public class GameServerWorker : BackgroundService
         });
     }
 
-    private async Task ConfigureGameServerNew(WeaverWork work)
+    private async Task ConfigureGameServerUpdate(WeaverWork work)
     {
         var deserializedLocation = await ExtractLocationPointerFromWorkData(work);
         if (deserializedLocation is null) return;
@@ -680,21 +678,62 @@ public class GameServerWorker : BackgroundService
             return;
         }
         
-        work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration item created");
-    }
-
-    private async Task ConfigureGameServerUpdate(WeaverWork work)
-    {
-        throw new NotImplementedException();
+        // TODO: Apply configuration to all configuration files locally
+        
+        work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 
     private async Task ConfigureGameServerDelete(WeaverWork work)
     {
-        throw new NotImplementedException();
+        var deserializedLocation = await ExtractLocationPointerFromWorkData(work);
+        if (deserializedLocation is null) return;
+
+        var foundGameServer = await _gameServerService.GetById(deserializedLocation.GameserverId);
+        if (!foundGameServer.Succeeded || foundGameServer.Data is null)
+        {
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+            work.SendStatusUpdate(WeaverWorkState.Failed, "Gameserver id doesn't match an active gameserver this host manages");
+            return;
+        }
+
+        var gameServerUpdated = foundGameServer.Data;
+
+        foreach (var resource in deserializedLocation.ConfigSets)
+        {
+            var matchingResource = gameServerUpdated.Resources.FirstOrDefault(x => x.Path == deserializedLocation.Path);
+            if (matchingResource is null)
+            {
+                continue;
+            }
+
+            var matchingConfig = matchingResource.ConfigSets.FirstOrDefault(x => x.Id == resource.Id);
+            if (matchingConfig is null)
+            {
+                continue;
+            }
+            
+            matchingResource.ConfigSets.Remove(matchingConfig);
+        }
+
+        var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
+        if (!gameServerLocalUpdateRequest.Succeeded)
+        {
+            work.SendStatusUpdate(WeaverWorkState.Failed, gameServerLocalUpdateRequest.Messages);
+            return;
+        }
+        
+        // TODO: Apply configuration to all configuration files locally
+        
+        work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 
-    private async Task ConfigureGameServerFull(WeaverWork work)
+    private async Task ConfigureGameServerUpdateFull(WeaverWork work)
     {
+        // TODO: Extract full resource list
+        
+        // TODO: Remove old resource list and apply new resource list
+        
+        // TODO: Apply configuration to all configuration files locally
         throw new NotImplementedException();
     }
 }
