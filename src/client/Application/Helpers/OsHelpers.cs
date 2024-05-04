@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using Domain.Models.Network;
 using Serilog;
 
 namespace Application.Helpers;
@@ -108,6 +109,45 @@ public static class OsHelpers
             from ip in item.GetIPProperties().UnicastAddresses
             where ip.Address.AddressFamily == AddressFamily.InterNetwork
             select ip.Address).ToArray();
+    }
+
+    public static IEnumerable<NetworkListeningSocket> GetListeningSockets()
+    {
+        var networkListeners = new List<NetworkListeningSocket>();
+
+        foreach (var tcpSocket in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners())
+        {
+            try
+            {
+                networkListeners.Add(new NetworkListeningSocket
+                {
+                    Protocol = ProtocolType.Tcp,
+                    Port = tcpSocket.Port
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Failed to parse TCP socket listener: {Error}", ex.Message);
+            }
+        }
+
+        foreach (var udpSocket in IPGlobalProperties.GetIPGlobalProperties().GetActiveUdpListeners())
+        {
+            try
+            {
+                networkListeners.Add(new NetworkListeningSocket
+                {
+                    Protocol = ProtocolType.Udp,
+                    Port = udpSocket.Port
+                });
+            }
+            catch (Exception ex)
+            {
+                Log.Debug("Failed to parse UDP socket listener: {Error}", ex.Message);
+            }
+        }
+
+        return networkListeners;
     }
 
     public static IEnumerable<Process> GetProcessesByDirectory(string directoryPath)

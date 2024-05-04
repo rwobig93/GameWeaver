@@ -25,5 +25,5 @@ public interface IGameServerService
     Task<IResult> Update(GameServerLocalUpdate gameServerUpdate);
     Task<IResult> UpdateState(Guid id, ServerState state);
     Task<IResult> Housekeeping();
-    Task<IResult<bool>> IsServerStateAsExpected(Guid id);
+    Task<IResult<ServerState>> GetCurrentRealtimeState(Guid id);
 }

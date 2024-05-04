@@ -15,5 +15,6 @@ public enum ServerState
     Shutdown = 10,
     Uninstalling = 11,
     Uninstalled = 12,
-    ShuttingDown = 13
+    ShuttingDown = 13,
+    OverlappingPort = 14
 }

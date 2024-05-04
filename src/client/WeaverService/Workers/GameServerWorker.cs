@@ -2,6 +2,7 @@
 using Application.Constants;
 using Application.Helpers;
 using Application.Mappers;
+using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
@@ -39,10 +40,13 @@ public class GameServerWorker : BackgroundService
 
     private static DateTime _lastRuntime;
     private static DateTime? _lastBackupTime;
+    private static DateTime? _lastStateCheck;
 
     public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(GameServerWorker));
+
+        await CheckGameServersRealtimeState();
         
         // TODO: Implement Sqlite for game server state tracking, for now we'll serialize/deserialize a json file
         await base.StartAsync(stoppingToken);
@@ -58,6 +62,7 @@ public class GameServerWorker : BackgroundService
                 
                 await ProcessWorkQueue();
                 await BackupGameServers();
+                await CheckGameServersRealtimeState();
 
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
                 if (millisecondsPassed < _generalConfig.Value.GameServerWorkIntervalMs)
@@ -151,6 +156,50 @@ public class GameServerWorker : BackgroundService
             await _gameServerService.BackupGame(gameserver.Id);
         
         _lastBackupTime = _dateTimeService.NowDatabaseTime;
+    }
+
+    private async Task CheckGameServersRealtimeState()
+    {
+        _lastStateCheck ??= _dateTimeService.NowDatabaseTime;
+
+        // TODO: Add configurable value for game server realtime state check
+        if (_dateTimeService.NowDatabaseTime < _lastStateCheck.Value.AddSeconds(30)) return;
+
+        var allGameServers = await _gameServerService.GetAll();
+
+        foreach (var gameServer in allGameServers.Data)
+        {
+            var realtimeState = (await _gameServerService.GetCurrentRealtimeState(gameServer.Id)).Data;
+            
+            if (gameServer.ServerState == realtimeState)
+            {
+                continue;
+            }
+            if (gameServer.ServerState == ServerState.Connectable && (realtimeState is ServerState.InternallyConnectable or ServerState.Unreachable))
+            {
+                continue;
+            }
+            if (realtimeState == ServerState.Stalled &&
+                gameServer.ServerState is ServerState.Installing or
+                    ServerState.Restarting or
+                    ServerState.Uninstalling or
+                    ServerState.ShuttingDown or
+                    ServerState.SpinningUp)
+            {
+                continue;
+            }
+            
+            _logger.Information("Realtime server state has changed from expected: [{GameserverId}]{GameserverName} [Expected]{ExpectedState} [Current]{CurrentState}",
+                gameServer.Id, gameServer.ServerName, gameServer.ServerState, realtimeState);
+            await _gameServerService.UpdateState(gameServer.Id, realtimeState);
+            new WeaverWork().SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+            {
+                Id = gameServer.Id,
+                ServerState = realtimeState
+            });
+        }
+        
+        _lastStateCheck = _dateTimeService.NowDatabaseTime;
     }
 
     private async Task HandleWork(WeaverWork work)
@@ -339,7 +388,7 @@ public class GameServerWorker : BackgroundService
 
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.SpinningUp);
         
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+        work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
             ServerProcessName = null,
@@ -347,7 +396,67 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
         
-        // TODO: Add thread task to pool to indicate when server is up | Check for listening port of gameserver, once listening we know it's up w/ timeout
+        var waitingStartTime = _dateTimeService.NowDatabaseTime;
+        
+        while (true)
+        {
+            // TODO: Add configurable spin-up timeout for calculating a stalled gameserver since this varies based on mods and system resources
+            if ((_dateTimeService.NowDatabaseTime - waitingStartTime).Minutes > 15)
+            {
+                await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Stalled);
+                work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+                {
+                    Id = gameServerLocal.Data.Id,
+                    ServerProcessName = null,
+                    ServerState = ServerState.Stalled,
+                    Resources = null
+                });
+                break;
+            }
+
+            var currentState = await _gameServerService.GetCurrentRealtimeState(gameServerLocal.Data.Id);
+            if (!currentState.Succeeded)
+            {
+                await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Unknown);
+                work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+                {
+                    Id = gameServerLocal.Data.Id,
+                    ServerProcessName = null,
+                    ServerState = ServerState.Unknown,
+                    Resources = null
+                });
+                break;
+            }
+            
+            if (currentState.Data == ServerState.InternallyConnectable)
+            {
+                await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.InternallyConnectable);
+                work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+                {
+                    Id = gameServerLocal.Data.Id,
+                    ServerProcessName = null,
+                    ServerState = ServerState.InternallyConnectable,
+                    Resources = null
+                });
+                break;
+            }
+
+            if (currentState.Data != ServerState.Shutdown)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(1000));
+                continue;
+            }
+            
+            await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Shutdown);
+            work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+            {
+                Id = gameServerLocal.Data.Id,
+                ServerProcessName = null,
+                ServerState = ServerState.Shutdown,
+                Resources = null
+            });
+            break;
+        }
     }
 
     private async Task StopGameServer(WeaverWork work, bool sendCompletion = true)
@@ -457,6 +566,20 @@ public class GameServerWorker : BackgroundService
     {
         var deserializedGameServer = await ExtractGameServerFromWorkData(work);
         if (deserializedGameServer is null) return;
+
+        var overlappingListeningSockets = deserializedGameServer.GetListeningSockets();
+        if (overlappingListeningSockets.Count > 0)
+        {
+            // TODO: Handle overlapping port state on control server
+            work.SendGameServerUpdate(WeaverWorkState.Failed, new GameServerStateUpdate
+            {
+                Id = deserializedGameServer.Id,
+                ServerProcessName = null,
+                ServerState = ServerState.OverlappingPort,
+                Resources = null
+            });
+            return;
+        }
 
         var createServerRequest = await _gameServerService.Create(deserializedGameServer);
         if (!createServerRequest.Succeeded) return;

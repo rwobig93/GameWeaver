@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using Application.Constants;
 using Application.Helpers;
 using Application.Models;
@@ -533,92 +534,42 @@ public class GameServerService : IGameServerService
         return await _gameServerRepository.SaveAsync();
     }
 
-    private async Task<IResult<List<ProcessNetworkInfo>>> GetProcessNetworkInfo()
-    {
-        var networkPorts = new List<ProcessNetworkInfo>();
-
-        // Get active TCP listeners
-        foreach (var tcpEndpoint in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners())
-        {
-            try
-            {
-                var connections = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections();
-                networkPorts.AddRange(from connection in connections
-                    where connection.LocalEndPoint.Equals(tcpEndpoint)
-                    select new ProcessNetworkInfo
-                    {
-                        ProcessId = connection.State == TcpState.Listen ? connection.GetHashCode() : 0, // Placeholder for Process ID retrieval
-                        Protocol = "TCP",
-                        Port = tcpEndpoint.Port.ToString()
-                    });
-            }
-            catch (Exception) // Simplified catch, need to refine
-            {
-                // Handle exceptions or ignore errors
-            }
-        }
-
-        // Get active UDP listeners
-        networkPorts.AddRange(IPGlobalProperties.GetIPGlobalProperties()
-            .GetActiveUdpListeners()
-            .Select(udpEndpoint => new ProcessNetworkInfo
-            {
-                ProcessId = 0, // No direct way to get the process for UDP
-                Protocol = "UDP",
-                Port = udpEndpoint.Port.ToString()
-            }));
-
-        return await Result<List<ProcessNetworkInfo>>.SuccessAsync(networkPorts);
-    }
-
-    public async Task<IResult<bool>> IsServerStateAsExpected(Guid id)
+    public async Task<IResult<ServerState>> GetCurrentRealtimeState(Guid id)
     {
         try
         {
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
-                return await Result<bool>.FailAsync(gameServerRequest.Messages);
+                return await Result<ServerState>.FailAsync(gameServerRequest.Messages);
             
             var gameServer = gameServerRequest.Data;
-            var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
-            
-            // TODO: Find a cross platform way to get listening TCP & UDP connections and their processes, only current way I could find is using per OS binaries
-            // State.InternallyConnectable | Check for process listening on gameserver ports and verify the running directory for those processes
 
-            switch (gameServer.ServerState)
+            if (!Directory.Exists(gameServer.GetInstallDirectory()))
             {
-                // State.Shutdown | Check if any processes are running from directory
-                case ServerState.Shutdown or ServerState.Uninstalling when gameserverProcesses.Count == 0:
-                    _logger.Verbose("Gameserver matches it's shutdown state: [{GameserverId}]{GameserverState}", gameServer.Id, gameServer.ServerState);
-                    return await Result<bool>.SuccessAsync(true);
-                case ServerState.Shutdown or ServerState.Uninstalling when gameserverProcesses.Count != 0:
-                    await UpdateState(gameServer.Id, ServerState.SpinningUp);
-                    _logger.Verbose("Gameserver doesn't matches it's shutdown state: [{GameserverId}]{GameserverState}", gameServer.Id, ServerState.SpinningUp);
-                    return await Result<bool>.SuccessAsync(false);
-                case ServerState.Connectable or
-                    ServerState.Installing or
-                    ServerState.Restarting or
-                    ServerState.Updating or
-                    ServerState.InternallyConnectable or
-                    ServerState.SpinningUp:
-                    break;
+                return await Result<ServerState>.SuccessAsync(ServerState.Uninstalled);
             }
-
-            // State.Installing-or-Updating-or-Restarting | Verify processes are running from directory
-            if (gameserverProcesses.Count != 0) return await Result<bool>.SuccessAsync(true);
             
-            await UpdateState(gameServer.Id, ServerState.Shutdown);
-            _logger.Verbose("Gameserver doesn't matches it's running state: [{GameserverId}]{GameserverState}", gameServer.Id, ServerState.Shutdown);
-            return await Result<bool>.SuccessAsync(false);
+            var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
+            var gameserverListeningSockets = gameServer.GetListeningSockets();
 
-            // State.Stalled | If was connectable before and now is running while not listening
-            // TODO: State.Stalled | Set spin up time limit for stall and if it was connectable before and now is running while not listening, stalled is conveyed
-
+            switch (gameserverProcesses.Count)
+            {
+                case > 0 when gameserverListeningSockets.Count > 0:
+                    return await Result<ServerState>.SuccessAsync(ServerState.InternallyConnectable);
+                case > 0 when gameserverListeningSockets.Count <= 0:
+                    return await Result<ServerState>.SuccessAsync(ServerState.Stalled);
+                case <= 0:
+                    return await Result<ServerState>.SuccessAsync(ServerState.Shutdown);
+                default:
+                    _logger.Error("Failed to properly calculate local server state: [{GameserverId}]{GameserverName} | [Processes]{ProcessCount} [Sockets]{SocketCount}",
+                        gameServer.Id, gameServer.ServerName, gameserverProcesses.Count, gameserverListeningSockets.Count);
+                    return await Result<ServerState>.FailAsync(ServerState.Unknown);
+            }
         }
         catch (Exception ex)
         {
             _logger.Error(ex, "Failure occurred checking on local game server state [{GameserverId}]: {Error}", id, ex.Message);
-            return await Result<bool>.FailAsync($"Failure occurred checking on local game server state [{id}]: {ex.Message}");
+            return await Result<ServerState>.FailAsync($"Failure occurred checking on local game server state [{id}]: {ex.Message}");
         }
     }
 }
