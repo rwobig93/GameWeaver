@@ -487,12 +487,13 @@
             <param name="gameServerService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteConfigurationItem(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteConfigurationItem(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete a configuration item
             </summary>
             <param name="id">Configuration item id</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchConfigurationItems(System.String,Application.Services.GameServer.IGameServerService)">
@@ -1580,6 +1581,18 @@
             <param name="numberOfBytes">Desired token size in bytes, larger is more secure</param>
             <returns>An enumerable of generated URL friendly tokens</returns>
         </member>
+        <member name="T:Application.Models.GameServer.ConfigurationItem.ConfigurationItemHost">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> Id<br/>
+            <b>bool</b> DuplicateKey<br/>
+            <b>string</b> Category<br/>
+            <b>string</b> Key<br/>
+            <b>string</b> Value<br/>
+            </code>
+            </remarks>
+        </member>
         <member name="T:Application.Models.GameServer.GameServer.GameServerToHost">
             <remarks>
             MemoryPack GenerateType: Object<br/>
@@ -1612,13 +1625,14 @@
             <remarks>
             MemoryPack GenerateType: Object<br/>
             <code>
+            <b>System.Guid</b> GameserverId<br/>
             <b>string</b> Name<br/>
             <b>string</b> Path<br/>
             <b>bool</b> Startup<br/>
             <b>Domain.Enums.GameServer.ResourceType</b> Type<br/>
             <b>string</b> Extension<br/>
             <b>string</b> Args<br/>
-            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.ConfigurationItem.ConfigurationItemSlim&gt;</b> ConfigSets<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.ConfigurationItem.ConfigurationItemHost&gt;</b> ConfigSets<br/>
             </code>
             </remarks>
         </member>

@@ -3,7 +3,7 @@
 namespace Application.Models.GameServer.ConfigurationItem;
 
 [MemoryPackable(SerializeLayout.Explicit)]
-public class ConfigurationItemHost
+public partial class ConfigurationItemHost
 {
     [MemoryPackOrder(0)]
     public Guid Id { get; set; }

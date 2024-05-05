@@ -15,7 +15,7 @@
 
     <ItemGroup>
       <PackageReference Include="Hardware.Info" Version="100.1.0" />
-      <PackageReference Include="ini-parser" Version="2.5.2" />
+      <PackageReference Include="ini-parser-netstandard" Version="2.5.2" />
       <PackageReference Include="MemoryPack" Version="1.21.1" />
       <PackageReference Include="Serilog" Version="3.1.1" />
     </ItemGroup>
