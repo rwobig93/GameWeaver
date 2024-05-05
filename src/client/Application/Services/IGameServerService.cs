@@ -26,4 +26,5 @@ public interface IGameServerService
     Task<IResult> UpdateState(Guid id, ServerState state);
     Task<IResult> Housekeeping();
     Task<IResult<ServerState>> GetCurrentRealtimeState(Guid id);
+    Task<IResult> UpdateConfigurationFiles(Guid id, bool loadExisting = true);
 }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
+using System.Text;
 using Application.Constants;
 using Application.Helpers;
 using Application.Models;
@@ -9,6 +10,8 @@ using Application.Settings;
 using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.GameServer;
+using IniParser;
+using IniParser.Model;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
@@ -29,6 +32,18 @@ public class GameServerService : IGameServerService
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
+    private static FileIniDataParser _iniParser = new() { Parser = { Configuration =
+    {
+        CaseInsensitive = false,
+        AllowKeysWithoutSection = true,
+        AllowDuplicateKeys = true,
+        OverrideDuplicateKeys = false,
+        ConcatenateDuplicateKeys = false,
+        ThrowExceptionsOnError = false,
+        AllowDuplicateSections = true,
+        AllowCreateSectionsOnFly = true,
+        SkipInvalidLines = true
+    }}};
 
     public async Task<IResult> ValidateSteamCmdInstall()
     {
@@ -568,5 +583,99 @@ public class GameServerService : IGameServerService
             _logger.Error(ex, "Failure occurred checking on local game server state [{GameserverId}]: {Error}", id, ex.Message);
             return await Result<ServerState>.FailAsync($"Failure occurred checking on local game server state [{id}]: {ex.Message}");
         }
+    }
+
+    private async Task<IResult> UpdateIniFile(string gameServerConfigPath, LocationPointer configFile, bool loadExisting = true)
+    {
+        var filePath = Path.Combine(gameServerConfigPath, configFile.Path);
+        var configFileContent = new IniData();
+
+        try
+        {
+            if (loadExisting && File.Exists(filePath))
+            {
+                var existingIniData = _iniParser.ReadFile(filePath);
+                configFileContent.Merge(existingIniData);
+                _logger.Debug("Existing ini file exists, loaded config contents: {FilePath}", filePath);
+            }
+
+            foreach (var config in configFile.ConfigSets)
+            {
+                if (!configFileContent.Sections.ContainsSection(config.Category))
+                {
+                    configFileContent.Sections.AddSection(config.Category);
+                }
+
+                if (!configFileContent[config.Category].ContainsKey(config.Key))
+                {
+                    configFileContent[config.Category].AddKey(config.Key);
+                }
+
+                configFileContent[config.Category][config.Key] = config.Value;
+            }
+
+            _iniParser.WriteFile(filePath, configFileContent);
+            _logger.Debug("Updated ini config file at {FilePath}", filePath);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating ini config file: {Error}", ex.Message);
+            return await Result.FailAsync($"Failure occurred updating ini config file: {ex.Message}");
+        }
+    }
+
+    private async Task<IResult> UpdateJsonFile(string gameServerConfigPath, LocationPointer configFile, bool loadExisting = true)
+    {
+        var filePath = Path.Combine(gameServerConfigPath, configFile.Path);
+
+        // TODO: Write Json file update logic
+        try
+        {
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating json config file: {Error}", ex.Message);
+            return await Result.FailAsync($"Failure occurred updating json config file: {ex.Message}");
+        }
+    }
+
+    public async Task<IResult> UpdateConfigurationFiles(Guid id, bool loadExisting = true)
+    {
+        var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            return await Result.FailAsync(gameServerRequest.Messages);
+
+        List<string> errorMessages = [];
+        var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == LocationType.ConfigFile).ToList();
+
+        foreach (var configFile in configurationFiles)
+        {
+            if (configFile.Extension.Contains("json", StringComparison.CurrentCultureIgnoreCase))
+            {
+                var jsonUpdateRequest = await UpdateJsonFile(gameServerRequest.Data.GetInstallDirectory(), configFile, loadExisting);
+                if (!jsonUpdateRequest.Succeeded)
+                {
+                    errorMessages.AddRange(jsonUpdateRequest.Messages);
+                }
+
+                continue;
+            }
+            
+            // Most game server config files default to ini format, so we'll use this as our catch-all / last ditch
+            var iniUpdateRequest = await UpdateIniFile(gameServerRequest.Data.GetInstallDirectory(), configFile, loadExisting);
+            if (!iniUpdateRequest.Succeeded)
+            {
+                errorMessages.AddRange(iniUpdateRequest.Messages);
+            }
+        }
+
+        if (errorMessages.Count > 0)
+        {
+            return await Result.FailAsync(errorMessages);
+        }
+
+        return await Result.SuccessAsync();
     }
 }

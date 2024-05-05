@@ -338,6 +338,24 @@ public class GameServerWorker : BackgroundService
         return deserializedServer?.ToLocal();
     }
 
+    private async Task<List<LocationPointer>?> ExtractLocationPointersFromWorkData(WeaverWork work)
+    {
+        if (work.WorkData is null)
+        {
+            _logger.Error("Gameserver {WorkType} request has an empty work data payload: {WorkId}", work.TargetType, work.Id);
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
+            work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
+            return null;
+        }
+        var deserializedLocation = _serializerService.DeserializeMemory<IEnumerable<LocationPointer>>(work.WorkData);
+        if (deserializedLocation is not null) return deserializedLocation.ToList();
+        
+        _logger.Error("Unable to deserialize work data payload: {WorkId}", work.Id);
+        await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
+        work.SendStatusUpdate(WeaverWorkState.Failed, $"Unable to deserialize work data payload: {work.Id}");
+        return deserializedLocation?.ToList();
+    }
+
     private async Task<LocationPointer?> ExtractLocationPointerFromWorkData(WeaverWork work)
     {
         if (work.WorkData is null)
@@ -678,7 +696,12 @@ public class GameServerWorker : BackgroundService
             return;
         }
         
-        // TODO: Apply configuration to all configuration files locally
+        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
+        if (!configUpdateRequest.Succeeded)
+        {
+            work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
+            return;
+        }
         
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
@@ -722,18 +745,51 @@ public class GameServerWorker : BackgroundService
             return;
         }
         
-        // TODO: Apply configuration to all configuration files locally
+        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
+        if (!configUpdateRequest.Succeeded)
+        {
+            work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
+            return;
+        }
         
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 
     private async Task ConfigureGameServerUpdateFull(WeaverWork work)
     {
-        // TODO: Extract full resource list
+        var deserializedLocations = await ExtractLocationPointersFromWorkData(work);
+        if (deserializedLocations is null) return;
+
+        var foundGameServer = await _gameServerService.GetById(deserializedLocations.First().GameserverId);
+        if (!foundGameServer.Succeeded || foundGameServer.Data is null)
+        {
+            _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+            work.SendStatusUpdate(WeaverWorkState.Failed, "Gameserver id doesn't match an active gameserver this host manages");
+            return;
+        }
         
-        // TODO: Remove old resource list and apply new resource list
+        var gameServerUpdated = foundGameServer.Data;
+        foreach (var location in gameServerUpdated.Resources.Where(x => x.Type == LocationType.ConfigFile))
+        {
+            gameServerUpdated.Resources.Remove(location);
+        }
         
-        // TODO: Apply configuration to all configuration files locally
-        throw new NotImplementedException();
+        gameServerUpdated.Resources.AddRange(deserializedLocations);
+
+        var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
+        if (!gameServerLocalUpdateRequest.Succeeded)
+        {
+            work.SendStatusUpdate(WeaverWorkState.Failed, gameServerLocalUpdateRequest.Messages);
+            return;
+        }
+        
+        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id, false);
+        if (!configUpdateRequest.Succeeded)
+        {
+            work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
+            return;
+        }
+        
+        work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 }
