@@ -3,7 +3,7 @@
 public class ConfigurationItemCreate
 {
     public Guid ModifyingUserId { get; set; }
-    public Guid GameProfileId { get; set; }
+    public Guid LocalResourceId { get; set; }
     public bool DuplicateKey { get; set; }
     public string Path { get; set; } = null!;
     public string Category { get; set; } = null!;

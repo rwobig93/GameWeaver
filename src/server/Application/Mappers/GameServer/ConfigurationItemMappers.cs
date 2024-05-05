@@ -13,7 +13,7 @@ public static class ConfigurationItemMappers
         return new ConfigurationItemSlim
         {
             Id = configDb.Id,
-            GameProfileId = configDb.GameProfileId,
+            LocalResourceId = configDb.LocalResourceId,
             DuplicateKey = configDb.DuplicateKey,
             Path = configDb.Path,
             Category = configDb.Category,
@@ -32,7 +32,7 @@ public static class ConfigurationItemMappers
         return new ConfigurationItemUpdate
         {
             Id = configDb.Id,
-            GameProfileId = configDb.GameProfileId,
+            LocalResourceId = configDb.LocalResourceId,
             DuplicateKey = configDb.DuplicateKey,
             Path = configDb.Path,
             Category = configDb.Category,
@@ -45,7 +45,7 @@ public static class ConfigurationItemMappers
     {
         return new ConfigurationItemCreate
         {
-            GameProfileId = configDb.GameProfileId,
+            LocalResourceId = configDb.LocalResourceId,
             DuplicateKey = configDb.DuplicateKey,
             Path = configDb.Path,
             Category = configDb.Category,

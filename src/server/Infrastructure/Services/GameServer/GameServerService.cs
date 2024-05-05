@@ -265,7 +265,7 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByGameProfileIdAsync(Guid id)
     {
-        var request = await _gameServerRepository.GetConfigurationItemsByGameProfileIdAsync(id);
+        var request = await _gameServerRepository.GetConfigurationItemsByLocalResourceIdAsync(id);
         if (!request.Succeeded)
             return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
@@ -276,7 +276,13 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate createObject)
     {
-        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
+        // TODO: LocalResource is the source of truth for updates, we need to send update for the local resource, not the config item
+        // TODO: LocalResource gathering and model should also include all configuration items w/ the LocalResourceId
+        // TODO: LocalResource update should be separate from the configuration items modification based on CRUD intent, create method for sending update
+        // TODO: Update LocalResource models on Client and Server to reflect DB model properties and configuration items
+        // TODO: LocalResource needs file type independent of file extension, files can be a format that doesn't bind to file name/extension
+        // TODO: File types: JSON, INI, RAW
+        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.LocalResourceId);
         if (!gameProfileRequest.Succeeded || gameProfileRequest.Result is null)
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
@@ -310,7 +316,7 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
         
-        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(findRequest.Result.GameProfileId);
+        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(findRequest.Result.LocalResourceId);
         if (!gameProfileRequest.Succeeded || gameProfileRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
@@ -344,7 +350,7 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
         
-        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(findRequest.Result.GameProfileId);
+        var gameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(findRequest.Result.LocalResourceId);
         if (!gameProfileRequest.Succeeded || gameProfileRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 

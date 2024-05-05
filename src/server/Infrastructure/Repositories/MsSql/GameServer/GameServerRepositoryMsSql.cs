@@ -392,19 +392,19 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetConfigurationItemsByGameProfileIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetConfigurationItemsByLocalResourceIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<ConfigurationItemDb>> actionReturn = new();
 
         try
         {
             var foundConfigItem = await _database.LoadData<ConfigurationItemDb, dynamic>(
-                ConfigurationItemsTableMsSql.GetByGameProfileId, new {GameProfileId = id});
+                ConfigurationItemsTableMsSql.GetByLocalResourceId, new {GameProfileId = id});
             actionReturn.Succeed(foundConfigItem);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ConfigurationItemsTableMsSql.GetByGameProfileId.Path, ex.Message);
+            actionReturn.FailLog(_logger, ConfigurationItemsTableMsSql.GetByLocalResourceId.Path, ex.Message);
         }
 
         return actionReturn;
