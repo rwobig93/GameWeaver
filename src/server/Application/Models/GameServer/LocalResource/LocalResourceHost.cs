@@ -17,11 +17,17 @@ public partial class LocalResourceHost
     [MemoryPackOrder(3)]
     public bool Startup { get; set; }
     [MemoryPackOrder(4)]
-    public ResourceType Type { get; set; }
+    public int StartupPriority { get; set; }
     [MemoryPackOrder(5)]
-    public string Extension { get; set; } = "";
+    public ResourceType Type { get; set; }
     [MemoryPackOrder(6)]
-    public string Args { get; set; } = "";
+    public ContentType ContentType { get; set; }
     [MemoryPackOrder(7)]
+    public string Extension { get; set; } = "";
+    [MemoryPackOrder(8)]
+    public string Args { get; set; } = "";
+    [MemoryPackOrder(9)]
     public SerializableList<ConfigurationItemHost> ConfigSets { get; set; } = [];
+    [MemoryPackOrder(10)]
+    public Guid Id { get; set; }
 }

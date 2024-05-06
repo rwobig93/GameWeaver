@@ -146,6 +146,8 @@ public static class PermissionConstants
         public const string CreateLocalResource = "PermissionConstants.Gameserver.Gameserver.CreateLocalResource";
         public const string UpdateLocalResource = "PermissionConstants.Gameserver.Gameserver.UpdateLocalResource";
         public const string DeleteLocalResource = "PermissionConstants.Gameserver.Gameserver.DeleteLocalResource";
+        public const string UpdateLocalResourceOnGameServer = "PermissionConstants.Gameserver.Gameserver.UpdateLocalResourceOnGameServer";
+        public const string UpdateAllLocalResourcesOnGameServer = "PermissionConstants.Gameserver.Gameserver.UpdateAllLocalResourcesOnGameServer";
         public const string SearchLocalResource = "PermissionConstants.Gameserver.Gameserver.SearchLocalResource";
         public const string GetAllGameProfilesPaginated = "PermissionConstants.Gameserver.Gameserver.GetAllGameProfilesPaginated";
         public const string GetGameProfileCount = "PermissionConstants.Gameserver.Gameserver.GetGameProfileCount";

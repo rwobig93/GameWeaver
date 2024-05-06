@@ -569,6 +569,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var foundResource = (await _database.LoadData<LocalResourceDb, dynamic>(
                 LocalResourcesTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            
             actionReturn.Succeed(foundResource!);
         }
         catch (Exception ex)

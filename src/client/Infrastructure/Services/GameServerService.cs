@@ -22,17 +22,20 @@ public class GameServerService : IGameServerService
     private readonly IDateTimeService _dateTimeService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IGameServerRepository _gameServerRepository;
+    private readonly ISerializerService _serializerService;
 
-    public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig, IGameServerRepository gameServerRepository)
+    public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig, IGameServerRepository gameServerRepository,
+        ISerializerService serializerService)
     {
         _logger = logger;
         _dateTimeService = dateTimeService;
         _generalConfig = generalConfig;
         _gameServerRepository = gameServerRepository;
+        _serializerService = serializerService;
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
-    private static FileIniDataParser _iniParser = new() { Parser = { Configuration =
+    private static readonly FileIniDataParser IniParser = new() { Parser = { Configuration =
     {
         CaseInsensitive = false,
         AllowKeysWithoutSection = true,
@@ -404,7 +407,7 @@ public class GameServerService : IGameServerService
                 return await Result.FailAsync(gameServerRequest.Messages);
             
             var gameServer = gameServerRequest.Data;
-            var backupPaths = gameServer.Resources.Where(x => x.Type == LocationType.BackupPath).ToList();
+            var backupPaths = gameServer.Resources.Where(x => x.Type == ResourceType.BackupPath).ToList();
             if (backupPaths.Count == 0)
             {
                 _logger.Debug("Gameserver doesn't have a backup path configured, skipping: [{GameserverId}]{GameserverName}",
@@ -446,7 +449,7 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(gameServerRequest.Messages);
             
         var gameServer = gameServerRequest.Data;
-        var startupBinaries = gameServer.Resources.Where(x => x is {Startup: true, Type: LocationType.Executable}).ToList();
+        var startupBinaries = gameServer.Resources.Where(x => x is {Startup: true, Type: ResourceType.Executable}).ToList();
         var failures = new List<string>();
 
         foreach (var binary in startupBinaries)
@@ -585,16 +588,16 @@ public class GameServerService : IGameServerService
         }
     }
 
-    private async Task<IResult> UpdateIniFile(string gameServerConfigPath, LocationPointer configFile, bool loadExisting = true)
+    private async Task<IResult> UpdateIniFile(LocalResource configFile, bool loadExisting = true)
     {
-        var filePath = Path.Combine(gameServerConfigPath, configFile.Path);
+        var filePath = configFile.GetFullPath();
         var configFileContent = new IniData();
 
         try
         {
             if (loadExisting && File.Exists(filePath))
             {
-                var existingIniData = _iniParser.ReadFile(filePath);
+                var existingIniData = IniParser.ReadFile(filePath);
                 configFileContent.Merge(existingIniData);
                 _logger.Debug("Existing ini file exists, loaded config contents: {FilePath}", filePath);
             }
@@ -611,33 +614,101 @@ public class GameServerService : IGameServerService
                     configFileContent[config.Category].AddKey(config.Key);
                 }
 
+                if (config.DuplicateKey)
+                {
+                    var sectionData = configFileContent.Sections.GetSectionData(config.Category);
+                    var matchingSections = sectionData.Keys.Where(x => x.KeyName == config.Key && x.Value == config.Value);
+                    if (!matchingSections.Any())
+                    {
+                        configFileContent[config.Category].AddKey(config.Key, config.Value);
+                    }
+
+                    continue;
+                }
+
                 configFileContent[config.Category][config.Key] = config.Value;
             }
 
-            _iniParser.WriteFile(filePath, configFileContent);
+            IniParser.WriteFile(filePath, configFileContent);
             _logger.Debug("Updated ini config file at {FilePath}", filePath);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failure occurred updating ini config file: {Error}", ex.Message);
-            return await Result.FailAsync($"Failure occurred updating ini config file: {ex.Message}");
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
         }
     }
 
-    private async Task<IResult> UpdateJsonFile(string gameServerConfigPath, LocationPointer configFile, bool loadExisting = true)
+    private async Task<IResult> UpdateJsonFile(LocalResource configFile, bool loadExisting = true)
     {
-        var filePath = Path.Combine(gameServerConfigPath, configFile.Path);
+        var filePath = configFile.GetFullPath();
+        var configFileContent = new Dictionary<string, string>();
 
-        // TODO: Write Json file update logic
+        if (loadExisting && File.Exists(filePath))
+        {
+            _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
+            try
+            {
+                var loadedContent = File.ReadAllText(filePath);
+                configFileContent = _serializerService.DeserializeJson<Dictionary<string, string>>(loadedContent);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to load existing {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            }
+        }
+
+        foreach (var configItem in configFile.ConfigSets)
+        {
+            if (!configFileContent.ContainsKey(configItem.Key))
+            {
+                configFileContent.Add(configItem.Key, configItem.Value);
+                continue;
+            }
+
+            _ = configFileContent.TryGetValue(configItem.Key, out var keyValue);
+            if (keyValue == configItem.Value)
+            {
+                continue;
+            }
+
+            configFileContent[configItem.Key] = configItem.Value;
+        }
+
         try
         {
+            var serializedContent = _serializerService.SerializeJson(configFileContent);
+            File.WriteAllText(filePath, serializedContent, Encoding.UTF8);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failure occurred updating json config file: {Error}", ex.Message);
-            return await Result.FailAsync($"Failure occurred updating json config file: {ex.Message}");
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
+        }
+    }
+
+    private async Task<IResult> UpdateRawFile(LocalResource configFile)
+    {
+        var filePath = configFile.GetFullPath();
+        var fileContent = new StringBuilder();
+
+        foreach (var configItem in configFile.ConfigSets)
+        {
+            fileContent.Append(configItem.Value);
+        }
+
+        try
+        {
+            var serializedContent = fileContent.ToString();
+            File.WriteAllText(filePath, serializedContent, Encoding.UTF8);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
         }
     }
 
@@ -648,26 +719,48 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(gameServerRequest.Messages);
 
         List<string> errorMessages = [];
-        var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == LocationType.ConfigFile).ToList();
+        var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == ResourceType.ConfigFile).ToList();
 
         foreach (var configFile in configurationFiles)
         {
-            if (configFile.Extension.Contains("json", StringComparison.CurrentCultureIgnoreCase))
+            switch (configFile)
             {
-                var jsonUpdateRequest = await UpdateJsonFile(gameServerRequest.Data.GetInstallDirectory(), configFile, loadExisting);
-                if (!jsonUpdateRequest.Succeeded)
+                case {ContentType: ContentType.Json}:
                 {
-                    errorMessages.AddRange(jsonUpdateRequest.Messages);
-                }
+                    var jsonUpdateRequest = await UpdateJsonFile(configFile, loadExisting);
+                    if (!jsonUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(jsonUpdateRequest.Messages);
+                    }
 
-                continue;
-            }
-            
-            // Most game server config files default to ini format, so we'll use this as our catch-all / last ditch
-            var iniUpdateRequest = await UpdateIniFile(gameServerRequest.Data.GetInstallDirectory(), configFile, loadExisting);
-            if (!iniUpdateRequest.Succeeded)
-            {
-                errorMessages.AddRange(iniUpdateRequest.Messages);
+                    continue;
+                }
+                case {ContentType: ContentType.Ini}:
+                {
+                    // Most game server config files default to ini format, so we'll use this as our catch-all / last ditch
+                    var iniUpdateRequest = await UpdateIniFile(configFile, loadExisting);
+                    if (!iniUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(iniUpdateRequest.Messages);
+                    }
+
+                    continue;
+                }
+                case {ContentType: ContentType.Raw}:
+                {
+                    var rawUpdateRequest = await UpdateRawFile(configFile);
+                    if (!rawUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(rawUpdateRequest.Messages);
+                    }
+                    continue;
+                }
+                default:
+                {
+                    // TODO: Implement XML content
+                    errorMessages.Add($"Config file content type '{configFile.ContentType}' isn't currently supported");
+                    continue;
+                }
             }
         }
 

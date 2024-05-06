@@ -26,6 +26,6 @@ public class GameServerLocal
     public ServerState ServerState { get; set; } = ServerState.Unknown;
     public GameSource Source { get; set; }
     public SerializableList<Mod> ModList { get; set; } = [];
-    public SerializableList<LocationPointer> Resources { get; set; } = [];
+    public SerializableList<LocalResource> Resources { get; set; } = [];
     public SerializableList<SoftwareUpdateStatus> UpdatesWaiting { get; set; } = [];
 }

@@ -463,7 +463,7 @@
             <param name="gameServerService"></param>
             <returns>Configuration item object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetConfigurationItemsByGameProfileId(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetConfigurationItemsByLocalResourceId(System.Guid,Application.Services.GameServer.IGameServerService)">
             <summary>
             Get configuration times by game profile id
             </summary>
@@ -555,21 +555,41 @@
             <param name="currentUserService"></param>
             <returns>Id of the created local resource</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceUpdate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceUpdate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a local resources properties
             </summary>
             <param name="updateObject">Required properties to update a local resource</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteLocalResource(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteLocalResource(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete a local resource
             </summary>
             <param name="id">Local resource id</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResourceOnGameServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update the local resource for the game server on the host
+            </summary>
+            <param name="id">Local resource id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateAllLocalResourcesOnGameServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update all local resources for the game server on the host
+            </summary>
+            <param name="serverId">Game server id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchLocalResource(System.String,Application.Services.GameServer.IGameServerService)">
             <summary>
@@ -1629,10 +1649,13 @@
             <b>string</b> Name<br/>
             <b>string</b> Path<br/>
             <b>bool</b> Startup<br/>
+            <b>int</b> StartupPriority<br/>
             <b>Domain.Enums.GameServer.ResourceType</b> Type<br/>
+            <b>Domain.Enums.GameServer.ContentType</b> ContentType<br/>
             <b>string</b> Extension<br/>
             <b>string</b> Args<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.ConfigurationItem.ConfigurationItemHost&gt;</b> ConfigSets<br/>
+            <b>System.Guid</b> Id<br/>
             </code>
             </remarks>
         </member>

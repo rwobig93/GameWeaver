@@ -338,7 +338,7 @@ public class GameServerWorker : BackgroundService
         return deserializedServer?.ToLocal();
     }
 
-    private async Task<List<LocationPointer>?> ExtractLocationPointersFromWorkData(WeaverWork work)
+    private async Task<List<LocalResource>?> ExtractLocalResourcesFromWorkData(WeaverWork work)
     {
         if (work.WorkData is null)
         {
@@ -347,7 +347,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return null;
         }
-        var deserializedLocation = _serializerService.DeserializeMemory<IEnumerable<LocationPointer>>(work.WorkData);
+        var deserializedLocation = _serializerService.DeserializeMemory<IEnumerable<LocalResource>>(work.WorkData);
         if (deserializedLocation is not null) return deserializedLocation.ToList();
         
         _logger.Error("Unable to deserialize work data payload: {WorkId}", work.Id);
@@ -356,7 +356,7 @@ public class GameServerWorker : BackgroundService
         return deserializedLocation?.ToList();
     }
 
-    private async Task<LocationPointer?> ExtractLocationPointerFromWorkData(WeaverWork work)
+    private async Task<LocalResource?> ExtractLocalResourceFromWorkData(WeaverWork work)
     {
         if (work.WorkData is null)
         {
@@ -365,7 +365,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return null;
         }
-        var deserializedLocation = _serializerService.DeserializeMemory<LocationPointer>(work.WorkData);
+        var deserializedLocation = _serializerService.DeserializeMemory<LocalResource>(work.WorkData);
         if (deserializedLocation is not null) return deserializedLocation;
         
         _logger.Error("Unable to deserialize work data payload: {WorkId}", work.Id);
@@ -655,10 +655,10 @@ public class GameServerWorker : BackgroundService
 
     private async Task ConfigureGameServerUpdate(WeaverWork work)
     {
-        var deserializedLocation = await ExtractLocationPointerFromWorkData(work);
-        if (deserializedLocation is null) return;
+        var deserializedResource = await ExtractLocalResourceFromWorkData(work);
+        if (deserializedResource is null) return;
 
-        var foundGameServer = await _gameServerService.GetById(deserializedLocation.GameserverId);
+        var foundGameServer = await _gameServerService.GetById(deserializedResource.GameserverId);
         if (!foundGameServer.Succeeded || foundGameServer.Data is null)
         {
             _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
@@ -668,26 +668,13 @@ public class GameServerWorker : BackgroundService
 
         var gameServerUpdated = foundGameServer.Data;
 
-        foreach (var resource in deserializedLocation.ConfigSets)
+        var matchingResource = gameServerUpdated.Resources.FirstOrDefault(x => x.Id == deserializedResource.Id);
+        if (matchingResource is not null)
         {
-            var matchingResource = gameServerUpdated.Resources.FirstOrDefault(x => x.Path == deserializedLocation.Path);
-            if (matchingResource is null)
-            {
-                gameServerUpdated.Resources.Add(deserializedLocation);
-                continue;
-            }
-
-            var matchingConfig = matchingResource.ConfigSets.FirstOrDefault(x => x.Id == resource.Id);
-            if (matchingConfig is not null)
-            {
-                matchingConfig.Key = resource.Key;
-                matchingConfig.DuplicateKey = resource.DuplicateKey;
-                matchingConfig.Value = resource.Value;
-                continue;
-            }
-            
-            matchingResource.ConfigSets.Add(resource);
+            gameServerUpdated.Resources.Remove(matchingResource);
         }
+
+        gameServerUpdated.Resources.Add(deserializedResource);
 
         var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
         if (!gameServerLocalUpdateRequest.Succeeded)
@@ -708,10 +695,10 @@ public class GameServerWorker : BackgroundService
 
     private async Task ConfigureGameServerDelete(WeaverWork work)
     {
-        var deserializedLocation = await ExtractLocationPointerFromWorkData(work);
-        if (deserializedLocation is null) return;
+        var deserializedResource = await ExtractLocalResourceFromWorkData(work);
+        if (deserializedResource is null) return;
 
-        var foundGameServer = await _gameServerService.GetById(deserializedLocation.GameserverId);
+        var foundGameServer = await _gameServerService.GetById(deserializedResource.GameserverId);
         if (!foundGameServer.Succeeded || foundGameServer.Data is null)
         {
             _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
@@ -721,21 +708,10 @@ public class GameServerWorker : BackgroundService
 
         var gameServerUpdated = foundGameServer.Data;
 
-        foreach (var resource in deserializedLocation.ConfigSets)
+        var matchingResource = gameServerUpdated.Resources.FirstOrDefault(x => x.Id == deserializedResource.Id);
+        if (matchingResource is not null)
         {
-            var matchingResource = gameServerUpdated.Resources.FirstOrDefault(x => x.Path == deserializedLocation.Path);
-            if (matchingResource is null)
-            {
-                continue;
-            }
-
-            var matchingConfig = matchingResource.ConfigSets.FirstOrDefault(x => x.Id == resource.Id);
-            if (matchingConfig is null)
-            {
-                continue;
-            }
-            
-            matchingResource.ConfigSets.Remove(matchingConfig);
+            gameServerUpdated.Resources.Remove(matchingResource);
         }
 
         var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
@@ -757,10 +733,10 @@ public class GameServerWorker : BackgroundService
 
     private async Task ConfigureGameServerUpdateFull(WeaverWork work)
     {
-        var deserializedLocations = await ExtractLocationPointersFromWorkData(work);
-        if (deserializedLocations is null) return;
+        var deserializedResources = await ExtractLocalResourcesFromWorkData(work);
+        if (deserializedResources is null) return;
 
-        var foundGameServer = await _gameServerService.GetById(deserializedLocations.First().GameserverId);
+        var foundGameServer = await _gameServerService.GetById(deserializedResources.First().GameserverId);
         if (!foundGameServer.Succeeded || foundGameServer.Data is null)
         {
             _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
@@ -769,12 +745,7 @@ public class GameServerWorker : BackgroundService
         }
         
         var gameServerUpdated = foundGameServer.Data;
-        foreach (var location in gameServerUpdated.Resources.Where(x => x.Type == LocationType.ConfigFile))
-        {
-            gameServerUpdated.Resources.Remove(location);
-        }
-        
-        gameServerUpdated.Resources.AddRange(deserializedLocations);
+        gameServerUpdated.Resources = new SerializableList<LocalResource>(deserializedResources);
 
         var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
         if (!gameServerLocalUpdateRequest.Succeeded)

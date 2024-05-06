@@ -27,7 +27,7 @@ public interface IGameServerService
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetConfigurationItemsCountAsync();
     Task<IResult<ConfigurationItemSlim>> GetConfigurationItemByIdAsync(Guid id);
-    Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByGameProfileIdAsync(Guid id);
+    Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByLocalResourceIdAsync(Guid id);
     Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate createObject);
     Task<IResult> UpdateConfigurationItemAsync(ConfigurationItemUpdate updateObject);
     Task<IResult> DeleteConfigurationItemAsync(Guid id, Guid modifyingUserId);
@@ -40,8 +40,10 @@ public interface IGameServerService
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameProfileIdAsync(Guid id);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameServerIdAsync(Guid id);
     Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject, Guid modifyingUserId);
-    Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdate updateObject);
-    Task<IResult> DeleteLocalResourceAsync(Guid id);
+    Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdate updateObject, Guid modifyingUserId);
+    Task<IResult> DeleteLocalResourceAsync(Guid id, Guid modifyingUserId);
+    Task<IResult> UpdateLocalResourceOnGameServerAsync(Guid id, Guid modifyingUserId);
+    Task<IResult> UpdateAllLocalResourcesOnGameServerAsync(Guid serverId, Guid modifyingUserId);
     Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourceAsync(string searchText);
     Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourcePaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesAsync();

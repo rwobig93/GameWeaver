@@ -11,6 +11,6 @@ public partial class GameServerStateUpdate
     [MemoryPackOrder(0)] public Guid Id { get; set; }
     [MemoryPackOrder(1)] public string? ServerProcessName { get; set; }
     [MemoryPackOrder(2)] public ServerState ServerState { get; set; } = ServerState.Unknown;
-    [MemoryPackOrder(3)] public SerializableList<LocationPointer>? Resources { get; set; }
+    [MemoryPackOrder(3)] public SerializableList<LocalResource>? Resources { get; set; }
 
 }

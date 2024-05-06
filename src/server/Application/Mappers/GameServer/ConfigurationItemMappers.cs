@@ -83,4 +83,21 @@ public static class ConfigurationItemMappers
             ConfigSets = [configDb.ToHost()]
         };
     }
+
+    public static ConfigurationItemHost ToHost(this ConfigurationItemSlim configItem)
+    {
+        return new ConfigurationItemHost
+        {
+            Id = configItem.Id,
+            DuplicateKey = configItem.DuplicateKey,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value
+        };
+    }
+
+    public static IEnumerable<ConfigurationItemHost> ToHosts(this IEnumerable<ConfigurationItemSlim> configItems)
+    {
+        return configItems.Select(x => x.ToHost()).ToList();
+    }
 }

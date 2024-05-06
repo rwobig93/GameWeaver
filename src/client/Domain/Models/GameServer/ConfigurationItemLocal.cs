@@ -4,7 +4,7 @@ namespace Domain.Models.GameServer;
 
 
 [MemoryPackable(SerializeLayout.Explicit)]
-public partial class ConfigurationSet
+public partial class ConfigurationItemLocal
 {
     [MemoryPackOrder(0)]
     public Guid Id { get; set; }
