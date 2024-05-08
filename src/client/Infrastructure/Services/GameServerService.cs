@@ -737,7 +737,6 @@ public class GameServerService : IGameServerService
                 }
                 case {ContentType: ContentType.Ini}:
                 {
-                    // Most game server config files default to ini format, so we'll use this as our catch-all / last ditch
                     var iniUpdateRequest = await UpdateIniFile(configFile, loadExisting);
                     if (!iniUpdateRequest.Succeeded)
                     {

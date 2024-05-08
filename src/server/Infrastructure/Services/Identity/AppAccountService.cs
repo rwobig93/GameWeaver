@@ -410,16 +410,16 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
+            // Grab user id before logout to create audit log for logout if configured
+            if (userId == Guid.Empty)
+                userId = await _currentUserService.GetCurrentUserId() ?? Guid.Empty;
+            
             // Remove client id and tokens from local client storage and de-authenticate
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthToken);
             await _localStorage.RemoveItemAsync(LocalStorageConstants.AuthTokenRefresh);
             _authProvider.DeAuthenticateUser();
             
             if (!_lifecycleConfig.AuditLoginLogout) return await Result.SuccessAsync();
-            
-            // Create audit log for logout if configured
-            if (userId == Guid.Empty)
-                userId = await _currentUserService.GetCurrentUserId() ?? Guid.Empty;
                 
             var user = (await _userRepository.GetByIdAsync(userId)).Result ??
                        new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
@@ -1088,7 +1088,7 @@ public class AppAccountService : IAppAccountService
         }
         catch (Exception ex)
         {
-            return await Result<bool>.FailAsync(ex.Message);
+            return await Result<bool>.FailAsync(true, ex.Message);
         }
     }
 
