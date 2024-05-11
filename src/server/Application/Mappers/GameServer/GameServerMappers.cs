@@ -1,4 +1,5 @@
 using Application.Models.GameServer.GameServer;
+using Application.SignalR.Models;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 
@@ -129,6 +130,16 @@ public static class GameServerMappers
             Source = GameSource.Steam,
             ModList = [],
             Resources = []
+        };
+    }
+
+    public static GameServerStatusSignal ToStatusSignal(this GameServerDb gameServer)
+    {
+        return new GameServerStatusSignal
+        {
+            Id = gameServer.Id,
+            ServerName = gameServer.ServerName,
+            ServerState = gameServer.ServerState
         };
     }
 }

@@ -8,6 +8,7 @@ using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
+using Application.SignalR.Hubs;
 using Hangfire;
 using HealthChecks.UI.Client;
 using Infrastructure.Middleware;
@@ -38,6 +39,7 @@ public static class WebServerConfiguration
         app.ConfigureIdentityServices();
         
         app.MapApplicationApiEndpoints();
+        app.MapSignalRHubs();
         
         app.AddScheduledJobs();
     }
@@ -100,6 +102,7 @@ public static class WebServerConfiguration
             ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All
         });
         app.UseMiddleware<ErrorHandlerMiddleware>();
+        app.UseResponseCompression();
     }
     
     private static void ValidateDatabaseStructure(this IHost app)
@@ -182,6 +185,13 @@ public static class WebServerConfiguration
         app.MapEndpointsGameserver();
         app.MapEndpointsGame();
         app.MapEndpointsNetwork();
+    }
+
+    private static void MapSignalRHubs(this IEndpointRouteBuilder app)
+    {
+        app.MapBlazorHub();
+        
+        app.MapHub<GameServerHub>(ApiRouteConstants.SignalRHubs.GameServers);
     }
 
     private static void AddScheduledJobs(this IHost app)

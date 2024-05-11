@@ -8,6 +8,11 @@ public static class ApiRouteConstants
         public const string WhoAmI = "/api/whoami";
     }
 
+    public static class SignalRHubs
+    {
+        public const string GameServers = "/hubs/game-servers";
+    }
+
     public static class Monitoring
     {
         public const string Health = "/_health";

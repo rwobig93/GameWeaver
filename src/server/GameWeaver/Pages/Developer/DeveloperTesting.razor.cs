@@ -9,11 +9,13 @@ using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
+using Application.SignalR.Models;
 using Domain.Enums.GameServer;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace GameWeaver.Pages.Developer;
 
-public partial class DeveloperTesting
+public partial class DeveloperTesting : IAsyncDisposable
 {
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
@@ -27,6 +29,7 @@ public partial class DeveloperTesting
     private bool _isContributor;
     private bool _isTester;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    private HubConnection? _hubConnection;
 
     private string _serverIp = "";
     private int _serverPort = 0;
@@ -72,8 +75,24 @@ public partial class DeveloperTesting
             await GetClientTimezone();
             await GatherGameServers();
             await GatherHosts();
+            await ListenForSignals();
             StateHasChanged();
         }
+    }
+
+    private async Task ListenForSignals()
+    {
+        _hubConnection = new HubConnectionBuilder()
+            .WithUrl(NavManager.ToAbsoluteUri(ApiRouteConstants.SignalRHubs.GameServers))
+            .Build();
+
+        _hubConnection.On<GameServerStatusSignal>(SignalRConstants.GameServer.StatusUpdate, (signal) =>
+        {
+            Snackbar.Add($"Server '{signal.ServerName}' is now: {signal.ServerState}", Severity.Info);
+            InvokeAsync(StateHasChanged);
+        });
+
+        await _hubConnection.StartAsync();
     }
 
     private async Task GetPermissions()
@@ -375,5 +394,13 @@ public partial class DeveloperTesting
         }
 
         Snackbar.Add($"Sent game server restart request!");
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_hubConnection is not null)
+        {
+            await _hubConnection.DisposeAsync();
+        }
     }
 }
