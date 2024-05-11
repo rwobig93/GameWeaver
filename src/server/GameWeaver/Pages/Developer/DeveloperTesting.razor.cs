@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
+using Application.Models.Events;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
@@ -9,9 +10,7 @@ using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
-using Application.SignalR.Models;
 using Domain.Enums.GameServer;
-using Microsoft.AspNetCore.SignalR.Client;
 
 namespace GameWeaver.Pages.Developer;
 
@@ -29,7 +28,6 @@ public partial class DeveloperTesting : IAsyncDisposable
     private bool _isContributor;
     private bool _isTester;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private HubConnection? _hubConnection;
 
     private string _serverIp = "";
     private int _serverPort = 0;
@@ -75,24 +73,17 @@ public partial class DeveloperTesting : IAsyncDisposable
             await GetClientTimezone();
             await GatherGameServers();
             await GatherHosts();
-            await ListenForSignals();
+
+            GameServerService.GameServerStatusChanged += GameServerStatusChanged;
+            
             StateHasChanged();
         }
     }
 
-    private async Task ListenForSignals()
+    private void GameServerStatusChanged(object? sender, GameServerStatusEvent args)
     {
-        _hubConnection = new HubConnectionBuilder()
-            .WithUrl(NavManager.ToAbsoluteUri(ApiRouteConstants.SignalRHubs.GameServers))
-            .Build();
-
-        _hubConnection.On<GameServerStatusSignal>(SignalRConstants.GameServer.StatusUpdate, (signal) =>
-        {
-            Snackbar.Add($"Server '{signal.ServerName}' is now: {signal.ServerState}", Severity.Info);
-            InvokeAsync(StateHasChanged);
-        });
-
-        await _hubConnection.StartAsync();
+        Snackbar.Add($"Game server '{args.ServerName}' status change: {args.ServerState}");
+        InvokeAsync(StateHasChanged);
     }
 
     private async Task GetPermissions()
@@ -398,9 +389,7 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (_hubConnection is not null)
-        {
-            await _hubConnection.DisposeAsync();
-        }
+        GameServerService.GameServerStatusChanged -= GameServerStatusChanged;
+        await Task.CompletedTask;
     }
 }

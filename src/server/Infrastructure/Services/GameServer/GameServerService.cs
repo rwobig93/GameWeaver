@@ -1,7 +1,7 @@
 ﻿using Application.Constants.Communication;
-using Application.Constants.Web;
 using Application.Helpers.GameServer;
 using Application.Mappers.GameServer;
+using Application.Models.Events;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
@@ -10,33 +10,30 @@ using Application.Models.GameServer.Mod;
 using Application.Repositories.GameServer;
 using Application.Services.GameServer;
 using Application.Services.System;
-using Application.SignalR.Hubs;
-using Application.SignalR.Models;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
-using Microsoft.AspNetCore.SignalR;
 
 namespace Infrastructure.Services.GameServer;
 
 public class GameServerService : IGameServerService
 {
+    public event EventHandler<GameServerStatusEvent>? GameServerStatusChanged; 
+    
     private readonly IGameServerRepository _gameServerRepository;
     private readonly IDateTimeService _dateTime;
     private readonly IHostRepository _hostRepository;
     private readonly ISerializerService _serializerService;
     private readonly IGameRepository _gameRepository;
-    private readonly IHubContext<GameServerHub> _gameHub;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository,
-        ISerializerService serializerService, IGameRepository gameRepository, IHubContext<GameServerHub> gameHub)
+        ISerializerService serializerService, IGameRepository gameRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
         _hostRepository = hostRepository;
         _serializerService = serializerService;
         _gameRepository = gameRepository;
-        _gameHub = gameHub;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -198,7 +195,7 @@ public class GameServerService : IGameServerService
 
         if (updateObject.ServerState is not null)
         {
-            await _gameHub.Clients.All.SendAsync(SignalRConstants.GameServer.StatusUpdate, findRequest.Result.ToStatusSignal());
+            GameServerStatusChanged?.Invoke(this, findRequest.Result.ToStatusEvent());
         }
 
         return await Result.SuccessAsync();

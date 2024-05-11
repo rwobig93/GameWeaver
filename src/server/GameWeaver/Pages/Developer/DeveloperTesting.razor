@@ -59,18 +59,20 @@
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
                     <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" @bind-Value="_desiredGame.Id" />
                     <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" @bind-Value="_desiredProfile.Id" />
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
                     <MudSelect Class="d-flex" @bind-Value="_selectedHost" Label="Host" OpenIcon="@Icons.Material.Filled.Computer"
                                AdornmentColor="Color.Secondary" Disabled="@(_hosts.Count < 1)">
                         @foreach (var host in _hosts)
                         {
-                            <MudSelectItem Value="@host">@host.FriendlyName</MudSelectItem>
+                        <MudSelectItem Value="@host">@host.Id</MudSelectItem>
                         }
                     </MudSelect>
                     <MudSelect Class="d-flex" @bind-Value="_selectedGameServer" Label="GameServer" OpenIcon="@Icons.Material.Filled.Gamepad"
                                AdornmentColor="Color.Tertiary" Disabled="@(_hosts.Count < 1)">
                         @foreach (var gameServer in _gameServers)
                         {
-                            <MudSelectItem Value="@gameServer">@gameServer.ServerName</MudSelectItem>
+                        <MudSelectItem Value="@gameServer">@gameServer.ServerName</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>

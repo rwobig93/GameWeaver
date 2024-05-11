@@ -1,4 +1,5 @@
-﻿using Application.Models.GameServer.ConfigurationItem;
+﻿using Application.Models.Events;
+using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
@@ -9,6 +10,7 @@ namespace Application.Services.GameServer;
 
 public interface IGameServerService
 {
+    public event EventHandler<GameServerStatusEvent>? GameServerStatusChanged;
     Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync();
     Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();

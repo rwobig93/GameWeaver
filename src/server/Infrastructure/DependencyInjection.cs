@@ -75,11 +75,6 @@ public static class DependencyInjection
     {
         services.AddRazorPages();
         services.AddServerSideBlazor();
-        services.AddSignalR();
-        services.AddResponseCompression(opts =>
-        {
-            opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[] { "application/octet-stream" });
-        });
     }
 
     private static void AddSettingsConfiguration(this IServiceCollection services, IConfiguration configuration)
