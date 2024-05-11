@@ -528,6 +528,8 @@ public class GameServerService : IGameServerService
         if (!foundServer.Succeeded || foundServer.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
         
+        // TODO: Framework for Local resources: game.DefaultGameProfile, overwrite by gameServer.ParentGameProfile, root is gameServer.GameProfile
+        
         var findRequest = await GetLocalResourcesByGameServerIdAsync(serverId);
         if (!findRequest.Succeeded)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
