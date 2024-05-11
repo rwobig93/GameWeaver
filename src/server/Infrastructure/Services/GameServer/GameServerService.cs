@@ -18,22 +18,22 @@ namespace Infrastructure.Services.GameServer;
 
 public class GameServerService : IGameServerService
 {
-    public event EventHandler<GameServerStatusEvent>? GameServerStatusChanged; 
-    
     private readonly IGameServerRepository _gameServerRepository;
     private readonly IDateTimeService _dateTime;
     private readonly IHostRepository _hostRepository;
     private readonly ISerializerService _serializerService;
     private readonly IGameRepository _gameRepository;
+    private readonly IEventService _eventService;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository,
-        ISerializerService serializerService, IGameRepository gameRepository)
+        ISerializerService serializerService, IGameRepository gameRepository, IEventService eventService)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
         _hostRepository = hostRepository;
         _serializerService = serializerService;
         _gameRepository = gameRepository;
+        _eventService = eventService;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -195,7 +195,7 @@ public class GameServerService : IGameServerService
 
         if (updateObject.ServerState is not null)
         {
-            GameServerStatusChanged?.Invoke(this, findRequest.Result.ToStatusEvent());
+            _eventService.TriggerGameServerStatus("GameServerServiceUpdate", findRequest.Result.ToStatusEvent());
         }
 
         return await Result.SuccessAsync();
@@ -206,6 +206,12 @@ public class GameServerService : IGameServerService
         var findRequest = await _gameServerRepository.GetByIdAsync(id);
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        var updateStatusRequest = await UpdateAsync(new GameServerUpdate {Id = findRequest.Result.Id, ServerState = ConnectivityState.Uninstalling});
+        if (!updateStatusRequest.Succeeded)
+        {
+            return await Result.FailAsync(updateStatusRequest.Messages);
+        }
 
         var hostDeleteRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUninstall, findRequest.Result.HostId,
             findRequest.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);

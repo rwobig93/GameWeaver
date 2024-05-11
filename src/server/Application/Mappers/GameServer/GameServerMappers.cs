@@ -1,5 +1,6 @@
 using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
+using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 
@@ -140,6 +141,16 @@ public static class GameServerMappers
             Id = gameServer.Id,
             ServerName = gameServer.ServerName,
             ServerState = gameServer.ServerState
+        };
+    }
+
+    public static GameServerStatusEvent ToStatusEvent(this GameServerStateUpdate update)
+    {
+        return new GameServerStatusEvent
+        {
+            Id = update.Id,
+            ServerName = "",
+            ServerState = update.ServerState
         };
     }
 }

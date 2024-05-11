@@ -103,7 +103,7 @@ public class WeaverWorkRepositoryMemoryJson : IWeaverWorkRepository
         {
             var weaverWorkQueue = await File.ReadAllTextAsync(SerializerConstants.WeaverWorkPath);
             _weaverWork = _serializerService.DeserializeJson<List<WeaverWork>>(weaverWorkQueue);
-            _logger.Information("Deserialized weaver work queue");
+            _logger.Information("Deserialized weaver work queue: {FilePath}", SerializerConstants.WeaverWorkPath);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)

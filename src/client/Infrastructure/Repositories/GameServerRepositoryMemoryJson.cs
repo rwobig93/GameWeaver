@@ -110,7 +110,7 @@ public class GameServerRepositoryMemoryJson : IGameServerRepository
         {
             var gameServerState = await File.ReadAllTextAsync(SerializerConstants.GameServerStatePath);
             _gameServers = _serializerService.DeserializeJson<List<GameServerLocal>>(gameServerState);
-            _logger.Information("Deserialized gameserver state");
+            _logger.Information("Deserialized gameserver state: {FilePath}", SerializerConstants.GameServerStatePath);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)

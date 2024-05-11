@@ -11,6 +11,7 @@ using Application.Models.Identity.User;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
+using GameWeaver.Helpers;
 
 namespace GameWeaver.Pages.Developer;
 
@@ -23,6 +24,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     [Inject] private IGameService GameService { get; init; } = null!;
     [Inject] private IGameServerService GameServerService { get; init; } = null!;
     [Inject] private IHostService HostService { get; init; } = null!;
+    [Inject] private IEventService EventService { get; init; } = null!;
     
     private AppUserFull _loggedInUser = new();
     private bool _isContributor;
@@ -74,15 +76,27 @@ public partial class DeveloperTesting : IAsyncDisposable
             await GatherGameServers();
             await GatherHosts();
 
-            GameServerService.GameServerStatusChanged += GameServerStatusChanged;
+            EventService.GameServerStatusChanged += GameServerStatusChanged;
+            EventService.WeaverWorkStatusChanged += WorkStatusChanged;
             
             StateHasChanged();
         }
     }
 
+    private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
+    {
+        Snackbar.Add($"Work '{e.TargetType}' for host [{e.HostId}] status change: {e.Status}");
+        InvokeAsync(StateHasChanged);
+    }
+
     private void GameServerStatusChanged(object? sender, GameServerStatusEvent args)
     {
         Snackbar.Add($"Game server '{args.ServerName}' status change: {args.ServerState}");
+        var matchingServer = _gameServers.FirstOrDefault(x => x.Id == args.Id);
+        if (matchingServer is not null)
+        {
+            matchingServer.ServerState = args.ServerState;
+        }
         InvokeAsync(StateHasChanged);
     }
 
@@ -211,7 +225,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             GameId = matchingGame.Data.Id,
             ServerProcessName = _desiredProfile.ServerProcessName
         };
-        var matchingProfile = await GameServerService.GetGameProfileByFriendlyNameAsync(profileCreate.FriendlyName);
+        var matchingProfile = await GameServerService.GetGameProfileByIdAsync(_selectedGameServer.GameProfileId);
         if (!matchingProfile.Succeeded)
         {
             var createProfileRequest = await GameServerService.CreateGameProfileAsync(profileCreate);
@@ -237,6 +251,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             Startup = true,
             StartupPriority = 0,
             Type = ResourceType.Executable,
+            ContentType = ContentType.Raw,
             Extension = "exe",
             Args = "-log"
         };
@@ -324,6 +339,32 @@ public partial class DeveloperTesting : IAsyncDisposable
         StateHasChanged();
     }
 
+    private async Task UninstallGameServer()
+    {
+        if (_selectedGameServer is null)
+        {
+            return;
+        }
+
+        var dialogResponse = await DialogService.ConfirmDialog(
+            "Are you sure you want to uninstall this game server?", $"Server Name: {_selectedGameServer.ServerName}");
+        if (dialogResponse.Canceled) return;
+
+        var uninstallRequest = await GameServerService.DeleteAsync(_selectedGameServer.Id, _loggedInUser.Id);
+        if (!uninstallRequest.Succeeded)
+        {
+            foreach (var message in uninstallRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+
+        Snackbar.Add($"Game server {_selectedGameServer.ServerName} is being uninstalled!", Severity.Success);
+        _gameServers.Remove(_selectedGameServer);
+        _selectedGameServer = null;
+    }
+
     private async Task StartGameServer()
     {
         if (_selectedGameServer is null)
@@ -389,7 +430,8 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        GameServerService.GameServerStatusChanged -= GameServerStatusChanged;
+        EventService.GameServerStatusChanged -= GameServerStatusChanged;
+        EventService.WeaverWorkStatusChanged -= WorkStatusChanged;
         await Task.CompletedTask;
     }
 }

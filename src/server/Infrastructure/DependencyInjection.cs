@@ -39,7 +39,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -151,7 +150,8 @@ public static class DependencyInjection
         var mailConfig = configuration.GetMailSettings();
         services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
             .AddRazorRenderer().AddSmtpSender(mailConfig.Host, mailConfig.Port, mailConfig.UserName, mailConfig.Password);
-        
+
+        services.AddSingleton<IEventService, EventService>();
         services.AddSingleton<IRunningServerState, RunningServerState>();
         services.AddSingleton<ISerializerService, SerializerService>();
         services.AddSingleton<IDateTimeService, DateTimeService>();
@@ -358,11 +358,13 @@ public static class DependencyInjection
                         var errorMessage = ErrorMessageConstants.Generic.ContactAdmin;
                         switch (auth.Exception)
                         {
+                            case SecurityTokenInvalidLifetimeException:
                             case SecurityTokenExpiredException:
                                 auth.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                                 errorMessage = ErrorMessageConstants.Authentication.TokenExpiredError;
                                 break;
                             case SecurityTokenMalformedException:
+                            case SecurityTokenArgumentException:
                                 auth.Response.StatusCode = (int) HttpStatusCode.BadRequest;
                                 errorMessage = ErrorMessageConstants.Authentication.TokenMalformedError;
                                 break;

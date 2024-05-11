@@ -10,7 +10,6 @@ namespace Application.Services.GameServer;
 
 public interface IGameServerService
 {
-    public event EventHandler<GameServerStatusEvent>? GameServerStatusChanged;
     Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync();
     Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();

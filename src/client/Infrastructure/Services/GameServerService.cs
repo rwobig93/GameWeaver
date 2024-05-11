@@ -468,6 +468,14 @@ public class GameServerService : IGameServerService
                 var fullPath = Path.Combine(gameServerDirectory, binary.Path);
                 if (!fullPath.EndsWith(binary.Extension) && !string.IsNullOrWhiteSpace(binary.Extension))
                     fullPath = $"{fullPath}.{binary.Extension}";
+
+                if (!File.Exists(fullPath))
+                {
+                    _logger.Error("Startup resource for gameserver doesn't exist: [{GameserverId}]{GameserverName} => {FilePath}",
+                        gameServer.Id, gameServer.ServerName, fullPath);
+                    failures.Add($"Startup resource for gameserver doesn't exist: [{gameServer.Id}]{gameServer.ServerName} => {fullPath}");
+                    continue;
+                }
             
                 var startedProcess = Process.Start(new ProcessStartInfo
                 {

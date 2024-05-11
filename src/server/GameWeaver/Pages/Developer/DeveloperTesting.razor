@@ -1,5 +1,4 @@
 ﻿@using Application.Constants.Identity
-@using Application.Models.GameServer.Host
 @using Domain.Enums.GameServer
 @attribute [Route(AppRouteConstants.Developer.Testing)]
 @attribute [Authorize(PermissionConstants.Developer.Dev)]
@@ -43,7 +42,7 @@
                         }
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                     <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(TestServerConnectivity)">
                         Check GameServer Status
                     </MudButton>
@@ -54,13 +53,13 @@
             </MudExpansionPanel>
             <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="GameServer Management">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
-                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Server Status: @_serverStatus</MudText>
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Server Status: @(_selectedGameServer?.ServerState)</MudText>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
                     <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" @bind-Value="_desiredGame.Id" />
                     <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" @bind-Value="_desiredProfile.Id" />
                 </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                     <MudSelect Class="d-flex" @bind-Value="_selectedHost" Label="Host" OpenIcon="@Icons.Material.Filled.Computer"
                                AdornmentColor="Color.Secondary" Disabled="@(_hosts.Count < 1)">
                         @foreach (var host in _hosts)
@@ -76,7 +75,7 @@
                         }
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                     <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(EnforceGame)">
                         Enforce Game
                     </MudButton>
@@ -87,18 +86,22 @@
                         Create Game Server
                     </MudButton>
                 </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                     <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Warning" OnClick="@(StartGameServer)">
+                               Color="Color.Success" OnClick="@(StartGameServer)">
                         Start Game Server
                     </MudButton>
                     <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Warning" OnClick="@(StopGameServer)">
+                               Color="Color.Error" OnClick="@(StopGameServer)">
                         Stop Game Server
                     </MudButton>
                     <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
                                Color="Color.Warning" OnClick="@(RestartGameServer)">
                         Restart Game Server
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
+                               Color="Color.Tertiary" OnClick="@(UninstallGameServer)">
+                        Uninstall Game Server
                     </MudButton>
                 </MudItem>
             </MudExpansionPanel>

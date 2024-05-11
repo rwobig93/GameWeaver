@@ -173,7 +173,7 @@ public class ControlServerService : IControlServerService
         // Token isn't within or over expiration threshold & we have the authorization token
         var expirationTime = Authorization.RefreshTokenExpiryTime - _dateTimeService.NowDatabaseTime;
         var expirationThreshold = TimeSpan.FromMinutes(_authConfig.CurrentValue.TokenRenewThresholdMinutes);
-        if (expirationTime.Minutes > expirationThreshold.Minutes && !string.IsNullOrWhiteSpace(Authorization.Token))
+        if (expirationTime.Minutes <= expirationThreshold.Minutes && !string.IsNullOrWhiteSpace(Authorization.Token))
         {
             return await Result.SuccessAsync();
         }
@@ -184,16 +184,6 @@ public class ControlServerService : IControlServerService
             return await Result.FailAsync(updateTokenRequest.Messages);
         
         return await Result.SuccessAsync();
-    }
-
-    public class JsonGenericRequest
-    {
-        public JsonGenericRequest(object request)
-        {
-            this.Request = request;
-        }
-
-        public object Request { get; set; }
     }
 
     /// <summary>

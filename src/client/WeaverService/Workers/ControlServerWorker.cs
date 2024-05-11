@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
+using Domain.Enums;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -90,7 +91,7 @@ public class ControlServerWorker : BackgroundService
         
         var currentResourceUsage = HostWorker.CurrentHostResourceUsage;
         
-        if (currentResourceUsage is {CpuUsage: 0, RamUsage: 0, Uptime: 0})
+        if (currentResourceUsage.CpuUsage == 0 || currentResourceUsage.RamUsage == 0 || currentResourceUsage.Uptime == 0)
             return;
         
         var checkInRequest = new HostCheckInRequest
@@ -110,9 +111,16 @@ public class ControlServerWorker : BackgroundService
             return;
         }
         if (checkInResponse.Data is null) return;
-
-        foreach (var work in checkInResponse.Data)
+        
+        foreach (var work in checkInResponse.Data.ToList())
         {
+            var matchingWorkRequest = await _weaverWorkService.GetByIdAsync(work.Id);
+            if (matchingWorkRequest.Data is not null)
+            {
+                _logger.Verbose("Already picked up work was sent again: [{WeaverworkId}]", work.Id);
+                continue;
+            }
+            
             var createRequest = await _weaverWorkService.CreateAsync(work);
             if (!createRequest.Succeeded)
             {
@@ -153,27 +161,36 @@ public class ControlServerWorker : BackgroundService
         while (runAttemptsLeft > 0 && !WorkUpdateQueue.IsEmpty)
         {
             runAttemptsLeft -= 1;
-            if (!WorkUpdateQueue.TryDequeue(out var message)) continue;
+            if (!WorkUpdateQueue.TryDequeue(out var work)) continue;
             
-            _logger.Debug("Sending outgoing communication => {WorkId}", message.Id);
+            _logger.Debug("Sending outgoing communication => {WorkId}", work.Id);
             
-            var response = await _serverService.WorkStatusUpdate(message);
+            var response = await _serverService.WorkStatusUpdate(work);
             if (response.Succeeded)
             {
-                _logger.Debug("Server successfully processed outgoing communication: {WorkId}", message.Id);
+                var localUpdateRequest = await _weaverWorkService.UpdateStatusAsync(work.Id, work.Status);
+                if (!localUpdateRequest.Succeeded)
+                {
+                    foreach (var message in localUpdateRequest.Messages)
+                    {
+                        _logger.Error("Failure updating local weaver work status occurred: [{Weaverworkid}]{Error}", work.Id, message);
+                    }
+                }
+                
+                _logger.Debug("Server successfully processed outgoing communication: {WorkId}", work.Id);
                 continue;
             }
 
-            if (message.AttemptCount >= _generalConfig.Value.MaxQueueAttempts)
+            if (work.AttemptCount >= _generalConfig.Value.MaxQueueAttempts)
             {
                 _logger.Warning("Maximum attempts reached for outgoing communication, dropping: {AttemptCount} {WorkId}",
-                    message.AttemptCount, message.Id);
+                    work.AttemptCount, work.Id);
                 continue;
             }
             
-            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", message.Id);
-            message.AttemptCount += 1;
-            AddWeaverWorkUpdate(message);
+            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", work.Id);
+            work.AttemptCount += 1;
+            AddWeaverWorkUpdate(work);
         }
         
         _logger.Debug("Finished parsing outgoing weaver communication queue, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);

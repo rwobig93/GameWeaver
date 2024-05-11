@@ -9,6 +9,7 @@ using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.UserExtensions;
+using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Requests.v1.Api;
 using Application.Requests.v1.Identity.User;
@@ -54,13 +55,14 @@ public class AppAccountService : IAppAccountService
     private readonly SecurityConfiguration _securityConfig;
     private readonly ICurrentUserService _currentUserService;
     private readonly LifecycleConfiguration _lifecycleConfig;
+    private readonly IHostRepository _hostRepository;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider,
         IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState,
         IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
-        ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig)
+        ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig, IHostRepository hostRepository)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -74,6 +76,7 @@ public class AppAccountService : IAppAccountService
         _auditService = auditService;
         _contextAccessor = contextAccessor;
         _currentUserService = currentUserService;
+        _hostRepository = hostRepository;
         _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
@@ -132,7 +135,7 @@ public class AppAccountService : IAppAccountService
         if (!passwordIsValid.Succeeded)
             return passwordIsValid;
         
-        // Entered password is correct so we reset previous bad password attempts and indicate full login timestamp
+        // Entered password is correct, so we reset previous bad password attempts and indicate full login timestamp
         userSecurity.BadPasswordAttempts = 0;
         userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
@@ -235,7 +238,7 @@ public class AppAccountService : IAppAccountService
         if (!accountIsLoginReady.Succeeded)
             return accountIsLoginReady;
         
-        // External auth is successful so we reset previous bad password attempts and indicate full login timestamp
+        // External auth is successful, so we reset previous bad password attempts and indicate full login timestamp
         userSecurity.BadPasswordAttempts = 0;
         userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
@@ -375,6 +378,7 @@ public class AppAccountService : IAppAccountService
 
         // Entered password is correct, so we reset previous bad password attempts
         userSecurity.BadPasswordAttempts = 0;
+        userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Succeeded)
@@ -1076,12 +1080,24 @@ public class AppAccountService : IAppAccountService
     {
         try
         {
+            // If the id provided is for a host the token is short-lived, so we won't force a full re-auth
+            var foundHost = await _hostRepository.GetByIdAsync(userId);
+            if (foundHost.Result is not null)
+            {
+                return await Result<bool>.SuccessAsync(false);
+            }
+            
             var userSecurity = await _userRepository.GetSecurityAsync(userId);
-            userSecurity.Result!.LastFullLogin ??= _dateTime.NowDatabaseTime;
+            if (userSecurity.Result?.LastFullLogin is null)
+            {
+                return await Result<bool>.SuccessAsync(true);
+            }
             
             // If configured force login time has passed since last full login we want the user to login again
-            if (userSecurity.Result!.LastFullLogin!.Value.AddMinutes(_securityConfig.ForceLoginIntervalMinutes) < _dateTime.NowDatabaseTime)
+            if (userSecurity.Result!.LastFullLogin!.Value.AddMinutes(_securityConfig.ForceLoginIntervalMinutes + 1) < _dateTime.NowDatabaseTime)
+            {
                 return await Result<bool>.SuccessAsync(true);
+            }
             
             // If account auth state is set to force re-login we want the user to login again
             return await Result<bool>.SuccessAsync(userSecurity.Result!.AuthState == AuthState.LoginRequired);

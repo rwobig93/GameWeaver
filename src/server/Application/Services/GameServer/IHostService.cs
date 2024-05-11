@@ -1,3 +1,4 @@
+using Application.Models.Events;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;

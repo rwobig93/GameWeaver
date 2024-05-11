@@ -45,11 +45,8 @@ public class HostWorker : BackgroundService
     public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(HostWorker));
-        Directory.CreateDirectory(_generalConfig.Value.AppDirectory);
-        Directory.SetCurrentDirectory(_generalConfig.Value.AppDirectory);
-        _logger.Information("Set application directory: {Directory}", _generalConfig.Value.AppDirectory);
-        _logger.Information("  Full path: {Directory}", Directory.GetCurrentDirectory());
         _lastRuntime = _dateTimeService.NowDatabaseTime;
+        _logger.Information("App Directory: {Directory}", Directory.GetCurrentDirectory());
         ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
         
         var steamCmdStatus = await _gameServerService.ValidateSteamCmdInstall();

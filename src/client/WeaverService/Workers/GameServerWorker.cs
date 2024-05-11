@@ -175,16 +175,22 @@ public class GameServerWorker : BackgroundService
             {
                 continue;
             }
-            if (realtimeState == ServerState.Stalled &&
-                gameServer.ServerState is ServerState.Installing or
-                    ServerState.Restarting or
-                    ServerState.Uninstalling or
-                    ServerState.ShuttingDown or
-                    ServerState.SpinningUp)
+            switch (realtimeState)
             {
-                continue;
+                case ServerState.Shutdown when
+                    gameServer.ServerState is ServerState.Installing or
+                        ServerState.Restarting or
+                        ServerState.Uninstalling or
+                        ServerState.ShuttingDown:
+                case ServerState.Stalled when
+                    gameServer.ServerState is ServerState.Installing or
+                        ServerState.Restarting or
+                        ServerState.Uninstalling or
+                        ServerState.ShuttingDown or
+                        ServerState.SpinningUp:
+                    continue;
             }
-            
+
             _logger.Information("Realtime server state has changed from expected: [{GameserverId}]{GameserverName} [Expected]{ExpectedState} [Current]{CurrentState}",
                 gameServer.Id, gameServer.ServerName, gameServer.ServerState, realtimeState);
             await _gameServerService.UpdateState(gameServer.Id, realtimeState);

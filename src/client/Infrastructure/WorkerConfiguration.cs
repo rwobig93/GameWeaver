@@ -23,6 +23,7 @@ public static class WorkerConfiguration
         builder.ConfigureServices((context, services) =>
             {
                 services.AddSettings(context.Configuration);
+                services.SetupLocalResources(context.Configuration);
                 services.AddClientServices(context.Configuration);
                 services.AddHostedRepositories(context.Configuration);
                 services.AddHostedServices(context.Configuration);
@@ -42,6 +43,14 @@ public static class WorkerConfiguration
             .Bind(configuration.GetRequiredSection(AuthConfiguration.SectionName))
             .ValidateDataAnnotations()
             .ValidateOnStart();
+    }
+
+    private static void SetupLocalResources(this IServiceCollection services, IConfiguration configuration)
+    {
+        var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
+        var appDirectory = generalConfig?.AppDirectory ?? "./";
+        Directory.CreateDirectory(appDirectory);
+        Directory.SetCurrentDirectory(appDirectory);
     }
 
     private static void AddHostedRepositories(this IServiceCollection services, IConfiguration configuration)
