@@ -42,6 +42,9 @@ public class GameServerWorker : BackgroundService
     {
         _logger.Debug("Started {ServiceName} service", nameof(GameServerWorker));
 
+        // TODO: First check updates from Unknown to something, need to not send an update on that as the weaver work item doesn't exist
+        // Realtime server state has changed from expected: [b6741ece-10c5-4aac-aecf-b10a69489d7e]"Test Conan Exiles Server - Wednesday, May 15, 2024" [Expected]Unknown [Current]Shutdown
+        // [Error] Failure updating local weaver work status occurred: [0]"Weaver work with Id [0] doesn't exist"
         await CheckGameServersRealtimeState();
         
         // TODO: Implement Sqlite for game server state tracking, for now we'll serialize/deserialize a json file
@@ -597,7 +600,7 @@ public class GameServerWorker : BackgroundService
 
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Updating);
         
-        await _gameServerService.InstallOrUpdateGame(gameServerLocal.Data.Id);
+        await _gameServerService.InstallOrUpdateGame(gameServerLocal.Data.Id, true);
         _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Data.Id, gameServerLocal.Data.ServerName);
         
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
@@ -760,7 +763,7 @@ public class GameServerWorker : BackgroundService
             return;
         }
         
-        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id, false);
+        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id, true);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);

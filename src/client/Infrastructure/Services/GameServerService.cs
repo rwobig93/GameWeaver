@@ -12,6 +12,7 @@ using Domain.Enums;
 using Domain.Models.GameServer;
 using IniParser;
 using IniParser.Model;
+using IniParser.Model.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
@@ -36,17 +37,18 @@ public class GameServerService : IGameServerService
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
     private static readonly FileIniDataParser IniParser = new() { Parser = { Configuration =
-    {
-        CaseInsensitive = false,
-        AllowKeysWithoutSection = true,
-        AllowDuplicateKeys = true,
-        OverrideDuplicateKeys = false,
-        ConcatenateDuplicateKeys = false,
-        ThrowExceptionsOnError = false,
-        AllowDuplicateSections = true,
-        AllowCreateSectionsOnFly = true,
-        SkipInvalidLines = true
-    }}};
+        {
+            CaseInsensitive = false,
+            AllowKeysWithoutSection = true,
+            AllowDuplicateKeys = true,
+            OverrideDuplicateKeys = false,
+            ConcatenateDuplicateKeys = false,
+            ThrowExceptionsOnError = false,
+            AllowDuplicateSections = true,
+            AllowCreateSectionsOnFly = true,
+            SkipInvalidLines = false
+        }
+    }};
 
     public async Task<IResult> ValidateSteamCmdInstall()
     {
@@ -301,7 +303,7 @@ public class GameServerService : IGameServerService
         return await _gameServerRepository.GetAll();
     }
 
-    public async Task<IResult> InstallOrUpdateGame(Guid id)
+    public async Task<IResult> InstallOrUpdateGame(Guid id, bool validate = false)
     {
         // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
         try
@@ -317,7 +319,7 @@ public class GameServerService : IGameServerService
                 _logger.Information("Created directory for gameserver install: {Directory}", gameServer.GetInstallDirectory());
             }
 
-            var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer));
+            var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer, validate));
             if (!installResult.Succeeded)
             {
                 _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
@@ -599,7 +601,7 @@ public class GameServerService : IGameServerService
     private async Task<IResult> UpdateIniFile(LocalResource configFile, bool loadExisting = true)
     {
         var filePath = configFile.GetFullPath();
-        var configFileContent = new IniData();
+        var configFileContent = new IniData { Configuration = IniParser.Parser.Configuration };
 
         try
         {
@@ -622,6 +624,7 @@ public class GameServerService : IGameServerService
                     configFileContent[config.Category].AddKey(config.Key);
                 }
 
+                // TODO: Duplicate keys aren't working, first key is always the one that is present instead of adding a new duplicate
                 if (config.DuplicateKey)
                 {
                     var sectionData = configFileContent.Sections.GetSectionData(config.Category);
@@ -729,8 +732,15 @@ public class GameServerService : IGameServerService
         List<string> errorMessages = [];
         var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == ResourceType.ConfigFile).ToList();
 
+        // TODO: Create path to config file, currently if the path doesn't exist a failure occurs
+        // TODO: Look at doing an initial run on server creation to generate files then kill the server after 10 seconds or so
         foreach (var configFile in configurationFiles)
         {
+            foreach (var item in configFile.ConfigSets)
+            {
+                item.Value = gameServerRequest.Data.UpdateWithServerValues(item.Value);
+            }
+            
             switch (configFile)
             {
                 case {ContentType: ContentType.Json}:

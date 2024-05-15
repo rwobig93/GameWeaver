@@ -76,14 +76,14 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(EnforceGame)">
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(() => EnforceGame())">
                         Enforce Game
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(EnforceGameProfile)">
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(() => EnforceGameProfile())">
                         Enforce Profile
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(CreateGameServer)">
-                        Create Game Server
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(EnforceGameProfileResources)">
+                        Enforce Profile Resources
                     </MudButton>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
@@ -99,8 +99,17 @@
                                Color="Color.Warning" OnClick="@(RestartGameServer)">
                         Restart Game Server
                     </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Success" OnClick="@(CreateGameServer)">
+                        Create Game Server
+                    </MudButton>
                     <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Tertiary" OnClick="@(UninstallGameServer)">
+                               Color="Color.Secondary" OnClick="@(UpdateGameServer)">
+                        Update Game Server
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
+                               Color="Color.Error" OnClick="@(UninstallGameServer)">
                         Uninstall Game Server
                     </MudButton>
                 </MudItem>

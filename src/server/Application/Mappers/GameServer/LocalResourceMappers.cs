@@ -2,6 +2,7 @@ using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.LocalResource;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
@@ -91,5 +92,22 @@ public static class LocalResourceMappers
     public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceSlim> localResources)
     {
         return localResources.Select(ToHost);
+    }
+
+    public static LocalResourceCreate ToCreate(this LocalResourceSlim localResource)
+    {
+        return new LocalResourceCreate
+        {
+            GameProfileId = localResource.GameProfileId,
+            GameServerId = localResource.GameServerId,
+            Name = localResource.Name,
+            Path = localResource.Path,
+            Startup = localResource.Startup,
+            StartupPriority = localResource.StartupPriority,
+            Type = localResource.Type,
+            ContentType = localResource.ContentType,
+            Extension = localResource.Extension,
+            Args = localResource.Args
+        };
     }
 }

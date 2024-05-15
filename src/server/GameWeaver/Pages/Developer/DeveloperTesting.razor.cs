@@ -1,6 +1,8 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Runtime;
+using Application.Mappers.GameServer;
 using Application.Models.Events;
+using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
@@ -41,19 +43,19 @@ public partial class DeveloperTesting : IAsyncDisposable
     private List<HostSlim> _hosts = [];
     private HostSlim? _selectedHost = null;
 
-    private GameSlim _desiredGame = new()
+    private readonly GameSlim _desiredGame = new()
     {
         FriendlyName = "Conan Exiles Dedicated Server",
         SteamName = "Conan Exiles - Dedicated Server",
         SteamGameId = 440900,
         SteamToolId = 443030
     };
-    private GameProfileSlim _desiredProfile = new()
+    private readonly GameProfileSlim _desiredProfile = new()
     {
         FriendlyName = "Conan Exiles - Profile",
         ServerProcessName = "ConanSandboxServer.exe"
     };
-    private GameServerSlim _desiredGameServer = new()
+    private readonly GameServerSlim _desiredGameServer = new()
     {
         ServerName = "Test Conan Exiles Server",
         Password = "dietpassword1",
@@ -65,6 +67,67 @@ public partial class DeveloperTesting : IAsyncDisposable
         Modded = false,
         Private = false
     };
+    private readonly LocalResourceSlim _desiredResourceEngine = new()
+    {
+        Name = "Config - Engine",
+        Path = "ConanSandbox/Saved/Config/WindowsServer/Engine",
+        Startup = false,
+        StartupPriority = 0,
+        Type = ResourceType.ConfigFile,
+        ContentType = ContentType.Ini,
+        Extension = "ini",
+        ConfigSets =
+        [
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "%GAMEDIR%Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/2D/Paper2D/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/Runtime/HoudiniEngine/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/DialoguePlugin/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/FuncomLiveServices/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "OnlineSubsystemSteam", Key = "ServerName", Value = "%%%SERVER_NAME%%%"},
+            new ConfigurationItemSlim { Category = "OnlineSubsystemSteam", Key = "ServerPassword", Value = "%%%PASSWORD%%%"},
+            new ConfigurationItemSlim { Category = "OnlineSubsystemSteam", Key = "AsyncTaskTimeout", Value = "360"},
+            new ConfigurationItemSlim { Category = "OnlineSubsystemSteam", Key = "GameServerQueryPort", Value = "%%%QUERY_PORT%%%"},
+            new ConfigurationItemSlim { Category = "url", Key = "Port", Value = "%%%GAME_PORT%%%"},
+            new ConfigurationItemSlim { Category = "url", Key = "PeerPort", Value = "%%%GAME_PORT_PEER%%%"},
+            new ConfigurationItemSlim { Category = "/script/onlinesubsystemutils.ipnetdriver", Key = "NetServerMaxTickRate", Value = "30"},
+        ]
+    };
+    private readonly LocalResourceSlim _desiredResourceGame = new()
+    {
+        Name = "Config - Game",
+        Path = "ConanSandbox/Saved/Config/WindowsServer/Game",
+        Startup = false,
+        StartupPriority = 0,
+        Type = ResourceType.ConfigFile,
+        ContentType = ContentType.Ini,
+        Extension = "ini",
+        ConfigSets =
+        [
+            new ConfigurationItemSlim { Category = "/script/engine.gamesession", Key = "MaxPlayers", Value = "70"},
+        ]
+    };
+    private readonly LocalResourceSlim _desiredResourceServerSettings = new()
+    {
+        Name = "Config - ServerSettings",
+        Path = "ConanSandbox/Saved/Config/WindowsServer/ServerSettings",
+        Startup = false,
+        StartupPriority = 0,
+        Type = ResourceType.ConfigFile,
+        ContentType = ContentType.Ini,
+        Extension = "ini",
+        ConfigSets =
+        [
+            new ConfigurationItemSlim { Category = "ServerSettings", Key = "AdminPassword", Value = "%%%PASSWORD_ADMIN%%%"},
+            new ConfigurationItemSlim { Category = "ServerSettings", Key = "MaxNudity", Value = "2"},
+            new ConfigurationItemSlim { Category = "ServerSettings", Key = "PVPBlitzServer", Value = "False"},
+            new ConfigurationItemSlim { Category = "ServerSettings", Key = "PVPEnabled", Value = "True"},
+            new ConfigurationItemSlim { Category = "ServerSettings", Key = "serverRegion", Value = "1"},
+            new ConfigurationItemSlim { Category = "ServerSettings", Key = "ServerCommunity", Value = "3"},
+            new ConfigurationItemSlim { Category = "ServerSettings", Key = "IsBattlEyeEnabled", Value = "False"},
+        ]
+    };
+    
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -79,19 +142,49 @@ public partial class DeveloperTesting : IAsyncDisposable
             EventService.GameServerStatusChanged += GameServerStatusChanged;
             EventService.WeaverWorkStatusChanged += WorkStatusChanged;
             
+            await AttemptDebugSetup();
+            
             StateHasChanged();
         }
     }
 
+    private async Task AttemptDebugSetup()
+    {
+        if (_hosts.Count > 0)
+        {
+            _selectedHost = _hosts.First();
+        }
+
+        if (_gameServers.Count > 0)
+        {
+            _selectedGameServer = _gameServers.First();
+        }
+        
+        var matchingGameRequest = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
+        if (matchingGameRequest.Succeeded)
+        {
+            _desiredGame.Id = matchingGameRequest.Data.Id;
+        }
+        
+        if (_selectedGameServer is not null && matchingGameRequest.Succeeded)
+        {
+            var matchingProfile = await GameServerService.GetGameProfileByIdAsync(_selectedGameServer.GameProfileId);
+            if (matchingProfile.Succeeded)
+            {
+                _desiredProfile.Id = matchingProfile.Data.Id;
+            }
+        }
+    } 
+
     private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
     {
-        Snackbar.Add($"Work '{e.TargetType}' for host [{e.HostId}] status change: {e.Status}");
+        Snackbar.Add($"Work {e.TargetType} status: {e.Status}");
         InvokeAsync(StateHasChanged);
     }
 
     private void GameServerStatusChanged(object? sender, GameServerStatusEvent args)
     {
-        Snackbar.Add($"Game server '{args.ServerName}' status change: {args.ServerState}");
+        Snackbar.Add($"Game server {args.ServerName} state: {args.ServerState}", Severity.Info);
         var matchingServer = _gameServers.FirstOrDefault(x => x.Id == args.Id);
         if (matchingServer is not null)
         {
@@ -201,6 +294,101 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         Snackbar.Add($"Created game: [{createGameRequest.Data}]{gameCreate.FriendlyName}", Severity.Success);
         _desiredGame.Id = matchingGameRequest.Data.Id;
+    }
+
+    private async Task EnforceGameProfileResources()
+    {
+        // TODO: Resources are being duplicated for some reason, need to investigate
+        if (_selectedGameServer is null)
+        {
+            return;
+        }
+        
+        var matchingProfile = await GameServerService.GetGameProfileByIdAsync(_selectedGameServer.GameProfileId);
+        if (!matchingProfile.Succeeded)
+        {
+            return;
+        }
+
+        var profileResources = await GameServerService.GetLocalResourcesByGameProfileIdAsync(matchingProfile.Data.Id);
+        var desiredResources = new List<LocalResourceSlim>
+        {
+            _desiredResourceEngine,
+            _desiredResourceGame,
+            _desiredResourceServerSettings
+        };
+
+        foreach (var resource in desiredResources)
+        {
+            var matchingResource = profileResources.Data.FirstOrDefault(x => x.Path == resource.Path && x.Type == resource.Type);
+            if (matchingResource is not null)
+            {
+                resource.Id = matchingResource.Id;
+                continue;
+            }
+            
+            var resourceCreate = resource.ToCreate();
+            resourceCreate.GameProfileId = matchingProfile.Data.Id;
+            resourceCreate.GameServerId = _selectedGameServer.Id;
+            var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
+            if (!createRequest.Succeeded)
+            {
+                createRequest.Messages.ForEach(x => Snackbar.Add($"Failed to create resource for profile: {x}", Severity.Error));
+                return;
+            }
+
+            resource.Id = createRequest.Data;
+        }
+
+        foreach (var resource in desiredResources)
+        {
+            var resourcesRequest = await GameServerService.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
+            var resourceConfigItems = resourcesRequest.Succeeded ? resourcesRequest.Data.ToList() : [];
+            foreach (var configItem in resource.ConfigSets)
+            {
+                var matchingItem = configItem.DuplicateKey ? resourceConfigItems.FirstOrDefault(x =>
+                    x.Category == configItem.Category &&
+                    x.Key == configItem.Key &&
+                    x.Value == configItem.Value) :
+                    resourceConfigItems.FirstOrDefault(x => x.Category == configItem.Category && x.Key == configItem.Key);
+                if (matchingItem is not null && configItem.DuplicateKey)
+                {
+                    continue;
+                }
+                if (matchingItem is not null && configItem.Value == matchingItem.Value)
+                {
+                    continue;
+                }
+                
+                if (matchingItem is not null)
+                {
+                    var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value, ModifyingUserId = _loggedInUser.Id};
+                    var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate);
+                    if (!updateRequest.Succeeded)
+                    {
+                        updateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                        return;
+                    }
+                    
+                    continue;
+                }
+            
+                var itemCreate = configItem.ToCreate();
+                itemCreate.LocalResourceId = resource.Id;
+                var createRequest = await GameServerService.CreateConfigurationItemAsync(itemCreate);
+                if (createRequest.Succeeded) continue;
+                
+                createRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            }
+        }
+
+        var hostUpdateRequest = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_selectedGameServer.Id, _loggedInUser.Id);
+        if (!hostUpdateRequest.Succeeded)
+        {
+            hostUpdateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        Snackbar.Add("Successfully enforced profile resources on the server and host", Severity.Success);
     }
 
     private async Task EnforceGameProfile()
@@ -336,7 +524,14 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         Snackbar.Add($"Created game server, now installing! [{createServerRequest.Data}]{gameServerCreate.ServerName}");
         await GatherGameServers();
-        StateHasChanged();
+        
+        matchingGameServer = _gameServers.FirstOrDefault(x => x.PortGame == _desiredGameServer.PortGame);
+        if (matchingGameServer is not null)
+        {
+            _selectedGameServer = matchingGameServer;
+            StateHasChanged();
+            await EnforceGameProfile();
+        }
     }
 
     private async Task UninstallGameServer()
@@ -383,7 +578,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Sent game server start request!");
+        Snackbar.Add($"Sent game server start request!", Severity.Success);
     }
 
     private async Task StopGameServer()
@@ -404,7 +599,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Sent game server stop request!");
+        Snackbar.Add($"Sent game server stop request!", Severity.Success);
     }
 
     private async Task RestartGameServer()
@@ -425,7 +620,28 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Sent game server restart request!");
+        Snackbar.Add($"Sent game server restart request!", Severity.Success);
+    }
+
+    private async Task UpdateGameServer()
+    {
+        if (_selectedGameServer is null)
+        {
+            Snackbar.Add("You must select a game server first!", Severity.Error);
+            return;
+        }
+
+        var updateRequest = await GameServerService.UpdateServerAsync(_selectedGameServer.Id, _loggedInUser.Id);
+        if (!updateRequest.Succeeded)
+        {
+            foreach (var message in updateRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+
+        Snackbar.Add($"Sent game server update request!", Severity.Success);
     }
 
     public async ValueTask DisposeAsync()

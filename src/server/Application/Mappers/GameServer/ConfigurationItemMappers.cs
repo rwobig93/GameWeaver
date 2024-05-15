@@ -99,4 +99,17 @@ public static class ConfigurationItemMappers
     {
         return configItems.Select(x => x.ToHost()).ToList();
     }
+
+    public static ConfigurationItemCreate ToCreate(this ConfigurationItemSlim configItem)
+    {
+        return new ConfigurationItemCreate
+        {
+            LocalResourceId = configItem.LocalResourceId,
+            DuplicateKey = configItem.DuplicateKey,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value
+        };
+    }
 }

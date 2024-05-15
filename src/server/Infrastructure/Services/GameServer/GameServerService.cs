@@ -187,9 +187,9 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        findRequest.Result.LastModifiedOn = _dateTime.NowDatabaseTime;
+        updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var request = await _gameServerRepository.UpdateAsync(findRequest.Result.ToUpdate());
+        var request = await _gameServerRepository.UpdateAsync(updateObject);
         if (!request.Succeeded)
             return await Result.FailAsync(request.ErrorMessage);
 
@@ -307,7 +307,7 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var updateRequest = await _gameServerRepository.UpdateConfigurationItemAsync(findRequest.Result.ToUpdate());
+        var updateRequest = await _gameServerRepository.UpdateConfigurationItemAsync(updateObject);
         if (!updateRequest.Succeeded)
             return await Result.FailAsync(updateRequest.ErrorMessage);
         
@@ -472,7 +472,7 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var updateRequest = await _gameServerRepository.UpdateLocalResourceAsync(findRequest.Result.ToUpdate());
+        var updateRequest = await _gameServerRepository.UpdateLocalResourceAsync(updateObject);
         if (!updateRequest.Succeeded)
             return await Result.FailAsync(updateRequest.ErrorMessage);
 
@@ -533,7 +533,7 @@ public class GameServerService : IGameServerService
         
         // TODO: Framework for Local resources: game.DefaultGameProfile, overwrite by gameServer.ParentGameProfile, root is gameServer.GameProfile
         
-        var findRequest = await GetLocalResourcesByGameServerIdAsync(serverId);
+        var findRequest = await GetLocalResourcesByGameProfileIdAsync(foundServer.Result.GameProfileId);
         if (!findRequest.Succeeded)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
         
@@ -689,7 +689,7 @@ public class GameServerService : IGameServerService
         
         findRequest.Result.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var request = await _gameServerRepository.UpdateGameProfileAsync(findRequest.Result.ToUpdate());
+        var request = await _gameServerRepository.UpdateGameProfileAsync(updateObject);
         if (!request.Succeeded)
             return await Result.FailAsync(request.ErrorMessage);
 
@@ -848,7 +848,7 @@ public class GameServerService : IGameServerService
 
         findRequest.Result.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var request = await _gameServerRepository.UpdateModAsync(findRequest.Result.ToUpdate());
+        var request = await _gameServerRepository.UpdateModAsync(updateObject);
         if (!request.Succeeded)
             return await Result.FailAsync(request.ErrorMessage);
 
@@ -926,6 +926,20 @@ public class GameServerService : IGameServerService
             foundServer.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);
         if (!restartRequest.Succeeded)
             return await Result<Guid>.FailAsync(restartRequest.ErrorMessage);
+
+        return await Result<Guid>.SuccessAsync();
+    }
+
+    public async Task<IResult> UpdateServerAsync(Guid id, Guid modifyingUserId)
+    {
+        var foundServer = await _gameServerRepository.GetByIdAsync(id);
+        if (!foundServer.Succeeded || foundServer.Result is null)
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        var updateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUpdate, foundServer.Result.HostId,
+            foundServer.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);
+        if (!updateRequest.Succeeded)
+            return await Result<Guid>.FailAsync(updateRequest.ErrorMessage);
 
         return await Result<Guid>.SuccessAsync();
     }

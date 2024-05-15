@@ -78,4 +78,5 @@ public interface IGameServerService
     Task<IResult> StartServerAsync(Guid id, Guid modifyingUserId);
     Task<IResult> StopServerAsync(Guid id, Guid modifyingUserId);
     Task<IResult> RestartServerAsync(Guid id, Guid modifyingUserId);
+    Task<IResult> UpdateServerAsync(Guid id, Guid modifyingUserId);
 }

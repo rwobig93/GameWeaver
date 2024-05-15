@@ -15,7 +15,7 @@ public interface IGameServerService
     Task<IResult<Guid>> Create(GameServerLocal gameServer);
     Task<IResult<GameServerLocal?>> GetById(Guid id);
     Task<IResult<List<GameServerLocal>>> GetAll();
-    Task<IResult> InstallOrUpdateGame(Guid id);
+    Task<IResult> InstallOrUpdateGame(Guid id, bool validate = false);
     Task<IResult> InstallOrUpdateMod(Guid id, Mod mod);
     Task<IResult> UninstallGame(Guid id);
     Task<IResult> UninstallMod(Guid id, Mod mod);

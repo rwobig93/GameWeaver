@@ -399,7 +399,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var foundConfigItem = await _database.LoadData<ConfigurationItemDb, dynamic>(
-                ConfigurationItemsTableMsSql.GetByLocalResourceId, new {GameProfileId = id});
+                ConfigurationItemsTableMsSql.GetByLocalResourceId, new {LocalResourceId = id});
             actionReturn.Succeed(foundConfigItem);
         }
         catch (Exception ex)
