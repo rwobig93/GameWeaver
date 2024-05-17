@@ -2,17 +2,15 @@
 using System.IO.Compression;
 using System.Text;
 using Application.Constants;
+using Application.Handlers;
 using Application.Helpers;
-using Application.Models;
+using Application.Models.GameServer;
 using Application.Repositories;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.GameServer;
-using IniParser;
-using IniParser.Model;
-using IniParser.Model.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
@@ -36,19 +34,6 @@ public class GameServerService : IGameServerService
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
-    private static readonly FileIniDataParser IniParser = new() { Parser = { Configuration =
-        {
-            CaseInsensitive = false,
-            AllowKeysWithoutSection = true,
-            AllowDuplicateKeys = true,
-            OverrideDuplicateKeys = false,
-            ConcatenateDuplicateKeys = false,
-            ThrowExceptionsOnError = false,
-            AllowDuplicateSections = true,
-            AllowCreateSectionsOnFly = true,
-            SkipInvalidLines = false
-        }
-    }};
 
     public async Task<IResult> ValidateSteamCmdInstall()
     {
@@ -225,8 +210,10 @@ public class GameServerService : IGameServerService
             while (!process.HasExited)
             {
                 var received = output.ReadLine();
-                if (received is not null && received.ToLower().Contains("install state:"))
+                if (received is not null && received.Contains("install state:", StringComparison.CurrentCultureIgnoreCase))
+                {
                     return;
+                }
                 
                 _logger.Verbose("STEAMCMD_OUTPUT[{ProcessId}]: {SteamCmdReceived}", process.Id, received);
             }
@@ -245,7 +232,9 @@ public class GameServerService : IGameServerService
             errors.Close();
 
             if (commandIsMaintenance)
+            {
                 SteamCmdUpdateInProgress = false;
+            }
         }
     }
     
@@ -601,47 +590,34 @@ public class GameServerService : IGameServerService
     private async Task<IResult> UpdateIniFile(LocalResource configFile, bool loadExisting = true)
     {
         var filePath = configFile.GetFullPath();
-        var configFileContent = new IniData { Configuration = IniParser.Parser.Configuration };
+        var allowDuplicates = configFile.ConfigSets.Any(x => x.DuplicateKey);
+        var configFileContent = new IniData(allowDuplicates: allowDuplicates);
 
         try
         {
             if (loadExisting && File.Exists(filePath))
             {
-                var existingIniData = IniParser.ReadFile(filePath);
-                configFileContent.Merge(existingIniData);
+                configFileContent.Load(filePath, true);
                 _logger.Debug("Existing ini file exists, loaded config contents: {FilePath}", filePath);
             }
 
             foreach (var config in configFile.ConfigSets)
             {
-                if (!configFileContent.Sections.ContainsSection(config.Category))
-                {
-                    configFileContent.Sections.AddSection(config.Category);
-                }
-
-                if (!configFileContent[config.Category].ContainsKey(config.Key))
-                {
-                    configFileContent[config.Category].AddKey(config.Key);
-                }
-
-                // TODO: Duplicate keys aren't working, first key is always the one that is present instead of adding a new duplicate
-                if (config.DuplicateKey)
-                {
-                    var sectionData = configFileContent.Sections.GetSectionData(config.Category);
-                    var matchingSections = sectionData.Keys.Where(x => x.KeyName == config.Key && x.Value == config.Value);
-                    if (!matchingSections.Any())
-                    {
-                        configFileContent[config.Category].AddKey(config.Key, config.Value);
-                    }
-
-                    continue;
-                }
-
-                configFileContent[config.Category][config.Key] = config.Value;
+                configFileContent.AddOrUpdateKey(config.Category, config.Key, config.Value);
             }
 
-            IniParser.WriteFile(filePath, configFileContent);
-            _logger.Debug("Updated ini config file at {FilePath}", filePath);
+            var saveRequest = await configFileContent.Save(filePath);
+            if (!saveRequest.Succeeded)
+            {
+                foreach (var message in saveRequest.Messages)
+                {
+                    _logger.Debug("Ini config file save failure: {Error}", message);
+                }
+
+                return await Result.FailAsync();
+            }
+            
+            _logger.Debug("Saved ini config file at {FilePath}", filePath);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -705,6 +681,7 @@ public class GameServerService : IGameServerService
         var filePath = configFile.GetFullPath();
         var fileContent = new StringBuilder();
 
+        // TODO: Load raw file, check if each line exists, if not add it for a successful merge
         foreach (var configItem in configFile.ConfigSets)
         {
             fileContent.Append(configItem.Value);
@@ -736,6 +713,17 @@ public class GameServerService : IGameServerService
         // TODO: Look at doing an initial run on server creation to generate files then kill the server after 10 seconds or so
         foreach (var configFile in configurationFiles)
         {
+            try
+            {
+                var directoryPath = Path.GetDirectoryName(configFile.GetFullPath()) ?? "./";
+                Directory.CreateDirectory(directoryPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to ensure config path exists: {Error}", ex.Message);
+                return await Result.FailAsync($"Failed to ensure config path exists: {ex.Message}");
+            }
+            
             foreach (var item in configFile.ConfigSets)
             {
                 item.Value = gameServerRequest.Data.UpdateWithServerValues(item.Value);

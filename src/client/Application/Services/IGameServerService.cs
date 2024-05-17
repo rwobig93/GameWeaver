@@ -1,4 +1,5 @@
 ﻿using Application.Models;
+using Application.Models.GameServer;
 using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.GameServer;

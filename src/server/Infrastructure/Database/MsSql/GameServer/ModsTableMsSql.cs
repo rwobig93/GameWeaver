@@ -60,6 +60,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT m.*
+                WHERE m.IsDeleted = 0
                 FROM dbo.[{Table.TableName}] m;
             end"
     };
@@ -76,6 +77,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
+                WHERE m.IsDeleted = 0
                 ORDER BY m.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -107,7 +109,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.GameId = @GameId
+                WHERE m.GameId = @GameId AND m.IsDeleted = 0
                 ORDER BY m.Id;
             end"
     };
@@ -123,7 +125,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.SteamGameId = @SteamGameId
+                WHERE m.SteamGameId = @SteamGameId AND m.IsDeleted = 0
                 ORDER BY m.Id;
             end"
     };
@@ -139,7 +141,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.SteamToolId = @SteamToolId
+                WHERE m.SteamToolId = @SteamToolId AND m.IsDeleted = 0
                 ORDER BY m.Id;
             end"
     };
@@ -155,7 +157,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.SteamId = @SteamId
+                WHERE m.SteamId = @SteamId AND m.IsDeleted = 0
                 ORDER BY m.Id;
             end"
     };
@@ -171,7 +173,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.FriendlyName = @FriendlyName
+                WHERE m.FriendlyName = @FriendlyName AND m.IsDeleted = 0
                 ORDER BY m.Id;
             end"
     };
@@ -233,7 +235,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE m.IsDeleted = 0 AND m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'
@@ -256,7 +258,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE m.IsDeleted = 0 AND m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'

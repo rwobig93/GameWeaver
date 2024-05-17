@@ -39,9 +39,10 @@ public partial class DeveloperTesting : IAsyncDisposable
     private NetworkProtocol _serverProtocol = NetworkProtocol.Tcp;
     private GameSource _serverSource = GameSource.Steam;
     private List<GameServerSlim> _gameServers = [];
-    private GameServerSlim? _selectedGameServer = null;
+    private GameServerSlim? _selectedGameServer;
     private List<HostSlim> _hosts = [];
-    private HostSlim? _selectedHost = null;
+    private HostSlim? _selectedHost;
+    private string _latestWorkState = "";
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -78,6 +79,12 @@ public partial class DeveloperTesting : IAsyncDisposable
         Extension = "ini",
         ConfigSets =
         [
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "%GAMEDIR%Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/2D/Paper2D/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/Runtime/HoudiniEngine/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/DialoguePlugin/Content", DuplicateKey = true },
+            new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/FuncomLiveServices/Content", DuplicateKey = true },
             new ConfigurationItemSlim { Category = "OnlineSubsystemSteam", Key = "ServerName", Value = "%%%SERVER_NAME%%%"},
             new ConfigurationItemSlim { Category = "OnlineSubsystemSteam", Key = "ServerPassword", Value = "%%%PASSWORD%%%"},
             new ConfigurationItemSlim { Category = "OnlineSubsystemSteam", Key = "AsyncTaskTimeout", Value = "360"},
@@ -172,7 +179,7 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
     {
-        Snackbar.Add($"Work {e.TargetType} status: {e.Status}");
+        _latestWorkState = e.Status.ToString();
         InvokeAsync(StateHasChanged);
     }
 
@@ -405,7 +412,8 @@ public partial class DeveloperTesting : IAsyncDisposable
             FriendlyName = _desiredProfile.FriendlyName,
             OwnerId = _loggedInUser.Id,
             GameId = matchingGame.Data.Id,
-            ServerProcessName = _desiredProfile.ServerProcessName
+            ServerProcessName = _desiredProfile.ServerProcessName,
+            
         };
         var matchingProfile = await GameServerService.GetGameProfileByIdAsync(_selectedGameServer.GameProfileId);
         if (!matchingProfile.Succeeded)
@@ -456,6 +464,15 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
+        var updateHostRequest = await GameServerService.UpdateLocalResourceOnGameServerAsync(createResourceRequest.Data, _loggedInUser.Id);
+        if (!updateHostRequest.Succeeded)
+        {
+            foreach (var message in updateHostRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
         Snackbar.Add("Updated and enforced game profile", Severity.Success);
         _desiredProfile.Id = matchingProfile.Data.Id;
     }
@@ -485,7 +502,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         var matchingProfile = await GameServerService.GetGameProfileByFriendlyNameAsync(_desiredProfile.FriendlyName);
         if (!matchingGame.Succeeded)
         {
-            Snackbar.Add($"Game profile '{matchingProfile.Data.FriendlyName}' wasn't found, please create it first", Severity.Error);
+            Snackbar.Add($"Game profile '{_desiredProfile.FriendlyName}' wasn't found, please create it first", Severity.Error);
             return;
         }
         

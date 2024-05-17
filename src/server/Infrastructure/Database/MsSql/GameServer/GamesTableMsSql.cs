@@ -128,7 +128,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.SteamName = @SteamName
+                WHERE g.SteamName = @SteamName AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };
@@ -144,7 +144,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.FriendlyName = @FriendlyName
+                WHERE g.FriendlyName = @FriendlyName AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };
@@ -160,7 +160,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.SteamGameId = @SteamGameId
+                WHERE g.SteamGameId = @SteamGameId AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };
@@ -176,7 +176,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.SteamToolId = @SteamToolId
+                WHERE g.SteamToolId = @SteamToolId AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };

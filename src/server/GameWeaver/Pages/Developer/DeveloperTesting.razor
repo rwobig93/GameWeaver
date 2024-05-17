@@ -52,8 +52,10 @@
                 </MudItem>
             </MudExpansionPanel>
             <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="GameServer Management">
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
-                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Server Status: @(_selectedGameServer?.ServerState)</MudText>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Work Status: @(_latestWorkState)</MudText>
+                    <MudSpacer />
+                    <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Server Status: @(_selectedGameServer?.ServerState)</MudText>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
                     <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" @bind-Value="_desiredGame.Id" />

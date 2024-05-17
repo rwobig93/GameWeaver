@@ -2,7 +2,7 @@ using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.GameServer;
 
-namespace Application.Models;
+namespace Application.Models.GameServer;
 
 public class GameServerLocalUpdate
 {

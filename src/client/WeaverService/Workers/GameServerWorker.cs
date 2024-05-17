@@ -423,7 +423,7 @@ public class GameServerWorker : BackgroundService
         {
             Id = gameServerLocal.Data.Id,
             ServerProcessName = null,
-            ServerState = ServerState.Unknown,
+            ServerState = gameServerLocal.Data.ServerState,
             Resources = null
         });
         
@@ -651,6 +651,25 @@ public class GameServerWorker : BackgroundService
         if (!installRequest.Succeeded) return;
         
         _logger.Information("Finished installing gameserver: [{GameserverId}]{GameserverName}", gameServerRequest.Data.Id, gameServerRequest.Data.ServerName);
+        
+        // Start the server for a short time to generate any necessary config files then kill it to complete installation
+        var startResult = await _gameServerService.StartServer(gameServerRequest.Data.Id);
+        if (!startResult.Succeeded)
+        {
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
+            work.SendStatusUpdate(WeaverWorkState.Failed, startResult.Messages);
+            return;
+        }
+
+        await Task.Delay(TimeSpan.FromSeconds(10));
+        
+        var stopResult = await _gameServerService.StopServer(gameServerRequest.Data.Id);
+        if (!stopResult.Succeeded)
+        {
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
+            work.SendStatusUpdate(WeaverWorkState.Failed, stopResult.Messages);
+            return;
+        }
 
         await _gameServerService.UpdateState(gameServerRequest.Data.Id, ServerState.Shutdown);
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
@@ -763,7 +782,7 @@ public class GameServerWorker : BackgroundService
             return;
         }
         
-        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id, true);
+        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);

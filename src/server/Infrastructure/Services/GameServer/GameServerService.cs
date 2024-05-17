@@ -412,20 +412,72 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameServerIdAsync(Guid id)
     {
-        var localResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameServerIdAsync(id);
-        if (!localResourcesRequest.Succeeded)
-            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(localResourcesRequest.ErrorMessage);
-        if (localResourcesRequest.Result is null)
-            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
-
-        var convertedLocalResource = localResourcesRequest.Result.ToSlims().ToList();
-        
-        foreach (var resource in convertedLocalResource)
+        var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Result is null)
         {
-            resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
+            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
         }
 
-        return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(localResourcesRequest.Result.ToSlims());
+        var gameRequest = await _gameRepository.GetByIdAsync(gameServerRequest.Result.GameId);
+        if (!gameRequest.Succeeded || gameRequest.Result is null)
+        {
+            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
+        
+        var defaultProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(gameRequest.Result.DefaultGameProfileId);
+        if (!defaultProfileRequest.Succeeded || defaultProfileRequest.Result is null)
+        {
+            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
+        
+        // TODO: Get local resources in hierarchical order then overwrite going from the bottom up
+        //   Order: Game.DefaultProfileId (Lowest) => Server.ParentProfileId (Medium) => Server.GameProfileId (Highest)
+        //   ContentType.Ignore should not be passed to the return, meant to act as a 'delete' from lower profiles
+
+        List<LocalResourceSlim> finalResourceList = [];
+
+        var defaultProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(defaultProfileRequest.Result.Id);
+        if (defaultProfileResourcesRequest.Result is not null)
+        {
+            var convertedResources = defaultProfileResourcesRequest.Result.ToSlims().ToList();
+            foreach (var resource in convertedResources)
+            {
+                resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
+            }
+            
+            finalResourceList.AddRange(convertedResources);
+        }
+
+        // TODO: Add ParentGameProfileId to GameServer entities
+        // var parentProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(gameServerRequest.Result.ParentGameProfileId);
+        // if (parentProfileResourcesRequest.Result is not null)
+        // {
+        //     var convertedResources = parentProfileResourcesRequest.Result.ToSlims().ToList();
+        //     foreach (var resource in convertedResources)
+        //     {
+        //         resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
+        //     }
+        //     
+        //     finalResourceList.AddRange(convertedResources);
+        // }
+
+        var serverProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(gameServerRequest.Result.GameProfileId);
+        if (serverProfileResourcesRequest.Result is not null)
+        {
+            var convertedResources = serverProfileResourcesRequest.Result.ToSlims().ToList();
+            foreach (var resource in convertedResources)
+            {
+                resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
+            }
+            // TODO: Add ignore key to ConfigurationItem for priority during inheritance checking
+            // TODO: Remove GameServerId from LocalResource since we want all profile config on the profile and not the server
+            
+            // TODO: Helper method that overrides current list with provided list including deleted/ignored resources
+            finalResourceList.AddRange(convertedResources);
+        }
+        
+
+        return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(finalResourceList);
     }
 
     public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject, Guid modifyingUserId)
