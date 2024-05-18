@@ -1,5 +1,4 @@
-﻿using Application.Models.GameServer.ConfigurationItem;
-using Application.Models.GameServer.LocalResource;
+﻿using Application.Models.GameServer.LocalResource;
 using Domain.Enums.GameServer;
 
 namespace Application.Helpers.GameServer;
@@ -35,31 +34,51 @@ public static class LocalResourceHelpers
 
             foreach (var config in resource.ConfigSets)
             {
-                var matchingConfigs = updatedConfigSets.Where(x =>
-                    x.Category == config.Category &&
-                    x.Path == config.Path &&
-                    x.Key == config.Key).ToList();
-
-                if (matchingConfigs.Count == 0)
+                if (config.DuplicateKey)
                 {
+                    var matchingConfigDuplicate = updatedConfigSets.FirstOrDefault(x =>
+                        x.Category == config.Category &&
+                        x.Path == config.Path &&
+                        x.Key == config.Key &&
+                        x.Value == config.Value);
+
+                    if (config.Ignore && matchingConfigDuplicate is not null)
+                    {
+                        updatedConfigSets.Remove(matchingConfigDuplicate);
+                        continue;
+                    }
+                    
+                    if (matchingConfigDuplicate is not null)
+                    {
+                        continue;
+                    }
+                    
                     updatedConfigSets.Add(config);
                     continue;
                 }
+                
+                // Key is not a duplicate key
+                var matchingConfig = updatedConfigSets.FirstOrDefault(x =>
+                    x.Category == config.Category &&
+                    x.Path == config.Path &&
+                    x.Key == config.Key);
 
-                if (!config.DuplicateKey)
+                if (config.Ignore && matchingConfig is not null)
                 {
-                    var matchingConfig = matchingConfigs.First();
+                    updatedConfigSets.Remove(matchingConfig);
+                    continue;
+                }
+
+                if (matchingConfig is not null)
+                {
                     matchingConfig.Value = config.Value;
                     continue;
                 }
 
-                if (config.Ignore)
-                {
-                    continue;
-                }
-                
-                
+                updatedConfigSets.Add(config);
             }
+
+            matchingResource.ConfigSets = updatedConfigSets;
         }
     }
 }

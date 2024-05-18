@@ -598,24 +598,6 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameServerIdAsync(Guid id)
-    {
-        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
-
-        try
-        {
-            var foundResource = await _database.LoadData<LocalResourceDb, dynamic>(
-                LocalResourcesTableMsSql.GetByGameServerId, new {GameServerId = id});
-            actionReturn.Succeed(foundResource);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetByGameServerId.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
     public async Task<DatabaseActionResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();

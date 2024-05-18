@@ -168,6 +168,12 @@ public class ControlServerWorker : BackgroundService
             var response = await _serverService.WorkStatusUpdate(work);
             if (response.Succeeded)
             {
+                if (work.Id == 0)
+                {
+                    // GameServerStateUpdate from realtime status checks won't be bound to work, so we'll skip the internal update
+                    continue;
+                }
+                
                 var localUpdateRequest = await _weaverWorkService.UpdateStatusAsync(work.Id, work.Status);
                 if (!localUpdateRequest.Succeeded)
                 {

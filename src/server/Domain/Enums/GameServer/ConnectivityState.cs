@@ -16,5 +16,6 @@ public enum ConnectivityState
     Uninstalling = 11,
     Uninstalled = 12,
     ShuttingDown = 13,
-    OverlappingPort = 14
+    OverlappingPort = 14,
+    Discovering = 15
 }

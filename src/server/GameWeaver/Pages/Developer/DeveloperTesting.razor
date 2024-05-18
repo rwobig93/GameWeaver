@@ -58,15 +58,19 @@
                     <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Server Status: @(_selectedGameServer?.ServerState)</MudText>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Host" Value="@(_selectedHost?.Id)" />
+                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Default Profile" Value="@(_defaultProfile.Id)" />
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
                     <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" @bind-Value="_desiredGame.Id" />
-                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" @bind-Value="_desiredProfile.Id" />
+                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" Value="@(_selectedGameServer?.GameProfileId)" />
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                     <MudSelect Class="d-flex" @bind-Value="_selectedHost" Label="Host" OpenIcon="@Icons.Material.Filled.Computer"
                                AdornmentColor="Color.Secondary" Disabled="@(_hosts.Count < 1)">
                         @foreach (var host in _hosts)
                         {
-                        <MudSelectItem Value="@host">@host.Id</MudSelectItem>
+                        <MudSelectItem Value="@host">@host.Description</MudSelectItem>
                         }
                     </MudSelect>
                     <MudSelect Class="d-flex" @bind-Value="_selectedGameServer" Label="GameServer" OpenIcon="@Icons.Material.Filled.Gamepad"
@@ -81,8 +85,8 @@
                     <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(() => EnforceGame())">
                         Enforce Game
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(() => EnforceGameProfile())">
-                        Enforce Profile
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(() => EnforceDefaultGameProfile())">
+                        Enforce Default Profile
                     </MudButton>
                     <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(EnforceGameProfileResources)">
                         Enforce Profile Resources

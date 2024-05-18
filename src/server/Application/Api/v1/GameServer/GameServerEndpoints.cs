@@ -606,7 +606,7 @@ public static class GameServerEndpoints
     {
         try
         {
-            return await gameServerService.GetLocalResourcesByGameServerIdAsync(id);
+            return await gameServerService.GetLocalResourcesForGameServerIdAsync(id);
         }
         catch (Exception ex)
         {
@@ -681,17 +681,19 @@ public static class GameServerEndpoints
     /// <summary>
     /// Update the local resource for the game server on the host
     /// </summary>
-    /// <param name="id">Local resource id</param>
+    /// <param name="serverId">Game server id</param>
+    /// <param name="resourceId">Local resource id</param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns></returns>
     [Authorize(PermissionConstants.Gameserver.UpdateLocalResourceOnGameServer)]
-    private static async Task<IResult> UpdateLocalResourceOnGameServer([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    private static async Task<IResult> UpdateLocalResourceOnGameServer([FromQuery]Guid serverId, [FromQuery]Guid resourceId, IGameServerService gameServerService,
+        ICurrentUserService currentUserService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.UpdateLocalResourceOnGameServerAsync(id, currentUserId);
+            return await gameServerService.UpdateLocalResourceOnGameServerAsync(serverId, resourceId, currentUserId);
         }
         catch (Exception ex)
         {

@@ -39,7 +39,6 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<int>> GetLocalResourcesCountAsync();
     Task<DatabaseActionResult<LocalResourceDb>> GetLocalResourceByIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameProfileIdAsync(Guid id);
-    Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameServerIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject);
     Task<DatabaseActionResult> UpdateLocalResourceAsync(LocalResourceUpdate updateObject);
     Task<DatabaseActionResult> DeleteLocalResourceAsync(Guid id);

@@ -32,6 +32,7 @@ public partial class Index
         }
         catch
         {
+            // TODO: Not getting redirect error after fixing auth handling (need to re-login or idle too long, ect)
             // User has old saved token, so we'll force a local storage clear and de-authenticate then redirect due to being unauthorized
             await AccountService.LogoutGuiAsync(Guid.Empty);
             StateHasChanged();

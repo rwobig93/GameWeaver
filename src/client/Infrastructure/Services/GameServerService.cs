@@ -552,6 +552,11 @@ public class GameServerService : IGameServerService
     {
         try
         {
+            // TODO: Getting error on realtime update: Failure updating local weaver work status occurred: [0]"Weaver work with Id [0] doesn't exist"
+            // Before error: Realtime server state has changed from expected: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024" [Expected]Unknown [Current]Shutdown
+            // Before error: Successfully updated gameserver: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024"
+            // Before error: Adding weaver work update: [0]Completed
+            // Before error: Sending outgoing communication => 0
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
                 return await Result<ServerState>.FailAsync(gameServerRequest.Messages);
@@ -709,8 +714,6 @@ public class GameServerService : IGameServerService
         List<string> errorMessages = [];
         var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == ResourceType.ConfigFile).ToList();
 
-        // TODO: Create path to config file, currently if the path doesn't exist a failure occurs
-        // TODO: Look at doing an initial run on server creation to generate files then kill the server after 10 seconds or so
         foreach (var configFile in configurationFiles)
         {
             try

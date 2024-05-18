@@ -662,10 +662,15 @@ public class HostService : IHostService
     public async Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject)
     {
         var foundHostRequest = await _hostRepository.GetWeaverWorkByIdAsync(updateObject.Id);
-        if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var hostId = foundHostRequest.Result?.HostId ?? Guid.Empty;
 
-        updateObject.HostId = foundHostRequest.Result.HostId;
+        // GameServerStateUpdate can come in without being bound to specific work
+        if (hostId == Guid.Empty && updateObject.TargetType != WeaverWorkTarget.GameServerStateUpdate)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
+
+        updateObject.HostId = hostId;
         updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
         switch (updateObject.TargetType)
@@ -702,6 +707,12 @@ public class HostService : IHostService
                 _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
                     updateObject.Id, updateObject.TargetType);
                 break;
+        }
+
+        // Some updates like GameServerStateUpdate may not be tied to Weaver Work, so we'll skip attempting to update non-existent work
+        if (hostId == Guid.Empty)
+        {
+            return await Result.SuccessAsync();
         }
         
         var updateWorkRequest = await _hostRepository.UpdateWeaverWorkAsync(updateObject);

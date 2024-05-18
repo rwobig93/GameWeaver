@@ -124,9 +124,9 @@ public class GameService : IGameService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        findRequest.Result.LastModifiedOn = _dateTime.NowDatabaseTime;
+        updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        var request = await _gameRepository.UpdateAsync(findRequest.Result.ToUpdate());
+        var request = await _gameRepository.UpdateAsync(updateObject);
         if (!request.Succeeded)
             return await Result.FailAsync(request.ErrorMessage);
 

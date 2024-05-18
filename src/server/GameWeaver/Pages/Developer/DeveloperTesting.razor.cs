@@ -51,7 +51,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         SteamGameId = 440900,
         SteamToolId = 443030
     };
-    private readonly GameProfileSlim _desiredProfile = new()
+    private readonly GameProfileSlim _defaultProfile = new()
     {
         FriendlyName = "Conan Exiles - Profile",
         ServerProcessName = "ConanSandboxServer.exe"
@@ -167,12 +167,12 @@ public partial class DeveloperTesting : IAsyncDisposable
             _desiredGame.Id = matchingGameRequest.Data.Id;
         }
         
-        if (_selectedGameServer is not null && matchingGameRequest.Succeeded)
+        if (matchingGameRequest.Succeeded)
         {
-            var matchingProfile = await GameServerService.GetGameProfileByIdAsync(_selectedGameServer.GameProfileId);
+            var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGameRequest.Data.DefaultGameProfileId);
             if (matchingProfile.Succeeded)
             {
-                _desiredProfile.Id = matchingProfile.Data.Id;
+                _defaultProfile.Id = matchingProfile.Data.Id;
             }
         }
     } 
@@ -299,19 +299,13 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private async Task EnforceGameProfileResources()
     {
-        // TODO: Resources are being duplicated for some reason, need to investigate
         if (_selectedGameServer is null)
         {
-            return;
-        }
-        
-        var matchingProfile = await GameServerService.GetGameProfileByIdAsync(_selectedGameServer.GameProfileId);
-        if (!matchingProfile.Succeeded)
-        {
+            Snackbar.Add("You must select a game server first!", Severity.Error);
             return;
         }
 
-        var profileResources = await GameServerService.GetLocalResourcesByGameProfileIdAsync(matchingProfile.Data.Id);
+        var profileResources = await GameServerService.GetLocalResourcesForGameServerIdAsync(_selectedGameServer.Id);
         var desiredResources = new List<LocalResourceSlim>
         {
             _desiredResourceEngine,
@@ -329,7 +323,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             }
             
             var resourceCreate = resource.ToCreate();
-            resourceCreate.GameProfileId = matchingProfile.Data.Id;
+            resourceCreate.GameProfileId = _selectedGameServer.GameProfileId;
             resourceCreate.GameServerId = _selectedGameServer.Id;
             var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
             if (!createRequest.Succeeded)
@@ -392,14 +386,8 @@ public partial class DeveloperTesting : IAsyncDisposable
         Snackbar.Add("Successfully enforced profile resources on the server and host", Severity.Success);
     }
 
-    private async Task EnforceGameProfile()
+    private async Task EnforceDefaultGameProfile()
     {
-        if (_selectedGameServer is null)
-        {
-            Snackbar.Add("You must select a game server to enforce a game profile!", Severity.Error);
-            return;
-        }
-        
         var matchingGame = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
         if (!matchingGame.Succeeded)
         {
@@ -409,13 +397,13 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         var profileCreate = new GameProfileCreate
         {
-            FriendlyName = _desiredProfile.FriendlyName,
+            FriendlyName = _defaultProfile.FriendlyName,
             OwnerId = _loggedInUser.Id,
             GameId = matchingGame.Data.Id,
-            ServerProcessName = _desiredProfile.ServerProcessName,
+            ServerProcessName = _defaultProfile.ServerProcessName,
             
         };
-        var matchingProfile = await GameServerService.GetGameProfileByIdAsync(_selectedGameServer.GameProfileId);
+        var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGame.Data.DefaultGameProfileId);
         if (!matchingProfile.Succeeded)
         {
             var createProfileRequest = await GameServerService.CreateGameProfileAsync(profileCreate);
@@ -427,9 +415,19 @@ public partial class DeveloperTesting : IAsyncDisposable
                 }
                 return;
             }
-            Snackbar.Add($"Created game profile: [{createProfileRequest.Data}]{profileCreate.FriendlyName}", Severity.Success);
+
+            var updateGameRequest = await GameService.UpdateAsync(new GameUpdate {Id = matchingGame.Data.Id, DefaultGameProfileId = createProfileRequest.Data});
+            if (!updateGameRequest.Succeeded)
+            {
+                foreach (var message in updateGameRequest.Messages)
+                {
+                    Snackbar.Add(message, Severity.Error);
+                }
+                return;
+            }
+            Snackbar.Add($"Created default game profile: [{createProfileRequest.Data}]{profileCreate.FriendlyName}", Severity.Success);
             matchingProfile = await GameServerService.GetGameProfileByIdAsync(createProfileRequest.Data);
-            _desiredProfile.Id = matchingProfile.Data.Id;
+            _defaultProfile.Id = matchingProfile.Data.Id;
         }
 
         var resourceCreate = new LocalResourceCreate
@@ -449,32 +447,23 @@ public partial class DeveloperTesting : IAsyncDisposable
         var matchingResource = profileResources.Data.FirstOrDefault(x => x.Name == resourceCreate.Name && x.Type == resourceCreate.Type);
         if (matchingResource is not null)
         {
-            Snackbar.Add($"Found game profile: [{matchingProfile.Data.Id}]{matchingProfile.Data.FriendlyName}");
-            _desiredProfile.Id = matchingProfile.Data.Id;
+            Snackbar.Add($"Default game profile is correct: [{matchingProfile.Data.Id}]{matchingProfile.Data.FriendlyName}");
+            _defaultProfile.Id = matchingProfile.Data.Id;
             return;
         }
 
-        var createResourceRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
-        if (!createResourceRequest.Succeeded)
+        var resourceCreateRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
+        if (!resourceCreateRequest.Succeeded)
         {
-            foreach (var message in createResourceRequest.Messages)
+            foreach (var message in resourceCreateRequest.Messages)
             {
                 Snackbar.Add(message, Severity.Error);
             }
             return;
         }
-
-        var updateHostRequest = await GameServerService.UpdateLocalResourceOnGameServerAsync(createResourceRequest.Data, _loggedInUser.Id);
-        if (!updateHostRequest.Succeeded)
-        {
-            foreach (var message in updateHostRequest.Messages)
-            {
-                Snackbar.Add(message, Severity.Error);
-            }
-            return;
-        }
-        Snackbar.Add("Updated and enforced game profile", Severity.Success);
-        _desiredProfile.Id = matchingProfile.Data.Id;
+        
+        Snackbar.Add("Updated and enforced default game profile", Severity.Success);
+        _defaultProfile.Id = matchingProfile.Data.Id;
     }
 
     private async Task CreateGameServer()
@@ -499,19 +488,12 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
         
-        var matchingProfile = await GameServerService.GetGameProfileByFriendlyNameAsync(_desiredProfile.FriendlyName);
-        if (!matchingGame.Succeeded)
-        {
-            Snackbar.Add($"Game profile '{_desiredProfile.FriendlyName}' wasn't found, please create it first", Severity.Error);
-            return;
-        }
-        
         var gameServerCreate = new GameServerCreate
         {
             OwnerId = _loggedInUser.Id,
             HostId = _selectedHost.Id,
             GameId = matchingGame.Data.Id,
-            GameProfileId = matchingProfile.Data.Id,
+            GameProfileId = Guid.Empty,
             ServerName = $"{_desiredGameServer.ServerName} - {DateTimeService.NowDatabaseTime.ToLongDateString()}",
             Password = _desiredGameServer.Password,
             PasswordRcon = _desiredGameServer.PasswordRcon,
@@ -541,7 +523,6 @@ public partial class DeveloperTesting : IAsyncDisposable
         {
             _selectedGameServer = matchingGameServer;
             StateHasChanged();
-            await EnforceGameProfile();
         }
     }
 
