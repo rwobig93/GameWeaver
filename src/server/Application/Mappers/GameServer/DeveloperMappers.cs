@@ -1,5 +1,4 @@
 using Application.Models.GameServer.Developers;
-using Application.Models.GameServer.Game;
 using Domain.DatabaseEntities.GameServer;
 
 namespace Application.Mappers.GameServer;
@@ -28,7 +27,7 @@ public static class DeveloperMappers
             Id = developerDb.Id,
             GameId = developerDb.GameId,
             Name = developerDb.Name,
-            Games = new List<GameSlim>()
+            Games = []
         };
     }
     

@@ -1,4 +1,3 @@
-using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
 using Domain.DatabaseEntities.GameServer;
 
@@ -30,7 +29,7 @@ public static class GameGenreMappers
             GameId = genreDb.GameId,
             Name = genreDb.Name,
             Description = genreDb.Description,
-            Games = new List<GameSlim>()
+            Games = []
         };
     }
 }

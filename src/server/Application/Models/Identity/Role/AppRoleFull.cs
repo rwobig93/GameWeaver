@@ -12,6 +12,6 @@ public class AppRoleFull
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
-    public List<AppUserSlim> Users { get; set; } = new();
-    public List<AppPermissionSlim> Permissions { get; set; } = new();
+    public List<AppUserSlim> Users { get; set; } = [];
+    public List<AppPermissionSlim> Permissions { get; set; } = [];
 }

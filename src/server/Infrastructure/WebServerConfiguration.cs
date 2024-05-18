@@ -38,7 +38,6 @@ public static class WebServerConfiguration
         app.ConfigureIdentityServices();
         
         app.MapApplicationApiEndpoints();
-        
         app.AddScheduledJobs();
     }
 

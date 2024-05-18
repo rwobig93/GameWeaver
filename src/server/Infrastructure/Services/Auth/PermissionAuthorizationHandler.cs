@@ -13,18 +13,20 @@ namespace Infrastructure.Services.Auth;
 public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionRequirement>
 {
     private readonly IAppAccountService _accountService;
-    private readonly NavigationManager _navManager;
+    private readonly NavigationManager _navigationManager;
+    private readonly ILogger _logger;
     
-    public PermissionAuthorizationHandler(IAppAccountService accountService, NavigationManager navManager)
+    public PermissionAuthorizationHandler(IAppAccountService accountService, NavigationManager navigationManager, ILogger logger)
     {
         _accountService = accountService;
-        _navManager = navManager;
+        _navigationManager = navigationManager;
+        _logger = logger;
     }
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
         // If there are no claims the user isn't authenticated as we always have at least a NameIdentifier in our generated JWT
-        if (context.User == UserConstants.UnauthenticatedPrincipal || !context.User.Claims.Any())
+        if (context.User == UserConstants.UnauthenticatedPrincipal)
         {
             context.Fail();
             return;
@@ -41,22 +43,25 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
                 return;
             }
             
-            _navManager.NavigateTo(_navManager.Uri, true);
+            _navigationManager.NavigateTo(_navigationManager.Uri, true);
             context.Fail();
             return;
         }
         
         // Validate if user is required to do a full re-authentication
         var userId = context.User.Claims.GetId();
-        if ((await _accountService.IsUserRequiredToReAuthenticate(userId)).Data)
+        var userRequiredToFullAuth = (await _accountService.IsUserRequiredToReAuthenticate(userId)).Data;
+        if (userRequiredToFullAuth)
         {
+            await _accountService.LogoutGuiAsync(userId);
             context.Fail();
             await Task.CompletedTask;
             return;
         }
         
         // Validate or re-authenticate active session based on token expiration, this can happen if the token hasn't been validated recently
-        if ((await _accountService.DoesCurrentSessionNeedReAuthenticated()).Data)
+        var sessionNeedsReAuthenticated = (await _accountService.DoesCurrentSessionNeedReAuthenticated()).Data;
+        if (sessionNeedsReAuthenticated)
         {
             var reAuthenticationSuccess = await AttemptReAuthentication();
             if (!reAuthenticationSuccess)
@@ -66,7 +71,14 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
                 return;
             }
             
-            _navManager.NavigateTo(_navManager.Uri, true);
+            _navigationManager.NavigateTo(_navigationManager.Uri, true);
+            context.Fail();
+            return;
+        }
+
+        if (!context.User.Claims.Any())
+        {
+            _logger.Warning("User doesn't have any claims during authorization checks: [id]{UserId}", userId);
             context.Fail();
             return;
         }
@@ -101,6 +113,6 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         var loginUriFull = QueryHelpers.AddQueryString(
             AppRouteConstants.Identity.Login, LoginRedirectConstants.RedirectParameter, nameof(LoginRedirectReason.SessionExpired));
         
-        _navManager.NavigateTo(loginUriFull, true);
+        _navigationManager.NavigateTo(loginUriFull, true);
     }
 }

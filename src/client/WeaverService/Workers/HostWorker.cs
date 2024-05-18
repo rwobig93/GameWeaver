@@ -1,6 +1,4 @@
-using System.Collections.Concurrent;
 using System.Net;
-using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
@@ -9,9 +7,8 @@ using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.ControlServer;
 using Domain.Models.Host;
-using MemoryPack;
 using Microsoft.Extensions.Options;
-using Serilog;
+using WeaverService.Helpers;
 
 namespace WeaverService.Workers;
 
@@ -20,41 +17,36 @@ public class HostWorker : BackgroundService
     private readonly ILogger _logger;
     private readonly IHostService _hostService;
     private readonly IDateTimeService _dateTimeService;
-    private readonly ISerializerService _serializerService;
+    private readonly IWeaverWorkService _weaverWorkService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IGameServerService _gameServerService;
     private readonly IHostApplicationLifetime _appLifetime;
-
-    private static ConcurrentQueue<WeaverWork> _workQueue = new();
-    private static DateTime _lastRuntime;
-    private static Task? _pollerThread;
-    private static int _inProgressWorkCount;
 
     public static HostResourceUsage CurrentHostResourceUsage { get; private set; } = new();
     
     /// <summary>
     /// Handles host IO operations and resource usage gathering
     /// </summary>
-    public HostWorker(ILogger logger, IHostService hostService, IDateTimeService dateTimeService, ISerializerService serializerService,
+    public HostWorker(ILogger logger, IHostService hostService, IDateTimeService dateTimeService, IWeaverWorkService weaverWorkService,
         IOptions<GeneralConfiguration> generalConfig, IGameServerService gameServerService, IHostApplicationLifetime appLifetime)
     {
         _logger = logger;
         _hostService = hostService;
         _dateTimeService = dateTimeService;
-        _serializerService = serializerService;
+        _weaverWorkService = weaverWorkService;
         _generalConfig = generalConfig;
         _gameServerService = gameServerService;
         _appLifetime = appLifetime;
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    private static DateTime _lastRuntime;
+    private static Task? _pollerThread;
+
+    public override async Task StartAsync(CancellationToken stoppingToken)
     {
         _logger.Debug("Started {ServiceName} service", nameof(HostWorker));
-        Directory.CreateDirectory(_generalConfig.Value.AppDirectory);
-        Directory.SetCurrentDirectory(_generalConfig.Value.AppDirectory);
-        _logger.Information("Set application directory: {Directory}", _generalConfig.Value.AppDirectory);
-        _logger.Information("  Full path: {Directory}", Directory.GetCurrentDirectory());
         _lastRuntime = _dateTimeService.NowDatabaseTime;
+        _logger.Information("App Directory: {Directory}", Directory.GetCurrentDirectory());
         ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
         
         var steamCmdStatus = await _gameServerService.ValidateSteamCmdInstall();
@@ -77,47 +69,40 @@ public class HostWorker : BackgroundService
         // ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
         // TODO: Implement Sqlite for host work tracking, for now we'll serialize/deserialize a json file
-        await DeserializeWorkQueues();
-        
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            _lastRuntime = _dateTimeService.NowDatabaseTime;
-            await UpdateCurrentResourceUsage();
-            
-            await ProcessWorkQueue();
-
-            var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
-            if (millisecondsPassed < _generalConfig.Value.HostWorkIntervalMs)
-                await Task.Delay(_generalConfig.Value.HostWorkIntervalMs - millisecondsPassed, stoppingToken);
-        }
-
-        await SerializeWorkQueues();
-        
-        _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
+        await base.StartAsync(stoppingToken);
     }
 
-    public static void AddWorkToQueue(WeaverWork work)
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        Log.Debug("Adding host work to waiting queue: {Id} | {WorkType} | {Status}", work.Id, work.TargetType, work.Status);
-        
-        if (_workQueue.Any(x => x.Id == work.Id))
+        while (!stoppingToken.IsCancellationRequested)
         {
-            Log.Verbose("Host work already exists in the queue, skipping duplicate: [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
-            return;
-        }
+            try
+            {
+                _lastRuntime = _dateTimeService.NowDatabaseTime;
+                await UpdateCurrentResourceUsage();
+            
+                await ProcessWorkQueue();
 
-        work.Status = WeaverWorkState.PickedUp;
-        _workQueue.Enqueue(work);
-        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-        {
-            Id = work.Id,
-            TargetType = WeaverWorkTarget.StatusUpdate,
-            Status = WeaverWorkState.PickedUp,
-            WorkData = MemoryPackSerializer.Serialize(new List<string> {"Work was picked up"}),
-            AttemptCount = 0
-        });
+                var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
+                if (millisecondsPassed < _generalConfig.Value.HostWorkIntervalMs)
+                    await Task.Delay(_generalConfig.Value.HostWorkIntervalMs - millisecondsPassed, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop: {ErrorMessage}",
+                    nameof(HostWorker), ex.Message);
+            }
+        }
+    }
+
+    public override async Task StopAsync(CancellationToken stoppingToken)
+    {
+        _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
+
+        await _weaverWorkService.Housekeeping();
         
-        Log.Debug("Added host work to queue:{Id} | {WorkType} | {Status}", work.Id, work.TargetType, work.Status);
+        _logger.Debug("Stopped {ServiceName} service", nameof(HostWorker));
+        await base.StopAsync(stoppingToken);
     }
 
     private void UpdateHostDetail()
@@ -189,14 +174,7 @@ public class HostWorker : BackgroundService
             AdapterRam = gpu.AdapterRAM
         }));
         
-        ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-        {
-            Id = 0,
-            TargetType = WeaverWorkTarget.HostDetail,
-            Status = WeaverWorkState.Completed,
-            WorkData = _serializerService.SerializeMemory(hostDetailRequest),
-            AttemptCount = 0
-        });
+        new WeaverWork{Id = 0}.SendHostDetailUpdate(WeaverWorkState.Completed, hostDetailRequest);
     }
 
     private async Task UpdateCurrentResourceUsage()
@@ -242,62 +220,59 @@ public class HostWorker : BackgroundService
         });
     }
 
-    private async Task SerializeWorkQueues()
-    {
-        var serializedWorkQueue = _serializerService.SerializeJson(_workQueue);
-        await File.WriteAllTextAsync(HostConstants.WorkQueuePath, serializedWorkQueue);
-        
-        _logger.Information("Serialized host work queue file: {FilePath}", HostConstants.WorkQueuePath);
-    }
-
-    private async Task DeserializeWorkQueues()
-    {
-        if (!File.Exists(HostConstants.WorkQueuePath))
-        {
-            _logger.Debug("Host work queue file doesn't exist, creating...");
-            await SerializeWorkQueues();
-        }
-        
-        var waitingQueue = await File.ReadAllTextAsync(HostConstants.WorkQueuePath);
-        _workQueue = _serializerService.DeserializeJson<ConcurrentQueue<WeaverWork>>(waitingQueue);
-        
-        _logger.Information("Deserialized host work queue");
-    }
-
     private async Task ProcessWorkQueue()
     {
-        if (_inProgressWorkCount >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        var inProgressCount = await _weaverWorkService.GetCountInProgressHostAsync();
+        var waitingCount = await _weaverWorkService.GetCountWaitingHostAsync();
+        
+        if (inProgressCount.Data >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
-            _logger.Verbose("In progress host work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}", _inProgressWorkCount,
-                _generalConfig.Value.SimultaneousQueueWorkCountMax, _workQueue.Count);
+            _logger.Verbose("In progress host work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}",
+                inProgressCount.Data, _generalConfig.Value.SimultaneousQueueWorkCountMax, waitingCount.Data);
             return;
         }
         
-        if (_workQueue.Count <= 0)
+        if (waitingCount.Data < 1)
         {
-            _logger.Verbose("No work waiting, moving on");
+            _logger.Verbose("No host work waiting, moving on");
             return;
         }
         
-        // Work is waiting and we have available queue space, adding next work to the thread pool
+        // TODO: Add checking on in progress weaver work that hasn't had a heartbeat / update in awhile
+        
+        // Work is waiting, and we have available queue space, adding next work to the thread pool
         var attemptCount = 0;
-        while (_inProgressWorkCount < _generalConfig.Value.SimultaneousQueueWorkCountMax)
+        while (inProgressCount.Data < _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
+            inProgressCount = await _weaverWorkService.GetCountInProgressHostAsync();
+            waitingCount = await _weaverWorkService.GetCountWaitingHostAsync();
+            if (waitingCount.Data < 1) break;
+            
             if (attemptCount >= 5)
             {
-                _logger.Error("Unable to dequeue next item in the host work queue, quiting cycle queue processing");
+                _logger.Error("Reached max attempt count in the host work queue, quiting cycle queue processing");
                 return;
             }
-            
-            if (!_workQueue.TryDequeue(out var work))
+
+            var nextWork = await _weaverWorkService.GetNextWaitingHostAsync();
+            if (!nextWork.Succeeded || nextWork.Data is null)
             {
+                _logger.Error("Failure occurred getting next host work from service: {Error}", nextWork.Messages);
                 attemptCount++;
                 continue;
             }
+
+            var updateRequest = await _weaverWorkService.UpdateStatusAsync(nextWork.Data.Id, WeaverWorkState.InProgress);
+            if (!updateRequest.Succeeded)
+            {
+                _logger.Error("Failure occurred updating host work from service: [{WeaverworkId}]{Error}", nextWork.Data.Id, updateRequest.Messages);
+                attemptCount++;
+                continue;
+            }
+            nextWork.Data.SendStatusUpdate(WeaverWorkState.InProgress, "Work is now in progress");
             
-            _inProgressWorkCount++;
-            work.Status = WeaverWorkState.InProgress;
-            ThreadHelper.QueueWork(_ => HandleWork(work).RunSynchronously());
+            // ReSharper disable once AsyncVoidLambda
+            ThreadHelper.QueueWork(async _ => await HandleWork(nextWork.Data));
         }
 
         await Task.CompletedTask;
@@ -307,35 +282,15 @@ public class HostWorker : BackgroundService
     {
         try
         {
-            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-            {
-                Id = work.Id,
-                TargetType = WeaverWorkTarget.StatusUpdate,
-                Status = WeaverWorkState.InProgress,
-                WorkData = _serializerService.SerializeMemory(new List<string>{"Work is in progress"}),
-                AttemptCount = 0
-            });
-            
             switch (work.TargetType)
             {
                 case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
                     _logger.Debug("Starting host work from queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
-                    return;
-                case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
-                    _logger.Error("Gameserver work somehow got into the Host work queue: [{WorkId}]{WorkType}", work.Id, work.TargetType);
-                    GameServerWorker.AddWorkToQueue(work);
-                    _logger.Warning("Gave gameserver work to gameserver worker since it was in the wrong place: [{WorkId}]{WorkType}", work.Id, work.TargetType);
                     break;
                 default:
                     _logger.Error("Invalid work type for work: [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
-                    ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-                    {
-                        Id = work.Id,
-                        TargetType = WeaverWorkTarget.StatusUpdate,
-                        Status = WeaverWorkState.Failed,
-                        WorkData = _serializerService.SerializeMemory(new List<string> {"Host work data was invalid, please verify the payload"}),
-                        AttemptCount = 0
-                    });
+                    await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
+                    work.SendStatusUpdate(WeaverWorkState.Failed, "Host work data was invalid, please verify the payload");
                     return;
             }
             
@@ -354,44 +309,26 @@ public class HostWorker : BackgroundService
                 case WeaverWorkTarget.GameServerUpdate:
                 case WeaverWorkTarget.GameServerUninstall:
                 case WeaverWorkTarget.CurrentEnd:
+                case WeaverWorkTarget.GameServerStateUpdate:
+                case WeaverWorkTarget.GameServerStart:
+                case WeaverWorkTarget.GameServerStop:
+                case WeaverWorkTarget.GameServerRestart:
                 default:
                     _logger.Error("Unsupported host work type asked for: Asked {WorkType}", work.TargetType);
-                    ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-                    {
-                        Id = work.Id,
-                        TargetType = WeaverWorkTarget.StatusUpdate,
-                        Status = WeaverWorkState.Failed,
-                        WorkData = _serializerService.SerializeMemory(new List<string> {$"Unsupported host work type asked for: {work.TargetType}"}),
-                        AttemptCount = 0
-                    });
+                    await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
+                    work.SendStatusUpdate(WeaverWorkState.Failed, $"Unsupported host work type asked for: {work.TargetType}");
                     return;
             }
             
-            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-            {
-                Id = work.Id,
-                TargetType = WeaverWorkTarget.StatusUpdate,
-                Status = WeaverWorkState.Completed,
-                WorkData = _serializerService.SerializeMemory(new List<string>{"Work complete"}),
-                AttemptCount = 0
-            });
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Completed);
+            work.SendStatusUpdate(WeaverWorkState.Completed, "Work complete");
             await Task.CompletedTask;
         }
         catch (Exception ex)
         {
             _logger.Error(ex, "Failure occurred handling host work: {Error}", ex.Message);
-            ControlServerWorker.AddWeaverWorkUpdate(new WeaverWorkUpdateRequest
-            {
-                Id = work.Id,
-                TargetType = WeaverWorkTarget.StatusUpdate,
-                Status = WeaverWorkState.Failed,
-                WorkData = _serializerService.SerializeMemory(new List<string> {$"Failure occurred handling host work: {ex.Message}"}),
-                AttemptCount = 0
-            });
-        }
-        finally
-        {
-            _inProgressWorkCount--;
+            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
+            work.SendStatusUpdate(WeaverWorkState.Failed, $"Failure occurred handling host work: {ex.Message}");
         }
     }
 }

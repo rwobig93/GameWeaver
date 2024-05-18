@@ -13,10 +13,10 @@ public partial class UserPermissionDialog
 
     [Parameter] public Guid UserId { get; set; }
     
-    private List<AppPermissionSlim> _assignedPermissions = new();
-    private List<AppPermissionCreate> _availablePermissions = new();
-    private HashSet<AppPermissionCreate> _addPermissions = new();
-    private HashSet<AppPermissionSlim> _removePermissions = new();
+    private List<AppPermissionSlim> _assignedPermissions = [];
+    private List<AppPermissionCreate> _availablePermissions = [];
+    private HashSet<AppPermissionCreate> _addPermissions = [];
+    private HashSet<AppPermissionSlim> _removePermissions = [];
     private Guid _currentUserId;
     private bool _canRemovePermissions;
     private bool _canAddPermissions;

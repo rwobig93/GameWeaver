@@ -21,45 +21,36 @@ public static class RoleConstants
 
     public static List<string> GetRequiredRoleNames()
     {
-        return new List<string>()
-        {
+        return
+        [
             DefaultRoles.AdminName,
             DefaultRoles.ModeratorName,
             DefaultRoles.ServiceAccountName,
             DefaultRoles.DefaultName
-        };
+        ];
     }
 
     public static List<string> GetAdminRoleNames()
     {
-        return new List<string>()
-        {
-            DefaultRoles.AdminName
-        };
+        return [DefaultRoles.AdminName];
     }
 
     public static List<string> GetModeratorRoleNames()
     {
-        return new List<string>()
-        {
+        return
+        [
             DefaultRoles.ModeratorName,
             DefaultRoles.DefaultName
-        };
+        ];
     }
 
     public static List<string> GetServiceAccountRoleNames()
     {
-        return new List<string>()
-        {
-            DefaultRoles.ServiceAccountName
-        };
+        return [DefaultRoles.ServiceAccountName];
     }
 
     public static List<string> GetDefaultRoleNames()
     {
-        return new List<string>()
-        {
-            DefaultRoles.DefaultName
-        };
+        return [DefaultRoles.DefaultName];
     }
 }

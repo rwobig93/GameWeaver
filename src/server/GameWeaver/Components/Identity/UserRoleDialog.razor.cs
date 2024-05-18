@@ -12,10 +12,10 @@ public partial class UserRoleDialog
     [Parameter] public Guid UserId { get; set; }
 
     private Guid _currentUserId;
-    private List<AppRoleSlim> _assignedRoles = new();
-    private List<AppRoleSlim> _availableRoles = new();
-    private HashSet<AppRoleSlim> _addRoles = new();
-    private HashSet<AppRoleSlim> _removeRoles = new();
+    private List<AppRoleSlim> _assignedRoles = [];
+    private List<AppRoleSlim> _availableRoles = [];
+    private HashSet<AppRoleSlim> _addRoles = [];
+    private HashSet<AppRoleSlim> _removeRoles = [];
     private bool _canRemoveRoles;
     private bool _canAddRoles;
     

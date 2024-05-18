@@ -26,6 +26,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                     [Startup] BIT NOT NULL,
                     [StartupPriority] int NOT NULL,
                     [Type] int NOT NULL,
+                    [ContentType] int NOT NULL,
                     [Extension] NVARCHAR(128) NOT NULL,
                     [Args] NVARCHAR(128) NOT NULL
                 )
@@ -136,13 +137,14 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @Startup BIT,
                 @StartupPriority int,
                 @Type int,
+                @ContentType int,
                 @Extension NVARCHAR(128),
                 @Args NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, GameServerId, Name, Path, Startup, StartupPriority, Type, Extension, Args)
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, GameServerId, Name, Path, Startup, StartupPriority, Type, ContentType, Extension, Args)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @GameServerId, @Name, @Path, @Startup, @StartupPriority, @Type, @Extension, @Args);
+                VALUES (@GameProfileId, @GameServerId, @Name, @Path, @Startup, @StartupPriority, @Type, @ContentType, @Extension, @Args);
             end"
     };
     
@@ -207,6 +209,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @Startup BIT = null,
                 @StartupPriority int = null,
                 @Type int = null,
+                @ContentType int = null,
                 @Extension NVARCHAR(128) = null,
                 @Args NVARCHAR(128) = null
             AS
@@ -214,7 +217,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 UPDATE dbo.[{Table.TableName}]
                 SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), GameServerId = COALESCE(@GameServerId, GameServerId), Name = COALESCE(@Name, Name),
                     Path = COALESCE(@Path, Path), Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority),
-                    Type = COALESCE(@Type, Type), Extension = COALESCE(@Extension, Extension), Args = COALESCE(@Args, Args)
+                    Type = COALESCE(@Type, Type), ContentType = COALESCE(@ContentType, ContentType), Extension = COALESCE(@Extension, Extension), Args = COALESCE(@Args, Args)
                 WHERE Id = @Id;
             end"
     };

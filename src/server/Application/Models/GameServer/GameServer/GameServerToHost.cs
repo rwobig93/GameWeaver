@@ -48,7 +48,7 @@ public partial class GameServerToHost
     [MemoryPackOrder(18)]
     public GameSource Source { get; set; }
     [MemoryPackOrder(19)]
-    public SerializableList<ModSlim> ModList { get; set; } = new();
+    public SerializableList<ModSlim> ModList { get; set; } = [];
     [MemoryPackOrder(20)]
-    public SerializableList<LocalResourceSlim> Resources { get; set; } = new();
+    public SerializableList<LocalResourceHost> Resources { get; set; } = [];
 }

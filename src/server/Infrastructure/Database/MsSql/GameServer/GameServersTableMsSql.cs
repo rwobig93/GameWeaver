@@ -121,7 +121,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.OwnerId = @OwnerId
+                WHERE g.OwnerId = @OwnerId AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };
@@ -137,7 +137,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.HostId = @HostId
+                WHERE g.HostId = @HostId AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };
@@ -153,7 +153,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.GameId = @GameId
+                WHERE g.GameId = @GameId AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };
@@ -169,7 +169,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.GameProfileId = @GameProfileId
+                WHERE g.GameProfileId = @GameProfileId AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };
@@ -185,7 +185,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.ServerName = @ServerName
+                WHERE g.ServerName = @ServerName AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };

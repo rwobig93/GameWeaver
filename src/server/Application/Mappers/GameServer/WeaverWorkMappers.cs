@@ -1,5 +1,7 @@
+using Application.Models.Events;
 using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
@@ -39,6 +41,17 @@ public static class WeaverWorkMappers
             CreatedOn = weaverWorkDb.CreatedOn,
             LastModifiedBy = weaverWorkDb.LastModifiedBy,
             LastModifiedOn = weaverWorkDb.LastModifiedOn
+        };
+    }
+
+    public static WeaverWorkStatusEvent ToEvent(this WeaverWorkUpdate update)
+    {
+        return new WeaverWorkStatusEvent
+        {
+            Id = update.Id,
+            HostId = update.HostId,
+            TargetType = update.TargetType ?? WeaverWorkTarget.StatusUpdate,
+            Status = update.Status ?? WeaverWorkState.InProgress
         };
     }
 }

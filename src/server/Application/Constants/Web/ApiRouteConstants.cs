@@ -8,6 +8,11 @@ public static class ApiRouteConstants
         public const string WhoAmI = "/api/whoami";
     }
 
+    public static class SignalRHubs
+    {
+        public const string GameServers = "/hubs/game-servers";
+    }
+
     public static class Monitoring
     {
         public const string Health = "/_health";
@@ -141,7 +146,7 @@ public static class ApiRouteConstants
             public const string GetAllConfigurationItemsPaginated = "/api/gameserver/gameserver/get-all-configurationitems-paginated";
             public const string GetConfigurationItemsCount = "/api/gameserver/gameserver/get-configurationitems-count";
             public const string GetConfigurationItemById = "/api/gameserver/gameserver/get-configurationitem-id";
-            public const string GetConfigurationItemsByGameProfileId = "/api/gameserver/gameserver/get-configurationitems-gameprofile-id";
+            public const string GetConfigurationItemsByLocalResourceId = "/api/gameserver/gameserver/get-configurationitems-localresource-id";
             public const string CreateConfigurationItem = "/api/gameserver/gameserver/create-configurationitem";
             public const string UpdateConfigurationItem = "/api/gameserver/gameserver/update-configurationitem";
             public const string DeleteConfigurationItem = "/api/gameserver/gameserver/delete-configurationitem";
@@ -154,6 +159,8 @@ public static class ApiRouteConstants
             public const string CreateLocalResource = "/api/gameserver/gameserver/create-localresource";
             public const string UpdateLocalResource = "/api/gameserver/gameserver/update-localresource";
             public const string DeleteLocalResource = "/api/gameserver/gameserver/delete-localresource";
+            public const string UpdateLocalResourceOnGameServer = "/api/gameserver/gameserver/update-gameserver-resource";
+            public const string UpdateAllLocalResourcesOnGameServer = "/api/gameserver/gameserver/update-gameserver-all-resources";
             public const string SearchLocalResource = "/api/gameserver/gameserver/search-localresource";
             public const string GetAllGameProfilesPaginated = "/api/gameserver/gameserver/get-all-gameprofiles-paginated";
             public const string GetGameProfileCount = "/api/gameserver/gameserver/get-gameprofile-count";
@@ -179,6 +186,9 @@ public static class ApiRouteConstants
             public const string UpdateMod = "/api/gameserver/gameserver/update-mod";
             public const string DeleteMod = "/api/gameserver/gameserver/delete-mod";
             public const string SearchMods = "/api/gameserver/gameserver/search-mods";
+            public const string StartServer = "/api/gameserver/gameserver/start-server";
+            public const string StopServer = "/api/gameserver/gameserver/stop-server";
+            public const string RestartServer = "/api/gameserver/gameserver/restart-server";
         }
 
         public static class Game

@@ -55,8 +55,8 @@ public static class PermissionHelpers
 
     public static List<string> GetModeratorRolePermissions()
     {
-        return new List<string>()
-        {
+        return
+        [
             PermissionConstants.Preferences.ChangeTheme,
             PermissionConstants.Jobs.View,
             PermissionConstants.Permissions.View,
@@ -80,23 +80,20 @@ public static class PermissionHelpers
             PermissionConstants.Audit.Search,
             PermissionConstants.Audit.Export,
             PermissionConstants.ServiceAccounts.View
-        };
+        ];
     }
 
     public static List<string> GetServiceAccountRolePermissions()
     {
-        return new List<string>()
-        {
-            PermissionConstants.Api.View
-        };
+        return [PermissionConstants.Api.View];
     }
 
     public static List<string> GetDefaultRolePermissions()
     {
-        return new List<string>()
-        {
+        return
+        [
             PermissionConstants.Preferences.ChangeTheme,
             PermissionConstants.Users.ChangeEmail
-        };
+        ];
     }
 }

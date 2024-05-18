@@ -1,7 +1,9 @@
 using Application.Constants;
+using Application.Repositories;
 using Application.Services;
 using Application.Settings;
 using Infrastructure.Handlers;
+using Infrastructure.Repositories;
 using Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,8 +23,10 @@ public static class WorkerConfiguration
         builder.ConfigureServices((context, services) =>
             {
                 services.AddSettings(context.Configuration);
-                services.AddHostedServices(context.Configuration);
+                services.SetupLocalResources(context.Configuration);
                 services.AddClientServices(context.Configuration);
+                services.AddHostedRepositories(context.Configuration);
+                services.AddHostedServices(context.Configuration);
             }
         );
 
@@ -41,11 +45,26 @@ public static class WorkerConfiguration
             .ValidateOnStart();
     }
 
+    private static void SetupLocalResources(this IServiceCollection services, IConfiguration configuration)
+    {
+        var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
+        var appDirectory = generalConfig?.AppDirectory ?? "./";
+        Directory.CreateDirectory(appDirectory);
+        Directory.SetCurrentDirectory(appDirectory);
+    }
+
+    private static void AddHostedRepositories(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.AddSingleton<IGameServerRepository, GameServerRepositoryMemoryJson>();
+        services.AddSingleton<IWeaverWorkRepository, WeaverWorkRepositoryMemoryJson>();
+    }
+
     private static void AddHostedServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IControlServerService, ControlServerService>();
         services.AddSingleton<IHostService, HostService>();
         services.AddSingleton<IGameServerService, GameServerService>();
+        services.AddSingleton<IWeaverWorkService, WeaverWorkService>();
     }
 
     private static void AddClientServices(this IServiceCollection services, IConfiguration configuration)

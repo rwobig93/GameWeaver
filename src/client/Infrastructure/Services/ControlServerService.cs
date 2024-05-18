@@ -173,7 +173,7 @@ public class ControlServerService : IControlServerService
         // Token isn't within or over expiration threshold & we have the authorization token
         var expirationTime = Authorization.RefreshTokenExpiryTime - _dateTimeService.NowDatabaseTime;
         var expirationThreshold = TimeSpan.FromMinutes(_authConfig.CurrentValue.TokenRenewThresholdMinutes);
-        if (expirationTime.Minutes > expirationThreshold.Minutes && !string.IsNullOrWhiteSpace(Authorization.Token))
+        if (expirationTime.Minutes <= expirationThreshold.Minutes && !string.IsNullOrWhiteSpace(Authorization.Token))
         {
             return await Result.SuccessAsync();
         }
@@ -186,22 +186,12 @@ public class ControlServerService : IControlServerService
         return await Result.SuccessAsync();
     }
 
-    public class JsonGenericRequest
-    {
-        public JsonGenericRequest(object request)
-        {
-            this.Request = request;
-        }
-
-        public object Request { get; set; }
-    }
-
     /// <summary>
     /// Send check-in and host statistics to the control server, also get back any host work to be done
     /// </summary>
     /// <param name="request">Host statistics to be sent to the control server</param>
     /// <returns></returns>
-    public async Task<IResult<IEnumerable<WeaverWork>>> Checkin(HostCheckInRequest request)
+    public async Task<IResult<IEnumerable<WeaverWork>?>> Checkin(HostCheckInRequest request)
     {
         if (!RegisteredWithServer) { return await Result<IEnumerable<WeaverWork>>.SuccessAsync(); }
         
@@ -212,7 +202,7 @@ public class ControlServerService : IControlServerService
         var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
-            return await Result<IEnumerable<WeaverWork>>.FailAsync(responseContent);
+            return await Result<IEnumerable<WeaverWork>>.FailAsync(new List<WeaverWork>(), responseContent);
 
         var deserializedResponse = _serializerService.DeserializeJson<HostCheckInResponse>(responseContent);
         return await Result<IEnumerable<WeaverWork>>.SuccessAsync(deserializedResponse.Data);

@@ -22,9 +22,9 @@ public class AppUserFullDb
     public DateTime? DeletedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
     public string? Notes { get; set; }
-    public List<AppRoleDb> Roles { get; set; } = new();
-    public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = new();
-    public List<AppPermissionDb> Permissions { get; set; } = new();
+    public List<AppRoleDb> Roles { get; set; } = [];
+    public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = [];
+    public List<AppPermissionDb> Permissions { get; set; } = [];
     // Security Attributes
     public AuthState AuthState { get; set; }
 }

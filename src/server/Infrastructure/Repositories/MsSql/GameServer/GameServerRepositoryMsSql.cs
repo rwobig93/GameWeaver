@@ -392,19 +392,19 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetConfigurationItemsByGameProfileIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetConfigurationItemsByLocalResourceIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<ConfigurationItemDb>> actionReturn = new();
 
         try
         {
             var foundConfigItem = await _database.LoadData<ConfigurationItemDb, dynamic>(
-                ConfigurationItemsTableMsSql.GetByGameProfileId, new {GameProfileId = id});
+                ConfigurationItemsTableMsSql.GetByLocalResourceId, new {LocalResourceId = id});
             actionReturn.Succeed(foundConfigItem);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, ConfigurationItemsTableMsSql.GetByGameProfileId.Path, ex.Message);
+            actionReturn.FailLog(_logger, ConfigurationItemsTableMsSql.GetByLocalResourceId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -569,6 +569,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var foundResource = (await _database.LoadData<LocalResourceDb, dynamic>(
                 LocalResourcesTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            
             actionReturn.Succeed(foundResource!);
         }
         catch (Exception ex)
@@ -592,24 +593,6 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetByGameProfileId.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
-    public async Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameServerIdAsync(Guid id)
-    {
-        DatabaseActionResult<IEnumerable<LocalResourceDb>> actionReturn = new();
-
-        try
-        {
-            var foundResource = await _database.LoadData<LocalResourceDb, dynamic>(
-                LocalResourcesTableMsSql.GetByGameServerId, new {GameServerId = id});
-            actionReturn.Succeed(foundResource);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, LocalResourcesTableMsSql.GetByGameServerId.Path, ex.Message);
         }
 
         return actionReturn;

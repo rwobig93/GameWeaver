@@ -19,7 +19,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
             begin
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
-                    [GameProfileId] UNIQUEIDENTIFIER NOT NULL,
+                    [LocalResourceId] UNIQUEIDENTIFIER NOT NULL,
+                    [DuplicateKey] BIT NOT NULL,
                     [Path] NVARCHAR(128) NOT NULL,
                     [Category] NVARCHAR(128) NOT NULL,
                     [Key] NVARCHAR(128) NOT NULL,
@@ -87,18 +88,18 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
-    public static readonly SqlStoredProcedure GetByGameProfileId = new()
+    public static readonly SqlStoredProcedure GetByLocalResourceId = new()
     {
         Table = Table,
-        Action = "GetByGameProfileId",
+        Action = "GetByLocalResourceId",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByGameProfileId]
-                @GameProfileId UNIQUEIDENTIFIER
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByLocalResourceId]
+                @LocalResourceId UNIQUEIDENTIFIER
             AS
             begin
                 SELECT c.*
                 FROM dbo.[{Table.TableName}] c
-                WHERE c.GameProfileId = @GameProfileId
+                WHERE c.LocalResourceId = @LocalResourceId
                 ORDER BY c.Id;
             end"
     };
@@ -109,16 +110,17 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
-                @GameProfileId UNIQUEIDENTIFIER,
+                @LocalResourceId UNIQUEIDENTIFIER,
+                @DuplicateKey BIT,
                 @Path NVARCHAR(128),
                 @Category NVARCHAR(128),
                 @Key NVARCHAR(128),
                 @Value NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, Path, Category, [Key], Value)
+                INSERT into dbo.[{Table.TableName}] (LocalResourceId, DuplicateKey, Path, Category, [Key], Value)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @Path, @Category, @Key, @Value);
+                VALUES (@LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value);
             end"
     };
     
@@ -135,7 +137,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT c.*
                 FROM dbo.[{Table.TableName}] c
-                WHERE c.GameProfileId LIKE '%' + @SearchTerm + '%'
+                WHERE c.LocalResourceId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'
@@ -158,7 +160,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT c.*
                 FROM dbo.[{Table.TableName}] c
-                WHERE c.GameProfileId LIKE '%' + @SearchTerm + '%'
+                WHERE c.LocalResourceId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'
@@ -174,7 +176,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
-                @GameProfileId UNIQUEIDENTIFIER = null,
+                @LocalResourceId UNIQUEIDENTIFIER = null,
+                @DuplicateKey BIT = null,
                 @Path NVARCHAR(128) = null,
                 @Category NVARCHAR(128) = null,
                 @Key NVARCHAR(128) = null,
@@ -182,8 +185,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Path = COALESCE(@Path, Path), Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]),
-                    Value = COALESCE(@Value, Value)
+                SET LocalResourceId = COALESCE(@LocalResourceId, LocalResourceId), DuplicateKey = COALESCE(@DuplicateKey, DuplicateKey), Path = COALESCE(@Path, Path),
+                    Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]), Value = COALESCE(@Value, Value)
                 WHERE Id = @Id;
             end"
     };

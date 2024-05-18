@@ -40,7 +40,7 @@ public class ErrorHandlerMiddleware
             {
                 case not null when error.InnerException is JsonException jsonException:
                     response.StatusCode = (int) HttpStatusCode.BadRequest;
-                    errorMessage = jsonException.Message;
+                    errorMessage = $"Invalid JSON value provided. Property: {jsonException.Path} | Line: {jsonException.LineNumber} | BytePosition: {jsonException.BytePositionInLine}";
                     break;
                 case ApiException:
                 case BadHttpRequestException:

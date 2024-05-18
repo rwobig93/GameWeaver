@@ -12,6 +12,7 @@ public class LocalResourceDb
     public bool Startup { get; set; } = false;
     public int StartupPriority { get; set; }
     public ResourceType Type { get; set; }
+    public ContentType ContentType { get; set; }
     public string Extension { get; set; } = "";
     public string Args { get; set; } = "";
 }

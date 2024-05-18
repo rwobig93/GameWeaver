@@ -17,12 +17,12 @@ public partial class HostNetworkInterface
 
     public string MacAddress { get; set; } = null!;
 
-    public SerializableList<IPAddress> IpAddresses { get; set; } = new();
+    public SerializableList<IPAddress> IpAddresses { get; set; } = [];
     
-    public SerializableList<IPAddress> DefaultGateways { get; set; } = new();
+    public SerializableList<IPAddress> DefaultGateways { get; set; } = [];
 
     [MemoryPackAllowSerialize]
     public IPAddress DhcpServer { get; set; } = null!;
 
-    public SerializableList<IPAddress> DnsServers { get; set; } = new();
+    public SerializableList<IPAddress> DnsServers { get; set; } = [];
 }

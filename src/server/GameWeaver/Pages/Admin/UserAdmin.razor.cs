@@ -18,7 +18,7 @@ public partial class UserAdmin
     
     private MudTable<AppUserSlim> _table = new();
     private IEnumerable<AppUserSlim> _pagedData = new List<AppUserSlim>();
-    private HashSet<AppUserSlim> _selectedItems = new();
+    private HashSet<AppUserSlim> _selectedItems = [];
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private string _searchString = "";
     private int _totalUsers;
@@ -93,7 +93,7 @@ public partial class UserAdmin
     {
         _searchString = text;
         await _table.ReloadServerData();
-        _selectedItems = new HashSet<AppUserSlim>();
+        _selectedItems = [];
         StateHasChanged();
     }
 

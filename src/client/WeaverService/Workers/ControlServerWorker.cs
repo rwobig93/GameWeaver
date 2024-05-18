@@ -15,27 +15,33 @@ public class ControlServerWorker : BackgroundService
     private readonly IControlServerService _serverService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IDateTimeService _dateTimeService;
-    private readonly ISerializerService _serializerService;
-
-    private static DateTime _lastRuntime;
-    private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
+    private readonly IWeaverWorkService _weaverWorkService;
 
     /// <summary>
     /// Handles control server communication
     /// </summary>
-    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig, IDateTimeService dateTimeService, ISerializerService serializerService)
+    public ControlServerWorker(ILogger logger, IControlServerService serverService, IOptions<GeneralConfiguration> generalConfig, IDateTimeService dateTimeService,
+        IWeaverWorkService weaverWorkService)
     {
         _logger = logger;
         _serverService = serverService;
         _generalConfig = generalConfig;
         _dateTimeService = dateTimeService;
-        _serializerService = serializerService;
+        _weaverWorkService = weaverWorkService;
+    }
+
+    private static DateTime _lastRuntime;
+    private static readonly ConcurrentQueue<WeaverWorkUpdateRequest> WorkUpdateQueue = new();
+
+    public override async Task StartAsync(CancellationToken stoppingToken)
+    {
+        _logger.Debug("Started {ServiceName} service", nameof(ControlServerWorker));
+        await Task.CompletedTask;
+        await base.StartAsync(stoppingToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.Debug("Started {ServiceName} service", nameof(ControlServerWorker));
-        
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -52,11 +58,17 @@ public class ControlServerWorker : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop", nameof(ControlServerWorker));
+                _logger.Error(ex, "Failure occurred during {ServiceName} execution loop: {ErrorMessage}",
+                    nameof(ControlServerWorker), ex.Message);
             }
         }
-        
-        _logger.Debug("Stopping {ServiceName} service", nameof(ControlServerWorker));
+    }
+
+    public override async Task StopAsync(CancellationToken stoppingToken)
+    {
+        _logger.Debug("Stopped {ServiceName} service", nameof(ControlServerWorker));
+        await Task.CompletedTask;
+        await base.StopAsync(stoppingToken);
     }
 
     private async Task ValidateServerStatus()
@@ -79,7 +91,7 @@ public class ControlServerWorker : BackgroundService
         
         var currentResourceUsage = HostWorker.CurrentHostResourceUsage;
         
-        if (currentResourceUsage is {CpuUsage: 0, RamUsage: 0, Uptime: 0})
+        if (currentResourceUsage.CpuUsage == 0 || currentResourceUsage.RamUsage == 0 || currentResourceUsage.Uptime == 0)
             return;
         
         var checkInRequest = new HostCheckInRequest
@@ -98,21 +110,25 @@ public class ControlServerWorker : BackgroundService
             _logger.Error("Failed to check in with the control server: {Error}", checkInResponse.Messages);
             return;
         }
-
-        foreach (var work in checkInResponse.Data)
+        if (checkInResponse.Data is null) return;
+        
+        foreach (var work in checkInResponse.Data.ToList())
         {
-            switch (work.TargetType)
+            var matchingWorkRequest = await _weaverWorkService.GetByIdAsync(work.Id);
+            if (matchingWorkRequest.Data is not null)
             {
-                case >= WeaverWorkTarget.Host and < WeaverWorkTarget.GameServer:
-                    HostWorker.AddWorkToQueue(work);
-                    break;
-                case >= WeaverWorkTarget.GameServer and < WeaverWorkTarget.CurrentEnd:
-                    GameServerWorker.AddWorkToQueue(work);
-                    break;
-                default:
-                    _logger.Error("Work needing processed doesn't have a valid type provided: {WorkType}", work.TargetType);
-                    break;
+                _logger.Verbose("Already picked up work was sent again: [{WeaverworkId}]", work.Id);
+                continue;
             }
+            
+            var createRequest = await _weaverWorkService.CreateAsync(work);
+            if (!createRequest.Succeeded)
+            {
+                _logger.Error("Failure occurred creating weaver work: {Error}", createRequest.Messages);
+                continue;
+            }
+            
+            _logger.Verbose("Successfully added weaver work: [{WeaverworkId}]{WeaverworkTarget}", work.Id, work.TargetType);
         }
         
         _logger.Verbose("Successfully checked in with the control server");
@@ -145,27 +161,42 @@ public class ControlServerWorker : BackgroundService
         while (runAttemptsLeft > 0 && !WorkUpdateQueue.IsEmpty)
         {
             runAttemptsLeft -= 1;
-            if (!WorkUpdateQueue.TryDequeue(out var message)) continue;
+            if (!WorkUpdateQueue.TryDequeue(out var work)) continue;
             
-            _logger.Debug("Sending outgoing communication => {WorkId}", message.Id);
+            _logger.Debug("Sending outgoing communication => {WorkId}", work.Id);
             
-            var response = await _serverService.WorkStatusUpdate(message);
+            var response = await _serverService.WorkStatusUpdate(work);
             if (response.Succeeded)
             {
-                _logger.Debug("Server successfully processed outgoing communication: {WorkId}", message.Id);
+                if (work.Id == 0)
+                {
+                    // GameServerStateUpdate from realtime status checks won't be bound to work, so we'll skip the internal update
+                    continue;
+                }
+                
+                var localUpdateRequest = await _weaverWorkService.UpdateStatusAsync(work.Id, work.Status);
+                if (!localUpdateRequest.Succeeded)
+                {
+                    foreach (var message in localUpdateRequest.Messages)
+                    {
+                        _logger.Error("Failure updating local weaver work status occurred: [{Weaverworkid}]{Error}", work.Id, message);
+                    }
+                }
+                
+                _logger.Debug("Server successfully processed outgoing communication: {WorkId}", work.Id);
                 continue;
             }
 
-            if (message.AttemptCount >= _generalConfig.Value.MaxQueueAttempts)
+            if (work.AttemptCount >= _generalConfig.Value.MaxQueueAttempts)
             {
                 _logger.Warning("Maximum attempts reached for outgoing communication, dropping: {AttemptCount} {WorkId}",
-                    message.AttemptCount, message.Id);
+                    work.AttemptCount, work.Id);
                 continue;
             }
             
-            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", message.Id);
-            message.AttemptCount += 1;
-            AddWeaverWorkUpdate(message);
+            _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", work.Id);
+            work.AttemptCount += 1;
+            AddWeaverWorkUpdate(work);
         }
         
         _logger.Debug("Finished parsing outgoing weaver communication queue, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);

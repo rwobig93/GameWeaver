@@ -1,6 +1,6 @@
 ﻿namespace Domain.Enums;
 
-public enum LocationType
+public enum ResourceType
 {
     ModPathRoot = 0,
     ConfigPathRoot = 1,

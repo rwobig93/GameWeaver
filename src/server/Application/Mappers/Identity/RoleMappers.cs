@@ -1,6 +1,4 @@
-﻿using Application.Models.Identity.Permission;
-using Application.Models.Identity.Role;
-using Application.Models.Identity.User;
+﻿using Application.Models.Identity.Role;
 using Application.Requests.v1.Identity.Role;
 using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
@@ -66,8 +64,8 @@ public static class RoleMappers
             CreatedOn = appRoleSlim.CreatedOn,
             LastModifiedBy = appRoleSlim.LastModifiedBy,
             LastModifiedOn = appRoleSlim.LastModifiedOn,
-            Users = new List<AppUserSlim>(),
-            Permissions = new List<AppPermissionSlim>()
+            Users = [],
+            Permissions = []
         };
     }
     
@@ -112,7 +110,7 @@ public static class RoleMappers
             Id = appRole.Id,
             Name = appRole.Name,
             Description = appRole.Description,
-            Permissions = new List<PermissionResponse>()
+            Permissions = []
         };
     }
     

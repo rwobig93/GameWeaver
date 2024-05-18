@@ -28,7 +28,7 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetConfigurationItemsCountAsync();
     Task<DatabaseActionResult<ConfigurationItemDb>> GetConfigurationItemByIdAsync(Guid id);
-    Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetConfigurationItemsByGameProfileIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetConfigurationItemsByLocalResourceIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate createObject);
     Task<DatabaseActionResult> UpdateConfigurationItemAsync(ConfigurationItemUpdate updateObject);
     Task<DatabaseActionResult> DeleteConfigurationItemAsync(Guid id);
@@ -39,7 +39,6 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<int>> GetLocalResourcesCountAsync();
     Task<DatabaseActionResult<LocalResourceDb>> GetLocalResourceByIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameProfileIdAsync(Guid id);
-    Task<DatabaseActionResult<IEnumerable<LocalResourceDb>>> GetLocalResourcesByGameServerIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject);
     Task<DatabaseActionResult> UpdateLocalResourceAsync(LocalResourceUpdate updateObject);
     Task<DatabaseActionResult> DeleteLocalResourceAsync(Guid id);

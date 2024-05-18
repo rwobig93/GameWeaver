@@ -14,7 +14,7 @@ public static class ThreadHelper
 
     public static void QueueWork(WaitCallback work)
     {
-        Log.Debug("Queuing work {CallbackName} to the thread pool", nameof(work));
+        Log.Debug("Queuing work {CallbackName} to the thread pool", work.Method.ToString());
         ThreadPool.QueueUserWorkItem(work);
     }
 }

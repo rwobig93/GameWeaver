@@ -1,7 +1,11 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
+using System.Text;
 using Application.Constants;
+using Application.Handlers;
 using Application.Helpers;
+using Application.Models.GameServer;
+using Application.Repositories;
 using Application.Services;
 using Application.Settings;
 using Domain.Contracts;
@@ -16,12 +20,17 @@ public class GameServerService : IGameServerService
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTimeService;
     private readonly IOptions<GeneralConfiguration> _generalConfig;
+    private readonly IGameServerRepository _gameServerRepository;
+    private readonly ISerializerService _serializerService;
 
-    public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig)
+    public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig, IGameServerRepository gameServerRepository,
+        ISerializerService serializerService)
     {
         _logger = logger;
         _dateTimeService = dateTimeService;
         _generalConfig = generalConfig;
+        _gameServerRepository = gameServerRepository;
+        _serializerService = serializerService;
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
@@ -201,8 +210,10 @@ public class GameServerService : IGameServerService
             while (!process.HasExited)
             {
                 var received = output.ReadLine();
-                if (received is not null && received.ToLower().Contains("install state:"))
+                if (received is not null && received.Contains("install state:", StringComparison.CurrentCultureIgnoreCase))
+                {
                     return;
+                }
                 
                 _logger.Verbose("STEAMCMD_OUTPUT[{ProcessId}]: {SteamCmdReceived}", process.Id, received);
             }
@@ -221,11 +232,13 @@ public class GameServerService : IGameServerService
             errors.Close();
 
             if (commandIsMaintenance)
+            {
                 SteamCmdUpdateInProgress = false;
+            }
         }
     }
     
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(GameServerLocal gameServer)
+    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(Guid id)
     {
         // From Powershell server-watcher.ps1 script
         // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
@@ -245,7 +258,7 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(GameServerLocal gameServer, Mod mod)
+    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(Guid id, Mod mod)
     {
         // https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?itemcount=1&publishedfileids%5B0%5D=3120364390
         // See: https://www.reddit.com/r/Steam/comments/30l5au/web_api_for_workshop_items/
@@ -260,18 +273,42 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> InstallOrUpdateGame(GameServerLocal gameServer)
+    public async Task<IResult<Guid>> Create(GameServerLocal gameServer)
+    {
+        var createRequest = await _gameServerRepository.CreateAsync(gameServer);
+        if (!createRequest.Succeeded)
+            return await Result<Guid>.FailAsync(createRequest.Messages);
+        
+        return await Result<Guid>.SuccessAsync(gameServer.Id);
+    }
+
+    public async Task<IResult<GameServerLocal?>> GetById(Guid id)
+    {
+        return await _gameServerRepository.GetByIdAsync(id);
+    }
+
+    public async Task<IResult<List<GameServerLocal>>> GetAll()
+    {
+        return await _gameServerRepository.GetAll();
+    }
+
+    public async Task<IResult> InstallOrUpdateGame(Guid id, bool validate = false)
     {
         // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
         try
         {
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
             if (!Directory.Exists(gameServer.GetInstallDirectory()))
             {
                 Directory.CreateDirectory(gameServer.GetInstallDirectory());
                 _logger.Information("Created directory for gameserver install: {Directory}", gameServer.GetInstallDirectory());
             }
 
-            var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer));
+            var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer, validate));
             if (!installResult.Succeeded)
             {
                 _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
@@ -283,12 +320,12 @@ public class GameServerService : IGameServerService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to install gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            return await Result.FailAsync($"Failed to install gameserver: [{gameServer.Id}]{gameServer.ServerName}");
+            _logger.Error(ex, "Failed to install gameserver: {GameserverId}", id);
+            return await Result.FailAsync($"Failed to install gameserver: {id}");
         }
     }
 
-    public async Task<IResult> InstallOrUpdateMod(GameServerLocal gameServer, Mod mod)
+    public async Task<IResult> InstallOrUpdateMod(Guid id, Mod mod)
     {
         // steamcmd.exe +login anonymous +workshop_download_item 346110 496735411 +quit
         // steamcmd.exe +login anonymous +workshop_download_item {steamGameId} {workshopItemId} +quit
@@ -299,14 +336,18 @@ public class GameServerService : IGameServerService
         throw new NotImplementedException();
     }
 
-    public async Task<IResult> UninstallGame(GameServerLocal gameServer)
+    public async Task<IResult> UninstallGame(Guid id)
     {
         try
         {
-            _logger.Debug("Attempting to uninstall gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            Directory.Delete(gameServer.GetInstallDirectory(), true);
-            _logger.Information("Successfully uninstalled gameserver[{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            return await Result.SuccessAsync();
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            _logger.Debug("Attempting to uninstall gameserver: {GameserverId}", id);
+            Directory.Delete(gameServerRequest.Data.GetInstallDirectory(), true);
+            _logger.Information("Successfully uninstalled gameserver: {GameserverId}", id);
+            return await _gameServerRepository.DeleteAsync(gameServerRequest.Data.Id);
         }
         catch (Exception ex)
         {
@@ -315,7 +356,7 @@ public class GameServerService : IGameServerService
         }
     }
 
-    public async Task<IResult> UninstallMod(GameServerLocal gameServer, Mod mod)
+    public async Task<IResult> UninstallMod(Guid id, Mod mod)
     {
         // Delete mod directory and cleanup GameServer object
         await Task.CompletedTask;
@@ -348,11 +389,17 @@ public class GameServerService : IGameServerService
         }
     }
 
-    public async Task<IResult> BackupGame(GameServerLocal gameServer)
+    public async Task<IResult> BackupGame(Guid id)
     {
         try
         {
-            if (gameServer.Resources.All(x => x.Type != LocationType.BackupPath))
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
+            var backupPaths = gameServer.Resources.Where(x => x.Type == ResourceType.BackupPath).ToList();
+            if (backupPaths.Count == 0)
             {
                 _logger.Debug("Gameserver doesn't have a backup path configured, skipping: [{GameserverId}]{GameserverName}",
                     gameServer.Id, gameServer.ServerName);
@@ -364,7 +411,7 @@ public class GameServerService : IGameServerService
             var backupRootPath = Path.Combine(OsHelpers.GetDefaultBackupPath(), gameServer.Id.ToString());
             var backupTimestamp = _dateTimeService.NowDatabaseTime.ToString("yyyyMMdd_HHmm");
             var backupIndex = 0;
-            foreach (var backupDirectory in gameServer.Resources.Where(x => x.Type == LocationType.BackupPath))
+            foreach (var backupDirectory in backupPaths)
             {
                 var backupPath = Path.Combine(gameServer.GetInstallDirectory(), backupDirectory.Path);
                 var archivePath = Path.Combine(backupRootPath, backupTimestamp, $"{backupIndex}.zip");
@@ -381,18 +428,355 @@ public class GameServerService : IGameServerService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failure occurred backing up gameserver: {GameserverId} | {Error}", gameServer.Id, ex.Message);
-            return await Result.FailAsync($"Failure occurred backing up gameserver: {gameServer.Id} | {ex.Message}");
+            _logger.Error(ex, "Failure occurred backing up gameserver: {GameserverId} | {Error}", id, ex.Message);
+            return await Result.FailAsync($"Failure occurred backing up gameserver: {id} | {ex.Message}");
         }
     }
 
-    public async Task<IResult> StartServer(GameServerLocal gameServer)
+    public async Task<IResult> StartServer(Guid id)
     {
-        throw new NotImplementedException();
+        var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            return await Result.FailAsync(gameServerRequest.Messages);
+            
+        var gameServer = gameServerRequest.Data;
+        var startupBinaries = gameServer.Resources.Where(x => x is {Startup: true, Type: ResourceType.Executable}).ToList();
+        var failures = new List<string>();
+
+        foreach (var binary in startupBinaries)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(binary.Path))
+                {
+                    _logger.Error("Startup resource for gameserver has an empty path, I don't know what to start!: [{GameserverId}]{GameserverName}",
+                        gameServer.Id, gameServer.ServerName);
+                    failures.Add("Startup resource for gameserver has an empty path, I don't know what to start!");
+                    continue;
+                }
+                
+                var gameServerDirectory = gameServer.GetInstallDirectory();
+                var fullPath = Path.Combine(gameServerDirectory, binary.Path);
+                if (!fullPath.EndsWith(binary.Extension) && !string.IsNullOrWhiteSpace(binary.Extension))
+                    fullPath = $"{fullPath}.{binary.Extension}";
+
+                if (!File.Exists(fullPath))
+                {
+                    _logger.Error("Startup resource for gameserver doesn't exist: [{GameserverId}]{GameserverName} => {FilePath}",
+                        gameServer.Id, gameServer.ServerName, fullPath);
+                    failures.Add($"Startup resource for gameserver doesn't exist: [{gameServer.Id}]{gameServer.ServerName} => {fullPath}");
+                    continue;
+                }
+            
+                var startedProcess = Process.Start(new ProcessStartInfo
+                {
+                    Arguments = binary.Args,
+                    CreateNoWindow = true,
+                    FileName = fullPath,
+                    UseShellExecute = false,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    WorkingDirectory = gameServerDirectory
+                });
+                if (startedProcess is null)
+                {
+                    _logger.Error("Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{GameserverId}]{GameserverName}",
+                        gameServer.Id, gameServer.ServerName);
+                    failures.Add($"Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{gameServer.Id}]{gameServer.ServerName}");
+                    continue;
+                }
+
+                startedProcess.PriorityClass = ProcessPriorityClass.High;
+            
+                _logger.Information("Started process for gameserver: [{GameserverId}]{GameserverName}: {ProcessId}",
+                    gameServer.Id, gameServer.ServerName, startedProcess.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failure occurred starting gameserver process [{GameserverId}]{GameserverName}: {ErrorMessage}",
+                    gameServer.Id, gameServer.ServerName, ex.Message);
+                failures.Add($"Failure occurred starting gameserver process [{gameServer.Id}]{gameServer.ServerName}: {ex.Message}");
+            }
+        }
+
+        if (failures.Count != 0)
+            return await Result.FailAsync(failures);
+
+        return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> StopServer(GameServerLocal gameServer)
+    public async Task<IResult> StopServer(Guid id)
     {
-        throw new NotImplementedException();
+        try
+        {
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
+            var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
+            if (gameserverProcesses.Count == 0)
+            {
+                _logger.Debug("Found no running processes from the gameserver directory to stop: [{GameserverId}]{GameserverName}",
+                    gameServer.Id, gameServer.ServerName);
+                return await Result.SuccessAsync();
+            }
+
+            foreach (var process in gameserverProcesses)
+                process.Kill();
+
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to stop gameserver processes [{GameserverId}]: {ErrorMessage}", id, ex.Message);
+            return await Result.FailAsync($"Failed to stop gameserver processes [{id}]: {ex.Message}");
+        }
+    }
+
+    public async Task<IResult> Update(GameServerLocalUpdate gameServerUpdate)
+    {
+        return await _gameServerRepository.UpdateAsync(gameServerUpdate);
+    }
+
+    public async Task<IResult> UpdateState(Guid id, ServerState state)
+    {
+        return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate {Id = id, ServerState = state});
+    }
+
+    public async Task<IResult> Housekeeping()
+    {
+        return await _gameServerRepository.SaveAsync();
+    }
+
+    public async Task<IResult<ServerState>> GetCurrentRealtimeState(Guid id)
+    {
+        try
+        {
+            // TODO: Getting error on realtime update: Failure updating local weaver work status occurred: [0]"Weaver work with Id [0] doesn't exist"
+            // Before error: Realtime server state has changed from expected: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024" [Expected]Unknown [Current]Shutdown
+            // Before error: Successfully updated gameserver: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024"
+            // Before error: Adding weaver work update: [0]Completed
+            // Before error: Sending outgoing communication => 0
+            var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+            if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+                return await Result<ServerState>.FailAsync(gameServerRequest.Messages);
+            
+            var gameServer = gameServerRequest.Data;
+
+            if (!Directory.Exists(gameServer.GetInstallDirectory()))
+            {
+                return await Result<ServerState>.SuccessAsync(ServerState.Uninstalled);
+            }
+            
+            var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
+            var gameserverListeningSockets = gameServer.GetListeningSockets();
+
+            switch (gameserverProcesses.Count)
+            {
+                case > 0 when gameserverListeningSockets.Count > 0:
+                    return await Result<ServerState>.SuccessAsync(ServerState.InternallyConnectable);
+                case > 0 when gameserverListeningSockets.Count <= 0:
+                    return await Result<ServerState>.SuccessAsync(ServerState.Stalled);
+                case <= 0:
+                    return await Result<ServerState>.SuccessAsync(ServerState.Shutdown);
+                default:
+                    _logger.Error("Failed to properly calculate local server state: [{GameserverId}]{GameserverName} | [Processes]{ProcessCount} [Sockets]{SocketCount}",
+                        gameServer.Id, gameServer.ServerName, gameserverProcesses.Count, gameserverListeningSockets.Count);
+                    return await Result<ServerState>.FailAsync(ServerState.Unknown);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred checking on local game server state [{GameserverId}]: {Error}", id, ex.Message);
+            return await Result<ServerState>.FailAsync($"Failure occurred checking on local game server state [{id}]: {ex.Message}");
+        }
+    }
+
+    private async Task<IResult> UpdateIniFile(LocalResource configFile, bool loadExisting = true)
+    {
+        var filePath = configFile.GetFullPath();
+        var allowDuplicates = configFile.ConfigSets.Any(x => x.DuplicateKey);
+        var configFileContent = new IniData(allowDuplicates: allowDuplicates);
+
+        try
+        {
+            if (loadExisting && File.Exists(filePath))
+            {
+                configFileContent.Load(filePath, true);
+                _logger.Debug("Existing ini file exists, loaded config contents: {FilePath}", filePath);
+            }
+
+            foreach (var config in configFile.ConfigSets)
+            {
+                configFileContent.AddOrUpdateKey(config.Category, config.Key, config.Value);
+            }
+
+            var saveRequest = await configFileContent.Save(filePath);
+            if (!saveRequest.Succeeded)
+            {
+                foreach (var message in saveRequest.Messages)
+                {
+                    _logger.Debug("Ini config file save failure: {Error}", message);
+                }
+
+                return await Result.FailAsync();
+            }
+            
+            _logger.Debug("Saved ini config file at {FilePath}", filePath);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
+        }
+    }
+
+    private async Task<IResult> UpdateJsonFile(LocalResource configFile, bool loadExisting = true)
+    {
+        var filePath = configFile.GetFullPath();
+        var configFileContent = new Dictionary<string, string>();
+
+        if (loadExisting && File.Exists(filePath))
+        {
+            _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
+            try
+            {
+                var loadedContent = File.ReadAllText(filePath);
+                configFileContent = _serializerService.DeserializeJson<Dictionary<string, string>>(loadedContent);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to load existing {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            }
+        }
+
+        foreach (var configItem in configFile.ConfigSets)
+        {
+            if (!configFileContent.ContainsKey(configItem.Key))
+            {
+                configFileContent.Add(configItem.Key, configItem.Value);
+                continue;
+            }
+
+            _ = configFileContent.TryGetValue(configItem.Key, out var keyValue);
+            if (keyValue == configItem.Value)
+            {
+                continue;
+            }
+
+            configFileContent[configItem.Key] = configItem.Value;
+        }
+
+        try
+        {
+            var serializedContent = _serializerService.SerializeJson(configFileContent);
+            File.WriteAllText(filePath, serializedContent, Encoding.UTF8);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
+        }
+    }
+
+    private async Task<IResult> UpdateRawFile(LocalResource configFile)
+    {
+        var filePath = configFile.GetFullPath();
+        var fileContent = new StringBuilder();
+
+        // TODO: Load raw file, check if each line exists, if not add it for a successful merge
+        foreach (var configItem in configFile.ConfigSets)
+        {
+            fileContent.Append(configItem.Value);
+        }
+
+        try
+        {
+            var serializedContent = fileContent.ToString();
+            File.WriteAllText(filePath, serializedContent, Encoding.UTF8);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
+        }
+    }
+
+    public async Task<IResult> UpdateConfigurationFiles(Guid id, bool loadExisting = true)
+    {
+        var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
+        if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            return await Result.FailAsync(gameServerRequest.Messages);
+
+        List<string> errorMessages = [];
+        var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == ResourceType.ConfigFile).ToList();
+
+        foreach (var configFile in configurationFiles)
+        {
+            try
+            {
+                var directoryPath = Path.GetDirectoryName(configFile.GetFullPath()) ?? "./";
+                Directory.CreateDirectory(directoryPath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Failed to ensure config path exists: {Error}", ex.Message);
+                return await Result.FailAsync($"Failed to ensure config path exists: {ex.Message}");
+            }
+            
+            foreach (var item in configFile.ConfigSets)
+            {
+                item.Value = gameServerRequest.Data.UpdateWithServerValues(item.Value);
+            }
+            
+            switch (configFile)
+            {
+                case {ContentType: ContentType.Json}:
+                {
+                    var jsonUpdateRequest = await UpdateJsonFile(configFile, loadExisting);
+                    if (!jsonUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(jsonUpdateRequest.Messages);
+                    }
+
+                    continue;
+                }
+                case {ContentType: ContentType.Ini}:
+                {
+                    var iniUpdateRequest = await UpdateIniFile(configFile, loadExisting);
+                    if (!iniUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(iniUpdateRequest.Messages);
+                    }
+
+                    continue;
+                }
+                case {ContentType: ContentType.Raw}:
+                {
+                    var rawUpdateRequest = await UpdateRawFile(configFile);
+                    if (!rawUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(rawUpdateRequest.Messages);
+                    }
+                    continue;
+                }
+                default:
+                {
+                    // TODO: Implement XML content
+                    errorMessages.Add($"Config file content type '{configFile.ContentType}' isn't currently supported");
+                    continue;
+                }
+            }
+        }
+
+        if (errorMessages.Count > 0)
+        {
+            return await Result.FailAsync(errorMessages);
+        }
+
+        return await Result.SuccessAsync();
     }
 }

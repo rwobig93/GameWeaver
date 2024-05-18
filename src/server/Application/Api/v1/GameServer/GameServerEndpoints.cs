@@ -42,7 +42,7 @@ public static class GameServerEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAllConfigurationItemsPaginated, GetAllConfigurationItemsPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetConfigurationItemsCount, GetConfigurationItemsCount).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetConfigurationItemById, GetConfigurationItemById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetConfigurationItemsByGameProfileId, GetConfigurationItemsByGameProfileId).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetConfigurationItemsByLocalResourceId, GetConfigurationItemsByLocalResourceId).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.CreateConfigurationItem, CreateConfigurationItem).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateConfigurationItem, UpdateConfigurationItem).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Gameserver.DeleteConfigurationItem, DeleteConfigurationItem).ApiVersionOne();
@@ -55,6 +55,8 @@ public static class GameServerEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.CreateLocalResource, CreateLocalResource).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateLocalResource, UpdateLocalResource).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Gameserver.DeleteLocalResource, DeleteLocalResource).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateLocalResourceOnGameServer, UpdateLocalResourceOnGameServer).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateAllLocalResourcesOnGameServer, UpdateAllLocalResourcesOnGameServer).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.SearchLocalResource, SearchLocalResource).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAllGameProfilesPaginated, GetAllGameProfilesPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetGameProfileCount, GetGameProfileCount).ApiVersionOne();
@@ -80,6 +82,9 @@ public static class GameServerEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateMod, UpdateMod).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Gameserver.DeleteMod, DeleteMod).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.SearchMods, SearchMods).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.StartServer, StartServer).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.StopServer, StopServer).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.RestartServer, RestartServer).ApiVersionOne();
     }
     
     /// <summary>
@@ -409,11 +414,11 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>List of configuration items</returns>
     [Authorize(PermissionConstants.Gameserver.GetConfigurationItemsByGameProfileId)]
-    private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByGameProfileId([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByLocalResourceId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
         {
-            return await gameServerService.GetConfigurationItemsByGameProfileIdAsync(id);
+            return await gameServerService.GetConfigurationItemsByLocalResourceIdAsync(id);
         }
         catch (Exception ex)
         {
@@ -458,19 +463,21 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a configuration item
     /// </summary>
     /// <param name="id">Configuration item id</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Gameserver.DeleteConfigurationItem)]
-    private static async Task<IResult> DeleteConfigurationItem([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult> DeleteConfigurationItem([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.DeleteConfigurationItemAsync(id);
+            var userId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.DeleteConfigurationItemAsync(id, userId);
         }
         catch (Exception ex)
         {
@@ -599,45 +606,71 @@ public static class GameServerEndpoints
     {
         try
         {
-            return await gameServerService.GetLocalResourcesByGameServerIdAsync(id);
+            return await gameServerService.GetLocalResourcesForGameServerIdAsync(id);
         }
         catch (Exception ex)
         {
             return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a local resource
     /// </summary>
     /// <param name="createObject"></param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created local resource</returns>
     [Authorize(PermissionConstants.Gameserver.CreateLocalResource)]
-    private static async Task<IResult<Guid>> CreateLocalResource([FromBody]LocalResourceCreate createObject, IGameServerService gameServerService)
+    private static async Task<IResult<Guid>> CreateLocalResource([FromBody]LocalResourceCreate createObject, IGameServerService gameServerService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.CreateLocalResourceAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.CreateLocalResourceAsync(createObject, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update a local resources properties
     /// </summary>
     /// <param name="updateObject">Required properties to update a local resource</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Gameserver.UpdateLocalResource)]
-    private static async Task<IResult> UpdateLocalResource([FromBody]LocalResourceUpdate updateObject, IGameServerService gameServerService)
+    private static async Task<IResult> UpdateLocalResource([FromBody]LocalResourceUpdate updateObject, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.UpdateLocalResourceAsync(updateObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateLocalResourceAsync(updateObject, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Delete a local resource
+    /// </summary>
+    /// <param name="id">Local resource id</param>
+    /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns>Success or failure with context messages</returns>
+    [Authorize(PermissionConstants.Gameserver.DeleteLocalResource)]
+    private static async Task<IResult> DeleteLocalResource([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.DeleteLocalResourceAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
@@ -646,17 +679,42 @@ public static class GameServerEndpoints
     }
     
     /// <summary>
-    /// Delete a local resource
+    /// Update the local resource for the game server on the host
     /// </summary>
-    /// <param name="id">Local resource id</param>
+    /// <param name="serverId">Game server id</param>
+    /// <param name="resourceId">Local resource id</param>
     /// <param name="gameServerService"></param>
-    /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.DeleteLocalResource)]
-    private static async Task<IResult> DeleteLocalResource([FromQuery]Guid id, IGameServerService gameServerService)
+    /// <param name="currentUserService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.Gameserver.UpdateLocalResourceOnGameServer)]
+    private static async Task<IResult> UpdateLocalResourceOnGameServer([FromQuery]Guid serverId, [FromQuery]Guid resourceId, IGameServerService gameServerService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.DeleteLocalResourceAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateLocalResourceOnGameServerAsync(serverId, resourceId, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Update all local resources for the game server on the host
+    /// </summary>
+    /// <param name="serverId">Game server id</param>
+    /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.Gameserver.UpdateAllLocalResourcesOnGameServer)]
+    private static async Task<IResult> UpdateAllLocalResourcesOnGameServer([FromQuery]Guid serverId, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateAllLocalResourcesOnGameServerAsync(serverId, currentUserId);
         }
         catch (Exception ex)
         {
@@ -1171,6 +1229,69 @@ public static class GameServerEndpoints
         catch (Exception ex)
         {
             return await Result<IEnumerable<ModSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Start a game server
+    /// </summary>
+    /// <param name="id">Gameserver Id</param>
+    /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns>Success or failure with context messages</returns>
+    [Authorize(PermissionConstants.Gameserver.StartServer)]
+    private static async Task<IResult> StartServer([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.StartServerAsync(id, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Stop a game server
+    /// </summary>
+    /// <param name="id">Gameserver Id</param>
+    /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns>Success or failure with context messages</returns>
+    [Authorize(PermissionConstants.Gameserver.StopServer)]
+    private static async Task<IResult> StopServer([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.StopServerAsync(id, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Restart a game server
+    /// </summary>
+    /// <param name="id">Gameserver Id</param>
+    /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns>Success or failure with context messages</returns>
+    [Authorize(PermissionConstants.Gameserver.RestartServer)]
+    private static async Task<IResult> RestartServer([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.RestartServerAsync(id, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
         }
     }
 }

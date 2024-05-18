@@ -1,8 +1,5 @@
-using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
-using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameProfile;
-using Application.Models.GameServer.Publishers;
 using Domain.DatabaseEntities.GameServer;
 
 namespace Application.Mappers.GameServer;
@@ -115,9 +112,9 @@ public static class GameMappers
             CreatedOn = gameDb.CreatedOn,
             LastModifiedBy = gameDb.LastModifiedBy,
             LastModifiedOn = gameDb.LastModifiedOn,
-            Genres = new List<GameGenreSlim>(),
-            Publishers = new List<PublisherSlim>(),
-            Developers = new List<DeveloperSlim>()
+            Genres = [],
+            Publishers = [],
+            Developers = []
         };
     }
 }

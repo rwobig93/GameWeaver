@@ -7,6 +7,7 @@ using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
+using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
@@ -38,9 +39,11 @@ public class HostService : IHostService
     private readonly ILogger _logger;
     private readonly IGameServerRepository _gameServerRepository;
     private readonly ISerializerService _serializerService;
+    private readonly IEventService _eventService;
 
     public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
-        IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService)
+        IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService,
+        IEventService eventService)
     {
         _hostRepository = hostRepository;
         _dateTime = dateTime;
@@ -48,6 +51,7 @@ public class HostService : IHostService
         _logger = logger;
         _gameServerRepository = gameServerRepository;
         _serializerService = serializerService;
+        _eventService = eventService;
         _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
     }
@@ -496,6 +500,9 @@ public class HostService : IHostService
 
     public async Task<IResult> CreateCheckInAsync(HostCheckInCreate createObject)
     {
+        if (!float.IsNormal(createObject.CpuUsage) || !float.IsNormal(createObject.RamUsage) || !float.IsNormal(createObject.Uptime))
+            return await Result.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
+        
         var createRequest = await _hostRepository.CreateCheckInAsync(createObject);
         if (!createRequest.Succeeded)
             return await Result.FailAsync(createRequest.ErrorMessage);
@@ -655,9 +662,15 @@ public class HostService : IHostService
     public async Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject)
     {
         var foundHostRequest = await _hostRepository.GetWeaverWorkByIdAsync(updateObject.Id);
-        if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var hostId = foundHostRequest.Result?.HostId ?? Guid.Empty;
 
+        // GameServerStateUpdate can come in without being bound to specific work
+        if (hostId == Guid.Empty && updateObject.TargetType != WeaverWorkTarget.GameServerStateUpdate)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
+
+        updateObject.HostId = hostId;
         updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
         switch (updateObject.TargetType)
@@ -669,6 +682,8 @@ public class HostService : IHostService
                 updateObject.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.StatusUpdate:
+                _logger.Debug("Weaver work status update received: [{WorkId}]{WorkStatus}", updateObject.Id, updateObject.Status);
+                break;
             case WeaverWorkTarget.Host:
             case WeaverWorkTarget.HostStatusUpdate:
             case WeaverWorkTarget.HostDetail:
@@ -676,17 +691,38 @@ public class HostService : IHostService
             case WeaverWorkTarget.GameServerInstall:
             case WeaverWorkTarget.GameServerUpdate:
             case WeaverWorkTarget.GameServerUninstall:
+            case WeaverWorkTarget.GameServerStart:
+            case WeaverWorkTarget.GameServerStop:
+            case WeaverWorkTarget.GameServerRestart:
+            case WeaverWorkTarget.GameServerConfigNew:
+            case WeaverWorkTarget.GameServerConfigUpdate:
+            case WeaverWorkTarget.GameServerConfigDelete:
+            case WeaverWorkTarget.GameServerConfigUpdateFull:
             case WeaverWorkTarget.CurrentEnd:
             case null:
+                _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
+                    updateObject.Id, updateObject.TargetType);
+                break;
             default:
                 _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
                     updateObject.Id, updateObject.TargetType);
                 break;
         }
+
+        // Some updates like GameServerStateUpdate may not be tied to Weaver Work, so we'll skip attempting to update non-existent work
+        if (hostId == Guid.Empty)
+        {
+            return await Result.SuccessAsync();
+        }
         
         var updateWorkRequest = await _hostRepository.UpdateWeaverWorkAsync(updateObject);
         if (!updateWorkRequest.Succeeded)
             return await Result.FailAsync(updateWorkRequest.ErrorMessage);
+
+        if (updateObject.Status is not null)
+        {
+            _eventService.TriggerWeaverWorkStatus("HostServiceWorkUpdate", updateObject.ToEvent());
+        }
 
         return await Result.SuccessAsync();
     }
@@ -702,20 +738,35 @@ public class HostService : IHostService
             if (deserializedData is null)
                 return await Result.FailAsync("Deserialized game server state update work data is null, unable to update state");
 
+            var gameServer = await _gameServerRepository.GetByIdAsync(deserializedData.Id);
+            if (!gameServer.Succeeded || gameServer.Result is null)
+                return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            
             var result = await _gameServerRepository.UpdateAsync(new GameServerUpdate
             {
-                Id = deserializedData.Id,
+                Id = gameServer.Result.Id,
                 ServerState = deserializedData.ServerState
             });
             if (!result.Succeeded)
                 return await Result.FailAsync(result.ErrorMessage);
+            
+            _eventService.TriggerGameServerStatus("HostServiceGameServerStateUpdate", deserializedData.ToStatusEvent());
 
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             
             // State update is uninstalled, so we'll wrap up by deleting the game server
-            var deleteServerRequest = await _gameServerRepository.DeleteAsync(deserializedData.Id, updateObject.LastModifiedBy ?? Guid.Empty);
+            var deleteServerRequest = await _gameServerRepository.DeleteAsync(gameServer.Result.Id, updateObject.LastModifiedBy ?? Guid.Empty);
             if (!deleteServerRequest.Succeeded)
                 return await Result.FailAsync(deleteServerRequest.ErrorMessage);
+
+            var serverGameProfile = await _gameServerRepository.GetGameProfileByIdAsync(gameServer.Result.GameProfileId);
+            if (!serverGameProfile.Succeeded || serverGameProfile.Result is null)
+                return await Result.FailAsync(serverGameProfile.ErrorMessage);
+
+            var deleteProfileRequest =
+                await _gameServerRepository.DeleteGameProfileAsync(serverGameProfile.Result.Id, updateObject.LastModifiedBy ?? Guid.Empty);
+            if (!deleteProfileRequest.Succeeded)
+                return await Result.FailAsync(deleteProfileRequest.ErrorMessage);
 
             return await Result.SuccessAsync();
         }

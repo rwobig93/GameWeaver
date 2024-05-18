@@ -463,7 +463,7 @@
             <param name="gameServerService"></param>
             <returns>Configuration item object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetConfigurationItemsByGameProfileId(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetConfigurationItemsByLocalResourceId(System.Guid,Application.Services.GameServer.IGameServerService)">
             <summary>
             Get configuration times by game profile id
             </summary>
@@ -487,12 +487,13 @@
             <param name="gameServerService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteConfigurationItem(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteConfigurationItem(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete a configuration item
             </summary>
             <param name="id">Configuration item id</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchConfigurationItems(System.String,Application.Services.GameServer.IGameServerService)">
@@ -545,29 +546,51 @@
             <param name="gameServerService"></param>
             <returns>List of local resources</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceCreate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceCreate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a local resource
             </summary>
             <param name="createObject"></param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created local resource</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceUpdate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResource(Application.Models.GameServer.LocalResource.LocalResourceUpdate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a local resources properties
             </summary>
             <param name="updateObject">Required properties to update a local resource</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteLocalResource(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteLocalResource(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete a local resource
             </summary>
             <param name="id">Local resource id</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResourceOnGameServer(System.Guid,System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update the local resource for the game server on the host
+            </summary>
+            <param name="serverId">Game server id</param>
+            <param name="resourceId">Local resource id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateAllLocalResourcesOnGameServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update all local resources for the game server on the host
+            </summary>
+            <param name="serverId">Game server id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchLocalResource(System.String,Application.Services.GameServer.IGameServerService)">
             <summary>
@@ -776,6 +799,33 @@
             <returns>List of matching mods</returns>
             <remarks>Searches by: GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
         </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.StartServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Start a game server
+            </summary>
+            <param name="id">Gameserver Id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.StopServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Stop a game server
+            </summary>
+            <param name="id">Gameserver Id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.RestartServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Restart a game server
+            </summary>
+            <param name="id">Gameserver Id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns>Success or failure with context messages</returns>
+        </member>
         <member name="T:Application.Api.v1.GameServer.HostEndpoints">
             <summary>
             Endpoints dealing with game server host operations
@@ -878,7 +928,7 @@
             </summary>
             <param name="request">Required properties request to create a host</param>
             <param name="hostService"></param>
-            <returns>Id of the host that was created</returns>
+            <returns>ID of the host that was created</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.Update(Application.Models.GameServer.Host.HostUpdate,Application.Services.GameServer.IHostService)">
             <summary>
@@ -1067,7 +1117,7 @@
             </summary>
             <param name="id">Id of the host to get weaver work for</param>
             <param name="hostService"></param>
-            <returns>All of the current waiting weaver work jobs</returns>
+            <returns>All the current waiting weaver work jobs</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.CreateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkCreate,Application.Services.GameServer.IHostService)">
             <summary>
@@ -1075,7 +1125,7 @@
             </summary>
             <param name="request">Required properties to create weaver work for a host</param>
             <param name="hostService"></param>
-            <returns>Id of the weaver work created</returns>
+            <returns>ID of the weaver work created</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService)">
             <summary>
@@ -1552,6 +1602,18 @@
             <param name="numberOfBytes">Desired token size in bytes, larger is more secure</param>
             <returns>An enumerable of generated URL friendly tokens</returns>
         </member>
+        <member name="T:Application.Models.GameServer.ConfigurationItem.ConfigurationItemHost">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> Id<br/>
+            <b>bool</b> DuplicateKey<br/>
+            <b>string</b> Category<br/>
+            <b>string</b> Key<br/>
+            <b>string</b> Value<br/>
+            </code>
+            </remarks>
+        </member>
         <member name="T:Application.Models.GameServer.GameServer.GameServerToHost">
             <remarks>
             MemoryPack GenerateType: Object<br/>
@@ -1576,7 +1638,36 @@
             <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
             <b>Domain.Enums.GameServer.GameSource</b> Source<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.Mod.ModSlim&gt;</b> ModList<br/>
-            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceHost&gt;</b> Resources<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.LocalResource.LocalResourceHost">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> GameserverId<br/>
+            <b>string</b> Name<br/>
+            <b>string</b> Path<br/>
+            <b>bool</b> Startup<br/>
+            <b>int</b> StartupPriority<br/>
+            <b>Domain.Enums.GameServer.ResourceType</b> Type<br/>
+            <b>Domain.Enums.GameServer.ContentType</b> ContentType<br/>
+            <b>string</b> Extension<br/>
+            <b>string</b> Args<br/>
+            <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.ConfigurationItem.ConfigurationItemHost&gt;</b> ConfigSets<br/>
+            <b>System.Guid</b> Id<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.Mod.ModHost">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>int</b> GameId<br/>
+            <b>int</b> ToolId<br/>
+            <b>string</b> SteamId<br/>
+            <b>string</b> FriendlyName<br/>
             </code>
             </remarks>
         </member>

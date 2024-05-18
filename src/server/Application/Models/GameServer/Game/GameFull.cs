@@ -37,7 +37,7 @@ public class GameFull
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
-    public List<GameGenreSlim> Genres { get; set; } = new();
-    public List<PublisherSlim> Publishers { get; set; } = new();
-    public List<DeveloperSlim> Developers { get; set; } = new();
+    public List<GameGenreSlim> Genres { get; set; } = [];
+    public List<PublisherSlim> Publishers { get; set; } = [];
+    public List<DeveloperSlim> Developers { get; set; } = [];
 }

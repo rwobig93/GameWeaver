@@ -15,7 +15,7 @@ public class PaginatedResult<T> : Result<T>
 
     public new static PaginatedResult<T> Fail(string message)
     {
-        return new PaginatedResult<T> { Succeeded = false, Messages = new List<string> { message } };
+        return new PaginatedResult<T> { Succeeded = false, Messages = [message]};
     }
 
     public new static PaginatedResult<T> Fail(List<string> messages)
@@ -31,7 +31,7 @@ public class PaginatedResult<T> : Result<T>
     public static PaginatedResult<T> Fail(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
         string? next = null)
     {
-        return new PaginatedResult<T> { Succeeded = false, Data = data, Messages = new List<string> { message }, CurrentPage = currentPage, TotalCount = totalCount,
+        return new PaginatedResult<T> { Succeeded = false, Data = data, Messages = [message], CurrentPage = currentPage, TotalCount = totalCount,
             PageSize = pageSize, Previous = previous, Next = next };
     }
 
@@ -87,7 +87,7 @@ public class PaginatedResult<T> : Result<T>
     public static PaginatedResult<T> Success(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
         string? next = null)
     {
-        return new PaginatedResult<T> { Succeeded = true, Data = data, Messages = new List<string> { message }, CurrentPage = currentPage, TotalCount = totalCount,
+        return new PaginatedResult<T> { Succeeded = true, Data = data, Messages = [message], CurrentPage = currentPage, TotalCount = totalCount,
             PageSize = pageSize, Previous = previous, Next = next };
     }
 

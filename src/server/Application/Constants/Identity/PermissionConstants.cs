@@ -146,6 +146,8 @@ public static class PermissionConstants
         public const string CreateLocalResource = "PermissionConstants.Gameserver.Gameserver.CreateLocalResource";
         public const string UpdateLocalResource = "PermissionConstants.Gameserver.Gameserver.UpdateLocalResource";
         public const string DeleteLocalResource = "PermissionConstants.Gameserver.Gameserver.DeleteLocalResource";
+        public const string UpdateLocalResourceOnGameServer = "PermissionConstants.Gameserver.Gameserver.UpdateLocalResourceOnGameServer";
+        public const string UpdateAllLocalResourcesOnGameServer = "PermissionConstants.Gameserver.Gameserver.UpdateAllLocalResourcesOnGameServer";
         public const string SearchLocalResource = "PermissionConstants.Gameserver.Gameserver.SearchLocalResource";
         public const string GetAllGameProfilesPaginated = "PermissionConstants.Gameserver.Gameserver.GetAllGameProfilesPaginated";
         public const string GetGameProfileCount = "PermissionConstants.Gameserver.Gameserver.GetGameProfileCount";
@@ -171,6 +173,9 @@ public static class PermissionConstants
         public const string UpdateMod = "PermissionConstants.Gameserver.Gameserver.UpdateMod";
         public const string DeleteMod = "PermissionConstants.Gameserver.Gameserver.DeleteMod";
         public const string SearchMods = "PermissionConstants.Gameserver.Gameserver.SearchMods";
+        public const string StartServer = "PermissionConstants.Gameserver.Gameserver.StartServer";
+        public const string StopServer = "PermissionConstants.Gameserver.Gameserver.StopServer";
+        public const string RestartServer = "PermissionConstants.Gameserver.Gameserver.RestartServer";
     }
 
     public static class Game

@@ -328,7 +328,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
 
         try
         {
-            List<AppPermissionDb> allPermissions = new();
+            List<AppPermissionDb> allPermissions = [];
 
             var userPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
                 AppPermissionsTableMsSql.GetByUserId, new {UserId = userId});

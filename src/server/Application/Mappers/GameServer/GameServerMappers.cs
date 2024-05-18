@@ -1,7 +1,6 @@
+using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
-using Application.Models.GameServer.LocalResource;
-using Application.Models.GameServer.Mod;
-using Domain.Contracts;
+using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 
@@ -130,8 +129,28 @@ public static class GameServerMappers
             ServerProcessName = "",
             ServerState = ConnectivityState.Unknown,
             Source = GameSource.Steam,
-            ModList = new SerializableList<ModSlim>(),
-            Resources = new SerializableList<LocalResourceSlim>()
+            ModList = [],
+            Resources = []
+        };
+    }
+
+    public static GameServerStatusEvent ToStatusEvent(this GameServerDb gameServer)
+    {
+        return new GameServerStatusEvent
+        {
+            Id = gameServer.Id,
+            ServerName = gameServer.ServerName,
+            ServerState = gameServer.ServerState
+        };
+    }
+
+    public static GameServerStatusEvent ToStatusEvent(this GameServerStateUpdate update)
+    {
+        return new GameServerStatusEvent
+        {
+            Id = update.Id,
+            ServerName = "",
+            ServerState = update.ServerState
         };
     }
 }

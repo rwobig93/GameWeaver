@@ -453,7 +453,7 @@ public class AppPermissionService : IAppPermissionService
             return;
         }
 
-        var usersToUpdate = roleUsers.Result?.ToSlims().ToList() ?? new List<AppUserSlim>();
+        var usersToUpdate = roleUsers.Result?.ToSlims().ToList() ?? [];
         
         _logger.Debug("Found {UserCount} users for role {RoleId} that need to re-auth for updated permissions", usersToUpdate.Count, roleId);
 

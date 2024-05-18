@@ -115,7 +115,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT TOP 1 h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.Hostname = @Hostname
+                WHERE h.Hostname = @Hostname AND h.IsDeleted = 0
                 ORDER BY h.Id;
             end"
     };

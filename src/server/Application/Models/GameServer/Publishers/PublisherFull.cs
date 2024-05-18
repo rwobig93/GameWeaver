@@ -7,5 +7,5 @@ public class PublisherFull
     public Guid Id { get; set; }
     public Guid GameId { get; set; }
     public string Name { get; set; } = "";
-    public List<GameSlim> Games { get; set; } = new();
+    public List<GameSlim> Games { get; set; } = [];
 }

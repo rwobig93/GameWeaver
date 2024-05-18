@@ -11,5 +11,12 @@ public enum WeaverWorkTarget
     GameServerUpdate = 202,
     GameServerUninstall = 203,
     GameServerStateUpdate = 204,
+    GameServerStart = 205,
+    GameServerStop = 206,
+    GameServerRestart = 207,
+    GameServerConfigNew = 208,
+    GameServerConfigUpdate = 209,
+    GameServerConfigDelete = 210,
+    GameServerConfigUpdateFull = 211,
     CurrentEnd = 300
 }
