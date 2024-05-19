@@ -350,24 +350,6 @@ public class GameServerWorker : BackgroundService
         return deserializedServer?.ToLocal();
     }
 
-    private async Task<List<LocalResource>?> ExtractLocalResourcesFromWorkData(WeaverWork work)
-    {
-        if (work.WorkData is null)
-        {
-            _logger.Error("Gameserver {WorkType} request has an empty work data payload: {WorkId}", work.TargetType, work.Id);
-            await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
-            work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
-            return null;
-        }
-        var deserializedLocation = _serializerService.DeserializeMemory<IEnumerable<LocalResource>>(work.WorkData);
-        if (deserializedLocation is not null) return deserializedLocation.ToList();
-        
-        _logger.Error("Unable to deserialize work data payload: {WorkId}", work.Id);
-        await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
-        work.SendStatusUpdate(WeaverWorkState.Failed, $"Unable to deserialize work data payload: {work.Id}");
-        return deserializedLocation?.ToList();
-    }
-
     private async Task<LocalResource?> ExtractLocalResourceFromWorkData(WeaverWork work)
     {
         if (work.WorkData is null)

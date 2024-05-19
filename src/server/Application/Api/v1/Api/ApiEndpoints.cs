@@ -33,13 +33,14 @@ public static class ApiEndpoints
     /// <param name="accountService"></param>
     /// <returns>JWT with an expiration datetime in GMT/UTC</returns>
     /// <remarks>
-    /// - Expiration time returned is in GMT/UTC
+    ///     - Expiration time returned is in GMT/UTC
     /// </remarks>
     [AllowAnonymous]
     private static async Task<IResult<ApiTokenResponse>> GetToken([FromBody]ApiGetTokenRequest tokenRequest, IAppAccountService accountService)
     {
         try
         {
+            // TODO: Look into adding claim for API access vs manually passing token from user auth for authorization handling
             var response = await accountService.GetApiAuthToken(tokenRequest); 
             return response;
         }
