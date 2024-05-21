@@ -23,7 +23,7 @@
             <param name="accountService"></param>
             <returns>JWT with an expiration datetime in GMT/UTC</returns>
             <remarks>
-            - Expiration time returned is in GMT/UTC
+                - Expiration time returned is in GMT/UTC
             </remarks>
         </member>
         <member name="M:Application.Api.v1.Api.ApiEndpoints.WhoAmI(Application.Services.Identity.ICurrentUserService)">
@@ -1679,6 +1679,22 @@
             <b>string</b> ServerProcessName<br/>
             <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Models.GameServer.WeaverWork.HostDetailUpdate">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> HostId<br/>
+            <b>string</b> Hostname<br/>
+            <b>Domain.Contracts.SerializableList&lt;Domain.Models.Host.HostCpu&gt;</b> Cpus<br/>
+            <b>Domain.Contracts.SerializableList&lt;Domain.Models.Host.HostMotherboard&gt;</b> Motherboards<br/>
+            <b>Domain.Contracts.SerializableList&lt;Domain.Models.Host.HostStorage&gt;</b> Storage<br/>
+            <b>Domain.Contracts.SerializableList&lt;Domain.Models.Host.HostNetworkInterface&gt;</b> NetworkInterfaces<br/>
+            <b>Domain.Contracts.SerializableList&lt;Domain.Models.Host.HostRam&gt;</b> RamModules<br/>
+            <b>Domain.Models.Host.HostOperatingSystem</b> Os<br/>
+            <b>Domain.Contracts.SerializableList&lt;Domain.Models.Host.HostGpu&gt;</b> Gpus<br/>
             </code>
             </remarks>
         </member>

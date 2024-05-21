@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
-using Domain.Enums;
 using Microsoft.Extensions.Options;
 using Serilog;
 

@@ -53,6 +53,12 @@
             </MudExpansionPanel>
             <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="GameServer Management">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(GenerateHostRegistration)">
+                        Generate Host Registration
+                    </MudButton>
+                    <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Host Registration: @(_registrationToken)</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                     <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Work Status: @(_latestWorkState)</MudText>
                     <MudSpacer />
                     <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Server Status: @(_selectedGameServer?.ServerState)</MudText>
@@ -118,6 +124,85 @@
                                Color="Color.Error" OnClick="@(UninstallGameServer)">
                         Uninstall Game Server
                     </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudTreeView T="string" Hover="true" ExpandOnClick="true">
+                        <MudTreeViewItem Value="@($"ID: {_selectedHost?.Id.ToString()}")"/>
+                        <MudTreeViewItem Value="@($"Hostname: {_selectedHost?.Hostname}")"/>
+                        <MudTreeViewItem Value="@($"FriendlyName: {_selectedHost?.FriendlyName}")"/>
+                        <MudTreeViewItem Value="@($"Description: {_selectedHost?.Description}")"/>
+                        <MudTreeViewItem Value="@("Os Details")">
+                            <MudTreeViewItem Value="@($"OS: {_selectedHost?.Os}")"/>
+                            <MudTreeViewItem Value="@($"OsName: {_selectedHost?.OsName}")"/>
+                            <MudTreeViewItem Value="@($"OsVersion: {_selectedHost?.OsVersion}")"/>
+                        </MudTreeViewItem>
+                        <MudTreeViewItem Value="@("Compute")">
+                            @if (_selectedHost?.Motherboards != null)
+                            {
+                                foreach (var motherboard in _selectedHost.Motherboards)
+                                {
+                                    <MudTreeViewItem Value="@($"MOBO: {motherboard.Manufacturer} | {motherboard.Product}")" />
+                                }
+                            }
+                            @if (_selectedHost?.Cpus != null)
+                            {
+                                foreach (var cpu in _selectedHost.Cpus)
+                                {
+                                    <MudTreeViewItem Value="@($"CPU: {cpu.Name} {cpu.CoreCount}/{cpu.LogicalProcessorCount} using {cpu.SocketDesignation}")" />
+                                }
+                            }
+                        </MudTreeViewItem>
+                        <MudTreeViewItem Value="@("RAM")">
+                            @if (_selectedHost?.RamModules != null)
+                            {
+                                foreach (var ram in _selectedHost.RamModules)
+                                {
+                                    <MudTreeViewItem Value="@($"{ram.Manufacturer} {ram.Capacity} @ {ram.Speed}")" />
+                                }
+                            }
+                        </MudTreeViewItem>
+                        <MudTreeViewItem Value="@("Storage")">
+                            @if (_selectedHost?.Storage != null)
+                            {
+                                foreach (var device in _selectedHost.Storage)
+                                {
+                                    <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model} | {device.MountPoint} {device.FreeSpace}/{device.TotalSpace}")" />
+                                }
+                            }
+                        </MudTreeViewItem>
+                        <MudTreeViewItem Value="@("Graphics")">
+                            @if (_selectedHost?.Gpus != null)
+                            {
+                                foreach (var gpu in _selectedHost.Gpus)
+                                {
+                                    <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {gpu.AdapterRam} | MODE: {gpu.VideoMode}")" />
+                                }
+                            }
+                        </MudTreeViewItem>
+                        <MudTreeViewItem Value="@("Network")">
+                            @if (_selectedHost?.NetworkInterfaces != null)
+                            {
+                                foreach (var netIf in _selectedHost.NetworkInterfaces)
+                                {
+                                    <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {netIf.Speed} | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
+                                        <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")" />
+                                        @foreach (var address in netIf.DefaultGateways)
+                                        {
+                                            <MudTreeViewItem Value="@($"GATEWAY: {address}")" />
+                                        }
+                                        @foreach (var address in netIf.IpAddresses)
+                                        {
+                                            <MudTreeViewItem Value="@($"ADDRESS: {address}")" />
+                                        }
+                                        @foreach (var server in netIf.DnsServers)
+                                        {
+                                            <MudTreeViewItem Value="@($"DNS: {server}")" />
+                                        }
+                                    </MudTreeViewItem>
+                                }
+                            }
+                        </MudTreeViewItem>
+                    </MudTreeView>
                 </MudItem>
             </MudExpansionPanel>
         }

@@ -1,10 +1,11 @@
 ﻿using Domain.Contracts;
 using Domain.Models.Host;
+using MemoryPack;
 
-namespace Application.Requests.Host;
+namespace Application.Models.GameServer.WeaverWork;
 
 [MemoryPackable(SerializeLayout.Explicit)]
-public partial class HostDetailRequest
+public partial class HostDetailUpdate
 {
     [MemoryPackOrder(0)]
     public Guid HostId { get; set; }

@@ -7,7 +7,6 @@ using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
-using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
@@ -133,10 +132,13 @@ public class HostService : IHostService
         if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
             return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var hostUpdate = foundHostRequest.Result.ToUpdate();
-        hostUpdate.CurrentState = ConnectivityState.Unknown;
-        hostUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
-        hostUpdate.LastModifiedBy = _serverState.SystemUserId;
+        var hostUpdate = new HostUpdateDb()
+        {
+            Id = foundHostRequest.Result.Id,
+            CurrentState = ConnectivityState.Unknown,
+            LastModifiedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = _serverState.SystemUserId
+        };
         var hostUpdateRequest = await _hostRepository.UpdateAsync(hostUpdate);
         if (!hostUpdateRequest.Succeeded)
             return await Result<HostRegisterResponse>.FailAsync(hostUpdateRequest.ErrorMessage);
@@ -153,11 +155,14 @@ public class HostService : IHostService
         if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
             return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var hostUpdate = foundHostRequest.Result.ToUpdate();
-        hostUpdate.PasswordSalt = salt;
-        hostUpdate.PasswordHash = hash;
-        hostUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
-        hostUpdate.LastModifiedBy = modifyingUserId;
+        var hostUpdate = new HostUpdateDb
+        {
+            Id = foundHostRequest.Result.Id,
+            PasswordSalt = salt,
+            PasswordHash = hash,
+            LastModifiedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = modifyingUserId
+        };
         var hostUpdateRequest = await _hostRepository.UpdateAsync(hostUpdate);
         if (!hostUpdateRequest.Succeeded)
             return await Result<HostRegisterResponse>.FailAsync(hostUpdateRequest.ErrorMessage);
@@ -294,7 +299,7 @@ public class HostService : IHostService
 
         updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
         
-        var updateHostRequest = await _hostRepository.UpdateAsync(updateObject);
+        var updateHostRequest = await _hostRepository.UpdateAsync(updateObject.ToUpdateDb());
         if (!updateHostRequest.Succeeded)
             return await Result.FailAsync(updateHostRequest.ErrorMessage);
 
@@ -664,8 +669,8 @@ public class HostService : IHostService
         var foundHostRequest = await _hostRepository.GetWeaverWorkByIdAsync(updateObject.Id);
         var hostId = foundHostRequest.Result?.HostId ?? Guid.Empty;
 
-        // GameServerStateUpdate can come in without being bound to specific work
-        if (hostId == Guid.Empty && updateObject.TargetType != WeaverWorkTarget.GameServerStateUpdate)
+        // Some updates like GameServerStateUpdate or HostDetail can come in without being bound to specific work
+        if (hostId == Guid.Empty && updateObject.TargetType is not WeaverWorkTarget.GameServerStateUpdate and not WeaverWorkTarget.HostDetail)
         {
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
         }
@@ -676,17 +681,22 @@ public class HostService : IHostService
         switch (updateObject.TargetType)
         {
             case WeaverWorkTarget.GameServerStateUpdate:
-                var result = await HandleUpdateGameServerState(updateObject);
-                if (!result.Succeeded)
-                    _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", updateObject.Id, updateObject.TargetType, result.Messages);
+                var serverStateResult = await HandleUpdateGameServerState(updateObject);
+                if (!serverStateResult.Succeeded)
+                    _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", updateObject.Id, updateObject.TargetType, serverStateResult.Messages);
                 updateObject.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.StatusUpdate:
                 _logger.Debug("Weaver work status update received: [{WorkId}]{WorkStatus}", updateObject.Id, updateObject.Status);
                 break;
+            case WeaverWorkTarget.HostDetail:
+                var hostDetailResult = await HandleHostDetail(updateObject);
+                if (!hostDetailResult.Succeeded)
+                    _logger.Error("Host detail update failed for [{WorkId}]{WorkType}: {Error}", updateObject.Id, updateObject.TargetType, hostDetailResult.Messages);
+                updateObject.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
+                break;
             case WeaverWorkTarget.Host:
             case WeaverWorkTarget.HostStatusUpdate:
-            case WeaverWorkTarget.HostDetail:
             case WeaverWorkTarget.GameServer:
             case WeaverWorkTarget.GameServerInstall:
             case WeaverWorkTarget.GameServerUpdate:
@@ -709,7 +719,7 @@ public class HostService : IHostService
                 break;
         }
 
-        // Some updates like GameServerStateUpdate may not be tied to Weaver Work, so we'll skip attempting to update non-existent work
+        // Some updates like GameServerStateUpdate or HostDetail may not be tied to Weaver Work, so we'll skip attempting to update non-existent work
         if (hostId == Guid.Empty)
         {
             return await Result.SuccessAsync();
@@ -727,6 +737,49 @@ public class HostService : IHostService
         return await Result.SuccessAsync();
     }
 
+    private async Task<IResult> HandleHostDetail(WeaverWorkUpdate updateObject)
+    {
+        try
+        {
+            if (updateObject.WorkData is null)
+            {
+                return await Result.FailAsync("Host detail work data is null, unable to update detail");
+            }
+        
+            var deserializedData = _serializerService.DeserializeMemory<HostDetailUpdate>(updateObject.WorkData);
+            if (deserializedData is null)
+            {
+                return await Result.FailAsync("Deserialized host detail work data is null, unable to update detail");
+            }
+
+            var foundHost = await _hostRepository.GetByIdAsync(deserializedData.HostId);
+            if (!foundHost.Succeeded || foundHost.Result is null)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            }
+
+            updateObject.HostId = foundHost.Result.Id;
+
+            var hostUpdate = deserializedData.ToUpdate();
+            // TODO: Pull public IP from the API request to inject
+            // hostUpdate.PublicIp = updateObject.PublicIp
+            hostUpdate.PrivateIp = hostUpdate.NetworkInterfaces?.FirstOrDefault()?.IpAddresses.FirstOrDefault();
+            hostUpdate.FriendlyName = string.IsNullOrWhiteSpace(foundHost.Result.FriendlyName) ? hostUpdate.Hostname : foundHost.Result.FriendlyName;
+
+            var updateRequest = await _hostRepository.UpdateAsync(hostUpdate.ToUpdateDb());
+            if (!updateRequest.Succeeded)
+            {
+                return await Result.FailAsync(updateRequest.ErrorMessage);
+            }
+
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync($"Failure occurred working with deserialized game server state update: {ex.Message}");
+        }
+    }
+    
     private async Task<IResult> HandleUpdateGameServerState(WeaverWorkUpdate updateObject)
     {
         try
@@ -741,6 +794,8 @@ public class HostService : IHostService
             var gameServer = await _gameServerRepository.GetByIdAsync(deserializedData.Id);
             if (!gameServer.Succeeded || gameServer.Result is null)
                 return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+            updateObject.HostId = gameServer.Result.HostId;
             
             var result = await _gameServerRepository.UpdateAsync(new GameServerUpdate
             {

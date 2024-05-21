@@ -1,7 +1,6 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.GameServer;
 using Application.Mappers.GameServer;
-using Application.Models.Events;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;

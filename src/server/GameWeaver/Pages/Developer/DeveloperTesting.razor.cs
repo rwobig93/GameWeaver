@@ -43,6 +43,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private List<HostSlim> _hosts = [];
     private HostSlim? _selectedHost;
     private string _latestWorkState = "";
+    private string _registrationToken = "";
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -636,6 +637,25 @@ public partial class DeveloperTesting : IAsyncDisposable
         Snackbar.Add($"Sent game server update request!", Severity.Success);
     }
 
+    private async Task GenerateHostRegistration()
+    {
+        // TODO: ERROR: Implicit conversion from data type nvarchar to varbinary is not allowed. Use the CONVERT function to run this query.
+        var description = $"Test Host - {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
+        var registerRequest = await HostService.RegistrationGenerateNew(description, _loggedInUser.Id, _loggedInUser.Id);
+        if (!registerRequest.Succeeded)
+        {
+            foreach (var message in registerRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+        
+        // TODO: Add host registration token cleanup after configured time period if it hasn't been used
+        await WebClientService.InvokeClipboardCopy(registerRequest.Data.RegisterUrl);
+        Snackbar.Add($"Generated host registration token and copied it to your clipboard!", Severity.Success);
+    }
+    
     public async ValueTask DisposeAsync()
     {
         EventService.GameServerStatusChanged -= GameServerStatusChanged;

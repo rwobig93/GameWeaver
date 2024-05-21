@@ -1,5 +1,4 @@
-﻿using Application.Models;
-using Application.Models.GameServer;
+﻿using Application.Models.GameServer;
 using Domain.Models.ControlServer;
 using Domain.Models.GameServer;
 

@@ -17,7 +17,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<HostDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<HostDb>> GetByHostnameAsync(string hostName);
     Task<DatabaseActionResult<Guid>> CreateAsync(HostCreate createObject);
-    Task<DatabaseActionResult> UpdateAsync(HostUpdate updateObject);
+    Task<DatabaseActionResult> UpdateAsync(HostUpdateDb updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId);
     Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);

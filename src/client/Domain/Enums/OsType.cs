@@ -1,4 +1,4 @@
-namespace Domain.Enums.GameServer;
+﻿namespace Domain.Enums;
 
 public enum OsType
 {

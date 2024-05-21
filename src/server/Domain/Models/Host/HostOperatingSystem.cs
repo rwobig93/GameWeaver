@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+﻿using Domain.Enums.GameServer;
 using MemoryPack;
 
 namespace Domain.Models.Host;

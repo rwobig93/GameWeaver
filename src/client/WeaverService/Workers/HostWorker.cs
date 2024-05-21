@@ -1,4 +1,3 @@
-using System.Net;
 using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
@@ -21,6 +20,7 @@ public class HostWorker : BackgroundService
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IGameServerService _gameServerService;
     private readonly IHostApplicationLifetime _appLifetime;
+    private readonly IOptions<AuthConfiguration> _authConfig;
 
     public static HostResourceUsage CurrentHostResourceUsage { get; private set; } = new();
     
@@ -28,7 +28,8 @@ public class HostWorker : BackgroundService
     /// Handles host IO operations and resource usage gathering
     /// </summary>
     public HostWorker(ILogger logger, IHostService hostService, IDateTimeService dateTimeService, IWeaverWorkService weaverWorkService,
-        IOptions<GeneralConfiguration> generalConfig, IGameServerService gameServerService, IHostApplicationLifetime appLifetime)
+        IOptions<GeneralConfiguration> generalConfig, IGameServerService gameServerService, IHostApplicationLifetime appLifetime,
+        IOptions<AuthConfiguration> authConfig)
     {
         _logger = logger;
         _hostService = hostService;
@@ -37,6 +38,7 @@ public class HostWorker : BackgroundService
         _generalConfig = generalConfig;
         _gameServerService = gameServerService;
         _appLifetime = appLifetime;
+        _authConfig = authConfig;
     }
 
     private static DateTime _lastRuntime;
@@ -57,7 +59,6 @@ public class HostWorker : BackgroundService
             _appLifetime.StopApplication();
         }
         
-        // TODO: Implement control server consumption of host detail
         StartResourcePoller();
         
         // Add startup delay for poller details to fully gather
@@ -65,8 +66,7 @@ public class HostWorker : BackgroundService
         if (startupTimePassed < 3000)
             await Task.Delay(3000 - startupTimePassed, stoppingToken);
         
-        // TODO: IPAddress object isn't serializable, need to look into options beyond what has already been tried
-        // ThreadHelper.QueueWork(_ => UpdateHostDetail());
+        ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
         // TODO: Implement Sqlite for host work tracking, for now we'll serialize/deserialize a json file
         await base.StartAsync(stoppingToken);
@@ -105,13 +105,23 @@ public class HostWorker : BackgroundService
         await base.StopAsync(stoppingToken);
     }
 
-    private void UpdateHostDetail()
+    private void UpdateHostDetail(WeaverWork? work = null)
     {
         _hostService.PollHostDetail();
         _hostService.PollHostResources();
+
+        work ??= new WeaverWork {Id = 0};
+
+        if (!Guid.TryParse(_authConfig.Value.Host, out var hostId))
+        {
+            _logger.Debug("HostId isn't valid so we likely haven't authed to the control server, skipping detail gather");
+            return;
+        }
+
         var currentHostInfo = _hostService.GetHardwareInfo();
         var hostDetailRequest = new HostDetailRequest
         {
+            HostId = hostId,
             Os = new HostOperatingSystem
             {
                 Name = currentHostInfo.OperatingSystem.Name,
@@ -153,10 +163,10 @@ public class HostWorker : BackgroundService
             Type = adapter.NetConnectionID,
             TypeDetail = adapter.AdapterType,
             MacAddress = adapter.MACAddress,
-            IpAddresses = new SerializableList<IPAddress>(adapter.IPAddressList),
-            DefaultGateways = new SerializableList<IPAddress>(adapter.DefaultIPGatewayList),
-            DhcpServer = adapter.DHCPServer,
-            DnsServers = new SerializableList<IPAddress>(adapter.DNSServerSearchOrderList)
+            IpAddresses = new SerializableList<string>(adapter.IPAddressList.Select(x => x.ToString())),
+            DefaultGateways = new SerializableList<string>(adapter.DefaultIPGatewayList.Select(x => x.ToString())),
+            DhcpServer = adapter.DHCPServer.ToString(),
+            DnsServers = new SerializableList<string>(adapter.DNSServerSearchOrderList.Select(x => x.ToString()))
         }));
         
         currentHostInfo.MemoryList.ForEach(ramStick => hostDetailRequest.RamModules.Add(new HostRam
@@ -174,7 +184,7 @@ public class HostWorker : BackgroundService
             AdapterRam = gpu.AdapterRAM
         }));
         
-        new WeaverWork{Id = 0}.SendHostDetailUpdate(WeaverWorkState.Completed, hostDetailRequest);
+        work.SendHostDetailUpdate(WeaverWorkState.Completed, hostDetailRequest);
     }
 
     private async Task UpdateCurrentResourceUsage()
@@ -300,7 +310,7 @@ public class HostWorker : BackgroundService
                     // TODO: Implement host status update
                     break;
                 case WeaverWorkTarget.HostDetail:
-                    UpdateHostDetail();
+                    UpdateHostDetail(work);
                     break;
                 case WeaverWorkTarget.StatusUpdate:
                 case WeaverWorkTarget.Host:
@@ -313,6 +323,10 @@ public class HostWorker : BackgroundService
                 case WeaverWorkTarget.GameServerStart:
                 case WeaverWorkTarget.GameServerStop:
                 case WeaverWorkTarget.GameServerRestart:
+                case WeaverWorkTarget.GameServerConfigNew:
+                case WeaverWorkTarget.GameServerConfigUpdate:
+                case WeaverWorkTarget.GameServerConfigDelete:
+                case WeaverWorkTarget.GameServerConfigUpdateFull:
                 default:
                     _logger.Error("Unsupported host work type asked for: Asked {WorkType}", work.TargetType);
                     await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);

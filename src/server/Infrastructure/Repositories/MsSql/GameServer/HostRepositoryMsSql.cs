@@ -150,7 +150,7 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> UpdateAsync(HostUpdate updateObject)
+    public async Task<DatabaseActionResult> UpdateAsync(HostUpdateDb updateObject)
     {
         DatabaseActionResult actionReturn = new();
 
@@ -188,10 +188,9 @@ public class HostRepositoryMsSql : IHostRepository
             var foundHost = await GetByIdAsync(id);
             if (!foundHost.Succeeded || foundHost.Result is null)
                 throw new Exception(foundHost.ErrorMessage);
-            var hostUpdate = foundHost.Result.ToUpdate();
             
-            // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
-            hostUpdate.LastModifiedBy = modifyingUserId;
+            // Update user w/ a property that is modified, so we get the last updated on/by for the deleting user
+            var hostUpdate = new HostUpdateDb { Id = foundHost.Result.Id, LastModifiedOn = _dateTime.NowDatabaseTime, LastModifiedBy = modifyingUserId};
             await UpdateAsync(hostUpdate);
             await _database.SaveData(HostsTableMsSql.Delete, 
                 new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
