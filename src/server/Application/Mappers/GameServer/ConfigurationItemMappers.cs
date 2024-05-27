@@ -17,7 +17,8 @@ public static class ConfigurationItemMappers
             Path = configDb.Path,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            FriendlyName = configDb.FriendlyName
         };
     }
     
@@ -36,7 +37,8 @@ public static class ConfigurationItemMappers
             Path = configDb.Path,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            FriendlyName = configDb.FriendlyName
         };
     }
     
@@ -49,7 +51,8 @@ public static class ConfigurationItemMappers
             Path = configDb.Path,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            FriendlyName = configDb.FriendlyName
         };
     }
 
@@ -109,7 +112,8 @@ public static class ConfigurationItemMappers
             Path = configItem.Path,
             Category = configItem.Category,
             Key = configItem.Key,
-            Value = configItem.Value
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
         };
     }
 }

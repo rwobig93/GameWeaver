@@ -2,6 +2,7 @@ using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.LocalResource;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
@@ -15,7 +16,9 @@ public static class LocalResourceMappers
             GameProfileId = localResourceDb.GameProfileId,
             GameServerId = localResourceDb.GameServerId,
             Name = localResourceDb.Name,
-            Path = localResourceDb.Path,
+            PathWindows = localResourceDb.PathWindows,
+            PathLinux = localResourceDb.PathLinux,
+            PathMac = localResourceDb.PathMac,
             Startup = localResourceDb.Startup,
             StartupPriority = localResourceDb.StartupPriority,
             Type = localResourceDb.Type,
@@ -39,7 +42,9 @@ public static class LocalResourceMappers
             GameProfileId = localResource.GameProfileId,
             GameServerId = localResource.GameServerId,
             Name = localResource.Name,
-            Path = localResource.Path,
+            PathWindows = localResource.PathWindows,
+            PathLinux = localResource.PathLinux,
+            PathMac = localResource.PathMac,
             Startup = localResource.Startup,
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
@@ -49,13 +54,20 @@ public static class LocalResourceMappers
         };
     }
 
-    public static LocalResourceHost ToHost(this LocalResourceDb localResource)
+    public static LocalResourceHost ToHost(this LocalResourceDb localResource, OsType osType)
     {
         return new LocalResourceHost
         {
             GameserverId = localResource.GameServerId,
             Name = localResource.Name,
-            Path = localResource.Path,
+            Path = osType switch
+            {
+                OsType.Unknown => localResource.PathWindows,
+                OsType.Windows => localResource.PathWindows,
+                OsType.Linux => localResource.PathLinux,
+                OsType.Mac => localResource.PathMac,
+                _ => localResource.PathWindows
+            },
             Startup = localResource.Startup,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
@@ -65,18 +77,25 @@ public static class LocalResourceMappers
         };
     }
 
-    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceDb> localResourceDbs)
+    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceDb> localResourceDbs, OsType osType)
     {
-        return localResourceDbs.Select(ToHost);
+        return localResourceDbs.Select(x => x.ToHost(osType));
     }
 
-    public static LocalResourceHost ToHost(this LocalResourceSlim localResource)
+    public static LocalResourceHost ToHost(this LocalResourceSlim localResource, OsType osType)
     {
         return new LocalResourceHost
         {
             GameserverId = localResource.GameServerId,
             Name = localResource.Name,
-            Path = localResource.Path,
+            Path = osType switch
+            {
+                OsType.Unknown => localResource.PathWindows,
+                OsType.Windows => localResource.PathWindows,
+                OsType.Linux => localResource.PathLinux,
+                OsType.Mac => localResource.PathMac,
+                _ => localResource.PathWindows
+            },
             Startup = localResource.Startup,
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
@@ -88,9 +107,9 @@ public static class LocalResourceMappers
         };
     }
 
-    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceSlim> localResources)
+    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceSlim> localResources, OsType osType)
     {
-        return localResources.Select(ToHost);
+        return localResources.Select(x => x.ToHost(osType));
     }
 
     public static LocalResourceCreate ToCreate(this LocalResourceSlim localResource)
@@ -100,7 +119,9 @@ public static class LocalResourceMappers
             GameProfileId = localResource.GameProfileId,
             GameServerId = localResource.GameServerId,
             Name = localResource.Name,
-            Path = localResource.Path,
+            PathWindows = localResource.PathWindows,
+            PathLinux = localResource.PathLinux,
+            PathMac = localResource.PathMac,
             Startup = localResource.Startup,
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,

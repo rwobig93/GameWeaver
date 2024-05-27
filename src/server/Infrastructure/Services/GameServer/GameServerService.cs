@@ -138,6 +138,10 @@ public class GameServerService : IGameServerService
         if (!defaultProfileRequest.Succeeded || defaultProfileRequest.Result is null)
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.DefaultProfileNotFound);
 
+        var foundHost = await _hostRepository.GetByIdAsync(createObject.HostId);
+        if (!foundHost.Succeeded || foundHost.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
         // TODO: Rename property to parent profile to allow setting parent profile on creation, which can be modified later
         var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
         var serverProcessName = parentGameProfileRequest.Result is null ? defaultProfileRequest.Result.ServerProcessName : parentGameProfileRequest.Result.ServerProcessName;
@@ -176,7 +180,7 @@ public class GameServerService : IGameServerService
         gameServerHost.SteamToolId = gameRequest.Result.SteamToolId;
 
         var gameServerResources = await GetLocalResourcesForGameServerIdAsync(gameServerHost.Id);
-        gameServerHost.Resources.AddRange(gameServerResources.Data.ToHosts());
+        gameServerHost.Resources.AddRange(gameServerResources.Data.ToHosts(foundHost.Result.Os));
         
         var hostInstallRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerInstall, createObject.HostId,
             gameServerHost, createObject.CreatedBy, _dateTime.NowDatabaseTime);
@@ -295,6 +299,9 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate createObject)
     {
+        // Default friendly name to category/key if a short or empty friendly name is provided
+        createObject.FriendlyName = createObject.FriendlyName.Length <= 3 ? $"{createObject.Category}/{createObject.Key}" : createObject.FriendlyName;
+        
         var localResourceRequest = await _gameServerRepository.GetLocalResourceByIdAsync(createObject.LocalResourceId);
         if (!localResourceRequest.Succeeded || localResourceRequest.Result is null)
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
@@ -491,7 +498,9 @@ public class GameServerService : IGameServerService
         // Ensure we aren't creating a duplicate resource
         var duplicateResources = currentResources.Result.Where(x =>
             x.Type == createObject.Type &&
-            x.Path == createObject.Path &&
+            (x.PathWindows.Length > 0 && x.PathWindows == createObject.PathWindows) &&
+            (x.PathLinux.Length > 0 && x.PathLinux == createObject.PathLinux) &&
+            (x.PathMac.Length > 0 && x.PathMac == createObject.PathMac) &&
             x.Args == createObject.Args);
         if (duplicateResources.Any())
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
@@ -529,13 +538,17 @@ public class GameServerService : IGameServerService
         if (!foundServer.Succeeded || foundServer.Result is null)
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameServers.NotFound);
 
+        var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
+        if (!foundHost.Succeeded || foundHost.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
         var deleteRequest = await _gameServerRepository.DeleteLocalResourceAsync(id);
         if (!deleteRequest.Succeeded)
             return await Result.FailAsync(deleteRequest.ErrorMessage);
 
         // Send local resource to the host game server to enforce state
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigDelete, foundServer.Result.HostId,
-            findRequest.Result.ToHost(), modifyingUserId, _dateTime.NowDatabaseTime);
+            findRequest.Result.ToHost(foundHost.Result.Os), modifyingUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
             return await Result<Guid>.FailAsync(configUpdateRequest.ErrorMessage);
 
@@ -549,6 +562,10 @@ public class GameServerService : IGameServerService
         if (!foundServer.Succeeded || foundServer.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
 
+        var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
+        if (!foundHost.Succeeded || foundHost.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
         var findRequest = await GetLocalResourceByIdAsync(resourceId);
         if (!findRequest.Succeeded)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
@@ -556,7 +573,7 @@ public class GameServerService : IGameServerService
         var gameServerHost = new GameServerToHost
         {
             Id = foundServer.Result.Id,
-            Resources = new SerializableList<LocalResourceHost>([findRequest.Data.ToHost()])
+            Resources = new SerializableList<LocalResourceHost>([findRequest.Data.ToHost(foundHost.Result.Os)])
         };
         
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdate,
@@ -572,6 +589,10 @@ public class GameServerService : IGameServerService
         var foundServer = await _gameServerRepository.GetByIdAsync(serverId);
         if (!foundServer.Succeeded || foundServer.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+
+        var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
+        if (!foundHost.Succeeded || foundHost.Result is null)
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
         
         var resourcesRequest = await GetLocalResourcesForGameServerIdAsync(foundServer.Result.Id);
         if (!resourcesRequest.Succeeded)
@@ -580,7 +601,7 @@ public class GameServerService : IGameServerService
         var gameServerHost = new GameServerToHost
         {
             Id = foundServer.Result.Id,
-            Resources = new SerializableList<LocalResourceHost>(resourcesRequest.Data.ToHosts())
+            Resources = new SerializableList<LocalResourceHost>(resourcesRequest.Data.ToHosts(foundHost.Result.Os))
         };
         
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdateFull,

@@ -24,7 +24,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                     [Path] NVARCHAR(128) NOT NULL,
                     [Category] NVARCHAR(128) NOT NULL,
                     [Key] NVARCHAR(128) NOT NULL,
-                    [Value] NVARCHAR(128) NOT NULL
+                    [Value] NVARCHAR(128) NOT NULL,
+                    [FriendlyName] NVARCHAR(128) NULL
                 )
             end"
     };
@@ -115,12 +116,13 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 @Path NVARCHAR(128),
                 @Category NVARCHAR(128),
                 @Key NVARCHAR(128),
-                @Value NVARCHAR(128)
+                @Value NVARCHAR(128),
+                @FriendlyName NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (LocalResourceId, DuplicateKey, Path, Category, [Key], Value)
+                INSERT into dbo.[{Table.TableName}] (LocalResourceId, DuplicateKey, Path, Category, [Key], Value, FriendlyName)
                 OUTPUT INSERTED.Id
-                VALUES (@LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value);
+                VALUES (@LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value, @FriendlyName);
             end"
     };
     
@@ -141,7 +143,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'
-                    OR c.Value LIKE '%' + @SearchTerm + '%';
+                    OR c.Value LIKE '%' + @SearchTerm + '%'
+                    OR c.FriendlyName LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -165,6 +168,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'
                     OR c.Value LIKE '%' + @SearchTerm + '%'
+                    OR c.FriendlyName LIKE '%' + @SearchTerm + '%'
                 ORDER BY c.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -181,12 +185,13 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 @Path NVARCHAR(128) = null,
                 @Category NVARCHAR(128) = null,
                 @Key NVARCHAR(128) = null,
-                @Value NVARCHAR(128) = null
+                @Value NVARCHAR(128) = null,
+                @FriendlyName NVARCHAR(128) = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET LocalResourceId = COALESCE(@LocalResourceId, LocalResourceId), DuplicateKey = COALESCE(@DuplicateKey, DuplicateKey), Path = COALESCE(@Path, Path),
-                    Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]), Value = COALESCE(@Value, Value)
+                    Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]), Value = COALESCE(@Value, Value), FriendlyName = COALESCE(@FriendlyName, FriendlyName)
                 WHERE Id = @Id;
             end"
     };

@@ -9,4 +9,5 @@ public class ConfigurationItemDb
     public string Category { get; set; } = null!;
     public string Key { get; set; } = null!;
     public string Value { get; set; } = null!;
+    public string FriendlyName { get; set; } = "";
 }

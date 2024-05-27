@@ -75,7 +75,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceEngine = new()
     {
         Name = "Config - Engine",
-        Path = "ConanSandbox/Saved/Config/WindowsServer/Engine",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Engine",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
@@ -101,7 +101,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceGame = new()
     {
         Name = "Config - Game",
-        Path = "ConanSandbox/Saved/Config/WindowsServer/Game",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Game",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
@@ -115,7 +115,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceServerSettings = new()
     {
         Name = "Config - ServerSettings",
-        Path = "ConanSandbox/Saved/Config/WindowsServer/ServerSettings",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/ServerSettings",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
@@ -323,7 +323,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
 
         Snackbar.Add($"Created game: [{createGameRequest.Data}]{gameCreate.FriendlyName}", Severity.Success);
-        _desiredGame.Id = matchingGameRequest.Data.Id;
+        _desiredGame.Id = createGameRequest.Data;
     }
 
     private async Task EnforceGameProfileResources()
@@ -344,7 +344,7 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         foreach (var resource in desiredResources)
         {
-            var matchingResource = profileResources.Data.FirstOrDefault(x => x.Path == resource.Path && x.Type == resource.Type);
+            var matchingResource = profileResources.Data.FirstOrDefault(x => x.PathWindows == resource.PathWindows && x.Type == resource.Type);
             if (matchingResource is not null)
             {
                 resource.Id = matchingResource.Id;
@@ -464,7 +464,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             GameProfileId = matchingProfile.Data.Id,
             GameServerId = _selectedGameServer?.Id ?? Guid.Empty,
             Name = "Dedicated Server Executable",
-            Path = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping",
+            PathWindows = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping",
             Startup = true,
             StartupPriority = 0,
             Type = ResourceType.Executable,

@@ -22,7 +22,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                     [GameProfileId] UNIQUEIDENTIFIER NOT NULL,
                     [GameServerId] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(128) NOT NULL,
-                    [Path] NVARCHAR(128) NOT NULL,
+                    [PathWindows] NVARCHAR(128) NOT NULL,
+                    [PathLinux] NVARCHAR(128) NOT NULL,
+                    [PathMac] NVARCHAR(128) NOT NULL,
                     [Startup] BIT NOT NULL,
                     [StartupPriority] int NOT NULL,
                     [Type] int NOT NULL,
@@ -133,7 +135,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @GameProfileId UNIQUEIDENTIFIER,
                 @GameServerId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(128),
-                @Path NVARCHAR(128),
+                @PathWindows NVARCHAR(128),
+                @PathLinux NVARCHAR(128),
+                @PathMac NVARCHAR(128),
                 @Startup BIT,
                 @StartupPriority int,
                 @Type int,
@@ -142,9 +146,10 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @Args NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, GameServerId, Name, Path, Startup, StartupPriority, Type, ContentType, Extension, Args)
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, GameServerId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType,
+                                                     Extension, Args)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @GameServerId, @Name, @Path, @Startup, @StartupPriority, @Type, @ContentType, @Extension, @Args);
+                VALUES (@GameProfileId, @GameServerId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Extension, @Args);
             end"
     };
     
@@ -164,7 +169,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 WHERE l.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR l.GameServerId LIKE '%' + @SearchTerm + '%'
                     OR l.Name LIKE '%' + @SearchTerm + '%'
-                    OR l.Path LIKE '%' + @SearchTerm + '%'
+                    OR l.PathWindows LIKE '%' + @SearchTerm + '%'
+                    OR l.PathLinux LIKE '%' + @SearchTerm + '%'
+                    OR l.PathMac LIKE '%' + @SearchTerm + '%'
                     OR l.Extension LIKE '%' + @SearchTerm + '%'
                     OR l.Args LIKE '%' + @SearchTerm + '%';
             end"
@@ -188,7 +195,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 WHERE l.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR l.GameServerId LIKE '%' + @SearchTerm + '%'
                     OR l.Name LIKE '%' + @SearchTerm + '%'
-                    OR l.Path LIKE '%' + @SearchTerm + '%'
+                    OR l.PathWindows LIKE '%' + @SearchTerm + '%'
+                    OR l.PathLinux LIKE '%' + @SearchTerm + '%'
+                    OR l.PathMac LIKE '%' + @SearchTerm + '%'
                     OR l.Extension LIKE '%' + @SearchTerm + '%'
                     OR l.Args LIKE '%' + @SearchTerm + '%'
                 ORDER BY l.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -205,7 +214,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @GameProfileId UNIQUEIDENTIFIER = null,
                 @GameServerId UNIQUEIDENTIFIER = null,
                 @Name NVARCHAR(128) = null,
-                @Path NVARCHAR(128) = null,
+                @PathWindows NVARCHAR(128) = null,
+                @PathLinux NVARCHAR(128) = null,
+                @PathMac NVARCHAR(128) = null,
                 @Startup BIT = null,
                 @StartupPriority int = null,
                 @Type int = null,
@@ -216,8 +227,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), GameServerId = COALESCE(@GameServerId, GameServerId), Name = COALESCE(@Name, Name),
-                    Path = COALESCE(@Path, Path), Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority),
-                    Type = COALESCE(@Type, Type), ContentType = COALESCE(@ContentType, ContentType), Extension = COALESCE(@Extension, Extension), Args = COALESCE(@Args, Args)
+                    PathWindows = COALESCE(@PathWindows, PathWindows), PathLinux = COALESCE(@PathLinux, PathLinux), PathMac = COALESCE(@PathMac, PathMac),
+                    Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority), Type = COALESCE(@Type, Type),
+                    ContentType = COALESCE(@ContentType, ContentType), Extension = COALESCE(@Extension, Extension), Args = COALESCE(@Args, Args)
                 WHERE Id = @Id;
             end"
     };
