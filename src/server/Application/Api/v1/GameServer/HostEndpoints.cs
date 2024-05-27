@@ -164,8 +164,8 @@ public static class HostEndpoints
                 CpuUsage = request.CpuUsage,
                 RamUsage = request.RamUsage,
                 Uptime = request.Uptime,
-                NetworkOutMb = request.NetworkOutMb,
-                NetworkInMb = request.NetworkInMb
+                NetworkOutBytes = request.NetworkOutBytes,
+                NetworkInBytes = request.NetworkInBytes
             };
             
             var checkInResponse = await hostService.CreateCheckInAsync(createCheckIn);
@@ -608,7 +608,7 @@ public static class HostEndpoints
     {
         try
         {
-            return await hostService.GetCheckInByHostIdAsync(id);
+            return await hostService.GetChecksInByHostIdAsync(id);
         }
         catch (Exception ex)
         {

@@ -60,8 +60,8 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT m.*
-                WHERE m.IsDeleted = 0
-                FROM dbo.[{Table.TableName}] m;
+                FROM dbo.[{Table.TableName}] m
+                WHERE m.IsDeleted = 0;
             end"
     };
 

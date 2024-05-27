@@ -7,6 +7,7 @@ using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
+using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
@@ -44,6 +45,8 @@ public partial class DeveloperTesting : IAsyncDisposable
     private HostSlim? _selectedHost;
     private string _latestWorkState = "";
     private string _registrationToken = "";
+    private Timer? _timer;
+    private HostCheckInFull? _latestHostCheckin;
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -143,11 +146,36 @@ public partial class DeveloperTesting : IAsyncDisposable
 
             EventService.GameServerStatusChanged += GameServerStatusChanged;
             EventService.WeaverWorkStatusChanged += WorkStatusChanged;
+            _timer = new Timer(async _ => { await UpdateHostUsage(); }, null, 0, 1000);
             
             await AttemptDebugSetup();
             
             StateHasChanged();
         }
+    }
+
+    private async Task UpdateHostUsage()
+    {
+        if (_selectedHost is null)
+        {
+            return;
+        }
+
+        var usageRequest = await HostService.GetCheckInsLatestByHostIdAsync(_selectedHost.Id, 10);
+        if (!usageRequest.Succeeded)
+        {
+            Snackbar.Add($"Host usage gather failed: {usageRequest.Messages}", Severity.Error);
+            return;
+        }
+
+        var latestCheckin = usageRequest.Data.FirstOrDefault();
+        if (latestCheckin is null)
+        {
+            return;
+        }
+
+        _latestHostCheckin = latestCheckin;
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task AttemptDebugSetup()
@@ -639,7 +667,6 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private async Task GenerateHostRegistration()
     {
-        // TODO: ERROR: Implicit conversion from data type nvarchar to varbinary is not allowed. Use the CONVERT function to run this query.
         var description = $"Test Host - {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
         var registerRequest = await HostService.RegistrationGenerateNew(description, _loggedInUser.Id, _loggedInUser.Id);
         if (!registerRequest.Succeeded)
@@ -652,7 +679,13 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
         
         // TODO: Add host registration token cleanup after configured time period if it hasn't been used
-        await WebClientService.InvokeClipboardCopy(registerRequest.Data.RegisterUrl);
+        _registrationToken = registerRequest.Data.RegisterUrl;
+        var copyResult = await WebClientService.InvokeClipboardCopy(registerRequest.Data.RegisterUrl);
+        if (!copyResult.Succeeded)
+        {
+            Snackbar.Add($"Generated host registration token but failed to copy it to your clipboard", Severity.Warning);
+            return;
+        }
         Snackbar.Add($"Generated host registration token and copied it to your clipboard!", Severity.Success);
     }
     
@@ -660,6 +693,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     {
         EventService.GameServerStatusChanged -= GameServerStatusChanged;
         EventService.WeaverWorkStatusChanged -= WorkStatusChanged;
+        _timer?.Dispose();
         await Task.CompletedTask;
     }
 }

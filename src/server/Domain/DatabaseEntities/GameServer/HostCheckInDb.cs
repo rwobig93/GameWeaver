@@ -9,6 +9,6 @@ public class HostCheckInDb
     public float CpuUsage { get; set; }
     public float RamUsage { get; set; }
     public float Uptime { get; set; }
-    public int NetworkOutMb { get; set; }
-    public int NetworkInMb { get; set; }
+    public int NetworkOutBytes { get; set; }
+    public int NetworkInBytes { get; set; }
 }

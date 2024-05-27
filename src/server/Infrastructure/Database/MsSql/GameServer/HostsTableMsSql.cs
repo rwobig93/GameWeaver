@@ -162,11 +162,11 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, Hostname, FriendlyName, Description, PrivateIp, PublicIp, CurrentState, Os,
-                                                     OsName, OsVersion, AllowedPorts, Cpus, Motherboards, Storage, NetworkInterfaces, RamModules, Gpus, AllowedPorts,
-                                                     CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
+                                                     OsName, OsVersion, AllowedPorts, Cpus, Motherboards, Storage, NetworkInterfaces, RamModules, Gpus, CreatedBy, CreatedOn,
+                                                     LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
                 VALUES (@OwnerId, @PasswordHash, @PasswordSalt, @Hostname, @FriendlyName, @Description, @PrivateIp, @PublicIp, @CurrentState, @Os,
-                        @OsName, @OsVersion, @AllowedPorts, @Cpus, @Motherboards, @Storage, @NetworkInterfaces, @RamModules, @Gpus, @AllowedPorts,
+                        @OsName, @OsVersion, @AllowedPorts, @Cpus, @Motherboards, @Storage, @NetworkInterfaces, @RamModules, @Gpus,
                         @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"
     };
@@ -258,9 +258,9 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                     Os = COALESCE(@Os, Os), OsName = COALESCE(@OsName, OsName), OsVersion = COALESCE(@OsVersion, OsVersion),
                     AllowedPorts = COALESCE(@AllowedPorts, AllowedPorts), Cpus = COALESCE(@Cpus, Cpus), Motherboards = COALESCE(@Motherboards, Motherboards),
                     Storage = COALESCE(@Storage, Storage), NetworkInterfaces = COALESCE(@NetworkInterfaces, NetworkInterfaces), RamModules = COALESCE(@RamModules, RamModules),
-                    Gpus = COALESCE(@Gpus, Gpus), AllowedPorts = COALESCE(@AllowedPorts, AllowedPorts), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
-                    CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
-                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
+                    Gpus = COALESCE(@Gpus, Gpus), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
+                    IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;
             end"
     };

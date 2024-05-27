@@ -14,7 +14,7 @@ public partial class HostCheckInRequest
     [MemoryPackOrder(3)]
     public float Uptime { get; set; }
     [MemoryPackOrder(4)]
-    public int NetworkOutMb { get; set; }
+    public int NetworkOutBytes { get; set; }
     [MemoryPackOrder(5)]
-    public int NetworkInMb { get; set; }
+    public int NetworkInBytes { get; set; }
 }

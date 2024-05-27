@@ -1751,8 +1751,8 @@
             <b>float</b> CpuUsage<br/>
             <b>float</b> RamUsage<br/>
             <b>float</b> Uptime<br/>
-            <b>int</b> NetworkOutMb<br/>
-            <b>int</b> NetworkInMb<br/>
+            <b>int</b> NetworkOutBytes<br/>
+            <b>int</b> NetworkInBytes<br/>
             </code>
             </remarks>
         </member>

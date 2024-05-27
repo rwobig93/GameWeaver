@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Application.Helpers;
 using Application.Requests.Host;
 using Application.Services;
@@ -124,9 +125,11 @@ public class HostWorker : BackgroundService
             HostId = hostId,
             Os = new HostOperatingSystem
             {
+                Os = OsHelpers.GetCurrentOs(),
                 Name = currentHostInfo.OperatingSystem.Name,
                 Version = currentHostInfo.OperatingSystem.VersionString
-            }
+            },
+            Hostname = _hostService.GetHostname()
         };
         
         currentHostInfo.MotherboardList.ForEach(motherboard => hostDetailRequest.Motherboards.Add(new HostMotherboard

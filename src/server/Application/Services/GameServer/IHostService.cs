@@ -42,7 +42,8 @@ public interface IHostService
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCheckInCountAsync();
     Task<IResult<HostCheckInFull>> GetCheckInByIdAsync(int id);
-    Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInByHostIdAsync(Guid id);
+    Task<IResult<IEnumerable<HostCheckInFull>>> GetChecksInByHostIdAsync(Guid id);
+    Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInsLatestByHostIdAsync(Guid id, int count = 10);
     Task<IResult> CreateCheckInAsync(HostCheckInCreate createObject);
     Task<IResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id);
     Task<IResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan);

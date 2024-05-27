@@ -63,20 +63,32 @@ public class HostService : IHostService
             return await Result<HostNewRegisterResponse>.FailAsync(matchingDescriptionRequest.ErrorMessage);
         if (matchingDescriptionRequest.Result is null || matchingDescriptionRequest.Result.Any())
             return await Result<HostNewRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.MatchingRegistrationExists);
-        
-        // Create host to get the GUID to bind the request to for registering this host
-        var newHostRequest = await _hostRepository.CreateAsync(new HostCreate
+
+        var hostCreate = new HostCreate
         {
             OwnerId = hostOwnerId,
             PasswordHash = UrlHelpers.GenerateToken(),
             PasswordSalt = UrlHelpers.GenerateToken(),
+            Hostname = "",
+            FriendlyName = "",
             Description = description,
+            PrivateIp = "",
+            PublicIp = "",
             CurrentState = ConnectivityState.UnRegistered,
+            Os = OsType.Unknown,
+            AllowedPorts = [],
             CreatedBy = requestingUserId,
             CreatedOn = _dateTime.NowDatabaseTime,
+            LastModifiedBy = null,
+            LastModifiedOn = null,
             IsDeleted = false,
             DeletedOn = null
-        });
+        };
+
+        var convertedCreate = hostCreate.ToCreateDb();
+        
+        // Create host to get the GUID to bind the request to for registering this host
+        var newHostRequest = await _hostRepository.CreateAsync(convertedCreate);
         if (!newHostRequest.Succeeded)
             return await Result<HostNewRegisterResponse>.FailAsync(newHostRequest.ErrorMessage);
 
@@ -284,7 +296,7 @@ public class HostService : IHostService
 
     public async Task<IResult<Guid>> CreateAsync(HostCreate createObject)
     {
-        var createHostRequest = await _hostRepository.CreateAsync(createObject);
+        var createHostRequest = await _hostRepository.CreateAsync(createObject.ToCreateDb());
         if (!createHostRequest.Succeeded)
             return await Result<Guid>.FailAsync(createHostRequest.ErrorMessage);
 
@@ -492,15 +504,26 @@ public class HostService : IHostService
         return await Result<HostCheckInFull>.SuccessAsync(foundCheckin.Result.ToFull());
     }
 
-    public async Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInByHostIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<HostCheckInFull>>> GetChecksInByHostIdAsync(Guid id)
     {
-        var foundCheckin = await _hostRepository.GetCheckInByHostIdAsync(id);
-        if (!foundCheckin.Succeeded)
-            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckin.ErrorMessage);
-        if (foundCheckin.Result is null)
+        var foundCheckins = await _hostRepository.GetChecksInByHostIdAsync(id);
+        if (!foundCheckins.Succeeded)
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckins.ErrorMessage);
+        if (foundCheckins.Result is null)
             return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckin.Result.ToFulls());
+        return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckins.Result.ToFulls());
+    }
+
+    public async Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInsLatestByHostIdAsync(Guid id, int count = 10)
+    {
+        var foundCheckins = await _hostRepository.GetCheckInsLatestByHostIdAsync(id, count);
+        if (!foundCheckins.Succeeded)
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckins.ErrorMessage);
+        if (foundCheckins.Result is null)
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+
+        return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckins.Result.ToFulls());
     }
 
     public async Task<IResult> CreateCheckInAsync(HostCheckInCreate createObject)

@@ -14,11 +14,11 @@ public class HostCreate
     public string PublicIp { get; set; } = "";
     public ConnectivityState CurrentState { get; set; } = ConnectivityState.Unknown;
     public OsType Os { get; set; }
-    public string AllowedPorts { get; set; } = "";
+    public List<string> AllowedPorts { get; set; } = [];
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; } = DateTime.Now;
-    public Guid? LastModifiedBy { get; set; } = null;
-    public DateTime? LastModifiedOn { get; set; } = null;
-    public bool IsDeleted { get; set; } = false;
-    public DateTime? DeletedOn { get; set; } = null;
+    public Guid? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedOn { get; set; }
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedOn { get; set; }
 }

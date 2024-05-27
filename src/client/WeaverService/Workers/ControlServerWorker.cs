@@ -99,8 +99,8 @@ public class ControlServerWorker : BackgroundService
             CpuUsage = currentResourceUsage.CpuUsage,
             RamUsage = currentResourceUsage.RamUsage,
             Uptime = currentResourceUsage.Uptime,
-            NetworkOutMb = currentResourceUsage.NetworkOutBytes,
-            NetworkInMb = currentResourceUsage.NetworkInBytes
+            NetworkOutBytes = currentResourceUsage.NetworkOutBytes,
+            NetworkInBytes = currentResourceUsage.NetworkInBytes
         };
         
         var checkInResponse = await _serverService.Checkin(checkInRequest);

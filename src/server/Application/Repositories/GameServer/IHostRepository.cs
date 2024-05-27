@@ -16,7 +16,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<HostDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<HostDb>> GetByHostnameAsync(string hostName);
-    Task<DatabaseActionResult<Guid>> CreateAsync(HostCreate createObject);
+    Task<DatabaseActionResult<Guid>> CreateAsync(HostCreateDb createObject);
     Task<DatabaseActionResult> UpdateAsync(HostUpdateDb updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId);
     Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchAsync(string searchText);
@@ -39,7 +39,8 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCheckInCountAsync();
     Task<DatabaseActionResult<HostCheckInDb>> GetCheckInByIdAsync(int id);
-    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInByHostIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetChecksInByHostIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsLatestByHostIdAsync(Guid id, int count);
     Task<DatabaseActionResult> CreateCheckInAsync(HostCheckInCreate createObject);
     Task<DatabaseActionResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id);
     Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan);

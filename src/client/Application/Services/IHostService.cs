@@ -9,4 +9,5 @@ public interface IHostService
     void PollHostResources();
     HostResourceUsage GetCurrentResourceUsage();
     IHardwareInfo GetHardwareInfo();
+    string GetHostname();
 }

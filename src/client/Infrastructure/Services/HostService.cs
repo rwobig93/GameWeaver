@@ -1,4 +1,5 @@
-﻿using Application.Services;
+﻿using System.Net;
+using Application.Services;
 using Domain.Models.Host;
 using Hardware.Info;
 
@@ -91,5 +92,20 @@ public class HostService : IHostService
     public IHardwareInfo GetHardwareInfo()
     {
         return HardwareInfo;
+    }
+
+    public string GetHostname()
+    {
+        try
+        {
+            var hostname = Dns.GetHostName();
+            _logger.Debug("Gathered machine hostname: {Hostname}", hostname);
+            return hostname;
+        }
+        catch (Exception ex)
+        {
+            _logger.Error("Failure occurred gathering hostname: {Error}", ex.Message);
+            return "";
+        }
     }
 }

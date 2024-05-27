@@ -126,6 +126,18 @@
                     </MudButton>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudChipSet Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                        <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">CPU: @(Math.Round(_latestHostCheckin?.CpuUsage ?? 0))%</MudChip>
+                        <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">RAM: @(Math.Round(_latestHostCheckin?.RamUsage ?? 0))%</MudChip>
+                        <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">
+                            Uptime:
+                             @(TimeSpan.FromMilliseconds(_latestHostCheckin?.Uptime ?? 0).Days)d
+                             @(TimeSpan.FromMilliseconds(_latestHostCheckin?.Uptime ?? 0).Hours)h
+                             @(TimeSpan.FromMilliseconds(_latestHostCheckin?.Uptime ?? 0).Minutes)m
+                        </MudChip>
+                        <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">Net In:  @(_latestHostCheckin?.NetworkInBytes / 1_000)kB</MudChip>
+                        <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">Net Out: @(_latestHostCheckin?.NetworkOutBytes / 1_000)kB</MudChip>
+                    </MudChipSet>
                     <MudTreeView T="string" Hover="true" ExpandOnClick="true">
                         <MudTreeViewItem Value="@($"ID: {_selectedHost?.Id.ToString()}")"/>
                         <MudTreeViewItem Value="@($"Hostname: {_selectedHost?.Hostname}")"/>
@@ -141,14 +153,14 @@
                             {
                                 foreach (var motherboard in _selectedHost.Motherboards)
                                 {
-                                    <MudTreeViewItem Value="@($"MOBO: {motherboard.Manufacturer} | {motherboard.Product}")" />
+                                    <MudTreeViewItem Value="@($"MOBO: {motherboard.Manufacturer} | {motherboard.Product}")"/>
                                 }
                             }
                             @if (_selectedHost?.Cpus != null)
                             {
                                 foreach (var cpu in _selectedHost.Cpus)
                                 {
-                                    <MudTreeViewItem Value="@($"CPU: {cpu.Name} {cpu.CoreCount}/{cpu.LogicalProcessorCount} using {cpu.SocketDesignation}")" />
+                                    <MudTreeViewItem Value="@($"CPU: {cpu.Name} {cpu.CoreCount}/{cpu.LogicalProcessorCount} using {cpu.SocketDesignation}")"/>
                                 }
                             }
                         </MudTreeViewItem>
@@ -157,7 +169,7 @@
                             {
                                 foreach (var ram in _selectedHost.RamModules)
                                 {
-                                    <MudTreeViewItem Value="@($"{ram.Manufacturer} {ram.Capacity} @ {ram.Speed}")" />
+                                    <MudTreeViewItem Value="@($"{ram.Manufacturer} {ram.Capacity} @ {ram.Speed}")"/>
                                 }
                             }
                         </MudTreeViewItem>
@@ -166,7 +178,7 @@
                             {
                                 foreach (var device in _selectedHost.Storage)
                                 {
-                                    <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model} | {device.MountPoint} {device.FreeSpace}/{device.TotalSpace}")" />
+                                    <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model} | {device.MountPoint} {device.FreeSpace}/{device.TotalSpace}")"/>
                                 }
                             }
                         </MudTreeViewItem>
@@ -175,7 +187,7 @@
                             {
                                 foreach (var gpu in _selectedHost.Gpus)
                                 {
-                                    <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {gpu.AdapterRam} | MODE: {gpu.VideoMode}")" />
+                                    <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {gpu.AdapterRam} | MODE: {gpu.VideoMode}")"/>
                                 }
                             }
                         </MudTreeViewItem>
@@ -185,18 +197,18 @@
                                 foreach (var netIf in _selectedHost.NetworkInterfaces)
                                 {
                                     <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {netIf.Speed} | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
-                                        <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")" />
+                                        <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")"/>
                                         @foreach (var address in netIf.DefaultGateways)
                                         {
-                                            <MudTreeViewItem Value="@($"GATEWAY: {address}")" />
+                                            <MudTreeViewItem Value="@($"GATEWAY: {address}")"/>
                                         }
                                         @foreach (var address in netIf.IpAddresses)
                                         {
-                                            <MudTreeViewItem Value="@($"ADDRESS: {address}")" />
+                                            <MudTreeViewItem Value="@($"ADDRESS: {address}")"/>
                                         }
                                         @foreach (var server in netIf.DnsServers)
                                         {
-                                            <MudTreeViewItem Value="@($"DNS: {server}")" />
+                                            <MudTreeViewItem Value="@($"DNS: {server}")"/>
                                         }
                                     </MudTreeViewItem>
                                 }

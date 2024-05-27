@@ -125,7 +125,7 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<Guid>> CreateAsync(HostCreate createObject)
+    public async Task<DatabaseActionResult<Guid>> CreateAsync(HostCreateDb createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
@@ -137,8 +137,10 @@ public class HostRepositoryMsSql : IHostRepository
 
             var foundHost = await GetByIdAsync(createdId);
 
+            var convertedHost = foundHost.Result!.ToSlim();
+
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Hosts, foundHost.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundHost.Result!.ToSlim());
+                createObject.CreatedBy, DatabaseActionType.Create, null, convertedHost);
 
             actionReturn.Succeed(createdId);
         }
@@ -599,7 +601,7 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInByHostIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetChecksInByHostIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
 
@@ -613,6 +615,25 @@ public class HostRepositoryMsSql : IHostRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsLatestByHostIdAsync(Guid id, int count)
+    {
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.GetByHostIdLatest, new {HostId = id, Count = count});
+            
+            actionReturn.Succeed(foundCheckIns);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetByHostIdLatest.Path, ex.Message);
         }
 
         return actionReturn;
