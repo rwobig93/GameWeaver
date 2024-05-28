@@ -10,6 +10,7 @@ public class ServerStateRecordsTableMsSql : IMsSqlEnforcedEntity
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ServerStateRecordsTableMsSql).GetDbScriptsFromClass();
     
+    // TODO: Add check if version is newer than application version, if it is stop with a failure since we don't want to clobber migrations
     public static readonly SqlTable Table = new()
     {
         TableName = TableName,
