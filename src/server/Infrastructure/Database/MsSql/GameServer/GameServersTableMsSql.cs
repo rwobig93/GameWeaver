@@ -169,7 +169,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.GameProfileId = @GameProfileId AND g.IsDeleted = 0
+                WHERE g.GameProfileId = @GameProfileId
+                    AND g.IsDeleted = 0
                 ORDER BY g.Id;
             end"
     };

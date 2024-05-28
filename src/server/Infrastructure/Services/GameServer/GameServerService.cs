@@ -84,37 +84,37 @@ public class GameServerService : IGameServerService
         return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByGameIdAsync(int id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByGameIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByGameProfileIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameProfileIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByGameProfileIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByHostIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByHostIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
     public async Task<IResult<GameServerSlim>> GetByOwnerIdAsync(Guid id)
@@ -196,6 +196,20 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
+        if (updateObject.GameProfileId is not null)
+        {
+            var foundGame = await _gameRepository.GetByIdAsync(findRequest.Result.GameId);
+            if (!foundGame.Succeeded)
+            {
+                return await Result.FailAsync(foundGame.ErrorMessage);
+            }
+
+            if (foundGame.Result?.DefaultGameProfileId == updateObject.GameProfileId)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.GameServers.DefaultProfileAssignment);
+            }
+        }
+
         updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
         var request = await _gameServerRepository.UpdateAsync(updateObject);
@@ -210,16 +224,40 @@ public class GameServerService : IGameServerService
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId, bool force = false)
     {
         var findRequest = await _gameServerRepository.GetByIdAsync(id);
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
+        var profileServers = await _gameServerRepository.GetByGameProfileIdAsync(findRequest.Result.GameProfileId);
+        if (!profileServers.Succeeded || profileServers.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+        }
+        // Delete the assigned game profile if the only assignment is this game server
+        if (profileServers.Result.ToList().Count == 1)
+        {
+            var profileDeleteRequest = await DeleteGameProfileAsync(findRequest.Result.GameProfileId, modifyingUserId);
+            if (!profileDeleteRequest.Succeeded)
+            {
+                return await Result.FailAsync(profileDeleteRequest.Messages);
+            }
+        }
+
         var updateStatusRequest = await UpdateAsync(new GameServerUpdate {Id = findRequest.Result.Id, ServerState = ConnectivityState.Uninstalling});
         if (!updateStatusRequest.Succeeded)
         {
             return await Result.FailAsync(updateStatusRequest.Messages);
+        }
+
+        if (force)
+        {
+            var deleteRequest = await _gameServerRepository.DeleteAsync(findRequest.Result.Id, modifyingUserId);
+            if (!deleteRequest.Succeeded)
+                return await Result.FailAsync(deleteRequest.ErrorMessage);
+
+            return await Result.SuccessAsync();
         }
 
         var hostDeleteRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUninstall, findRequest.Result.HostId,
@@ -528,7 +566,7 @@ public class GameServerService : IGameServerService
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteLocalResourceAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> DeleteLocalResourceAsync(Guid id, Guid modifyingUserId, bool force = false)
     {
         var findRequest = await _gameServerRepository.GetLocalResourceByIdAsync(id);
         if (!findRequest.Succeeded || findRequest.Result is null)
@@ -536,16 +574,18 @@ public class GameServerService : IGameServerService
         
         var foundServer = await _gameServerRepository.GetByIdAsync(findRequest.Result.GameServerId);
         if (!foundServer.Succeeded || foundServer.Result is null)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
 
         var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
         if (!foundHost.Succeeded || foundHost.Result is null)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
         var deleteRequest = await _gameServerRepository.DeleteLocalResourceAsync(id);
         if (!deleteRequest.Succeeded)
             return await Result.FailAsync(deleteRequest.ErrorMessage);
 
+        if (force) return await Result.SuccessAsync();
+        
         // Send local resource to the host game server to enforce state
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigDelete, foundServer.Result.HostId,
             findRequest.Result.ToHost(foundHost.Result.Os), modifyingUserId, _dateTime.NowDatabaseTime);
@@ -693,7 +733,7 @@ public class GameServerService : IGameServerService
         return await Result<GameProfileSlim>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByGameIdAsync(int id)
+    public async Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByGameIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetGameProfilesByGameIdAsync(id);
         if (!request.Succeeded)
@@ -768,6 +808,45 @@ public class GameServerService : IGameServerService
         var findRequest = await _gameServerRepository.GetGameProfileByIdAsync(id);
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        
+        // Don't allow deletion if a default game profile or assigned to game servers
+        var matchingGame = await _gameRepository.GetByIdAsync(findRequest.Result.GameId);
+        if (!matchingGame.Succeeded || matchingGame.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+        }
+        if (matchingGame.Result.DefaultGameProfileId == findRequest.Result.Id)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameProfiles.DeleteDefaultProfile);
+        }
+
+        var assignedGameServers = await _gameServerRepository.GetByGameProfileIdAsync(findRequest.Result.Id);
+        if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Any())
+        {
+            List<string> errorMessages = [ErrorMessageConstants.GameProfiles.AssignedGameServers];
+            errorMessages.AddRange((assignedGameServers.Result ?? Array.Empty<GameServerDb>()).ToList().Select(assignment => $"Assigned GameServer: [id]{assignment.Id} [name]{assignment.ServerName}"));
+            return await Result.FailAsync(errorMessages);
+        }
+
+        // Delete all assigned local resources
+        var assignedLocalResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(findRequest.Result.Id);
+        if (assignedLocalResources.Succeeded)
+        {
+            List<string> errorMessages = [];
+            foreach (var resource in assignedLocalResources.Result?.ToList() ?? [])
+            {
+                var resourceDeleteRequest = await DeleteLocalResourceAsync(resource.Id, modifyingUserId, true);
+                if (!resourceDeleteRequest.Succeeded)
+                {
+                    errorMessages.AddRange(resourceDeleteRequest.Messages);
+                }
+            }
+
+            if (errorMessages.Count > 0)
+            {
+                return await Result.FailAsync(errorMessages);
+            }
+        }
 
         var request = await _gameServerRepository.DeleteGameProfileAsync(id, modifyingUserId);
         if (!request.Succeeded)

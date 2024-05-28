@@ -10,6 +10,7 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.DatabaseEntities.GameServer;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;
@@ -20,12 +21,15 @@ public class GameService : IGameService
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
     private readonly AppConfiguration _appConfig;
+    private readonly IGameServerRepository _gameServerRepository;
 
-    public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig)
+    public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
+        IGameServerRepository gameServerRepository)
     {
         _gameRepository = gameRepository;
         _dateTime = dateTime;
         _serverState = serverState;
+        _gameServerRepository = gameServerRepository;
         _appConfig = appConfig.Value;
     }
 
@@ -139,9 +143,39 @@ public class GameService : IGameService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        var request = await _gameRepository.DeleteAsync(id, modifyingUserId);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        // Don't allow deletion if game servers are active for this game
+        var assignedGameServers = await _gameServerRepository.GetByGameIdAsync(findRequest.Result.Id);
+        if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Any())
+        {
+            List<string> errorMessages = [ErrorMessageConstants.Games.AssignedGameServers];
+            errorMessages.AddRange((assignedGameServers.Result ?? Array.Empty<GameServerDb>()).ToList().Select(
+                server => $"Assigned Game Server: [id]{server.Id} [name]{server.ServerName}"));
+            return await Result.FailAsync(errorMessages);
+        }
+
+        // Delete all assigned game profiles for this game
+        var assignedProfiles = await _gameServerRepository.GetGameProfilesByGameIdAsync(findRequest.Result.Id);
+        if (assignedProfiles.Succeeded)
+        {
+            List<string> errorMessages = [];
+            foreach (var profile in assignedProfiles.Result?.ToList() ?? [])
+            {
+                var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id, modifyingUserId);
+                if (!profileDeleteRequest.Succeeded)
+                {
+                    errorMessages.Add(profileDeleteRequest.ErrorMessage);
+                }
+            }
+            
+            if (errorMessages.Count > 0)
+            {
+                return await Result.FailAsync(errorMessages);
+            }
+        }
+
+        var deleteRequest = await _gameRepository.DeleteAsync(id, modifyingUserId);
+        if (!deleteRequest.Succeeded)
+            return await Result.FailAsync(deleteRequest.ErrorMessage);
 
         return await Result.SuccessAsync();
     }
@@ -236,7 +270,7 @@ public class GameService : IGameService
         var findRequest = await _gameRepository.GetDevelopersByGameIdAsync(id);
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
-
+        
         var request = await _gameRepository.DeleteDeveloperAsync(id);
         if (!request.Succeeded)
             return await Result.FailAsync(request.ErrorMessage);

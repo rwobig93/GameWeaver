@@ -15,9 +15,9 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<GameServerDb>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<GameServerDb>> GetByServerNameAsync(string serverName);
-    Task<DatabaseActionResult<GameServerDb>> GetByGameIdAsync(int id);
-    Task<DatabaseActionResult<GameServerDb>> GetByGameProfileIdAsync(Guid id);
-    Task<DatabaseActionResult<GameServerDb>> GetByHostIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameProfileIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByHostIdAsync(Guid id);
     Task<DatabaseActionResult<GameServerDb>> GetByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateAsync(GameServerCreate createObject);
     Task<DatabaseActionResult> UpdateAsync(GameServerUpdate updateObject);
@@ -49,7 +49,7 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<int>> GetGameProfileCountAsync();
     Task<DatabaseActionResult<GameProfileDb>> GetGameProfileByIdAsync(Guid id);
     Task<DatabaseActionResult<GameProfileDb>> GetGameProfileByFriendlyNameAsync(string friendlyName);
-    Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(int id);
+    Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName);
     // TODO: Ensure friendly name is validated, these should all be unique on creation and updates

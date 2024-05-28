@@ -324,6 +324,20 @@ public class HostService : IHostService
         if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
+        var assignedServers = await _gameServerRepository.GetByHostIdAsync(foundHostRequest.Result.Id);
+        if (assignedServers.Succeeded)
+        {
+            List<string> errorMessages = [ErrorMessageConstants.Hosts.AssignedGameServers];
+            errorMessages.AddRange(from server in assignedServers.Result?.ToList() ?? [] select $"Assigned Game Server: [id]{server.Id} [name]{server.ServerName}");
+            return await Result.FailAsync(errorMessages);
+        }
+
+        var checkinsDeleteRequest = await _hostRepository.DeleteAllCheckInsForHostIdAsync(foundHostRequest.Result.Id);
+        if (!checkinsDeleteRequest.Succeeded)
+        {
+            return await Result.FailAsync(checkinsDeleteRequest.ErrorMessage);
+        }
+
         var deleteHostRequest = await _hostRepository.DeleteAsync(id, modifyingUserId);
         if (!deleteHostRequest.Succeeded)
             return await Result.FailAsync(deleteHostRequest.ErrorMessage);

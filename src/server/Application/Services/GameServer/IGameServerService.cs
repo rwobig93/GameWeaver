@@ -14,13 +14,13 @@ public interface IGameServerService
     Task<IResult<int>> GetCountAsync();
     Task<IResult<GameServerSlim>> GetByIdAsync(Guid id);
     Task<IResult<GameServerSlim>> GetByServerNameAsync(string serverName);
-    Task<IResult<GameServerSlim>> GetByGameIdAsync(int id);
-    Task<IResult<GameServerSlim>> GetByGameProfileIdAsync(Guid id);
-    Task<IResult<GameServerSlim>> GetByHostIdAsync(Guid id);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetByGameProfileIdAsync(Guid id);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id);
     Task<IResult<GameServerSlim>> GetByOwnerIdAsync(Guid id);
     Task<IResult<Guid>> CreateAsync(GameServerCreate createObject);
     Task<IResult> UpdateAsync(GameServerUpdate updateObject);
-    Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId);
+    Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId, bool force = false);
     Task<IResult<IEnumerable<GameServerSlim>>> SearchAsync(string searchText);
     Task<IResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsAsync();
@@ -41,7 +41,7 @@ public interface IGameServerService
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesForGameServerIdAsync(Guid id);
     Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject, Guid modifyingUserId);
     Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdate updateObject, Guid modifyingUserId);
-    Task<IResult> DeleteLocalResourceAsync(Guid id, Guid modifyingUserId);
+    Task<IResult> DeleteLocalResourceAsync(Guid id, Guid modifyingUserId, bool force = false);
     Task<IResult> UpdateLocalResourceOnGameServerAsync(Guid serverId, Guid resourceId, Guid modifyingUserId);
     Task<IResult> UpdateAllLocalResourcesOnGameServerAsync(Guid serverId, Guid modifyingUserId);
     Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourceAsync(string searchText);
@@ -51,7 +51,7 @@ public interface IGameServerService
     Task<IResult<int>> GetGameProfileCountAsync();
     Task<IResult<GameProfileSlim>> GetGameProfileByIdAsync(Guid id);
     Task<IResult<GameProfileSlim>> GetGameProfileByFriendlyNameAsync(string friendlyName);
-    Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByGameIdAsync(int id);
+    Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByGameIdAsync(Guid id);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByOwnerIdAsync(Guid id);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName);
     Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject);

@@ -25,7 +25,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                     [Category] NVARCHAR(128) NOT NULL,
                     [Key] NVARCHAR(128) NOT NULL,
                     [Value] NVARCHAR(128) NOT NULL,
-                    [FriendlyName] NVARCHAR(128) NULL
+                    [FriendlyName] NVARCHAR(128) NULL,
+                    FOREIGN KEY (LocalResourceId) REFERENCES {LocalResourcesTableMsSql.Table.TableName}(Id) ON DELETE CASCADE
                 )
             end"
     };

@@ -125,14 +125,14 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByGameIdAsync(int id)
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
             var foundGameServer = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByGameId, new {GameId = id})).FirstOrDefault();
+                GameServersTableMsSql.GetByGameId, new {GameId = id}));
             actionReturn.Succeed(foundGameServer!);
         }
         catch (Exception ex)
@@ -143,15 +143,15 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByGameProfileIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameProfileIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
-            var foundGameServer = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByGameProfileId, new {GameProfileId = id})).FirstOrDefault();
-            actionReturn.Succeed(foundGameServer!);
+            var foundGameServers = await _database.LoadData<GameServerDb, dynamic>(
+                GameServersTableMsSql.GetByGameProfileId, new {GameProfileId = id});
+            actionReturn.Succeed(foundGameServers!);
         }
         catch (Exception ex)
         {
@@ -161,15 +161,15 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByHostIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByHostIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
-            var foundGameServer = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByHostId, new {HostId = id})).FirstOrDefault();
-            actionReturn.Succeed(foundGameServer!);
+            var foundGameServer = await _database.LoadData<GameServerDb, dynamic>(
+                GameServersTableMsSql.GetByHostId, new {HostId = id});
+            actionReturn.Succeed(foundGameServer);
         }
         catch (Exception ex)
         {
@@ -785,7 +785,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(int id)
+    public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
 
@@ -904,7 +904,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
                 throw new Exception(foundProfile.ErrorMessage);
             var gameProfileUpdate = foundProfile.Result.ToUpdate();
             
-            // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
+            // Update user w/ a property that is modified, so we get the last updated on/by for the deleting user
             gameProfileUpdate.LastModifiedBy = modifyingUserId;
             await UpdateGameProfileAsync(gameProfileUpdate);
             await _database.SaveData(GameProfilesTableMsSql.Delete, 

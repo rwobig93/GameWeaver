@@ -371,7 +371,7 @@
             <param name="gameServerService"></param>
             <returns>Game server object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameId(System.Int32,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameId(System.Guid,Application.Services.GameServer.IGameServerService)">
             <summary>
             Get game servers by game id
             </summary>
@@ -634,7 +634,7 @@
             <param name="gameServerService"></param>
             <returns>Game profile object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfilesByGameId(System.Int32,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfilesByGameId(System.Guid,Application.Services.GameServer.IGameServerService)">
             <summary>
             Get list of game profiles by game id
             </summary>
