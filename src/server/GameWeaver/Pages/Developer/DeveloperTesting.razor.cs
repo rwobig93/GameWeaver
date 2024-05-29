@@ -47,6 +47,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private string _registrationToken = "";
     private Timer? _timer;
     private HostCheckInFull? _latestHostCheckin;
+    private bool _workInProgress;
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -208,6 +209,16 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
     {
+        _workInProgress = e.Status switch
+        {
+            WeaverWorkState.WaitingToBePickedUp => true,
+            WeaverWorkState.PickedUp => true,
+            WeaverWorkState.InProgress => true,
+            WeaverWorkState.Completed => false,
+            WeaverWorkState.Cancelled => false,
+            WeaverWorkState.Failed => false,
+            _ => false
+        };
         _latestWorkState = e.Status.ToString();
         InvokeAsync(StateHasChanged);
     }
