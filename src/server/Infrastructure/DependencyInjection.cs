@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
 using Application.Constants.Communication;
+using Application.Constants.Web;
 using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
@@ -10,6 +11,7 @@ using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
+using Application.Services.External;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.Integrations;
@@ -28,6 +30,7 @@ using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
+using Infrastructure.Services.External;
 using Infrastructure.Services.GameServer;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
@@ -142,10 +145,18 @@ public static class DependencyInjection
         });
         
         services.AddBlazoredLocalStorage();
-        services.AddHttpClient("Default", options =>
+        services.AddHttpClient(ApiConstants.Clients.GameWeaverDefault, options =>
         {
             options.BaseAddress = new Uri(configuration.GetApplicationSettings().BaseUrl);
         }).ConfigureCertificateHandling(configuration);
+        services.AddHttpClient(ApiConstants.Clients.SteamUnauthenticated, options =>
+        {
+            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrl);
+        });
+        services.AddHttpClient(ApiConstants.Clients.SteamAuthenticated, options =>
+        {
+            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrl);
+        });
 
         var mailConfig = configuration.GetMailSettings();
         services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)
@@ -225,6 +236,9 @@ public static class DependencyInjection
         services.AddSingleton<IGameService, GameService>();
         services.AddSingleton<IGameServerService, GameServerService>();
         services.AddSingleton<INetworkService, NetworkService>();
+        
+        // External Services
+        services.AddSingleton<ISteamApiService, SteamApiService>();
     }
 
     private static void AddApiServices(this IServiceCollection services)
