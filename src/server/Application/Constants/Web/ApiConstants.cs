@@ -19,7 +19,7 @@ public static class ApiConstants
 
     public static class Steam
     {
-        public const string BaseUrl = "api.steamcmd.net";
+        public const string BaseUrl = "https://api.steamcmd.net";
         public static string AppInfo(int appId) => $"/v1/info/{appId}";
     }
 }

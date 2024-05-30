@@ -10,6 +10,7 @@ public static class DataConstants
     public static class DateTime
     {
         public const string DisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
+        public const string TimeShortFormat = "hh:mm:ss";
         public const string FileNameFormat = "ddMMyyyyHHmmss";
     }
 }

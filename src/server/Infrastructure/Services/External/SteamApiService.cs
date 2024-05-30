@@ -24,30 +24,33 @@ public class SteamApiService : ISteamApiService
 
     public async Task<IResult<SteamApiResponse>> GetAllApps()
     {
-        throw new NotImplementedException();
+        return await Result<SteamApiResponse>.FailAsync();
     }
 
-    public async Task<IResult<SteamAppInfo>> GetCurrentAppVersion(int appId)
+    public async Task<IResult<SteamAppInfo?>> GetCurrentAppBuild(int appId)
     {
-        var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamUnauthenticated);
-        var response = await httpClient.GetAsync(ApiConstants.Steam.AppInfo(appId));
-        if (!response.IsSuccessStatusCode)
-        {
-            return await Result<SteamAppInfo>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
-        }
-
         try
         {
-            var convertedResponse = _serializerService.DeserializeJson<SteamApiResponse>(await response.Content.ReadAsStringAsync());
-
-            var appIdRoot = convertedResponse.data.GetNestedValue($"data.{appId}");
-            if (appIdRoot is null)
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamUnauthenticated);
+            var response = await httpClient.GetAsync(ApiConstants.Steam.AppInfo(appId));
+            if (!response.IsSuccessStatusCode)
             {
-                return await Result<SteamAppInfo>.FailAsync($"App Id '{appId}' doesn't exist in the data payload");
+                return await Result<SteamAppInfo?>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
             }
             
-            var parsedAppId = 0;
-            ((JsonElement)appIdRoot).GetNestedValue("appid")?.TryGetInt32(out parsedAppId);
+            var convertedResponse = _serializerService.DeserializeJson<SteamApiResponse>(await response.Content.ReadAsStringAsync());
+
+            var appIdRoot = convertedResponse.data.GetNestedValue(appId.ToString());
+            if (appIdRoot is null)
+            {
+                return await Result<SteamAppInfo?>.FailAsync($"App Id '{appId}' doesn't exist in the data payload");
+            }
+
+            var isValidAppId = int.TryParse(((JsonElement) appIdRoot).GetNestedValue("appid").ToString(), out var parsedAppId);
+            if (!isValidAppId)
+            {
+                return await Result<SteamAppInfo?>.FailAsync("Unable to parse App Id from payload");
+            }
             
             var appInfo = new SteamAppInfo { AppId = parsedAppId };
 
@@ -71,15 +74,18 @@ public class SteamApiService : ISteamApiService
                 appInfo.VersionBuild = ((JsonElement)appPublicBranch).GetNestedValue("buildid")?.ToString() ?? "";
                 var timeUpdatedRaw = ((JsonElement)appPublicBranch).GetNestedValue("timeupdated")?.ToString() ?? "";
 
-                long.TryParse(timeUpdatedRaw, out var convertedEpochTime);
-                appInfo.LastUpdatedUtc = DateTimeOffset.FromUnixTimeSeconds(convertedEpochTime).UtcDateTime;
+                var isValidLong = long.TryParse(timeUpdatedRaw, out var convertedEpochTime);
+                if (isValidLong)
+                {
+                    appInfo.LastUpdatedUtc = DateTimeOffset.FromUnixTimeSeconds(convertedEpochTime).UtcDateTime;
+                }
             }
 
-            return await Result<SteamAppInfo>.SuccessAsync(appInfo);
+            return await Result<SteamAppInfo?>.SuccessAsync(appInfo);
         }
         catch (Exception ex)
         {
-            return await Result<SteamAppInfo>.FailAsync($"Failure occurred getting app version: {ex.Message}");
+            return await Result<SteamAppInfo?>.FailAsync($"Failure occurred getting app version: {ex.Message}");
         }
     }
 }

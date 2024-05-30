@@ -2,6 +2,7 @@
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.Events;
+using Application.Models.External.Steam;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
@@ -11,6 +12,7 @@ using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
+using Application.Services.External;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
@@ -28,6 +30,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     [Inject] private IGameServerService GameServerService { get; init; } = null!;
     [Inject] private IHostService HostService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
+    [Inject] private ISteamApiService SteamService { get; init; } = null!;
     
     private AppUserFull _loggedInUser = new();
     private bool _isContributor;
@@ -48,6 +51,14 @@ public partial class DeveloperTesting : IAsyncDisposable
     private Timer? _timer;
     private HostCheckInFull? _latestHostCheckin;
     private bool _workInProgress;
+    private int _steamBuildCheckAppId;
+    private SteamAppInfo _steamAppInfo = new();
+    private ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
+    private ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
+    private string[] _chartXAxis = [];
+    private List<ChartSeries> _cpuUsage = [];
+    private List<ChartSeries> _ramUsage = [];
+    private List<ChartSeries> _netUsage = [];
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -162,7 +173,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        var usageRequest = await HostService.GetCheckInsLatestByHostIdAsync(_selectedHost.Id, 10);
+        var usageRequest = await HostService.GetCheckInsLatestByHostIdAsync(_selectedHost.Id, 100);
         if (!usageRequest.Succeeded)
         {
             Snackbar.Add($"Host usage gather failed: {usageRequest.Messages}", Severity.Error);
@@ -174,6 +185,16 @@ public partial class DeveloperTesting : IAsyncDisposable
         {
             return;
         }
+
+        _cpuUsage.Clear();
+        _ramUsage.Clear();
+        _netUsage.Clear();
+        
+        _chartXAxis = usageRequest.Data.Select(x => TimeZoneInfo.ConvertTimeFromUtc(x.ReceiveTimestamp, _localTimeZone).ToString("ss")).Reverse().ToArray();
+        _cpuUsage.Add(new ChartSeries {Name = "CPU Usage", Data = usageRequest.Data.Select(x => (double) x.CpuUsage).Reverse().ToArray()});
+        _ramUsage.Add(new ChartSeries {Name = "RAM Usage", Data = usageRequest.Data.Select(x => (double) x.RamUsage).Reverse().ToArray()});
+        _netUsage.Add(new ChartSeries {Name = "Net In kB", Data = usageRequest.Data.Select(x => (double) x.NetworkInBytes / 1_000).Reverse().ToArray()});
+        _netUsage.Add(new ChartSeries {Name = "Net Out kB", Data = usageRequest.Data.Select(x => (double) x.NetworkOutBytes / 1_000).Reverse().ToArray()});
 
         _latestHostCheckin = latestCheckin;
         await InvokeAsync(StateHasChanged);
@@ -698,6 +719,25 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
         Snackbar.Add($"Generated host registration token and copied it to your clipboard!", Severity.Success);
+    }
+
+    private async Task GetSteamAppBuild()
+    {
+        if (_steamBuildCheckAppId < 1000)
+        {
+            Snackbar.Add("Please input a valid Steam App Id", Severity.Warning);
+            return;
+        }
+        
+        var currentAppBuild = await SteamService.GetCurrentAppBuild(_steamBuildCheckAppId);
+        if (!currentAppBuild.Succeeded || currentAppBuild.Data is null)
+        {
+            currentAppBuild.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _steamAppInfo = currentAppBuild.Data;
+        Snackbar.Add("Gathered App Id Build Info!");
     }
     
     public async ValueTask DisposeAsync()

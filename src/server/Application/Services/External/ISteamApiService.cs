@@ -6,5 +6,5 @@ namespace Application.Services.External;
 public interface ISteamApiService
 {
     Task<IResult<SteamApiResponse>> GetAllApps();
-    Task<IResult<SteamAppInfo>> GetCurrentAppVersion(int appId);
+    Task<IResult<SteamAppInfo?>> GetCurrentAppBuild(int appId);
 }
