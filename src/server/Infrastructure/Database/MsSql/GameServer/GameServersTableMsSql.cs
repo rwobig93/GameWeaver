@@ -23,6 +23,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
                     [GameProfileId] UNIQUEIDENTIFIER NOT NULL,
+                    [ParentGameProfileId] UNIQUEIDENTIFIER NULL,
+                    [ServerBuildVersion] NVARCHAR(128) NOT NULL,
                     [ServerName] NVARCHAR(128) NOT NULL,
                     [Password] NVARCHAR(128) NOT NULL,
                     [PasswordRcon] NVARCHAR(128) NOT NULL,
@@ -175,6 +177,40 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetByParentGameProfileId = new()
+    {
+        Table = Table,
+        Action = "GetByParentGameProfileId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByParentGameProfileId]
+                @ParentGameProfileId UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT g.*
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.ParentGameProfileId = @ParentGameProfileId
+                    AND g.IsDeleted = 0
+                ORDER BY g.Id;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure GetByServerBuildVersion = new()
+    {
+        Table = Table,
+        Action = "GetByServerBuildVersion",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByServerBuildVersion]
+                @ServerBuildVersion NVARCHAR(128)
+            AS
+            begin
+                SELECT g.*
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.ServerBuildVersion = @ServerBuildVersion
+                    AND g.IsDeleted = 0
+                ORDER BY g.Id;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure GetByServerName = new()
     {
         Table = Table,
@@ -201,6 +237,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @HostId UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
                 @GameProfileId UNIQUEIDENTIFIER,
+                @ParentGameProfileId UNIQUEIDENTIFIER,
+                @ServerBuildVersion NVARCHAR(128),
                 @ServerName NVARCHAR(128),
                 @Password NVARCHAR(128),
                 @PasswordRcon NVARCHAR(128),
@@ -219,11 +257,12 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @IsDeleted BIT
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (OwnerId, HostId, GameId, GameProfileId, ServerName, Password, PasswordRcon, PasswordAdmin, PublicIp, PrivateIp,
-                                                      ExternalHostname, PortGame, PortQuery, PortRcon, Modded, Private, ServerState, CreatedBy, CreatedOn, IsDeleted)
+                INSERT into dbo.[{Table.TableName}]  (OwnerId, HostId, GameId, GameProfileId, ParentGameProfileId, ServerBuildVersion, ServerName, Password, PasswordRcon,
+                                                      PasswordAdmin, PublicIp, PrivateIp, ExternalHostname, PortGame, PortQuery, PortRcon, Modded, Private, ServerState,
+                                                      CreatedBy, CreatedOn, IsDeleted)
                 OUTPUT INSERTED.Id
-                VALUES (@OwnerId, @HostId, @GameId, @GameProfileId, @ServerName, @Password, @PasswordRcon, @PasswordAdmin, @PublicIp, @PrivateIp, @ExternalHostname, @PortGame,
-                        @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @IsDeleted);
+                VALUES (@OwnerId, @HostId, @GameId, @GameProfileId, @ParentGameProfileId, @ServerBuildVersion, @ServerName, @Password, @PasswordRcon, @PasswordAdmin,
+                        @PublicIp, @PrivateIp, @ExternalHostname, @PortGame, @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @IsDeleted);
             end"
     };
     
@@ -244,6 +283,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     OR g.HostId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.GameProfileId LIKE '%' + @SearchTerm + '%'
+                    OR g.ParentGameProfileId LIKE '%' + @SearchTerm + '%'
+                    OR g.ServerBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.PublicIp LIKE '%' + @SearchTerm + '%'
                     OR g.PrivateIp LIKE '%' + @SearchTerm + '%'
                     OR g.ExternalHostname LIKE '%' + @SearchTerm + '%'
@@ -270,6 +311,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     OR g.HostId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.GameProfileId LIKE '%' + @SearchTerm + '%'
+                    OR g.ParentGameProfileId LIKE '%' + @SearchTerm + '%'
+                    OR g.ServerBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.PublicIp LIKE '%' + @SearchTerm + '%'
                     OR g.PrivateIp LIKE '%' + @SearchTerm + '%'
                     OR g.ExternalHostname LIKE '%' + @SearchTerm + '%'
@@ -289,6 +332,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @HostId UNIQUEIDENTIFIER = null,
                 @GameId UNIQUEIDENTIFIER = null,
                 @GameProfileId UNIQUEIDENTIFIER = null,
+                @ParentGameProfileId UNIQUEIDENTIFIER = null,
+                @ServerBuildVersion NVARCHAR(128) = null,
                 @ServerName NVARCHAR(128) = null,
                 @Password NVARCHAR(128) = null,
                 @PasswordRcon NVARCHAR(128) = null,
@@ -312,12 +357,13 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET OwnerId = COALESCE(@OwnerId, OwnerId), HostId = COALESCE(@HostId, HostId), GameId = COALESCE(@GameId, GameId),
-                    GameProfileId = COALESCE(@GameProfileId, GameProfileId), ServerName = COALESCE(@ServerName, ServerName), Password = COALESCE(@Password, Password),
-                    PasswordRcon = COALESCE(@PasswordRcon, PasswordRcon), PasswordAdmin = COALESCE(@PasswordAdmin, PasswordAdmin), PublicIp = COALESCE(@PublicIp, PublicIp),
-                    PrivateIp = COALESCE(@PrivateIp, PrivateIp), ExternalHostname = COALESCE(@ExternalHostname, ExternalHostname), PortGame = COALESCE(@PortGame, PortGame),
-                    PortQuery = COALESCE(@PortQuery, PortQuery), PortRcon = COALESCE(@PortRcon, PortRcon), Modded = COALESCE(@Modded, Modded),
-                    Private = COALESCE(@Private, Private), ServerState = COALESCE(@ServerState, ServerState), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
-                    CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
+                    GameProfileId = COALESCE(@GameProfileId, GameProfileId), ParentGameProfileId = COALESCE(@ParentGameProfileId, ParentGameProfileId),
+                    ServerBuildVersion = COALESCE(@ServerBuildVersion, ServerBuildVersion), ServerName = COALESCE(@ServerName, ServerName),
+                    Password = COALESCE(@Password, Password), PasswordRcon = COALESCE(@PasswordRcon, PasswordRcon), PasswordAdmin = COALESCE(@PasswordAdmin, PasswordAdmin),
+                    PublicIp = COALESCE(@PublicIp, PublicIp), PrivateIp = COALESCE(@PrivateIp, PrivateIp), ExternalHostname = COALESCE(@ExternalHostname, ExternalHostname),
+                    PortGame = COALESCE(@PortGame, PortGame), PortQuery = COALESCE(@PortQuery, PortQuery), PortRcon = COALESCE(@PortRcon, PortRcon),
+                    Modded = COALESCE(@Modded, Modded), Private = COALESCE(@Private, Private), ServerState = COALESCE(@ServerState, ServerState),
+                    CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
                     LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;
             end"

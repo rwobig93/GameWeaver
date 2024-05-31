@@ -1,6 +1,7 @@
 ﻿using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
+using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Models.Database;
@@ -52,4 +53,14 @@ public interface IGameRepository
     Task<DatabaseActionResult> DeleteGameGenreAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> SearchGameGenresAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> SearchGameGenresPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesAsync();
+    Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<int>> GetGameUpdatesCountAsync();
+    Task<DatabaseActionResult<GameUpdateDb?>> GetGameUpdateByIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetGameUpdatesByGameId(Guid id);
+    Task<DatabaseActionResult<Guid>> CreateGameUpdateAsync(GameUpdateCreate createObject);
+    Task<DatabaseActionResult> DeleteGameUpdateAsync(Guid id);
+    Task<DatabaseActionResult> DeleteGameUpdatesForGameIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdateAsync(string searchText);
+    Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

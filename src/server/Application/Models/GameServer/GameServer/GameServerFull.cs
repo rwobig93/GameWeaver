@@ -9,6 +9,8 @@ public class GameServerFull
     public Guid HostId { get; set; }
     public Guid GameId { get; set; }
     public Guid GameProfileId { get; set; }
+    public Guid ParentGameProfileId { get; set; }
+    public string ServerBuildVersion { get; set; } = "";
     public string ServerName { get; set; } = "";
     public string Password { get; set; } = "";
     public string PasswordRcon { get; set; } = "";
@@ -28,5 +30,4 @@ public class GameServerFull
     public DateTime? LastModifiedOn { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
-    // TODO: Updates and Weaver Client Command DB Entities need to be created and lists added
 }

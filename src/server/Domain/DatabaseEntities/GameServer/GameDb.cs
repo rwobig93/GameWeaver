@@ -10,6 +10,7 @@ public class GameDb : IAuditableEntity<Guid>
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
     public Guid DefaultGameProfileId { get; set; }
+    public string LatestBuildVersion { get; set; } = "";
     public string UrlBackground { get; set; } = "";
     public string UrlLogo { get; set; } = "";
     public string UrlLogoSmall { get; set; } = "";

@@ -4,6 +4,7 @@ using Application.Mappers.GameServer;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
+using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
@@ -856,6 +857,195 @@ public class GameRepositoryMsSql : IGameRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, GameGenreTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesAsync()
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var foundUpdates = await _database.LoadData<GameUpdateDb, dynamic>(GameUpdatesTableMsSql.GetAll, new { });
+
+            actionReturn.Succeed(foundUpdates);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.GetAllPaginated, new { Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> GetGameUpdatesCountAsync()
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowCount = (await _database.LoadData<int, dynamic>(
+                GeneralTableMsSql.GetRowCount, new {GameUpdatesTableMsSql.Table.TableName})).FirstOrDefault();
+            actionReturn.Succeed(rowCount);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<GameUpdateDb?>> GetGameUpdateByIdAsync(Guid id)
+    {
+        DatabaseActionResult<GameUpdateDb?> actionReturn = new();
+
+        try
+        {
+            var foundUpdate = (await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundUpdate);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetGameUpdatesByGameId(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var foundUpdates = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.GetByGameId, new {Id = id});
+            actionReturn.Succeed(foundUpdates);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetByGameId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<Guid>> CreateGameUpdateAsync(GameUpdateCreate createObject)
+    {
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            var createdId = await _database.SaveDataReturnId(GameUpdatesTableMsSql.Insert, createObject);
+            
+            actionReturn.Succeed(createdId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteGameUpdateAsync(Guid id)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            var foundUpdate = await GetGameUpdateByIdAsync(id);
+            if (!foundUpdate.Succeeded || foundUpdate.Result is null)
+                throw new Exception(foundUpdate.ErrorMessage);
+
+            await _database.SaveData(GameUpdatesTableMsSql.Delete, new { Id = id });
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.Delete.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteGameUpdatesForGameIdAsync(Guid id)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(GameUpdatesTableMsSql.DeleteForGameId, new { Id = id });
+            
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.DeleteForGameId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdateAsync(string searchText)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.Search, new { SearchTerm = searchText });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;

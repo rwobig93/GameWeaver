@@ -1,6 +1,7 @@
 ﻿using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
+using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
 using Domain.Contracts;
 
@@ -51,4 +52,14 @@ public interface IGameService
     Task<IResult> DeleteGameGenreAsync(Guid id);
     Task<IResult<IEnumerable<GameGenreSlim>>> SearchGameGenresAsync(string searchText);
     Task<IResult<IEnumerable<GameGenreSlim>>> SearchGameGenresPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<IResult<IEnumerable<GameUpdateSlim>>> GetAllGameUpdatesAsync();
+    Task<IResult<IEnumerable<GameUpdateSlim>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize);
+    Task<IResult<int>> GetGameUpdatesCountAsync();
+    Task<IResult<GameUpdateSlim?>> GetGameUpdateByIdAsync(Guid id);
+    Task<IResult<IEnumerable<GameUpdateSlim>>> GetGameUpdatesByGameId(Guid id);
+    Task<IResult<Guid>> CreateGameUpdateAsync(GameUpdateCreate createObject);
+    Task<IResult> DeleteGameUpdateAsync(Guid id);
+    Task<IResult> DeleteGameUpdatesForGameIdAsync(Guid id);
+    Task<IResult<IEnumerable<GameUpdateSlim>>> SearchGameUpdateAsync(string searchText);
+    Task<IResult<IEnumerable<GameUpdateSlim>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

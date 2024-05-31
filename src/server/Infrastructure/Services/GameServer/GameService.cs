@@ -3,6 +3,7 @@ using Application.Mappers.GameServer;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
+using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
 using Application.Services.GameServer;
@@ -490,5 +491,109 @@ public class GameService : IGameService
             return await Result<IEnumerable<GameGenreSlim>>.FailAsync(request.ErrorMessage);
 
         return await Result<IEnumerable<GameGenreSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameGenreSlim>());
+    }
+
+    public async Task<IResult<IEnumerable<GameUpdateSlim>>> GetAllGameUpdatesAsync()
+    {
+        var request = await _gameRepository.GetAllGameUpdatesAsync();
+        if (!request.Succeeded)
+        {
+            return await Result<IEnumerable<GameUpdateSlim>>.FailAsync(request.ErrorMessage);
+        }
+
+        return await Result<IEnumerable<GameUpdateSlim>>.SuccessAsync(request.Result?.ToSlims() ?? []);
+    }
+
+    public async Task<IResult<IEnumerable<GameUpdateSlim>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize)
+    {
+        var request = await _gameRepository.GetAllGameUpdatesPaginatedAsync(pageNumber, pageSize);
+        if (!request.Succeeded)
+        {
+            return await Result<IEnumerable<GameUpdateSlim>>.FailAsync(request.ErrorMessage);
+        }
+
+        return await Result<IEnumerable<GameUpdateSlim>>.SuccessAsync(request.Result?.ToSlims() ?? []);
+    }
+
+    public async Task<IResult<int>> GetGameUpdatesCountAsync()
+    {
+        var request = await _gameRepository.GetGameUpdatesCountAsync();
+        if (!request.Succeeded)
+        {
+            return await Result<int>.FailAsync(request.ErrorMessage);
+        }
+
+        return await Result<int>.SuccessAsync(request.Result);
+    }
+
+    public async Task<IResult<GameUpdateSlim?>> GetGameUpdateByIdAsync(Guid id)
+    {
+        var request = await _gameRepository.GetGameUpdateByIdAsync(id);
+        if (!request.Succeeded)
+        {
+            return await Result<GameUpdateSlim?>.FailAsync(request.ErrorMessage);
+        }
+
+        return await Result<GameUpdateSlim?>.SuccessAsync(request.Result?.ToSlim());
+    }
+
+    public async Task<IResult<IEnumerable<GameUpdateSlim>>> GetGameUpdatesByGameId(Guid id)
+    {
+        var request = await _gameRepository.GetGameUpdatesByGameId(id);
+        if (!request.Succeeded)
+        {
+            return await Result<IEnumerable<GameUpdateSlim>>.FailAsync(request.ErrorMessage);
+        }
+
+        return await Result<IEnumerable<GameUpdateSlim>>.SuccessAsync(request.Result?.ToSlims() ?? []);
+    }
+
+    public async Task<IResult<Guid>> CreateGameUpdateAsync(GameUpdateCreate createObject)
+    {
+        var request = await _gameRepository.CreateGameUpdateAsync(createObject);
+        if (!request.Succeeded)
+            return await Result<Guid>.FailAsync(request.ErrorMessage);
+
+        return await Result<Guid>.SuccessAsync(request.Result);
+    }
+
+    public async Task<IResult> DeleteGameUpdateAsync(Guid id)
+    {
+        var request = await _gameRepository.DeleteGameUpdateAsync(id);
+        if (!request.Succeeded)
+            return await Result.FailAsync(request.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult> DeleteGameUpdatesForGameIdAsync(Guid id)
+    {
+        var request = await _gameRepository.DeleteGameUpdatesForGameIdAsync(id);
+        if (!request.Succeeded)
+            return await Result.FailAsync(request.ErrorMessage);
+
+        return await Result.SuccessAsync();
+    }
+
+    public async Task<IResult<IEnumerable<GameUpdateSlim>>> SearchGameUpdateAsync(string searchText)
+    {
+        var request = await _gameRepository.SearchGameUpdateAsync(searchText);
+        if (!request.Succeeded)
+        {
+            return await Result<IEnumerable<GameUpdateSlim>>.FailAsync(request.ErrorMessage);
+        }
+
+        return await Result<IEnumerable<GameUpdateSlim>>.SuccessAsync(request.Result?.ToSlims() ?? []);
+    }
+
+    public async Task<IResult<IEnumerable<GameUpdateSlim>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        var request = await _gameRepository.SearchGameUpdatePaginatedAsync(searchText, pageNumber, pageSize);
+        if (!request.Succeeded)
+        {
+            return await Result<IEnumerable<GameUpdateSlim>>.FailAsync(request.ErrorMessage);
+        }
+
+        return await Result<IEnumerable<GameUpdateSlim>>.SuccessAsync(request.Result?.ToSlims() ?? []);
     }
 }

@@ -554,7 +554,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             OwnerId = _loggedInUser.Id,
             HostId = _selectedHost.Id,
             GameId = matchingGame.Data.Id,
-            GameProfileId = Guid.Empty,
+            ParentGameProfileId = Guid.Empty,
             ServerName = $"{_desiredGameServer.ServerName} - {DateTimeService.NowDatabaseTime.ToLongDateString()}",
             Password = _desiredGameServer.Password,
             PasswordRcon = _desiredGameServer.PasswordRcon,

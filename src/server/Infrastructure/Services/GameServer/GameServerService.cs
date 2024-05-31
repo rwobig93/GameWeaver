@@ -130,29 +130,38 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateAsync(GameServerCreate createObject)
     {
+        // TODO: Prevent game server creation without a default profile for the game this server is bound to
         var gameRequest = await _gameRepository.GetByIdAsync(createObject.GameId);
-        if (!gameRequest.Succeeded || gameRequest.Result is null)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (gameRequest.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
 
         var defaultProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(gameRequest.Result.DefaultGameProfileId);
         if (!defaultProfileRequest.Succeeded || defaultProfileRequest.Result is null)
+        {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.DefaultProfileNotFound);
+        }
 
         var foundHost = await _hostRepository.GetByIdAsync(createObject.HostId);
-        if (!foundHost.Succeeded || foundHost.Result is null)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundHost.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
+        }
 
         // TODO: Rename property to parent profile to allow setting parent profile on creation, which can be modified later
-        var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
-        var serverProcessName = parentGameProfileRequest.Result is null ? defaultProfileRequest.Result.ServerProcessName : parentGameProfileRequest.Result.ServerProcessName;
+        var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.ParentGameProfileId);
+        if (parentGameProfileRequest.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.ParentProfileNotFound);
+        }
 
-        // TODO: Allow empty game profile creation w/o parent, then prevent running w/o required properties
+        // TODO: Remove ServerProcessName, we look at processes based on directory so we have no need to know the process name anymore
         var createdGameProfileRequest = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
             FriendlyName = $"{createObject.ServerName} Profile",
             OwnerId = createObject.OwnerId,
             GameId = gameRequest.Result.Id,
-            ServerProcessName = serverProcessName,
             CreatedBy = createObject.CreatedBy,
             CreatedOn = createObject.CreatedOn,
             LastModifiedBy = null,
@@ -163,7 +172,7 @@ public class GameServerService : IGameServerService
         if (!createdGameProfileRequest.Succeeded)
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
 
-        createObject.GameProfileId = createdGameProfileRequest.Result;
+        createObject.ParentGameProfileId = createdGameProfileRequest.Result;
         
         var gameServerRequest = await _gameServerRepository.CreateAsync(createObject);
         if (!gameServerRequest.Succeeded)
@@ -174,7 +183,6 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(createdGameserverRequest.ErrorMessage);
 
         var gameServerHost = createdGameserverRequest.Result.ToHost();
-        gameServerHost.ServerProcessName = serverProcessName;
         gameServerHost.SteamName = gameRequest.Result.SteamName;
         gameServerHost.SteamGameId = gameRequest.Result.SteamGameId;
         gameServerHost.SteamToolId = gameRequest.Result.SteamToolId;

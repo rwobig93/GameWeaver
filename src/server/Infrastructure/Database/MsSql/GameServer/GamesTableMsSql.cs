@@ -24,6 +24,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     [SteamGameId] int NULL,
                     [SteamToolId] int NULL,
                     [DefaultGameProfileId] UNIQUEIDENTIFIER NOT NULL,
+                    [LatestBuildVersion] NVARCHAR(128) NOT NULL,
                     [UrlBackground] NVARCHAR(256) NOT NULL,
                     [UrlLogo] NVARCHAR(256) NOT NULL,
                     [UrlLogoSmall] NVARCHAR(256) NOT NULL,
@@ -192,6 +193,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @SteamGameId int,
                 @SteamToolId int,
                 @DefaultGameProfileId UNIQUEIDENTIFIER,
+                @LatestBuildVersion NVARCHAR(128),
                 @UrlBackground NVARCHAR(258),
                 @UrlLogo NVARCHAR(256),
                 @UrlLogoSmall NVARCHAR(256),
@@ -218,13 +220,13 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @IsDeleted BIT
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, UrlBackground, UrlLogo, UrlLogoSmall,
-                                                      UrlWebsite, ControllerSupport, DescriptionShort, DescriptionLong, DescriptionAbout, PriceInitial, PriceCurrent,
+                INSERT into dbo.[{Table.TableName}]  (FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, LatestBuildVersion, UrlBackground, UrlLogo,
+                                                      UrlLogoSmall, UrlWebsite, ControllerSupport, DescriptionShort, DescriptionLong, DescriptionAbout, PriceInitial, PriceCurrent,
                                                       PriceDiscount, MetaCriticScore, UrlMetaCriticPage, RequirementsPcMinimum, RequirementsPcRecommended, RequirementsMacMinimum,
                                                       RequirementsMacRecommended, RequirementsLinuxMinimum, RequirementsLinuxRecommended, CreatedBy, CreatedOn, LastModifiedBy,
                                                       LastModifiedOn, IsDeleted)
                 OUTPUT INSERTED.Id
-                VALUES (@FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
+                VALUES (@FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @LatestBuildVersion, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
                         @ControllerSupport, @DescriptionShort, @DescriptionLong, @DescriptionAbout, @PriceInitial, @PriceCurrent, @PriceDiscount, @MetaCriticScore,
                         @UrlMetaCriticPage, @RequirementsPcMinimum, @RequirementsPcRecommended, @RequirementsMacMinimum, @RequirementsMacRecommended, @RequirementsLinuxMinimum,
                         @RequirementsLinuxRecommended, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted);
@@ -248,6 +250,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
+                    OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.DescriptionShort LIKE '%' + @SearchTerm + '%';
             end"
     };
@@ -271,6 +274,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
+                    OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -288,6 +292,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @SteamGameId int = null,
                 @SteamToolId int = null,
                 @DefaultGameProfileId UNIQUEIDENTIFIER = null,
+                @LatestBuildVersion NVARCHAR(128) = null,
                 @UrlBackground NVARCHAR(258) = null,
                 @UrlLogo NVARCHAR(256) = null,
                 @UrlLogoSmall NVARCHAR(256) = null,
@@ -319,7 +324,8 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SET FriendlyName = COALESCE(@FriendlyName, FriendlyName), SteamName = COALESCE(@SteamName, SteamName),
                     SteamGameId = COALESCE(@SteamGameId, SteamGameId), SteamToolId = COALESCE(@SteamToolId, SteamToolId),
                     DefaultGameProfileId = COALESCE(@DefaultGameProfileId, DefaultGameProfileId), UrlBackground = COALESCE(@UrlBackground, UrlBackground),
-                    UrlLogo = COALESCE(@UrlLogo, UrlLogo), UrlLogoSmall = COALESCE(@UrlLogoSmall, UrlLogoSmall), UrlWebsite = COALESCE(@UrlWebsite, UrlWebsite),
+                    LatestBuildVersion = COALESCE(@LatestBuildVersion, LatestBuildVersion), UrlLogo = COALESCE(@UrlLogo, UrlLogo),
+                    UrlLogoSmall = COALESCE(@UrlLogoSmall, UrlLogoSmall), UrlWebsite = COALESCE(@UrlWebsite, UrlWebsite),
                     ControllerSupport = COALESCE(@ControllerSupport, ControllerSupport), DescriptionShort = COALESCE(@DescriptionShort, DescriptionShort),
                     DescriptionLong = COALESCE(@DescriptionLong, DescriptionLong), DescriptionAbout = COALESCE(@DescriptionAbout, DescriptionAbout),
                     PriceInitial = COALESCE(@PriceInitial, PriceInitial), PriceCurrent = COALESCE(@PriceCurrent, PriceCurrent),

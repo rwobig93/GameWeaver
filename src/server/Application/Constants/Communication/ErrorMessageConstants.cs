@@ -58,6 +58,7 @@ public static class ErrorMessageConstants
         public const string RegisterNotFound =
             "Failure occurred attempting to register your host, please contact the administrator, this failure attempt has been logged";
         public const string AssignedGameServers = "Game servers are assigned to this host, unable to delete the host while there are assignments";
+        public const string NotFound = "Couldn't find a host matching the information provided, please provide a valid host";
     }
 
     public static class GameProfiles
@@ -66,6 +67,7 @@ public static class ErrorMessageConstants
             "The friendly name you provided already matches an existing profile, please provide a different friendly name for this profile";
         public const string NotFound = "Was unable to find a game profile using the information provided";
         public const string DefaultProfileNotFound = "The selected game is currently missing a default profile, please create a profile for the game first";
+        public const string ParentProfileNotFound = "The provided parent profile Id doesn't exist, please provide a valid parent profile Id";
         public const string DeleteDefaultProfile = "Game profile is the default for it's game, unable to delete the profile without deleting the game first";
         public const string AssignedGameServers = "Game profile is assigned to game servers, unable to delete the profile without removing the assignments";
     }
@@ -73,6 +75,7 @@ public static class ErrorMessageConstants
     public static class Games
     {
         public const string AssignedGameServers = "Game is assigned to game servers, unable to delete the game without deleting the game servers";
+        public const string NotFound = "Was unable to find a game using the information provided, please provide a valid game";
     }
 
     public static class GameServers

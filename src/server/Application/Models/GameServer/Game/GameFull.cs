@@ -13,6 +13,7 @@ public class GameFull
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
     public GameProfileSlim DefaultGameProfile { get; set; } = null!;
+    public string LatestBuildVersion { get; set; } = "";
     public string UrlBackground { get; set; } = "";
     public string UrlLogo { get; set; } = "";
     public string UrlLogoSmall { get; set; } = "";
