@@ -809,7 +809,7 @@ public class GameServerService : IGameServerService
         if (!findRequest.Succeeded || findRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
         
-        // Don't allow deletion if a default game profile or assigned to game servers
+        // Don't allow deletion if a default game profile
         var matchingGame = await _gameRepository.GetByIdAsync(findRequest.Result.GameId);
         if (!matchingGame.Succeeded || matchingGame.Result is null)
         {
@@ -820,8 +820,9 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(ErrorMessageConstants.GameProfiles.DeleteDefaultProfile);
         }
 
+        // Don't allow deletion if assigned to multiple game servers
         var assignedGameServers = await _gameServerRepository.GetByGameProfileIdAsync(findRequest.Result.Id);
-        if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Any())
+        if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Count() > 1)
         {
             List<string> errorMessages = [ErrorMessageConstants.GameProfiles.AssignedGameServers];
             errorMessages.AddRange((assignedGameServers.Result ?? Array.Empty<GameServerDb>()).ToList().Select(assignment => $"Assigned GameServer: [id]{assignment.Id} [name]{assignment.ServerName}"));

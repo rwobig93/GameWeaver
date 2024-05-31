@@ -51,7 +51,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private Timer? _timer;
     private HostCheckInFull? _latestHostCheckin;
     private bool _workInProgress;
-    private int _steamBuildCheckAppId;
+    private int _steamBuildCheckAppId = 443030;
     private SteamAppInfo _steamAppInfo = new();
     private ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
     private ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
