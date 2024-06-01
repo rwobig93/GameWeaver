@@ -21,6 +21,7 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.WebUtilities;
@@ -39,10 +40,11 @@ public class HostService : IHostService
     private readonly IGameServerRepository _gameServerRepository;
     private readonly ISerializerService _serializerService;
     private readonly IEventService _eventService;
+    private readonly IGameRepository _gameRepository;
 
     public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
         IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService,
-        IEventService eventService)
+        IEventService eventService, IGameRepository gameRepository)
     {
         _hostRepository = hostRepository;
         _dateTime = dateTime;
@@ -51,6 +53,7 @@ public class HostService : IHostService
         _gameServerRepository = gameServerRepository;
         _serializerService = serializerService;
         _eventService = eventService;
+        _gameRepository = gameRepository;
         _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
     }
@@ -833,16 +836,27 @@ public class HostService : IHostService
                 return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
             updateObject.HostId = gameServer.Result.HostId;
+
+            var gameServerUpdate = new GameServerUpdate {Id = gameServer.Result.Id, ServerState = deserializedData.ServerState};
             
-            var result = await _gameServerRepository.UpdateAsync(new GameServerUpdate
+            // Update the game server version to the latest if we just did a server update and it was successful
+            if (deserializedData.BuildVersionUpdated)
             {
-                Id = gameServer.Result.Id,
-                ServerState = deserializedData.ServerState
-            });
+                var gameServerGame = await _gameRepository.GetByIdAsync(gameServer.Result.GameId);
+                if (gameServerGame.Result is not null)
+                {
+                    gameServerUpdate.ServerBuildVersion = gameServerGame.Result.LatestBuildVersion;
+                }
+            }
+            
+            var result = await _gameServerRepository.UpdateAsync(gameServerUpdate);
             if (!result.Succeeded)
                 return await Result.FailAsync(result.ErrorMessage);
+
+            var serverStatusEvent = deserializedData.ToStatusEvent();
+            serverStatusEvent.ServerName = gameServer.Result.ServerName;
             
-            _eventService.TriggerGameServerStatus("HostServiceGameServerStateUpdate", deserializedData.ToStatusEvent());
+            _eventService.TriggerGameServerStatus("HostServiceGameServerStateUpdate", serverStatusEvent);
 
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             

@@ -215,10 +215,10 @@ public class GameServerService : IGameServerService
                     return;
                 }
                 
-                _logger.Verbose("STEAMCMD_OUTPUT[{ProcessId}]: {SteamCmdReceived}", process.Id, received);
+                _logger.Debug("STEAMCMD_OUTPUT[{ProcessId}]: {SteamCmdReceived}", process.Id, received);
             }
 
-            _logger.Verbose("STEAMCMD_OUTPUT_ENDED[{ProcessId}]", process.Id);
+            _logger.Debug("STEAMCMD_OUTPUT_ENDED[{ProcessId}]", process.Id);
         }
         catch (Exception ex)
         {

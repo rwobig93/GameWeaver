@@ -376,7 +376,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = gameServerLocal.Data.ServerState,
             Resources = null
         });
@@ -407,7 +407,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = gameServerLocal.Data.ServerState,
             Resources = null
         });
@@ -427,7 +427,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.SpinningUp,
             Resources = null
         });
@@ -443,7 +443,7 @@ public class GameServerWorker : BackgroundService
                 work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
                 {
                     Id = gameServerLocal.Data.Id,
-                    ServerProcessName = null,
+                    BuildVersionUpdated = false,
                     ServerState = ServerState.Stalled,
                     Resources = null
                 });
@@ -457,7 +457,7 @@ public class GameServerWorker : BackgroundService
                 work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
                 {
                     Id = gameServerLocal.Data.Id,
-                    ServerProcessName = null,
+                    BuildVersionUpdated = false,
                     ServerState = ServerState.Unknown,
                     Resources = null
                 });
@@ -470,7 +470,7 @@ public class GameServerWorker : BackgroundService
                 work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
                 {
                     Id = gameServerLocal.Data.Id,
-                    ServerProcessName = null,
+                    BuildVersionUpdated = false,
                     ServerState = ServerState.InternallyConnectable,
                     Resources = null
                 });
@@ -487,7 +487,7 @@ public class GameServerWorker : BackgroundService
             work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
             {
                 Id = gameServerLocal.Data.Id,
-                ServerProcessName = null,
+                BuildVersionUpdated = false,
                 ServerState = ServerState.Shutdown,
                 Resources = null
             });
@@ -503,7 +503,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.ShuttingDown,
             Resources = null
         });
@@ -515,7 +515,7 @@ public class GameServerWorker : BackgroundService
             work.SendGameServerUpdate(WeaverWorkState.Failed, new GameServerStateUpdate
             {
                 Id = gameServerLocal.Data.Id,
-                ServerProcessName = null,
+                BuildVersionUpdated = false,
                 ServerState = ServerState.Unknown,
                 Resources = null
             });
@@ -531,7 +531,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(finalStatus, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.Shutdown,
             Resources = null
         });
@@ -552,7 +552,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.Uninstalling,
             Resources = null
         });
@@ -564,7 +564,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.Uninstalled,
             Resources = null
         });
@@ -578,7 +578,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.Updating,
             Resources = null
         });
@@ -592,7 +592,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = true,
             ServerState = ServerState.Shutdown,
             Resources = null
         });
@@ -611,7 +611,7 @@ public class GameServerWorker : BackgroundService
             work.SendGameServerUpdate(WeaverWorkState.Failed, new GameServerStateUpdate
             {
                 Id = deserializedGameServer.Id,
-                ServerProcessName = null,
+                BuildVersionUpdated = false,
                 ServerState = ServerState.OverlappingPort,
                 Resources = null
             });
@@ -627,7 +627,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerRequest.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.Installing,
             Resources = null
         });
@@ -642,7 +642,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerRequest.Data.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = false,
             ServerState = ServerState.Discovering,
             Resources = null
         });
@@ -675,7 +675,7 @@ public class GameServerWorker : BackgroundService
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
         {
             Id = deserializedGameServer.Id,
-            ServerProcessName = null,
+            BuildVersionUpdated = true,
             ServerState = ServerState.Shutdown,
             Resources = null
         });

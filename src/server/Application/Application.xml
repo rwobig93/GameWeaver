@@ -1676,7 +1676,7 @@
             MemoryPack GenerateType: Object<br/>
             <code>
             <b>System.Guid</b> Id<br/>
-            <b>string</b> ServerProcessName<br/>
+            <b>bool</b> BuildVersionUpdated<br/>
             <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
             </code>

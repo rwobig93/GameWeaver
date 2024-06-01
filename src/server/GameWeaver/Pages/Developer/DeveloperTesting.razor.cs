@@ -48,6 +48,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private HostSlim? _selectedHost;
     private List<GameSlim> _games = [];
     private GameSlim? _selectedGame;
+    private bool _gameServerUpToDate;
     private string _latestWorkState = "";
     private string _registrationToken = "";
     private Timer? _timer;
@@ -259,7 +260,36 @@ public partial class DeveloperTesting : IAsyncDisposable
         if (matchingServer is not null)
         {
             matchingServer.ServerState = args.ServerState;
+
+            if (args.BuildVersionUpdated)
+            {
+                var matchingGame = _games.FirstOrDefault(x => x.Id == matchingServer.GameId);
+                matchingServer.ServerBuildVersion = matchingGame?.LatestBuildVersion ?? matchingServer.ServerBuildVersion;
+                
+                if (_selectedGameServer != null && matchingServer.Id == _selectedGameServer.Id)
+                {
+                    _gameServerUpToDate = matchingGame?.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
+                }
+            }
+
         }
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private void CheckGameServerVersion()
+    {
+        if (_selectedGameServer is null)
+        {
+            return;
+        }
+        
+        var matchingGame = _games.FirstOrDefault(x => x.Id == _selectedGameServer.GameId);
+        if (matchingGame is null)
+        {
+            return;
+        }
+        
+        _gameServerUpToDate = matchingGame.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
         InvokeAsync(StateHasChanged);
     }
 

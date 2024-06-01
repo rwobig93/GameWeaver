@@ -146,6 +146,7 @@ public static class GameServerMappers
         {
             Id = gameServer.Id,
             ServerName = gameServer.ServerName,
+            BuildVersionUpdated = false,
             ServerState = gameServer.ServerState
         };
     }
@@ -156,6 +157,7 @@ public static class GameServerMappers
         {
             Id = update.Id,
             ServerName = "",
+            BuildVersionUpdated = update.BuildVersionUpdated,
             ServerState = update.ServerState
         };
     }

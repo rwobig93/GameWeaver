@@ -6,5 +6,6 @@ public class GameServerStatusEvent : EventArgs
 {
     public Guid Id { get; set; }
     public string ServerName { get; set; } = "";
+    public bool BuildVersionUpdated = false;
     public ConnectivityState ServerState { get; set; }
 }

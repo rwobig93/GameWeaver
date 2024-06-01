@@ -117,6 +117,9 @@
                                 <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Primary">Games: @(_games.Count)</MudChip>
                                 <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Secondary">Hosts: @(_hosts.Count)</MudChip>
                                 <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Tertiary">GameServers: @(_gameServers.Count)</MudChip>
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="@(_gameServerUpToDate ? Color.Success : Color.Warning)">
+                                    Selected GameServer: @(_gameServerUpToDate ? "Up to date" : "Ready to update")
+                                </MudChip>
                             </MudChipSet>
                         </MudItem>
                     </MudPaper>
@@ -140,7 +143,7 @@
                             }
                         </MudSelect>
                         <MudSelect Class="d-flex" @bind-Value="_selectedGameServer" Label="GameServer" OpenIcon="@Icons.Material.Filled.Gamepad"
-                                   AdornmentColor="Color.Tertiary" Disabled="@(_hosts.Count < 1)">
+                                   AdornmentColor="Color.Tertiary" Disabled="@(_hosts.Count < 1)" TextChanged="@CheckGameServerVersion">
                             @foreach (var gameServer in _gameServers)
                             {
                             <MudSelectItem Value="@gameServer">@gameServer.ServerName</MudSelectItem>
