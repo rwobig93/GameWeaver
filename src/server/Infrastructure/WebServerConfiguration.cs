@@ -194,5 +194,8 @@ public static class WebServerConfiguration
         
         hangfireJobs.AddOrUpdate("DailyCleanup", () =>
             jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
+        
+        hangfireJobs.AddOrUpdate("GameVersionCheck", () =>
+            jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));
     }
 }

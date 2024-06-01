@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Communication;
 using Application.Mappers.GameServer;
+using Application.Models.Events;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
@@ -23,14 +24,16 @@ public class GameService : IGameService
     private readonly IRunningServerState _serverState;
     private readonly AppConfiguration _appConfig;
     private readonly IGameServerRepository _gameServerRepository;
+    private readonly IEventService _eventService;
 
     public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
-        IGameServerRepository gameServerRepository)
+        IGameServerRepository gameServerRepository, IEventService eventService)
     {
         _gameRepository = gameRepository;
         _dateTime = dateTime;
         _serverState = serverState;
         _gameServerRepository = gameServerRepository;
+        _eventService = eventService;
         _appConfig = appConfig.Value;
     }
 
@@ -140,12 +143,12 @@ public class GameService : IGameService
 
     public async Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId)
     {
-        var findRequest = await _gameRepository.GetByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
+        var foundGameRequest = await _gameRepository.GetByIdAsync(id);
+        if (!foundGameRequest.Succeeded || foundGameRequest.Result is null)
             return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
         // Don't allow deletion if game servers are active for this game
-        var assignedGameServers = await _gameServerRepository.GetByGameIdAsync(findRequest.Result.Id);
+        var assignedGameServers = await _gameServerRepository.GetByGameIdAsync(foundGameRequest.Result.Id);
         if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Any())
         {
             List<string> errorMessages = [ErrorMessageConstants.Games.AssignedGameServers];
@@ -155,7 +158,7 @@ public class GameService : IGameService
         }
 
         // Delete all assigned game profiles for this game
-        var assignedProfiles = await _gameServerRepository.GetGameProfilesByGameIdAsync(findRequest.Result.Id);
+        var assignedProfiles = await _gameServerRepository.GetGameProfilesByGameIdAsync(foundGameRequest.Result.Id);
         if (assignedProfiles.Succeeded)
         {
             List<string> errorMessages = [];
@@ -172,6 +175,13 @@ public class GameService : IGameService
             {
                 return await Result.FailAsync(errorMessages);
             }
+        }
+        
+        // Delete all update records for this game
+        var deleteUpdatesRequest = await _gameRepository.DeleteGameUpdatesForGameIdAsync(foundGameRequest.Result.Id);
+        if (!deleteUpdatesRequest.Succeeded)
+        {
+            return await Result.FailAsync(deleteUpdatesRequest.ErrorMessage);
         }
 
         var deleteRequest = await _gameRepository.DeleteAsync(id, modifyingUserId);
@@ -550,9 +560,23 @@ public class GameService : IGameService
 
     public async Task<IResult<Guid>> CreateGameUpdateAsync(GameUpdateCreate createObject)
     {
+        var foundGame = await _gameRepository.GetByIdAsync(createObject.GameId);
+        if (foundGame.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
+        
         var request = await _gameRepository.CreateGameUpdateAsync(createObject);
         if (!request.Succeeded)
             return await Result<Guid>.FailAsync(request.ErrorMessage);
+
+        _eventService.TriggerGameVersionUpdate("CreateGameUpdateAsync", new GameVersionUpdatedEvent
+        {
+            GameId = foundGame.Result.Id,
+            AppId = foundGame.Result.SteamToolId,
+            AppName = foundGame.Result.FriendlyName,
+            VersionBuild = createObject.BuildVersion
+        });
 
         return await Result<Guid>.SuccessAsync(request.Result);
     }

@@ -71,7 +71,13 @@
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudTextField Variant="Variant.Outlined" Label="Steam App Id" @bind-Value="_steamBuildCheckAppId" />
+                    <MudSelect Class="d-flex" @bind-Value="_selectedGame" Label="Game" OpenIcon="@Icons.Material.Filled.Games"
+                               AdornmentColor="Color.Primary" Disabled="@(_games.Count < 1)">
+                        @foreach (var game in _games)
+                        {
+                        <MudSelectItem Value="@game">@($"[{game.SteamToolId}] {game.SteamName}")</MudSelectItem>
+                        }
+                    </MudSelect>
                     <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(GetSteamAppBuild)">
                         Get App Build Info
                     </MudButton>
@@ -106,6 +112,13 @@
                             <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" Value="@($"{_desiredGame.Id} ({_desiredGame.FriendlyName})")" />
                             <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" Value="@(_selectedGameServer?.GameProfileId)" />
                         </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudChipSet Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Primary">Games: @(_games.Count)</MudChip>
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Secondary">Hosts: @(_hosts.Count)</MudChip>
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Tertiary">GameServers: @(_gameServers.Count)</MudChip>
+                            </MudChipSet>
+                        </MudItem>
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -136,9 +149,9 @@
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudPaper Elevation="5" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudPaper Elevation="5" Class="d-flex flex-wrap pa-1 justify-center">
                         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                            <MudPaper Outlined="true" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudPaper Outlined="true" Class="d-flex flex-wrap gap-2 pa-1 justify-center">
                                 <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(() => EnforceGame())">
                                     Enforce Game
                                 </MudButton>
@@ -151,7 +164,7 @@
                             </MudPaper>
                         </MudItem>
                         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                            <MudPaper Outlined="true" Square="true" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudPaper Outlined="true" Square="true" Class="d-flex flex-wrap gap-2 pa-1 justify-center">
                                 <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
                                            Color="Color.Success" OnClick="@(StartGameServer)">
                                     Start Game Server
@@ -167,7 +180,7 @@
                             </MudPaper>
                         </MudItem>
                         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                            <MudPaper Outlined="true" Elevation="8" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudPaper Outlined="true" Elevation="8" Class="d-flex flex-wrap gap-2 pa-1 justify-center">
                                 <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Success" OnClick="@(CreateGameServer)">
                                     Create Game Server
                                 </MudButton>

@@ -52,8 +52,8 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                DELETE FROM dbo.[{Table.TableName}] g
-                WHERE g.GameId = @Id;
+                DELETE FROM dbo.[{Table.TableName}]
+                WHERE GameId = @Id;
             end"
     };
     
@@ -67,7 +67,6 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.IsDeleted = 0
                 ORDER BY g.BuildVersionReleased DESC;
             end"
     };

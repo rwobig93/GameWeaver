@@ -130,14 +130,13 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateAsync(GameServerCreate createObject)
     {
-        // TODO: Prevent game server creation without a default profile for the game this server is bound to
-        var gameRequest = await _gameRepository.GetByIdAsync(createObject.GameId);
-        if (gameRequest.Result is null)
+        var foundGame = await _gameRepository.GetByIdAsync(createObject.GameId);
+        if (foundGame.Result is null)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
 
-        var defaultProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(gameRequest.Result.DefaultGameProfileId);
+        var defaultProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(foundGame.Result.DefaultGameProfileId);
         if (!defaultProfileRequest.Succeeded || defaultProfileRequest.Result is null)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.DefaultProfileNotFound);
@@ -149,11 +148,17 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
 
-        // TODO: Rename property to parent profile to allow setting parent profile on creation, which can be modified later
-        var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(createObject.ParentGameProfileId);
-        if (parentGameProfileRequest.Result is null)
+        if (createObject.ParentGameProfileId == Guid.Empty)
         {
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.ParentProfileNotFound);
+            createObject.ParentGameProfileId = null;
+        }
+        if (createObject.ParentGameProfileId is not null)
+        {
+            var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync((Guid)createObject.ParentGameProfileId);
+            if (parentGameProfileRequest.Result is null)
+            {
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.ParentProfileNotFound);
+            }
         }
 
         // TODO: Remove ServerProcessName, we look at processes based on directory so we have no need to know the process name anymore
@@ -161,7 +166,7 @@ public class GameServerService : IGameServerService
         {
             FriendlyName = $"{createObject.ServerName} Profile",
             OwnerId = createObject.OwnerId,
-            GameId = gameRequest.Result.Id,
+            GameId = foundGame.Result.Id,
             CreatedBy = createObject.CreatedBy,
             CreatedOn = createObject.CreatedOn,
             LastModifiedBy = null,
@@ -172,7 +177,8 @@ public class GameServerService : IGameServerService
         if (!createdGameProfileRequest.Succeeded)
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
 
-        createObject.ParentGameProfileId = createdGameProfileRequest.Result;
+        createObject.GameProfileId = createdGameProfileRequest.Result;
+        createObject.ServerBuildVersion = foundGame.Result.LatestBuildVersion;
         
         var gameServerRequest = await _gameServerRepository.CreateAsync(createObject);
         if (!gameServerRequest.Succeeded)
@@ -183,9 +189,9 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(createdGameserverRequest.ErrorMessage);
 
         var gameServerHost = createdGameserverRequest.Result.ToHost();
-        gameServerHost.SteamName = gameRequest.Result.SteamName;
-        gameServerHost.SteamGameId = gameRequest.Result.SteamGameId;
-        gameServerHost.SteamToolId = gameRequest.Result.SteamToolId;
+        gameServerHost.SteamName = foundGame.Result.SteamName;
+        gameServerHost.SteamGameId = foundGame.Result.SteamGameId;
+        gameServerHost.SteamToolId = foundGame.Result.SteamToolId;
 
         var gameServerResources = await GetLocalResourcesForGameServerIdAsync(gameServerHost.Id);
         gameServerHost.Resources.AddRange(gameServerResources.Data.ToHosts(foundHost.Result.Os));
@@ -502,18 +508,20 @@ public class GameServerService : IGameServerService
             finalResourceList.AddRange(convertedResources);
         }
 
-        // TODO: Add ParentGameProfileId to GameServer entities
-        // var parentProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(gameServerRequest.Result.ParentGameProfileId);
-        // if (parentProfileResourcesRequest.Result is not null)
-        // {
-        //     var convertedResources = parentProfileResourcesRequest.Result.ToSlims().ToList();
-        //     foreach (var resource in convertedResources)
-        //     {
-        //         resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
-        //     }
-        //     
-        //     finalResourceList.AddRange(convertedResources);
-        // }
+        if (gameServerRequest.Result.ParentGameProfileId is not null)
+        {
+            var parentProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync((Guid)gameServerRequest.Result.ParentGameProfileId);
+            if (parentProfileResourcesRequest.Result is not null)
+            {
+                var convertedResources = parentProfileResourcesRequest.Result.ToSlims().ToList();
+                foreach (var resource in convertedResources)
+                {
+                    resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
+                }
+            
+                finalResourceList.AddRange(convertedResources);
+            }
+        }
 
         var serverProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(gameServerRequest.Result.GameProfileId);
         if (serverProfileResourcesRequest.Result is not null)

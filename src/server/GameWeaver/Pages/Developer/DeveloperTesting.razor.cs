@@ -46,12 +46,13 @@ public partial class DeveloperTesting : IAsyncDisposable
     private GameServerSlim? _selectedGameServer;
     private List<HostSlim> _hosts = [];
     private HostSlim? _selectedHost;
+    private List<GameSlim> _games = [];
+    private GameSlim? _selectedGame;
     private string _latestWorkState = "";
     private string _registrationToken = "";
     private Timer? _timer;
     private HostCheckInFull? _latestHostCheckin;
     private bool _workInProgress;
-    private int _steamBuildCheckAppId = 443030;
     private SteamAppInfo _steamAppInfo = new();
     private ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
     private ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
@@ -153,9 +154,11 @@ public partial class DeveloperTesting : IAsyncDisposable
             await UpdateLoggedInUser();
             await GetPermissions();
             await GetClientTimezone();
+            await GatherGames();
             await GatherGameServers();
             await GatherHosts();
 
+            EventService.GameVersionUpdated += GameVersionUpdated;
             EventService.GameServerStatusChanged += GameServerStatusChanged;
             EventService.WeaverWorkStatusChanged += WorkStatusChanged;
             _timer = new Timer(async _ => { await UpdateHostUsage(); }, null, 0, 1000);
@@ -202,6 +205,11 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private async Task AttemptDebugSetup()
     {
+        if (_games.Count > 0)
+        {
+            _selectedGame = _games.First();
+        }
+        
         if (_hosts.Count > 0)
         {
             _selectedHost = _hosts.First();
@@ -253,6 +261,11 @@ public partial class DeveloperTesting : IAsyncDisposable
             matchingServer.ServerState = args.ServerState;
         }
         InvokeAsync(StateHasChanged);
+    }
+
+    private void GameVersionUpdated(object? sender, GameVersionUpdatedEvent args)
+    {
+        Snackbar.Add($"Game updated! [{args.AppId}]{args.AppName}", Severity.Info);
     }
 
     private async Task GetPermissions()
@@ -314,16 +327,19 @@ public partial class DeveloperTesting : IAsyncDisposable
         _serverStatus = $"{status} at {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
     }
 
+    private async Task GatherGames()
+    {
+        _games = (await GameService.GetAllAsync()).Data.ToList();
+    }
+    
     private async Task GatherGameServers()
     {
         _gameServers = (await GameServerService.GetAllAsync()).Data.ToList();
-        Snackbar.Add($"Gathered {_gameServers.Count} game servers", Severity.Success);
     }
 
     private async Task GatherHosts()
     {
         _hosts = (await HostService.GetAllAsync()).Data.ToList();
-        Snackbar.Add($"Gathered {_hosts.Count} hosts", Severity.Success);
     }
 
     private async Task EnforceGame()
@@ -723,13 +739,19 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private async Task GetSteamAppBuild()
     {
-        if (_steamBuildCheckAppId < 1000)
+        if (_selectedGame is null)
         {
-            Snackbar.Add("Please input a valid Steam App Id", Severity.Warning);
+            Snackbar.Add("Please select a valid game", Severity.Warning);
+            return;
+        }
+
+        if (_selectedGame.SteamToolId < 1000)
+        {
+            Snackbar.Add("Selected game has an invalid App Tool Id", Severity.Error);
             return;
         }
         
-        var currentAppBuild = await SteamService.GetCurrentAppBuild(_steamBuildCheckAppId);
+        var currentAppBuild = await SteamService.GetCurrentAppBuild(_selectedGame.SteamToolId);
         if (!currentAppBuild.Succeeded || currentAppBuild.Data is null)
         {
             currentAppBuild.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -742,6 +764,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     
     public async ValueTask DisposeAsync()
     {
+        EventService.GameVersionUpdated -= GameVersionUpdated;
         EventService.GameServerStatusChanged -= GameServerStatusChanged;
         EventService.WeaverWorkStatusChanged -= WorkStatusChanged;
         _timer?.Dispose();

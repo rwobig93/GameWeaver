@@ -585,6 +585,7 @@ public class GameServerWorker : BackgroundService
 
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Updating);
         
+        // TODO: Get server build version from steam output and update the game server w/ the new version
         await _gameServerService.InstallOrUpdateGame(gameServerLocal.Data.Id, true);
         _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Data.Id, gameServerLocal.Data.ServerName);
         
