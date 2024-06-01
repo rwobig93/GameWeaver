@@ -255,7 +255,7 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private void GameServerStatusChanged(object? sender, GameServerStatusEvent args)
     {
-        Snackbar.Add($"Game server {args.ServerName} state: {args.ServerState}", Severity.Info);
+        Snackbar.Add($"Game server state change: {args.ServerState}", Severity.Info);
         var matchingServer = _gameServers.FirstOrDefault(x => x.Id == args.Id);
         if (matchingServer is not null)
         {

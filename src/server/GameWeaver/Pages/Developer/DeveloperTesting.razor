@@ -91,7 +91,21 @@
                     <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Host Registration: @(_registrationToken)</MudText>
                 </MudItem>
             </MudExpansionPanel>
-            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="GameServer Management">
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Entity Detail">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudPaper Elevation="5" Class="d-flex flex-wrap gap-4 pa-2">
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Host" Value="@($"{_selectedHost?.Id} ({_selectedHost?.Hostname})")" />
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Default Profile" Value="@($"{_defaultProfile.Id} ({_defaultProfile.FriendlyName})")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" Value="@($"{_desiredGame.Id} ({_desiredGame.FriendlyName})")" />
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" Value="@(_selectedGameServer?.GameProfileId)" />
+                        </MudItem>
+                    </MudPaper>
+                </MudItem>
+            </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" IsExpanded="true" Text="GameServer Management">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36">
                     <MudPaper Elevation="5" Outlined="true" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                         <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Work Status: @(_latestWorkState)</MudText>
@@ -104,21 +118,13 @@
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                     <MudPaper Elevation="5" Class="d-flex flex-wrap gap-4 pa-2">
-                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
-                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Host" Value="@($"{_selectedHost?.Id} ({_selectedHost?.Hostname})")" />
-                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Default Profile" Value="@($"{_defaultProfile.Id} ({_defaultProfile.FriendlyName})")" />
-                        </MudItem>
-                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
-                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" Value="@($"{_desiredGame.Id} ({_desiredGame.FriendlyName})")" />
-                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" Value="@(_selectedGameServer?.GameProfileId)" />
-                        </MudItem>
                         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                             <MudChipSet Class="d-flex flex-wrap gap-4 pa-2 justify-center">
                                 <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Primary">Games: @(_games.Count)</MudChip>
                                 <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Secondary">Hosts: @(_hosts.Count)</MudChip>
                                 <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Tertiary">GameServers: @(_gameServers.Count)</MudChip>
                                 <MudChip Text="grey" Variant="Variant.Outlined" Color="@(_gameServerUpToDate ? Color.Success : Color.Warning)">
-                                    Selected GameServer: @(_gameServerUpToDate ? "Up to date" : "Ready to update")
+                                    GameServer Version: @(_gameServerUpToDate ? "Up to date" : "Ready to update")
                                 </MudChip>
                             </MudChipSet>
                         </MudItem>
@@ -222,6 +228,8 @@
                         <MudChart ChartType="ChartType.Line" ChartSeries="@_netUsage" ChartOptions="@_chartOptionsNet" Width="100%" Height="200px" Class="mud-theme-dark"/>
                     </MudPaper>
                 </MudItem>
+            </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Host Detail">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
                     <MudPaper Elevation="5" Outlined="true" Class="pa-1 justify-center">
                         <MudTreeView T="string" Hover="true" ExpandOnClick="true" Class="justify-center">
