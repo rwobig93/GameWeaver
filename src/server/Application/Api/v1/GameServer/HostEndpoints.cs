@@ -6,7 +6,8 @@ using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
-using Application.Requests.v1.GameServer;
+using Application.Requests.GameServer;
+using Application.Requests.GameServer.Host;
 using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using HostCheckInRequest = Application.Requests.GameServer.Host.HostCheckInRequest;
 
 namespace Application.Api.v1.GameServer;
 
@@ -76,19 +78,18 @@ public static class HostEndpoints
     /// <summary>
     /// Generates a new registration token to register a new host, the host must then use the registration URI to complete registration
     /// </summary>
-    /// <param name="description">A unique description of the host registration, intended to be a detailed identifier</param>
-    /// <param name="hostOwnerId">ID of the account that will be the owner of this host</param>
+    /// <param name="request">Required properties to generate a host registration</param>
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Host ID, Key and full registration confirmation URI for the new host to complete registration</returns>
     [Authorize(PermissionConstants.Hosts.CreateRegistration)]
-    private static async Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(string description, Guid hostOwnerId,
-        IHostService hostService, ICurrentUserService currentUserService)
+    private static async Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(HostRegistrationCreateRequest request, IHostService hostService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            var currentUser = await currentUserService.GetApiCurrentUserBasic();
-            return await hostService.RegistrationGenerateNew(description, currentUser.Id, hostOwnerId);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.RegistrationGenerateNew(request, currentUserId);
         }
         catch (Exception ex)
         {
@@ -104,7 +105,7 @@ public static class HostEndpoints
     /// <param name="context"></param>
     /// <returns>Host ID and Host Token for use when authenticating the host</returns>
     [AllowAnonymous]
-    private static async Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, IHostService hostService, HttpContext context)
+    private static async Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegistrationConfirmRequest request, IHostService hostService, HttpContext context)
     {
         try
         {
@@ -300,38 +301,42 @@ public static class HostEndpoints
             return await Result<HostSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a host
     /// </summary>
     /// <param name="request">Required properties request to create a host</param>
     /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>ID of the host that was created</returns>
     [Authorize(PermissionConstants.Hosts.Create)]
-    private static async Task<IResult<Guid>> Create([FromBody]HostCreate request, IHostService hostService)
+    private static async Task<IResult<Guid>> Create([FromBody]HostCreateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await hostService.CreateAsync(request);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.CreateAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update the properties of a host
     /// </summary>
     /// <param name="request">Required properties to update a host</param>
     /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with any context messages</returns>
     [Authorize(PermissionConstants.Hosts.Update)]
-    private static async Task<IResult> Update([FromBody]HostUpdate request, IHostService hostService)
+    private static async Task<IResult> Update([FromBody]HostUpdateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await hostService.UpdateAsync(request);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.UpdateAsync(request, currentUserId);
         }
         catch (Exception ex)
         {

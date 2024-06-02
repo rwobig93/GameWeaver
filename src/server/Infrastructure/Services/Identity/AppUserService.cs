@@ -262,7 +262,7 @@ public class AppUserService : IAppUserService
             if (!serviceAccountPermissions.Succeeded || serviceAccountPermissions.Result is null)
             {
                 await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
-                    foundUser.Data.Id, new Dictionary<string, string>()
+                    foundUser.Data.Id, new Dictionary<string, string>
                     {
                         {"Username Before", foundUser.Data.Username},
                         {"Username After", updateObject.Username!},
@@ -286,13 +286,13 @@ public class AppUserService : IAppUserService
                     errorMessages.Add(updatePermissionRequest.ErrorMessage);
             }
 
-            if (!errorMessages.Any())
+            if (errorMessages.Count == 0)
                 return await Result.SuccessAsync();
 
             // For any update requests that failed we'll create a troubleshooting audit trail to troubleshoot easier
             foreach (var message in errorMessages)
                 await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
-                    foundUser.Data.Id, new Dictionary<string, string>()
+                    foundUser.Data.Id, new Dictionary<string, string>
                     {
                         {"Username Before", foundUser.Data.Username},
                         {"Username After", updateObject.Username!},

@@ -2,7 +2,8 @@ using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
-using Application.Requests.v1.GameServer;
+using Application.Requests.GameServer;
+using Application.Requests.GameServer.Host;
 using Application.Responses.v1.GameServer;
 using Domain.Contracts;
 using Domain.Enums.GameServer;
@@ -12,8 +13,8 @@ namespace Application.Services.GameServer;
 
 public interface IHostService
 {
-    Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(string description, Guid requestingUserId, Guid hostOwnerId);
-    Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, string registrationIp);
+    Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(HostRegistrationCreateRequest request, Guid requestUserId);
+    Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegistrationConfirmRequest request, string registrationIp);
     Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
     Task<IResult> IsProvidedKeyCorrect(Guid hostId, string key);
     Task<IResult<IEnumerable<HostSlim>>> GetAllAsync();
@@ -21,9 +22,9 @@ public interface IHostService
     Task<IResult<int>> GetCountAsync();
     Task<IResult<HostSlim>> GetByIdAsync(Guid id);
     Task<IResult<HostSlim>> GetByHostnameAsync(string hostName);
-    Task<IResult<Guid>> CreateAsync(HostCreate createObject);
-    Task<IResult> UpdateAsync(HostUpdate updateObject);
-    Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId);
+    Task<IResult<Guid>> CreateAsync(HostCreateRequest request, Guid requestUserId);
+    Task<IResult> UpdateAsync(HostUpdateRequest request, Guid requestUserId);
+    Task<IResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<HostSlim>>> SearchAsync(string searchText);
     Task<IResult<IEnumerable<HostSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsAsync();
@@ -33,8 +34,8 @@ public interface IHostService
     Task<IResult<int>> GetRegistrationCountAsync();
     Task<IResult<HostRegistrationFull>> GetRegistrationByIdAsync(Guid id);
     Task<IResult<HostRegistrationFull>> GetRegistrationByHostIdAsync(Guid hostId);
-    Task<IResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate createObject);
-    Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdate updateObject);
+    Task<IResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate request);
+    Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdate request);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsAsync(string searchText);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAsync();

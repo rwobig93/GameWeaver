@@ -1,6 +1,7 @@
 using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.WeaverWork;
+using Application.Requests.GameServer.GameServer;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 
@@ -159,6 +160,48 @@ public static class GameServerMappers
             ServerName = "",
             BuildVersionUpdated = update.BuildVersionUpdated,
             ServerState = update.ServerState
+        };
+    }
+
+    public static GameServerCreate ToCreate(this GameServerCreateRequest request)
+    {
+        return new GameServerCreate
+        {
+            OwnerId = request.OwnerId,
+            HostId = request.HostId,
+            GameId = request.GameId,
+            GameProfileId = Guid.Empty,
+            ParentGameProfileId = request.ParentGameProfileId,
+            ServerName = request.Name,
+            Password = request.Password,
+            PasswordRcon = request.PasswordRcon,
+            PasswordAdmin = request.PasswordAdmin,
+            ExternalHostname = request.ExternalUrl,
+            PortGame = request.PortGame,
+            PortQuery = request.PortQuery,
+            PortRcon = request.PortRcon,
+            Modded = request.Modded,
+            Private = request.Private
+        };
+    }
+
+    public static GameServerUpdate ToUpdate(this GameServerUpdateRequest request)
+    {
+        return new GameServerUpdate
+        {
+            Id = request.Id,
+            OwnerId = request.OwnerId,
+            ParentGameProfileId = request.ParentGameProfileId,
+            ServerBuildVersion = request.ServerBuildVersion,
+            ServerName = request.ServerName,
+            Password = request.Password,
+            PasswordRcon = request.PasswordRcon,
+            PasswordAdmin = request.PasswordAdmin,
+            PortGame = request.PortGame,
+            PortQuery = request.PortQuery,
+            PortRcon = request.PortRcon,
+            Modded = request.Modded,
+            Private = request.Private
         };
     }
 }

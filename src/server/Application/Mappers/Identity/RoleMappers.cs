@@ -1,5 +1,5 @@
 ﻿using Application.Models.Identity.Role;
-using Application.Requests.v1.Identity.Role;
+using Application.Requests.Identity.Role;
 using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 

@@ -1,7 +1,7 @@
 ﻿using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameUpdate;
-using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
+using Application.Requests.GameServer.Game;
 using Application.Services.External;
 using Application.Services.GameServer;
 using Application.Services.Identity;
@@ -162,13 +162,11 @@ public class JobManager : IJobManager
                 }
                 
                 // Latest version is newer than the game's current version, so we'll update the game and add an update record
-                var gameUpdate = await _gameService.UpdateAsync(new GameUpdate
+                var gameUpdate = await _gameService.UpdateAsync(new GameUpdateRequest
                 {
                     Id = foundGame.Data.Id,
-                    LatestBuildVersion = latestVersionBuild.Data.VersionBuild,
-                    LastModifiedBy = _serverState.SystemUserId,
-                    LastModifiedOn = _dateTime.NowDatabaseTime
-                });
+                    LatestBuildVersion = latestVersionBuild.Data.VersionBuild
+                }, _serverState.SystemUserId);
                 if (!gameUpdate.Succeeded)
                 {
                     _logger.Error("Failed to update game with latest version: [{GameId}]{Error}", gameId, gameUpdate.Messages);

@@ -1,6 +1,6 @@
 ﻿using Application.Models.Identity.UserExtensions;
-using Application.Requests.v1.Api;
-using Application.Requests.v1.Identity.User;
+using Application.Requests.Api;
+using Application.Requests.Identity.User;
 using Application.Responses.v1.Api;
 using Application.Responses.v1.Identity;
 using Domain.Contracts;

@@ -1,18 +1,24 @@
 ﻿using Application.Constants.Communication;
+using Application.Helpers.Lifecycle;
 using Application.Mappers.GameServer;
 using Application.Models.Events;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
+using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
+using Application.Repositories.Lifecycle;
+using Application.Requests.GameServer.Game;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.Database;
+using Domain.Enums.Lifecycle;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;
@@ -25,15 +31,17 @@ public class GameService : IGameService
     private readonly AppConfiguration _appConfig;
     private readonly IGameServerRepository _gameServerRepository;
     private readonly IEventService _eventService;
+    private readonly IAuditTrailsRepository _auditRepository;
 
     public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
-        IGameServerRepository gameServerRepository, IEventService eventService)
+        IGameServerRepository gameServerRepository, IEventService eventService, IAuditTrailsRepository auditRepository)
     {
         _gameRepository = gameRepository;
         _dateTime = dateTime;
         _serverState = serverState;
         _gameServerRepository = gameServerRepository;
         _eventService = eventService;
+        _auditRepository = auditRepository;
         _appConfig = appConfig.Value;
     }
 
@@ -67,10 +75,10 @@ public class GameService : IGameService
     public async Task<IResult<GameSlim>> GetByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetByIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<GameSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
 
         return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -87,10 +95,10 @@ public class GameService : IGameService
     public async Task<IResult<GameSlim>> GetByFriendlyNameAsync(string friendlyName)
     {
         var request = await _gameRepository.GetByFriendlyNameAsync(friendlyName);
-        if (!request.Succeeded)
-            return await Result<GameSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
 
         return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -98,10 +106,10 @@ public class GameService : IGameService
     public async Task<IResult<GameSlim>> GetBySteamGameIdAsync(int id)
     {
         var request = await _gameRepository.GetBySteamGameIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<GameSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
 
         return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -109,46 +117,121 @@ public class GameService : IGameService
     public async Task<IResult<GameSlim>> GetBySteamToolIdAsync(int id)
     {
         var request = await _gameRepository.GetBySteamToolIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<GameSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
 
         return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<Guid>> CreateAsync(GameCreate createObject)
+    public async Task<IResult<Guid>> CreateAsync(GameCreateRequest request, Guid requestUserId)
     {
-        var request = await _gameRepository.CreateAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        if (request.SteamToolId == 0)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.InvalidSteamToolId);
+        }
+        
+        var matchingGame = await _gameRepository.GetBySteamToolIdAsync(request.SteamToolId);
+        if (matchingGame.Result is not null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.DuplicateSteamToolId);
+        }
+        
+        var convertedRequest = request.ToCreate();
+        convertedRequest.CreatedBy = requestUserId;
+        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+        convertedRequest.DefaultGameProfileId = Guid.Empty;
+        
+        var createRequest = await _gameRepository.CreateAsync(convertedRequest);
+        if (!createRequest.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to create a game"},
+                {"Error", createRequest.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        var defaultProfileCreate = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
+        {
+            FriendlyName = $"{convertedRequest.FriendlyName} - Default",
+            OwnerId = requestUserId,
+            GameId = createRequest.Result,
+            CreatedBy = requestUserId,
+            CreatedOn = _dateTime.NowDatabaseTime
+        });
+        if (!defaultProfileCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"GameId", createRequest.Result.ToString()},
+                {"Detail", "Successfully created game but failed to create default profile"},
+                {"Error", defaultProfileCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var updateGameProfile = await _gameRepository.UpdateAsync(new GameUpdate {Id = createRequest.Result, DefaultGameProfileId = defaultProfileCreate.Result});
+        if (!updateGameProfile.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"GameId", createRequest.Result.ToString()},
+                {"Detail", "Successfully created game and default profile, failed to assign default profile to the game"},
+                {"Error", updateGameProfile.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var createdGame = await _gameRepository.GetByIdAsync(createRequest.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Games, createRequest.Result, requestUserId, DatabaseActionType.Create,
+            null, createdGame.Result);
+
+        return await Result<Guid>.SuccessAsync(createRequest.Result);
     }
 
-    public async Task<IResult> UpdateAsync(GameUpdate updateObject)
+    public async Task<IResult> UpdateAsync(GameUpdateRequest request, Guid requestUserId)
     {
-        var findRequest = await _gameRepository.GetByIdAsync(updateObject.Id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundGame = await _gameRepository.GetByIdAsync(request.Id);
+        if (foundGame.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
 
-        updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
+        var convertedRequest = request.ToUpdate();
+        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
+        convertedRequest.LastModifiedBy = requestUserId;
 
-        var request = await _gameRepository.UpdateAsync(updateObject);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var updateRequest = await _gameRepository.UpdateAsync(convertedRequest);
+        if (!updateRequest.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, foundGame.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to update game"},
+                {"Error", updateRequest.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var updatedGame = await _gameRepository.GetByIdAsync(foundGame.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Games, foundGame.Result.Id, requestUserId, DatabaseActionType.Update,
+            foundGame.Result, updatedGame.Result);
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> DeleteAsync(Guid id, Guid requestUserId)
     {
-        var foundGameRequest = await _gameRepository.GetByIdAsync(id);
-        if (!foundGameRequest.Succeeded || foundGameRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundGame = await _gameRepository.GetByIdAsync(id);
+        if (!foundGame.Succeeded || foundGame.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Games.NotFound);
+        }
 
         // Don't allow deletion if game servers are active for this game
-        var assignedGameServers = await _gameServerRepository.GetByGameIdAsync(foundGameRequest.Result.Id);
+        var assignedGameServers = await _gameServerRepository.GetByGameIdAsync(foundGame.Result.Id);
         if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Any())
         {
             List<string> errorMessages = [ErrorMessageConstants.Games.AssignedGameServers];
@@ -158,17 +241,16 @@ public class GameService : IGameService
         }
 
         // Delete all assigned game profiles for this game
-        var assignedProfiles = await _gameServerRepository.GetGameProfilesByGameIdAsync(foundGameRequest.Result.Id);
+        var assignedProfiles = await _gameServerRepository.GetGameProfilesByGameIdAsync(foundGame.Result.Id);
         if (assignedProfiles.Succeeded)
         {
             List<string> errorMessages = [];
             foreach (var profile in assignedProfiles.Result?.ToList() ?? [])
             {
-                var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id, modifyingUserId);
-                if (!profileDeleteRequest.Succeeded)
-                {
-                    errorMessages.Add(profileDeleteRequest.ErrorMessage);
-                }
+                var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id, requestUserId);
+                if (profileDeleteRequest.Succeeded) continue;
+                
+                errorMessages.Add(profileDeleteRequest.ErrorMessage);
             }
             
             if (errorMessages.Count > 0)
@@ -178,15 +260,29 @@ public class GameService : IGameService
         }
         
         // Delete all update records for this game
-        var deleteUpdatesRequest = await _gameRepository.DeleteGameUpdatesForGameIdAsync(foundGameRequest.Result.Id);
+        var deleteUpdatesRequest = await _gameRepository.DeleteGameUpdatesForGameIdAsync(foundGame.Result.Id);
         if (!deleteUpdatesRequest.Succeeded)
         {
-            return await Result.FailAsync(deleteUpdatesRequest.ErrorMessage);
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, foundGame.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Deleted any assigned profiles for game but failed to delete game update records before deleting the game"},
+                {"Error", deleteUpdatesRequest.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
 
-        var deleteRequest = await _gameRepository.DeleteAsync(id, modifyingUserId);
+        var deleteRequest = await _gameRepository.DeleteAsync(id, requestUserId);
         if (!deleteRequest.Succeeded)
-            return await Result.FailAsync(deleteRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, foundGame.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Deleted any assigned profiles and update records but failed to delete the game"},
+                {"Error", deleteRequest.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Games, foundGame.Result.Id, requestUserId, DatabaseActionType.Delete, foundGame.Result);
 
         return await Result.SuccessAsync();
     }
@@ -239,10 +335,10 @@ public class GameService : IGameService
     public async Task<IResult<DeveloperSlim>> GetDeveloperByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetDeveloperByIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<DeveloperSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<DeveloperSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<DeveloperSlim>.FailAsync(ErrorMessageConstants.Developers.NotFound);
+        }
 
         return await Result<DeveloperSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -250,10 +346,10 @@ public class GameService : IGameService
     public async Task<IResult<DeveloperSlim>> GetDeveloperByNameAsync(string name)
     {
         var request = await _gameRepository.GetDeveloperByNameAsync(name);
-        if (!request.Succeeded)
-            return await Result<DeveloperSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<DeveloperSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<DeveloperSlim>.FailAsync(ErrorMessageConstants.Developers.NotFound);
+        }
 
         return await Result<DeveloperSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -267,24 +363,47 @@ public class GameService : IGameService
         return await Result<IEnumerable<DeveloperSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<DeveloperSlim>());
     }
 
-    public async Task<IResult<Guid>> CreateDeveloperAsync(DeveloperCreate createObject)
+    public async Task<IResult<Guid>> CreateDeveloperAsync(DeveloperCreate request, Guid requestUserId)
     {
-        var request = await _gameRepository.CreateDeveloperAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        var developerCreate = await _gameRepository.CreateDeveloperAsync(request);
+        if (!developerCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootDevelopers, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to create developer"},
+                {"Error", developerCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        var createdDeveloper = await _gameRepository.GetDeveloperByIdAsync(developerCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Developers, developerCreate.Result, requestUserId, DatabaseActionType.Create, 
+            null, createdDeveloper.Result);
+
+        return await Result<Guid>.SuccessAsync(developerCreate.Result);
     }
 
-    public async Task<IResult> DeleteDeveloperAsync(Guid id)
+    public async Task<IResult> DeleteDeveloperAsync(Guid id, Guid requestUserId)
     {
-        var findRequest = await _gameRepository.GetDevelopersByGameIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundDeveloper = await _gameRepository.GetDeveloperByIdAsync(id);
+        if (foundDeveloper.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Developers.NotFound);
+        }
+
+        var deleteDeveloper = await _gameRepository.DeleteDeveloperAsync(id);
+        if (!deleteDeveloper.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootDevelopers, foundDeveloper.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to delete developer"},
+                {"Error", deleteDeveloper.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
         
-        var request = await _gameRepository.DeleteDeveloperAsync(id);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Developers, foundDeveloper.Result.Id, requestUserId, DatabaseActionType.Delete,
+            foundDeveloper.Result);
 
         return await Result.SuccessAsync();
     }
@@ -337,10 +456,10 @@ public class GameService : IGameService
     public async Task<IResult<PublisherSlim>> GetPublisherByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetPublisherByIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<PublisherSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<PublisherSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<PublisherSlim>.FailAsync(ErrorMessageConstants.Publishers.NotFound);
+        }
 
         return await Result<PublisherSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -348,10 +467,10 @@ public class GameService : IGameService
     public async Task<IResult<PublisherSlim>> GetPublisherByNameAsync(string name)
     {
         var request = await _gameRepository.GetPublisherByNameAsync(name);
-        if (!request.Succeeded)
-            return await Result<PublisherSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<PublisherSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<PublisherSlim>.FailAsync(ErrorMessageConstants.Publishers.NotFound);
+        }
 
         return await Result<PublisherSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -365,24 +484,47 @@ public class GameService : IGameService
         return await Result<IEnumerable<PublisherSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<PublisherSlim>());
     }
 
-    public async Task<IResult<Guid>> CreatePublisherAsync(PublisherCreate createObject)
+    public async Task<IResult<Guid>> CreatePublisherAsync(PublisherCreate request, Guid requestUserId)
     {
-        var request = await _gameRepository.CreatePublisherAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        var publisherCreate = await _gameRepository.CreatePublisherAsync(request);
+        if (!publisherCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootPublishers, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to create publisher"},
+                {"Error", publisherCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        var createdPublisher = await _gameRepository.GetPublisherByIdAsync(publisherCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Publishers, publisherCreate.Result, requestUserId, DatabaseActionType.Create,
+            null, createdPublisher.Result);
+
+        return await Result<Guid>.SuccessAsync(publisherCreate.Result);
     }
 
-    public async Task<IResult> DeletePublisherAsync(Guid id)
+    public async Task<IResult> DeletePublisherAsync(Guid id, Guid requestUserId)
     {
-        var findRequest = await _gameRepository.GetPublisherByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundPublisher = await _gameRepository.GetPublisherByIdAsync(id);
+        if (foundPublisher.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Publishers.NotFound);
+        }
 
-        var request = await _gameRepository.DeletePublisherAsync(id);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var deletePublisher = await _gameRepository.DeletePublisherAsync(id);
+        if (!deletePublisher.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootPublishers, foundPublisher.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to delete publisher"},
+                {"Error", deletePublisher.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Publishers, foundPublisher.Result.Id, requestUserId, DatabaseActionType.Delete,
+            foundPublisher.Result);
 
         return await Result.SuccessAsync();
     }
@@ -435,10 +577,10 @@ public class GameService : IGameService
     public async Task<IResult<GameGenreSlim>> GetGameGenreByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetGameGenreByIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<GameGenreSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameGenreSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<GameGenreSlim>.FailAsync(ErrorMessageConstants.GameGenres.NotFound);
+        }
 
         return await Result<GameGenreSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -446,10 +588,10 @@ public class GameService : IGameService
     public async Task<IResult<GameGenreSlim>> GetGameGenreByNameAsync(string name)
     {
         var request = await _gameRepository.GetGameGenreByNameAsync(name);
-        if (!request.Succeeded)
-            return await Result<GameGenreSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameGenreSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<GameGenreSlim>.FailAsync(ErrorMessageConstants.GameGenres.NotFound);
+        }
 
         return await Result<GameGenreSlim>.SuccessAsync(request.Result.ToSlim());
     }
@@ -463,24 +605,47 @@ public class GameService : IGameService
         return await Result<IEnumerable<GameGenreSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameGenreSlim>());
     }
 
-    public async Task<IResult<Guid>> CreateGameGenreAsync(GameGenreCreate createObject)
+    public async Task<IResult<Guid>> CreateGameGenreAsync(GameGenreCreate createObject, Guid requestUserId)
     {
-        var request = await _gameRepository.CreateGameGenreAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        var genreCreate = await _gameRepository.CreateGameGenreAsync(createObject);
+        if (!genreCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameGenres, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to create game genre"},
+                {"Error", genreCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        var createdGenre = await _gameRepository.GetGameGenreByIdAsync(genreCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameGenres, genreCreate.Result, requestUserId, DatabaseActionType.Create,
+            null, createdGenre.Result);
+
+        return await Result<Guid>.SuccessAsync(genreCreate.Result);
     }
 
-    public async Task<IResult> DeleteGameGenreAsync(Guid id)
+    public async Task<IResult> DeleteGameGenreAsync(Guid id, Guid requestUserId)
     {
-        var findRequest = await _gameRepository.GetGameGenreByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundGameGenre = await _gameRepository.GetGameGenreByIdAsync(id);
+        if (!foundGameGenre.Succeeded || foundGameGenre.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameGenres.NotFound);
+        }
 
-        var request = await _gameRepository.DeleteGameGenreAsync(id);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var deleteGenre = await _gameRepository.DeleteGameGenreAsync(id);
+        if (!deleteGenre.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameGenres, foundGameGenre.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to delete game genre"},
+                {"Error", deleteGenre.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameGenres, foundGameGenre.Result.Id, requestUserId, DatabaseActionType.Delete,
+            foundGameGenre.Result);
 
         return await Result.SuccessAsync();
     }

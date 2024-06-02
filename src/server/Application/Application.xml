@@ -15,7 +15,7 @@
             </summary>
             <param name="app">Running application</param>
         </member>
-        <member name="M:Application.Api.v1.Api.ApiEndpoints.GetToken(Application.Requests.v1.Api.ApiGetTokenRequest,Application.Services.Identity.IAppAccountService)">
+        <member name="M:Application.Api.v1.Api.ApiEndpoints.GetToken(Application.Requests.Api.ApiGetTokenRequest,Application.Services.Identity.IAppAccountService)">
             <summary>
             Gets a Json Web Token (JWT) for use in API calls
             </summary>
@@ -96,20 +96,22 @@
             <param name="gameService"></param>
             <returns>Game object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Create(Application.Models.GameServer.Game.GameCreate,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Create(Application.Requests.GameServer.Game.GameCreateRequest,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a game
             </summary>
-            <param name="createObject">Required properties to create a game</param>
+            <param name="request">Required properties to create a game</param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created game</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Update(Application.Models.GameServer.Game.GameUpdate,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Update(Application.Requests.GameServer.Game.GameUpdateRequest,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a game's properties
             </summary>
-            <param name="updateObject"></param>
+            <param name="request"></param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameEndpoints.Delete(System.Guid,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
@@ -171,20 +173,22 @@
             <param name="gameService"></param>
             <returns>List of developers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateDeveloper(Application.Models.GameServer.Developers.DeveloperCreate,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateDeveloper(Application.Models.GameServer.Developers.DeveloperCreate,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a developer
             </summary>
             <param name="createObject">Required properties to create a developer</param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created developer</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteDeveloper(System.Guid,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteDeveloper(System.Guid,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete a developer
             </summary>
             <param name="id">Developer id</param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchDevelopers(System.String,Application.Services.GameServer.IGameService)">
@@ -236,20 +240,22 @@
             <param name="gameService"></param>
             <returns>List of publishers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreatePublisher(Application.Models.GameServer.Publishers.PublisherCreate,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreatePublisher(Application.Models.GameServer.Publishers.PublisherCreate,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a publisher
             </summary>
             <param name="createObject">Required properties to create a publisher</param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created publisher</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeletePublisher(System.Guid,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeletePublisher(System.Guid,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete a publisher
             </summary>
             <param name="id">Publisher id</param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchPublishers(System.String,Application.Services.GameServer.IGameService)">
@@ -302,20 +308,22 @@
             <param name="gameService"></param>
             <returns>List of game genres</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateGameGenre(Application.Models.GameServer.GameGenre.GameGenreCreate,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.CreateGameGenre(Application.Models.GameServer.GameGenre.GameGenreCreate,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a game genre
             </summary>
             <param name="createObject">Requires properties to create a game genre</param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created game genre</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteGameGenre(System.Guid,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DeleteGameGenre(System.Guid,Application.Services.GameServer.IGameService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete a game genre
             </summary>
             <param name="id">Game genre id</param>
             <param name="gameService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameEndpoints.SearchGameGenres(System.String,Application.Services.GameServer.IGameService)">
@@ -403,21 +411,22 @@
             <param name="gameServerService"></param>
             <returns>List of game servers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Create(Application.Models.GameServer.GameServer.GameServerCreate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Create(Application.Requests.GameServer.GameServer.GameServerCreateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a game server
             </summary>
-            <param name="createObject">Required properties to create a game server</param>
+            <param name="request">Required properties to create a game server</param>
             <param name="gameServerService"></param>
             <param name="currentUserService"></param>
             <returns>Id of the created game server</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Update(Application.Models.GameServer.GameServer.GameServerUpdate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Update(Application.Requests.GameServer.GameServer.GameServerUpdateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a game server's properties
             </summary>
-            <param name="updateObject">Required properties to update a game server</param>
+            <param name="request">Required properties to update a game server</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Delete(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
@@ -471,20 +480,22 @@
             <param name="gameServerService"></param>
             <returns>List of configuration items</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateConfigurationItem(Application.Models.GameServer.ConfigurationItem.ConfigurationItemCreate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateConfigurationItem(Application.Models.GameServer.ConfigurationItem.ConfigurationItemCreate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a configuration item
             </summary>
             <param name="createObject">Required properties to create a configuration item</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created configuration item</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateConfigurationItem(Application.Models.GameServer.ConfigurationItem.ConfigurationItemUpdate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateConfigurationItem(Application.Models.GameServer.ConfigurationItem.ConfigurationItemUpdate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a configuration items properties
             </summary>
             <param name="updateObject">Required properties to update a configuration item</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteConfigurationItem(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
@@ -658,20 +669,22 @@
             <param name="gameServerService"></param>
             <returns>List of game profiles</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateGameProfile(Application.Models.GameServer.GameProfile.GameProfileCreate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateGameProfile(Application.Requests.GameServer.GameProfile.GameProfileCreateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a game profile
             </summary>
-            <param name="createObject">Required properties to create a game profile</param>
+            <param name="request">Required properties to create a game profile</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created game profile</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateGameProfile(Application.Models.GameServer.GameProfile.GameProfileUpdate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateGameProfile(Application.Requests.GameServer.GameProfile.GameProfileUpdateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a game profiles properties
             </summary>
-            <param name="updateObject">Required properties to update a game profile</param>
+            <param name="request">Required properties to update a game profile</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteGameProfile(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
@@ -765,20 +778,22 @@
             <param name="gameServerService"></param>
             <returns>List of mods</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateMod(Application.Models.GameServer.Mod.ModCreate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateMod(Application.Models.GameServer.Mod.ModCreate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a mod
             </summary>
-            <param name="createObject">Required properties to create a mod</param>
+            <param name="request">Required properties to create a mod</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Id of the created mod</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateMod(Application.Models.GameServer.Mod.ModUpdate,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateMod(Application.Models.GameServer.Mod.ModUpdate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a mod's properties
             </summary>
             <param name="updateObject">Required properties to update a mod</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.DeleteMod(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
@@ -837,17 +852,16 @@
             </summary>
             <param name="app">Running application</param>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationGenerateNew(System.String,System.Guid,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationGenerateNew(Application.Requests.GameServer.Host.HostRegistrationCreateRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Generates a new registration token to register a new host, the host must then use the registration URI to complete registration
             </summary>
-            <param name="description">A unique description of the host registration, intended to be a detailed identifier</param>
-            <param name="hostOwnerId">ID of the account that will be the owner of this host</param>
+            <param name="request">Required properties to generate a host registration</param>
             <param name="hostService"></param>
             <param name="currentUserService"></param>
             <returns>Host ID, Key and full registration confirmation URI for the new host to complete registration</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationConfirm(Application.Requests.v1.GameServer.HostRegisterRequest,Application.Services.GameServer.IHostService,Microsoft.AspNetCore.Http.HttpContext)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.RegistrationConfirm(Application.Requests.GameServer.Host.HostRegistrationConfirmRequest,Application.Services.GameServer.IHostService,Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
             Confirms and completes an active registration
             </summary>
@@ -856,7 +870,7 @@
             <param name="context"></param>
             <returns>Host ID and Host Token for use when authenticating the host</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetToken(Application.Requests.v1.GameServer.HostAuthRequest,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetToken(Application.Requests.GameServer.Host.HostAuthRequest,Application.Services.GameServer.IHostService)">
             <summary>
             Generate a valid authorization token for use in host API endpoints
             </summary>
@@ -867,7 +881,7 @@
             - Expiration time returned is in GMT/UTC
             </remarks>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Checkin(Application.Requests.v1.GameServer.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Checkin(Application.Requests.GameServer.Host.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
             <summary>
             Inject a valid host check-in status
             </summary>
@@ -922,20 +936,22 @@
             <param name="hostService"></param>
             <returns>Host object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Create(Application.Models.GameServer.Host.HostCreate,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Create(Application.Requests.GameServer.Host.HostCreateRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a host
             </summary>
             <param name="request">Required properties request to create a host</param>
             <param name="hostService"></param>
+            <param name="currentUserService"></param>
             <returns>ID of the host that was created</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Update(Application.Models.GameServer.Host.HostUpdate,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Update(Application.Requests.GameServer.Host.HostUpdateRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update the properties of a host
             </summary>
             <param name="request">Required properties to update a host</param>
             <param name="hostService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with any context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.Delete(System.Guid,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
@@ -1216,7 +1232,7 @@
             <param name="permissionService"></param>
             <returns>Permission object for a user or role</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToRole(Application.Requests.v1.Identity.Permission.PermissionCreateForRoleRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToRole(Application.Requests.Identity.Permission.PermissionCreateForRoleRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Add the specified permission to the specified role
             </summary>
@@ -1225,7 +1241,7 @@
             <param name="currentUserService"></param>
             <returns>Guid ID of the permission added</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToUser(Application.Requests.v1.Identity.Permission.PermissionCreateForUserRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.AddPermissionToUser(Application.Requests.Identity.Permission.PermissionCreateForUserRequest,Application.Services.Identity.IAppPermissionService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Add the specified permission to the specified user
             </summary>
@@ -1252,7 +1268,7 @@
             <param name="permissionService"></param>
             <returns>Boolean indicating whether the specified role has the specified permission</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.RemovePermissionFromUser(Application.Requests.v1.Identity.Permission.PermissionRemoveFromUserRequest,Application.Services.Identity.IAppPermissionService)">
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.RemovePermissionFromUser(Application.Requests.Identity.Permission.PermissionRemoveFromUserRequest,Application.Services.Identity.IAppPermissionService)">
             <summary>
             Remove the specified permission from the specified user
             </summary>
@@ -1260,7 +1276,7 @@
             <param name="permissionService"></param>
             <returns></returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.RemovePermissionFromRole(Application.Requests.v1.Identity.Permission.PermissionRemoveFromRoleRequest,Application.Services.Identity.IAppPermissionService)">
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.RemovePermissionFromRole(Application.Requests.Identity.Permission.PermissionRemoveFromRoleRequest,Application.Services.Identity.IAppPermissionService)">
             <summary>
             Remove the specified permission from the specified role 
             </summary>
@@ -1318,7 +1334,7 @@
             <param name="roleService"></param>
             <returns>Detail regarding the specified role</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.CreateRole(Application.Requests.v1.Identity.Role.CreateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.CreateRole(Application.Requests.Identity.Role.CreateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a role
             </summary>
@@ -1327,7 +1343,7 @@
             <param name="currentUserService"></param>
             <returns>GUID ID of the newly created role</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.UpdateRole(Application.Requests.v1.Identity.Role.UpdateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.UpdateRole(Application.Requests.Identity.Role.UpdateRoleRequest,Application.Services.Identity.IAppRoleService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a role's properties
             </summary>
@@ -1393,7 +1409,7 @@
             </summary>
             <param name="app"></param>
         </member>
-        <member name="M:Application.Api.v1.Identity.UserEndpoints.Register(Application.Requests.v1.Identity.User.UserRegisterRequest,Application.Services.Identity.IAppAccountService)">
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.Register(Application.Requests.Identity.User.UserRegisterRequest,Application.Services.Identity.IAppAccountService)">
             <summary>
             Register a user account
             </summary>
@@ -1456,7 +1472,7 @@
             <param name="userService"></param>
             <returns>Detail for the specified user including permissions and extended attributes</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.UserEndpoints.CreateUser(Application.Requests.v1.Identity.User.UserCreateRequest,Application.Services.Identity.IAppUserService,Application.Services.Identity.IAppAccountService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.CreateUser(Application.Requests.Identity.User.UserCreateRequest,Application.Services.Identity.IAppUserService,Application.Services.Identity.IAppAccountService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a user account, bypassing registration
             </summary>
@@ -1466,7 +1482,7 @@
             <param name="currentUserService"></param>
             <returns>GUID ID of the newly created user account</returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.UserEndpoints.UpdateUser(Application.Requests.v1.Identity.User.UserUpdateRequest,Application.Services.Identity.IAppUserService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.UpdateUser(Application.Requests.Identity.User.UserUpdateRequest,Application.Services.Identity.IAppUserService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update properties of the specified user account
             </summary>
@@ -1743,7 +1759,7 @@
             </code>
             </remarks>
         </member>
-        <member name="T:Application.Requests.v1.GameServer.HostCheckInRequest">
+        <member name="T:Application.Requests.GameServer.Host.HostCheckInRequest">
             <remarks>
             MemoryPack GenerateType: Object<br/>
             <code>

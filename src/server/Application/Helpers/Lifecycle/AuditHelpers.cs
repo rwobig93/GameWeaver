@@ -3,6 +3,7 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Lifecycle;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.Enums.Database;
 using Domain.Enums.Lifecycle;
 using Newtonsoft.Json;
@@ -87,6 +88,12 @@ public static class AuditHelpers
         });
     }
 
+    public static async Task CreateAuditTrail(this IAuditTrailsRepository auditRepository, IRunningServerState serverState, IDateTimeService dateTime,
+        AuditTableName tableName, Guid recordId, DatabaseActionType actionType, object? before = null, object? after = null)
+    {
+        await auditRepository.CreateAuditTrail(dateTime, tableName, recordId, serverState.SystemUserId, actionType, before, after);
+    }
+
     public static async Task CreateTroubleshootLog(this IAuditTrailService auditService, IRunningServerState serverState, IDateTimeService dateTime,
         AuditTableName tableName, Guid recordId, Dictionary<string, string> log)
     {
@@ -102,18 +109,26 @@ public static class AuditHelpers
         });
     }
 
-    public static async Task CreateTroubleshootLog(this IAuditTrailsRepository auditRepository, IRunningServerState serverState,
-        IDateTimeService dateTime, AuditTableName tableName, Guid recordId, Dictionary<string, string> log)
+    public static async Task<IResult<Guid>> CreateTroubleshootLog(this IAuditTrailsRepository auditRepository, IDateTimeService dateTime, AuditTableName tableName, Guid recordId,
+        Guid changedById, Dictionary<string, string> log)
     {
-        await auditRepository.CreateAsync(new AuditTrailCreate
+        var createdTrail = await auditRepository.CreateAsync(new AuditTrailCreate
         {
             TableName = tableName.ToString(),
             RecordId = recordId,
-            ChangedBy = serverState.SystemUserId,
+            ChangedBy = changedById,
             Timestamp = dateTime.NowDatabaseTime,
             Action = DatabaseActionType.Troubleshooting,
             Before = JsonConvert.SerializeObject(new Dictionary<string, string>()),
             After = JsonConvert.SerializeObject(log)
         });
+
+        return await Result<Guid>.SuccessAsync(createdTrail.Result);
+    }
+    
+    public static async Task<IResult<Guid>> CreateTroubleshootLog(this IAuditTrailsRepository auditRepository, IRunningServerState serverState,
+        IDateTimeService dateTime, AuditTableName tableName, Guid recordId, Dictionary<string, string> log)
+    {
+        return await auditRepository.CreateTroubleshootLog(dateTime, tableName, recordId, serverState.SystemUserId, log);
     }
 }

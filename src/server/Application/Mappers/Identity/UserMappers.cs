@@ -1,6 +1,6 @@
 ﻿using Application.Models.Identity.User;
 using Application.Models.Identity.UserExtensions;
-using Application.Requests.v1.Identity.User;
+using Application.Requests.Identity.User;
 using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;

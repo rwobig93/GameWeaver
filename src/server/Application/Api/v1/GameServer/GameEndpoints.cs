@@ -1,10 +1,12 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.Publishers;
+using Application.Requests.GameServer.Game;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Settings.AppSettings;
@@ -205,38 +207,42 @@ public static class GameEndpoints
             return await Result<GameSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a game
     /// </summary>
-    /// <param name="createObject">Required properties to create a game</param>
+    /// <param name="request">Required properties to create a game</param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created game</returns>
     [Authorize(PermissionConstants.Game.Create)]
-    private static async Task<IResult<Guid>> Create(GameCreate createObject, IGameService gameService)
+    private static async Task<IResult<Guid>> Create(GameCreateRequest request, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.CreateAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.CreateAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update a game's properties
     /// </summary>
-    /// <param name="updateObject"></param>
+    /// <param name="request"></param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Game.Update)]
-    private static async Task<IResult> Update(GameUpdate updateObject, IGameService gameService)
+    private static async Task<IResult> Update(GameUpdateRequest request, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.UpdateAsync(updateObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.UpdateAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
@@ -393,38 +399,42 @@ public static class GameEndpoints
             return await Result<IEnumerable<DeveloperSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a developer
     /// </summary>
     /// <param name="createObject">Required properties to create a developer</param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created developer</returns>
     [Authorize(PermissionConstants.Game.CreateDeveloper)]
-    private static async Task<IResult<Guid>> CreateDeveloper(DeveloperCreate createObject, IGameService gameService)
+    private static async Task<IResult<Guid>> CreateDeveloper(DeveloperCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.CreateDeveloperAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.CreateDeveloperAsync(createObject, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a developer
     /// </summary>
     /// <param name="id">Developer id</param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Game.DeleteDeveloper)]
-    private static async Task<IResult> DeleteDeveloper(Guid id, IGameService gameService)
+    private static async Task<IResult> DeleteDeveloper(Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.DeleteDeveloperAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.DeleteDeveloperAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
@@ -559,38 +569,42 @@ public static class GameEndpoints
             return await Result<IEnumerable<PublisherSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a publisher
     /// </summary>
     /// <param name="createObject">Required properties to create a publisher</param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created publisher</returns>
     [Authorize(PermissionConstants.Game.CreatePublisher)]
-    private static async Task<IResult<Guid>> CreatePublisher(PublisherCreate createObject, IGameService gameService)
+    private static async Task<IResult<Guid>> CreatePublisher(PublisherCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.CreatePublisherAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.CreatePublisherAsync(createObject, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a publisher
     /// </summary>
     /// <param name="id">Publisher id</param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Game.DeletePublisher)]
-    private static async Task<IResult> DeletePublisher(Guid id, IGameService gameService)
+    private static async Task<IResult> DeletePublisher(Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.DeletePublisherAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.DeletePublisherAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
@@ -726,38 +740,42 @@ public static class GameEndpoints
             return await Result<IEnumerable<GameGenreSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a game genre
     /// </summary>
     /// <param name="createObject">Requires properties to create a game genre</param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created game genre</returns>
     [Authorize(PermissionConstants.Game.CreateGameGenre)]
-    private static async Task<IResult<Guid>> CreateGameGenre(GameGenreCreate createObject, IGameService gameService)
+    private static async Task<IResult<Guid>> CreateGameGenre(GameGenreCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.CreateGameGenreAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.CreateGameGenreAsync(createObject, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a game genre
     /// </summary>
     /// <param name="id">Game genre id</param>
     /// <param name="gameService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Game.DeleteGameGenre)]
-    private static async Task<IResult> DeleteGameGenre(Guid id, IGameService gameService)
+    private static async Task<IResult> DeleteGameGenre(Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameService.DeleteGameGenreAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameService.DeleteGameGenreAsync(id, currentUserId);
         }
         catch (Exception ex)
         {

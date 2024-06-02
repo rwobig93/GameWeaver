@@ -1,5 +1,6 @@
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
+using Application.Requests.GameServer.Game;
 using Domain.DatabaseEntities.GameServer;
 
 namespace Application.Mappers.GameServer;
@@ -118,6 +119,37 @@ public static class GameMappers
             Genres = [],
             Publishers = [],
             Developers = []
+        };
+    }
+
+    public static GameCreate ToCreate(this GameCreateRequest request)
+    {
+        return new GameCreate
+        {
+            FriendlyName = request.Name,
+            SteamGameId = request.SteamGameId,
+            SteamToolId = request.SteamToolId,
+            DescriptionShort = request.Description
+        };
+    }
+
+    public static GameUpdate ToUpdate(this GameUpdateRequest request)
+    {
+        return new GameUpdate
+        {
+            Id = request.Id,
+            FriendlyName = request.Name,
+            DefaultGameProfileId = request.DefaultGameProfileId,
+            LatestBuildVersion = request.LatestBuildVersion,
+            UrlBackground = request.UrlBackground,
+            UrlLogo = request.UrlLogo,
+            UrlLogoSmall = request.UrlLogoSmall,
+            UrlWebsite = request.UrlWebsite,
+            ControllerSupport = request.ControllerSupport,
+            DescriptionShort = request.DescriptionShort,
+            DescriptionLong = request.DescriptionLong,
+            DescriptionAbout = request.DescriptionAbout,
+            UrlMetaCriticPage = request.UrlMetaCriticPage
         };
     }
 }

@@ -12,6 +12,10 @@ using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
+using Application.Requests.GameServer.Game;
+using Application.Requests.GameServer.GameProfile;
+using Application.Requests.GameServer.GameServer;
+using Application.Requests.GameServer.Host;
 using Application.Services.External;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
@@ -49,7 +53,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private List<GameSlim> _games = [];
     private GameSlim? _selectedGame;
     private bool _gameServerUpToDate;
-    private string _latestWorkState = "";
+    private string _latestWorkState = "Idle";
     private string _registrationToken = "";
     private Timer? _timer;
     private HostCheckInFull? _latestHostCheckin;
@@ -57,7 +61,6 @@ public partial class DeveloperTesting : IAsyncDisposable
     private SteamAppInfo _steamAppInfo = new();
     private ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
     private ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
-    private string[] _chartXAxis = [];
     private List<ChartSeries> _cpuUsage = [];
     private List<ChartSeries> _ramUsage = [];
     private List<ChartSeries> _netUsage = [];
@@ -194,11 +197,10 @@ public partial class DeveloperTesting : IAsyncDisposable
         _ramUsage.Clear();
         _netUsage.Clear();
         
-        _chartXAxis = usageRequest.Data.Select(x => TimeZoneInfo.ConvertTimeFromUtc(x.ReceiveTimestamp, _localTimeZone).ToString("ss")).Reverse().ToArray();
         _cpuUsage.Add(new ChartSeries {Name = "CPU Usage", Data = usageRequest.Data.Select(x => (double) x.CpuUsage).Reverse().ToArray()});
         _ramUsage.Add(new ChartSeries {Name = "RAM Usage", Data = usageRequest.Data.Select(x => (double) x.RamUsage).Reverse().ToArray()});
-        _netUsage.Add(new ChartSeries {Name = "Net In kB", Data = usageRequest.Data.Select(x => (double) x.NetworkInBytes / 1_000).Reverse().ToArray()});
-        _netUsage.Add(new ChartSeries {Name = "Net Out kB", Data = usageRequest.Data.Select(x => (double) x.NetworkOutBytes / 1_000).Reverse().ToArray()});
+        _netUsage.Add(new ChartSeries {Name = "Net In kb", Data = usageRequest.Data.Select(x => (double) x.NetworkInBytes / 8_000).Reverse().ToArray()});
+        _netUsage.Add(new ChartSeries {Name = "Net Out kb", Data = usageRequest.Data.Select(x => (double) x.NetworkOutBytes / 8_000).Reverse().ToArray()});
 
         _latestHostCheckin = latestCheckin;
         await InvokeAsync(StateHasChanged);
@@ -374,10 +376,9 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private async Task EnforceGame()
     {
-        var gameCreate = new GameCreate
+        var gameCreate = new GameCreateRequest
         {
-            FriendlyName = _desiredGame.FriendlyName,
-            SteamName = _desiredGame.SteamName,
+            Name = _desiredGame.FriendlyName,
             SteamGameId = _desiredGame.SteamGameId,
             SteamToolId = _desiredGame.SteamToolId
         };
@@ -390,7 +391,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        var createGameRequest = await GameService.CreateAsync(gameCreate);
+        var createGameRequest = await GameService.CreateAsync(gameCreate, _loggedInUser.Id);
         if (!createGameRequest.Succeeded)
         {
             foreach (var message in createGameRequest.Messages)
@@ -400,7 +401,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Created game: [{createGameRequest.Data}]{gameCreate.FriendlyName}", Severity.Success);
+        Snackbar.Add($"Created game: [{createGameRequest.Data}]{gameCreate.Name}", Severity.Success);
         _desiredGame.Id = createGameRequest.Data;
     }
 
@@ -431,7 +432,6 @@ public partial class DeveloperTesting : IAsyncDisposable
             
             var resourceCreate = resource.ToCreate();
             resourceCreate.GameProfileId = _selectedGameServer.GameProfileId;
-            resourceCreate.GameServerId = _selectedGameServer.Id;
             var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
             if (!createRequest.Succeeded)
             {
@@ -465,7 +465,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 if (matchingItem is not null)
                 {
                     var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value, ModifyingUserId = _loggedInUser.Id};
-                    var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate);
+                    var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate, _loggedInUser.Id);
                     if (!updateRequest.Succeeded)
                     {
                         updateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -477,7 +477,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             
                 var itemCreate = configItem.ToCreate();
                 itemCreate.LocalResourceId = resource.Id;
-                var createRequest = await GameServerService.CreateConfigurationItemAsync(itemCreate);
+                var createRequest = await GameServerService.CreateConfigurationItemAsync(itemCreate, _loggedInUser.Id);
                 if (createRequest.Succeeded) continue;
                 
                 createRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -502,18 +502,17 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        var profileCreate = new GameProfileCreate
+        var profileCreate = new GameProfileCreateRequest
         {
-            FriendlyName = _defaultProfile.FriendlyName,
+            Name = _defaultProfile.FriendlyName,
             OwnerId = _loggedInUser.Id,
-            GameId = matchingGame.Data.Id,
-            ServerProcessName = _defaultProfile.ServerProcessName,
+            GameId = matchingGame.Data.Id
             
         };
         var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGame.Data.DefaultGameProfileId);
         if (!matchingProfile.Succeeded)
         {
-            var createProfileRequest = await GameServerService.CreateGameProfileAsync(profileCreate);
+            var createProfileRequest = await GameServerService.CreateGameProfileAsync(profileCreate, _loggedInUser.Id);
             if (!createProfileRequest.Succeeded)
             {
                 foreach (var message in createProfileRequest.Messages)
@@ -523,7 +522,8 @@ public partial class DeveloperTesting : IAsyncDisposable
                 return;
             }
 
-            var updateGameRequest = await GameService.UpdateAsync(new GameUpdate {Id = matchingGame.Data.Id, DefaultGameProfileId = createProfileRequest.Data});
+            var gameUpdate = new GameUpdateRequest {Id = matchingGame.Data.Id, DefaultGameProfileId = createProfileRequest.Data};
+            var updateGameRequest = await GameService.UpdateAsync(gameUpdate, _loggedInUser.Id);
             if (!updateGameRequest.Succeeded)
             {
                 foreach (var message in updateGameRequest.Messages)
@@ -532,7 +532,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 }
                 return;
             }
-            Snackbar.Add($"Created default game profile: [{createProfileRequest.Data}]{profileCreate.FriendlyName}", Severity.Success);
+            Snackbar.Add($"Created default game profile: [{createProfileRequest.Data}]{profileCreate.Name}", Severity.Success);
             matchingProfile = await GameServerService.GetGameProfileByIdAsync(createProfileRequest.Data);
             _defaultProfile.Id = matchingProfile.Data.Id;
         }
@@ -540,7 +540,6 @@ public partial class DeveloperTesting : IAsyncDisposable
         var resourceCreate = new LocalResourceCreate
         {
             GameProfileId = matchingProfile.Data.Id,
-            GameServerId = _selectedGameServer?.Id ?? Guid.Empty,
             Name = "Dedicated Server Executable",
             PathWindows = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping",
             Startup = true,
@@ -595,13 +594,13 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
         
-        var gameServerCreate = new GameServerCreate
+        var gameServerCreate = new GameServerCreateRequest
         {
             OwnerId = _loggedInUser.Id,
             HostId = _selectedHost.Id,
             GameId = matchingGame.Data.Id,
             ParentGameProfileId = Guid.Empty,
-            ServerName = $"{_desiredGameServer.ServerName} - {DateTimeService.NowDatabaseTime.ToLongDateString()}",
+            Name = $"{_desiredGameServer.ServerName} - {DateTimeService.NowDatabaseTime.ToLongDateString()}",
             Password = _desiredGameServer.Password,
             PasswordRcon = _desiredGameServer.PasswordRcon,
             PasswordAdmin = _desiredGameServer.PasswordAdmin,
@@ -609,10 +608,9 @@ public partial class DeveloperTesting : IAsyncDisposable
             PortQuery = _desiredGameServer.PortQuery,
             PortRcon = _desiredGameServer.PortRcon,
             Modded = _desiredGameServer.Modded,
-            Private = _desiredGameServer.Private,
-            CreatedBy = _loggedInUser.Id
+            Private = _desiredGameServer.Private
         };
-        var createServerRequest = await GameServerService.CreateAsync(gameServerCreate);
+        var createServerRequest = await GameServerService.CreateAsync(gameServerCreate, _loggedInUser.Id);
         if (!createServerRequest.Succeeded)
         {
             foreach (var message in createServerRequest.Messages)
@@ -622,7 +620,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Created game server, now installing! [{createServerRequest.Data}]{gameServerCreate.ServerName}");
+        Snackbar.Add($"Created game server, now installing! [{createServerRequest.Data}]{gameServerCreate.Name}");
         await GatherGameServers();
         
         matchingGameServer = _gameServers.FirstOrDefault(x => x.PortGame == _desiredGameServer.PortGame);
@@ -746,7 +744,13 @@ public partial class DeveloperTesting : IAsyncDisposable
     private async Task GenerateHostRegistration()
     {
         var description = $"Test Host - {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
-        var registerRequest = await HostService.RegistrationGenerateNew(description, _loggedInUser.Id, _loggedInUser.Id);
+        var registerRequest = await HostService.RegistrationGenerateNew(new HostRegistrationCreateRequest
+        {
+            OwnerId = _loggedInUser.Id,
+            Name = "Test Host",
+            Description = description,
+            AllowedPorts = ["30000-31000", "40000-41000", "50000-51000"]
+        }, _loggedInUser.Id);
         if (!registerRequest.Succeeded)
         {
             foreach (var message in registerRequest.Messages)

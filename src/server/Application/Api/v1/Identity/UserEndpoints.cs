@@ -4,7 +4,7 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Requests.v1.Identity.User;
+using Application.Requests.Identity.User;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
 using Domain.Contracts;

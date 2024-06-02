@@ -1,5 +1,7 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.GameServer;
+using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
@@ -7,11 +9,17 @@ using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
 using Application.Repositories.GameServer;
+using Application.Repositories.Lifecycle;
+using Application.Requests.GameServer.GameProfile;
+using Application.Requests.GameServer.GameServer;
 using Application.Services.GameServer;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.Database;
 using Domain.Enums.GameServer;
+using Domain.Enums.Lifecycle;
 
 namespace Infrastructure.Services.GameServer;
 
@@ -23,9 +31,12 @@ public class GameServerService : IGameServerService
     private readonly ISerializerService _serializerService;
     private readonly IGameRepository _gameRepository;
     private readonly IEventService _eventService;
+    private readonly IAuditTrailsRepository _auditRepository;
+    private readonly IRunningServerState _serverState;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository,
-        ISerializerService serializerService, IGameRepository gameRepository, IEventService eventService)
+        ISerializerService serializerService, IGameRepository gameRepository, IEventService eventService, IAuditTrailsRepository auditRepository,
+        IRunningServerState serverState)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
@@ -33,6 +44,8 @@ public class GameServerService : IGameServerService
         _serializerService = serializerService;
         _gameRepository = gameRepository;
         _eventService = eventService;
+        _auditRepository = auditRepository;
+        _serverState = serverState;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -128,33 +141,57 @@ public class GameServerService : IGameServerService
         return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<Guid>> CreateAsync(GameServerCreate createObject)
+    public async Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId)
     {
-        var foundGame = await _gameRepository.GetByIdAsync(createObject.GameId);
+        var foundGame = await _gameRepository.GetByIdAsync(request.GameId);
         if (foundGame.Result is null)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
 
-        var defaultProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync(foundGame.Result.DefaultGameProfileId);
-        if (!defaultProfileRequest.Succeeded || defaultProfileRequest.Result is null)
+        var gameDefaultProfile = await _gameServerRepository.GetGameProfileByIdAsync(foundGame.Result.DefaultGameProfileId);
+        if (!gameDefaultProfile.Succeeded || gameDefaultProfile.Result is null)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.DefaultProfileNotFound);
         }
 
-        var foundHost = await _hostRepository.GetByIdAsync(createObject.HostId);
+        var profileResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(gameDefaultProfile.Result.Id);
+        var profileStartupResources = profileResources.Result?.Where(x => x.Startup).ToList() ?? [];
+        if (profileStartupResources.Count == 0)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.NoStartupResources);
+        }
+
+        var foundHost = await _hostRepository.GetByIdAsync(request.HostId);
         if (foundHost.Result is null)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
-
-        if (createObject.ParentGameProfileId == Guid.Empty)
+        
+        var allowedHostPorts = NetworkHelpers.GetPortsFromRangeList(foundHost.Result?.ToSlim().AllowedPorts);
+        var desiredPorts = request.GetUsedPorts();
+        foreach (var port in desiredPorts.Where(port => !allowedHostPorts.Contains(port)))
         {
-            createObject.ParentGameProfileId = null;
+            return await Result<Guid>.FailAsync($"Port provided isn't allowed on the chosen host: {port}");
         }
-        if (createObject.ParentGameProfileId is not null)
+
+        var hostGameServers = await _gameServerRepository.GetByHostIdAsync(foundHost.Result!.Id);
+        if (hostGameServers.Result is not null)
         {
-            var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync((Guid)createObject.ParentGameProfileId);
+            var usedHostPorts = hostGameServers.Result.GetUsedPorts();
+            foreach (var port in desiredPorts.Where(port => usedHostPorts.Contains(port)))
+            {
+                return await Result<Guid>.FailAsync($"Port provided overlaps with another server on the chosen host: {port}");
+            }
+        }
+        
+        if (request.ParentGameProfileId == Guid.Empty)
+        {
+            request.ParentGameProfileId = null;
+        }
+        if (request.ParentGameProfileId is not null)
+        {
+            var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync((Guid)request.ParentGameProfileId);
             if (parentGameProfileRequest.Result is null)
             {
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.ParentProfileNotFound);
@@ -162,33 +199,46 @@ public class GameServerService : IGameServerService
         }
 
         // TODO: Remove ServerProcessName, we look at processes based on directory so we have no need to know the process name anymore
-        var createdGameProfileRequest = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
+        var createdGameProfile = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
-            FriendlyName = $"{createObject.ServerName} Profile",
-            OwnerId = createObject.OwnerId,
+            FriendlyName = $"Server Profile - {request.Name}",
+            OwnerId = request.OwnerId,
             GameId = foundGame.Result.Id,
-            CreatedBy = createObject.CreatedBy,
-            CreatedOn = createObject.CreatedOn,
-            LastModifiedBy = null,
-            LastModifiedOn = null,
-            IsDeleted = false,
-            DeletedOn = null
+            CreatedBy = requestUserId,
+            CreatedOn = _dateTime.NowDatabaseTime
         });
-        if (!createdGameProfileRequest.Succeeded)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+        if (!createdGameProfile.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to create game profile for server before game server creation"},
+                {"Error", createdGameProfile.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
-        createObject.GameProfileId = createdGameProfileRequest.Result;
-        createObject.ServerBuildVersion = foundGame.Result.LatestBuildVersion;
+        var convertedRequest = request.ToCreate();
+        convertedRequest.GameProfileId = createdGameProfile.Result;
+        convertedRequest.ServerBuildVersion = foundGame.Result.LatestBuildVersion;
+        convertedRequest.CreatedBy = requestUserId;
+        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
         
-        var gameServerRequest = await _gameServerRepository.CreateAsync(createObject);
-        if (!gameServerRequest.Succeeded)
-            return await Result<Guid>.FailAsync(gameServerRequest.ErrorMessage);
+        var gameServerCreate = await _gameServerRepository.CreateAsync(convertedRequest);
+        if (!gameServerCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Created server profile but failed to create game server"},
+                {"Error", gameServerCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
-        var createdGameserverRequest = await _gameServerRepository.GetByIdAsync(gameServerRequest.Result);
-        if (!createdGameserverRequest.Succeeded || createdGameserverRequest.Result is null)
-            return await Result<Guid>.FailAsync(createdGameserverRequest.ErrorMessage);
+        var createdGameServer = await _gameServerRepository.GetByIdAsync(gameServerCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, gameServerCreate.Result, requestUserId, DatabaseActionType.Create,
+            null, createdGameServer.Result);
 
-        var gameServerHost = createdGameserverRequest.Result.ToHost();
+        var gameServerHost = createdGameServer.Result!.ToHost();
         gameServerHost.SteamName = foundGame.Result.SteamName;
         gameServerHost.SteamGameId = foundGame.Result.SteamGameId;
         gameServerHost.SteamToolId = foundGame.Result.SteamToolId;
@@ -196,90 +246,158 @@ public class GameServerService : IGameServerService
         var gameServerResources = await GetLocalResourcesForGameServerIdAsync(gameServerHost.Id);
         gameServerHost.Resources.AddRange(gameServerResources.Data.ToHosts(foundHost.Result.Os));
         
-        var hostInstallRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerInstall, createObject.HostId,
-            gameServerHost, createObject.CreatedBy, _dateTime.NowDatabaseTime);
+        var hostInstallRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerInstall, gameServerCreate.Result,
+            gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
         if (!hostInstallRequest.Succeeded)
-            return await Result<Guid>.FailAsync(hostInstallRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, gameServerCreate.Result, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Created game server and profile but failed to send install request to the host"},
+                {"Error", hostInstallRequest.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.WeaverWorks, gameServerHost.Id, DatabaseActionType.GameServerAction,
+            null, new Dictionary<string, string>
+            {
+                {"WorkId", hostInstallRequest.Result.ToString()},
+                {"Detail", "Game Server Install work request sent"}
+            });
 
-        return await Result<Guid>.SuccessAsync(gameServerRequest.Result);
+        return await Result<Guid>.SuccessAsync(gameServerCreate.Result);
     }
 
-    public async Task<IResult> UpdateAsync(GameServerUpdate updateObject)
+    public async Task<IResult> UpdateAsync(GameServerUpdateRequest request, Guid requestUserId)
     {
-        var findRequest = await _gameServerRepository.GetByIdAsync(updateObject.Id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
-
-        if (updateObject.GameProfileId is not null)
+        var foundGameServer = await _gameServerRepository.GetByIdAsync(request.Id);
+        if (foundGameServer.Result is null)
         {
-            var foundGame = await _gameRepository.GetByIdAsync(findRequest.Result.GameId);
+            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
+
+        if (request.ParentGameProfileId is not null)
+        {
+            var foundGame = await _gameRepository.GetByIdAsync(foundGameServer.Result.GameId);
             if (!foundGame.Succeeded)
             {
                 return await Result.FailAsync(foundGame.ErrorMessage);
             }
 
-            if (foundGame.Result?.DefaultGameProfileId == updateObject.GameProfileId)
+            if (foundGame.Result?.DefaultGameProfileId == request.ParentGameProfileId)
             {
                 return await Result.FailAsync(ErrorMessageConstants.GameServers.DefaultProfileAssignment);
             }
         }
 
-        updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
+        var convertedRequest = request.ToUpdate();
+        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
+        convertedRequest.LastModifiedBy = requestUserId;
 
-        var request = await _gameServerRepository.UpdateAsync(updateObject);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
-
-        if (updateObject.ServerState is not null)
+        var gameServerUpdate = await _gameServerRepository.UpdateAsync(convertedRequest);
+        if (!gameServerUpdate.Succeeded)
         {
-            _eventService.TriggerGameServerStatus("GameServerServiceUpdate", findRequest.Result.ToStatusEvent());
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundGameServer.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to update game server"},
+                {"Error", gameServerUpdate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
+
+        var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundGameServer.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundGameServer.Result.Id, requestUserId, DatabaseActionType.Update,
+            foundGameServer.Result, updatedGameServer.Result);
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId, bool force = false)
+    /// <summary>
+    /// Delete a game server
+    /// </summary>
+    /// <param name="id">Game server Id</param>
+    /// <param name="requestUserId">User Id making the request</param>
+    /// <param name="sendHostUninstall">Whether to send an uninstall request to the game server host</param>
+    /// <returns>Success or failure with context messages</returns>
+    public async Task<IResult> DeleteAsync(Guid id, Guid requestUserId, bool sendHostUninstall = true)
     {
-        var findRequest = await _gameServerRepository.GetByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
-
-        var profileServers = await _gameServerRepository.GetByGameProfileIdAsync(findRequest.Result.GameProfileId);
-        if (!profileServers.Succeeded || profileServers.Result is null)
+        var foundServer = await _gameServerRepository.GetByIdAsync(id);
+        if (foundServer.Result is null)
         {
-            return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
+
+        var profileServers = await _gameServerRepository.GetByGameProfileIdAsync(foundServer.Result.GameProfileId);
+        if (profileServers.Result is null)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to get game server profile servers before deletion"},
+                {"Error", profileServers.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
         // Delete the assigned game profile if the only assignment is this game server
         if (profileServers.Result.ToList().Count == 1)
         {
-            var profileDeleteRequest = await DeleteGameProfileAsync(findRequest.Result.GameProfileId, modifyingUserId);
+            var profileDeleteRequest = await DeleteGameProfileAsync(foundServer.Result.GameProfileId, requestUserId);
             if (!profileDeleteRequest.Succeeded)
             {
-                return await Result.FailAsync(profileDeleteRequest.Messages);
+                var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to delete server profile before game server deletion"},
+                    {"Error", profileDeleteRequest.Messages.ToString() ?? ""}
+                });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
             }
         }
 
-        var updateStatusRequest = await UpdateAsync(new GameServerUpdate {Id = findRequest.Result.Id, ServerState = ConnectivityState.Uninstalling});
+        var updateStatusRequest = await _gameServerRepository.UpdateAsync(new GameServerUpdate
+        {
+            Id = foundServer.Result.Id,
+            ServerState = ConnectivityState.Uninstalling,
+            LastModifiedBy = requestUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        });
         if (!updateStatusRequest.Succeeded)
         {
-            return await Result.FailAsync(updateStatusRequest.Messages);
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"Detail", "Failed to update server state to uninstalling before game server deletion"},
+                {"Error", updateStatusRequest.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
 
-        if (force)
+        if (!sendHostUninstall)
         {
-            var deleteRequest = await _gameServerRepository.DeleteAsync(findRequest.Result.Id, modifyingUserId);
+            var deleteRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, requestUserId);
             if (!deleteRequest.Succeeded)
-                return await Result.FailAsync(deleteRequest.ErrorMessage);
+            {
+                var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to delete game server"},
+                    {"Error", deleteRequest.ErrorMessage}
+                });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            }
+            
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, requestUserId, DatabaseActionType.Delete,
+                foundServer.Result);
 
             return await Result.SuccessAsync();
         }
 
-        var hostDeleteRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUninstall, findRequest.Result.HostId,
-            findRequest.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);
-        if (!hostDeleteRequest.Succeeded)
-            return await Result<Guid>.FailAsync(hostDeleteRequest.ErrorMessage);
-
-        return await Result.SuccessAsync();
+        var hostDeleteRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUninstall, foundServer.Result.HostId,
+            foundServer.Result.Id, requestUserId, _dateTime.NowDatabaseTime);
+        if (hostDeleteRequest.Succeeded) return await Result.SuccessAsync();
+        
+        var trailId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
+        {
+            {"Detail", "Failed to send host uninstall request for game server deletion"},
+            {"Error", hostDeleteRequest.ErrorMessage}
+        });
+        return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, $"Please mention this record Id: {trailId.Data}"]);
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> SearchAsync(string searchText)
@@ -349,44 +467,102 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate createObject)
+    public async Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate request, Guid requestUserId)
     {
         // Default friendly name to category/key if a short or empty friendly name is provided
-        createObject.FriendlyName = createObject.FriendlyName.Length <= 3 ? $"{createObject.Category}/{createObject.Key}" : createObject.FriendlyName;
+        request.FriendlyName = request.FriendlyName.Length <= 3 ? $"{request.Category}/{request.Key}" : request.FriendlyName;
         
-        var localResourceRequest = await _gameServerRepository.GetLocalResourceByIdAsync(createObject.LocalResourceId);
-        if (!localResourceRequest.Succeeded || localResourceRequest.Result is null)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
-        
-        var createRequest = await _gameServerRepository.CreateConfigurationItemAsync(createObject);
-        if (!createRequest.Succeeded)
-            return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
+        var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.LocalResourceId);
+        if (foundResource.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.NotFound);
+        }
 
-        return await Result<Guid>.SuccessAsync(createRequest.Result);
+        var resourceConfig = await _gameServerRepository.GetConfigurationItemsByLocalResourceIdAsync(foundResource.Result.Id);
+        var matchingConfig = resourceConfig.Result?.Where(x =>
+            x.Category == request.Category &&
+            x.Key == request.Key &&
+            x.Path == request.Path).ToList() ?? [];
+        foreach (var config in matchingConfig)
+        {
+            if (!config.DuplicateKey)
+            {
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.ConfigItems.DuplicateConfig);
+            }
+            
+            // Is a duplicate key, so the only thing to verify against is the value since we can't have 2 items with the same key and value
+            if (config.Value == request.Value)
+            {
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.ConfigItems.DuplicateConfig);
+            }
+        }
+        
+        var configItemCreate = await _gameServerRepository.CreateConfigurationItemAsync(request);
+        if (!configItemCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootConfigItems, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"LocalResourceId", foundResource.Result.Id.ToString()},
+                {"Detail", "Failed to create a configuration item"},
+                {"Error", configItemCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
+        // TODO: Diff will be config before and after for the local resource
+
+        return await Result<Guid>.SuccessAsync(configItemCreate.Result);
     }
 
-    public async Task<IResult> UpdateConfigurationItemAsync(ConfigurationItemUpdate updateObject)
+    public async Task<IResult> UpdateConfigurationItemAsync(ConfigurationItemUpdate updateObject, Guid requestUserId)
     {
-        var findRequest = await _gameServerRepository.GetConfigurationItemByIdAsync(updateObject.Id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundConfig = await _gameServerRepository.GetConfigurationItemByIdAsync(updateObject.Id);
+        if (foundConfig.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.ConfigItems.NotFound);
+        }
 
-        var updateRequest = await _gameServerRepository.UpdateConfigurationItemAsync(updateObject);
-        if (!updateRequest.Succeeded)
-            return await Result.FailAsync(updateRequest.ErrorMessage);
+        var configUpdate = await _gameServerRepository.UpdateConfigurationItemAsync(updateObject);
+        if (!configUpdate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootConfigItems, foundConfig.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
+                {"Detail", "Failed to update a configuration item"},
+                {"Error", configUpdate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
+        // TODO: Diff will be config before and after for the local resource
         
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteConfigurationItemAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> DeleteConfigurationItemAsync(Guid id, Guid requestUserId)
     {
-        var findRequest = await _gameServerRepository.GetConfigurationItemByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundConfig = await _gameServerRepository.GetConfigurationItemByIdAsync(id);
+        if (foundConfig.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.ConfigItems.NotFound);
+        }
         
-        var deleteRequest = await _gameServerRepository.DeleteConfigurationItemAsync(id);
-        if (!deleteRequest.Succeeded)
-            return await Result.FailAsync(deleteRequest.ErrorMessage);
+        var configDelete = await _gameServerRepository.DeleteConfigurationItemAsync(id);
+        if (!configDelete.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootConfigItems, foundConfig.Result.Id, requestUserId, new Dictionary<string, string>
+            {
+                {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
+                {"Detail", "Failed to delete a configuration item"},
+                {"Error", configDelete.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
+        // TODO: Diff will be config before and after for the local resource
 
         return await Result.SuccessAsync();
     }
@@ -540,71 +716,138 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(finalResourceList);
     }
 
-    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate createObject, Guid modifyingUserId)
+    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate request, Guid requestUserId)
     {
-        var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(createObject.GameProfileId);
-        if (!foundProfile.Succeeded || foundProfile.Result is null)
+        var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(request.GameProfileId);
+        if (foundProfile.Result is null)
+        {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
+        }
         
-        var currentResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(foundProfile.Result.Id);
-        currentResources.Result ??= new List<LocalResourceDb>();
+        var profileCurrentResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(foundProfile.Result.Id);
+        profileCurrentResources.Result ??= new List<LocalResourceDb>();
         
         // Ensure we aren't creating a duplicate resource
-        var duplicateResources = currentResources.Result.Where(x =>
-            x.Type == createObject.Type &&
-            (x.PathWindows.Length > 0 && x.PathWindows == createObject.PathWindows) &&
-            (x.PathLinux.Length > 0 && x.PathLinux == createObject.PathLinux) &&
-            (x.PathMac.Length > 0 && x.PathMac == createObject.PathMac) &&
-            x.Args == createObject.Args);
+        var duplicateResources = profileCurrentResources.Result.Where(x =>
+            x.Type == request.Type &&
+            (x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) &&
+            (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) &&
+            (x.PathMac.Length > 0 && x.PathMac == request.PathMac) &&
+            x.Args == request.Args);
         if (duplicateResources.Any())
+        {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
+        }
         
         // TODO: Decide on data validation framework / method
-        createObject.Extension = createObject.Extension.Replace(".", "");
+        request.Extension = request.Extension.Replace(".", "");
         
-        var createRequest = await _gameServerRepository.CreateLocalResourceAsync(createObject);
-        if (!createRequest.Succeeded)
-            return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
+        var resourceCreate = await _gameServerRepository.CreateLocalResourceAsync(request);
+        if (!resourceCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"GameProfileId", foundProfile.Result.Id.ToString()},
+                {"Detail", "Failed to create a local resource"},
+                {"Error", resourceCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
 
-        return await Result<Guid>.SuccessAsync(createRequest.Result);
+        return await Result<Guid>.SuccessAsync(resourceCreate.Result);
     }
 
-    public async Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdate updateObject, Guid modifyingUserId)
+    public async Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdate request, Guid requestUserId)
     {
-        var findRequest = await _gameServerRepository.GetLocalResourceByIdAsync(updateObject.Id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.Id);
+        if (foundResource.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.LocalResources.NotFound);
+        }
+        
+        var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(foundResource.Result.GameProfileId);
+        if (foundProfile.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
+        }
 
-        var updateRequest = await _gameServerRepository.UpdateLocalResourceAsync(updateObject);
-        if (!updateRequest.Succeeded)
-            return await Result.FailAsync(updateRequest.ErrorMessage);
+        var profileCurrentResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(foundProfile.Result.Id);
+        profileCurrentResources.Result ??= new List<LocalResourceDb>();
+        
+        // Ensure we aren't updating the resource to become a duplicate resource
+        var duplicateResources = profileCurrentResources.Result.Where(x =>
+            x.Id != request.Id &&
+            x.Type == request.Type &&
+            (x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) &&
+            (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) &&
+            (x.PathMac.Length > 0 && x.PathMac == request.PathMac) &&
+            x.Args == request.Args);
+        if (duplicateResources.Any())
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
+        }
+
+        var resourceUpdate = await _gameServerRepository.UpdateLocalResourceAsync(request);
+        if (!resourceUpdate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, foundResource.Result.Id, requestUserId, new Dictionary<string, 
+                string>
+            {
+                {"GameProfileId", foundProfile.Result.Id.ToString()},
+                {"Detail", "Failed to update a local resource"},
+                {"Error", resourceUpdate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteLocalResourceAsync(Guid id, Guid modifyingUserId, bool force = false)
+    public async Task<IResult> DeleteLocalResourceAsync(Guid id, Guid requestUserId, bool sendUpdateToHost = true)
     {
-        var findRequest = await _gameServerRepository.GetLocalResourceByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(id);
+        if (foundResource.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.LocalResources.NotFound);
+        }
         
-        var foundServer = await _gameServerRepository.GetByIdAsync(findRequest.Result.GameServerId);
-        if (!foundServer.Succeeded || foundServer.Result is null)
+        var foundServer = await _gameServerRepository.GetByIdAsync(foundResource.Result.GameServerId);
+        if (foundServer.Result is null)
+        {
             return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
 
         var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
-        if (!foundHost.Succeeded || foundHost.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundHost.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Hosts.NotFound);
+        }
 
-        var deleteRequest = await _gameServerRepository.DeleteLocalResourceAsync(id);
-        if (!deleteRequest.Succeeded)
-            return await Result.FailAsync(deleteRequest.ErrorMessage);
+        var resourceDelete = await _gameServerRepository.DeleteLocalResourceAsync(id);
+        if (!resourceDelete.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, foundResource.Result.Id, requestUserId, new Dictionary<string, 
+                string>
+            {
+                {"GameServerId", foundServer.Result.Id.ToString()},
+                {"HostId", foundHost.Result.Id.ToString()},
+                {"Detail", "Failed to delete a local resource"},
+                {"Error", resourceDelete.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
 
-        if (force) return await Result.SuccessAsync();
+        if (!sendUpdateToHost) return await Result.SuccessAsync();
         
         // Send local resource to the host game server to enforce state
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigDelete, foundServer.Result.HostId,
-            findRequest.Result.ToHost(foundHost.Result.Os), modifyingUserId, _dateTime.NowDatabaseTime);
+            foundResource.Result.ToHost(foundHost.Result.Os), requestUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
             return await Result<Guid>.FailAsync(configUpdateRequest.ErrorMessage);
 
@@ -782,62 +1025,117 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject)
+    public async Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreateRequest request, Guid requestUserId)
     {
-        // Game profiles shouldn't have matching friendly names, so we'll enforce that 
-        var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(createObject.FriendlyName);
-        if (matchingUsernameRequest.Result is not null)
-            createObject.FriendlyName = $"{createObject.FriendlyName} - {Guid.NewGuid()}";
-        
-        var request = await _gameServerRepository.CreateGameProfileAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
-
-        return await Result<Guid>.SuccessAsync(request.Result);
-    }
-
-    public async Task<IResult> UpdateGameProfileAsync(GameProfileUpdate updateObject)
-    {
-        var findRequest = await _gameServerRepository.GetGameProfileByIdAsync(updateObject.Id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
-
-        if (!string.IsNullOrWhiteSpace(updateObject.FriendlyName))
+        if (string.IsNullOrWhiteSpace(request.Name))
         {
-            // Game profiles shouldn't have matching friendly names, so we'll enforce that 
-            var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(updateObject.FriendlyName);
-            if (matchingUsernameRequest.Result is not null)
-                return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
+            request.Name = $"Profile - {Guid.NewGuid()}";
         }
         
-        findRequest.Result.LastModifiedOn = _dateTime.NowDatabaseTime;
+        // Game profiles shouldn't have matching friendly names, so we'll enforce that 
+        var matchingProfile = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(request.Name);
+        if (matchingProfile.Result is not null)
+        {
+            request.Name = $"{request.Name} - {Guid.NewGuid()}";
+        }
 
-        var request = await _gameServerRepository.UpdateGameProfileAsync(updateObject);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var convertedRequest = request.ToCreate();
+        convertedRequest.CreatedBy = requestUserId;
+        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+        
+        var profileCreate = await _gameServerRepository.CreateGameProfileAsync(convertedRequest);
+        if (!profileCreate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, Guid.Empty, requestUserId, new Dictionary<string, string>
+            {
+                {"ProfileName", convertedRequest.FriendlyName},
+                {"Detail", "Failed to create a game profile"},
+                {"Error", profileCreate.ErrorMessage}
+            });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var createdProfile = await _gameServerRepository.GetGameProfileByIdAsync(profileCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, profileCreate.Result, requestUserId, DatabaseActionType.Create,
+            null, createdProfile.Result);
+
+        return await Result<Guid>.SuccessAsync(profileCreate.Result);
+    }
+
+    public async Task<IResult> UpdateGameProfileAsync(GameProfileUpdateRequest request, Guid requestUserId)
+    {
+        var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(request.Id);
+        if (foundProfile.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
+        }
+
+        if (request.Name is not null)
+        {
+            if (request.Name.Length == 0)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.GameProfiles.EmptyName);
+            }
+            
+            // Game profiles shouldn't have matching friendly names, so we'll enforce that 
+            var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(request.Name);
+            if (matchingUsernameRequest.Result is not null)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
+            }
+        }
+
+        var convertedRequest = request.ToUpdate();
+        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
+        convertedRequest.LastModifiedBy = requestUserId;
+
+        var profileUpdate = await _gameServerRepository.UpdateGameProfileAsync(convertedRequest);
+        if (!profileUpdate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to update game profile"},
+                    {"Error", profileUpdate.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var updatedProfile = await _gameServerRepository.GetGameProfileByIdAsync(foundProfile.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result.Id, requestUserId, DatabaseActionType.Update,
+            foundProfile.Result, updatedProfile.Result);
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteGameProfileAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> DeleteGameProfileAsync(Guid id, Guid requestUserId)
     {
-        var findRequest = await _gameServerRepository.GetGameProfileByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(id);
+        if (foundProfile.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
+        }
         
         // Don't allow deletion if a default game profile
-        var matchingGame = await _gameRepository.GetByIdAsync(findRequest.Result.GameId);
-        if (!matchingGame.Succeeded || matchingGame.Result is null)
+        var foundGame = await _gameRepository.GetByIdAsync(foundProfile.Result.GameId);
+        if (!foundGame.Succeeded || foundGame.Result is null)
         {
-            return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to find game before game profile deletion"},
+                    {"Error", foundGame.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
-        if (matchingGame.Result.DefaultGameProfileId == findRequest.Result.Id)
+        
+        if (foundGame.Result.DefaultGameProfileId == foundProfile.Result.Id)
         {
             return await Result.FailAsync(ErrorMessageConstants.GameProfiles.DeleteDefaultProfile);
         }
 
         // Don't allow deletion if assigned to multiple game servers
-        var assignedGameServers = await _gameServerRepository.GetByGameProfileIdAsync(findRequest.Result.Id);
+        var assignedGameServers = await _gameServerRepository.GetByGameProfileIdAsync(foundProfile.Result.Id);
         if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Count() > 1)
         {
             List<string> errorMessages = [ErrorMessageConstants.GameProfiles.AssignedGameServers];
@@ -846,13 +1144,13 @@ public class GameServerService : IGameServerService
         }
 
         // Delete all assigned local resources
-        var assignedLocalResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(findRequest.Result.Id);
+        var assignedLocalResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(foundProfile.Result.Id);
         if (assignedLocalResources.Succeeded)
         {
             List<string> errorMessages = [];
             foreach (var resource in assignedLocalResources.Result?.ToList() ?? [])
             {
-                var resourceDeleteRequest = await DeleteLocalResourceAsync(resource.Id, modifyingUserId, true);
+                var resourceDeleteRequest = await DeleteLocalResourceAsync(resource.Id, requestUserId, false);
                 if (!resourceDeleteRequest.Succeeded)
                 {
                     errorMessages.AddRange(resourceDeleteRequest.Messages);
@@ -865,9 +1163,20 @@ public class GameServerService : IGameServerService
             }
         }
 
-        var request = await _gameServerRepository.DeleteGameProfileAsync(id, modifyingUserId);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(id, requestUserId);
+        if (!profileDelete.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to delete game profile after deleting assigned resources"},
+                    {"Error", profileDelete.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result.Id, requestUserId, DatabaseActionType.Delete,
+            foundProfile.Result);
 
         return await Result.SuccessAsync();
     }
@@ -994,39 +1303,78 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<Guid>> CreateModAsync(ModCreate createObject)
+    public async Task<IResult<Guid>> CreateModAsync(ModCreate request, Guid requestUserId)
     {
-        var request = await _gameServerRepository.CreateModAsync(createObject);
-        if (!request.Succeeded)
-            return await Result<Guid>.FailAsync(request.ErrorMessage);
+        var createMod = await _gameServerRepository.CreateModAsync(request);
+        if (!createMod.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, Guid.Empty, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to create a mod"},
+                    {"Error", createMod.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
-        return await Result<Guid>.SuccessAsync(request.Result);
+        var createdMod = await _gameServerRepository.GetModByIdAsync(createMod.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, createMod.Result, requestUserId, DatabaseActionType.Create,
+            null, createdMod.Result);
+
+        return await Result<Guid>.SuccessAsync(createMod.Result);
     }
 
-    public async Task<IResult> UpdateModAsync(ModUpdate updateObject)
+    public async Task<IResult> UpdateModAsync(ModUpdate request, Guid requestUserId)
     {
-        var findRequest = await _gameServerRepository.GetModByIdAsync(updateObject.Id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundMod = await _gameServerRepository.GetModByIdAsync(request.Id);
+        if (foundMod.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Mods.NotFound);
+        }
 
-        findRequest.Result.LastModifiedOn = _dateTime.NowDatabaseTime;
+        foundMod.Result.LastModifiedOn = _dateTime.NowDatabaseTime;
+        foundMod.Result.LastModifiedBy = requestUserId;
 
-        var request = await _gameServerRepository.UpdateModAsync(updateObject);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var modUpdate = await _gameServerRepository.UpdateModAsync(request);
+        if (!modUpdate.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, foundMod.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to update mod"},
+                    {"Error", modUpdate.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var updatedMod = await _gameServerRepository.GetModByIdAsync(foundMod.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result.Id, requestUserId, DatabaseActionType.Update,
+            foundMod.Result, updatedMod.Result);
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> DeleteModAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> DeleteModAsync(Guid id, Guid requestUserId)
     {
-        var findRequest = await _gameServerRepository.GetModByIdAsync(id);
-        if (!findRequest.Succeeded || findRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundMod = await _gameServerRepository.GetModByIdAsync(id);
+        if (!foundMod.Succeeded || foundMod.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Mods.NotFound);
+        }
 
-        var request = await _gameServerRepository.DeleteModAsync(id, modifyingUserId);
-        if (!request.Succeeded)
-            return await Result.FailAsync(request.ErrorMessage);
+        var modDelete = await _gameServerRepository.DeleteModAsync(id, requestUserId);
+        if (!modDelete.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, foundMod.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to delete mod"},
+                    {"Error", modDelete.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result.Id, requestUserId, DatabaseActionType.Delete, foundMod.Result);
 
         return await Result.SuccessAsync();
     }
@@ -1049,60 +1397,127 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
     }
 
-    public async Task<IResult> StartServerAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> StartServerAsync(Guid id, Guid requestUserId)
     {
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
-        if (!foundServer.Succeeded || foundServer.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundServer.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
 
-        var startRequest =
-            await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerStart, foundServer.Result.HostId, foundServer.Result.Id,
-                modifyingUserId, _dateTime.NowDatabaseTime);
+        var startRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerStart, foundServer.Result.HostId, foundServer.Result.Id,
+            requestUserId, _dateTime.NowDatabaseTime);
         if (!startRequest.Succeeded)
-            return await Result<Guid>.FailAsync(startRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to send game server start work"},
+                    {"Error", startRequest.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+            null, new Dictionary<string, string>
+            {
+                {"WorkId", startRequest.Result.ToString()},
+                {"Detail", "Game Server Version Update work request sent"}
+            });
 
         return await Result<Guid>.SuccessAsync();
     }
 
-    public async Task<IResult> StopServerAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> StopServerAsync(Guid id, Guid requestUserId)
     {
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
-        if (!foundServer.Succeeded || foundServer.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundServer.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
 
         var stopRequest =
             await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerStop, foundServer.Result.HostId, foundServer.Result.Id,
-                modifyingUserId, _dateTime.NowDatabaseTime);
+                requestUserId, _dateTime.NowDatabaseTime);
         if (!stopRequest.Succeeded)
-            return await Result<Guid>.FailAsync(stopRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to send game server stop work"},
+                    {"Error", stopRequest.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+            null, new Dictionary<string, string>
+            {
+                {"WorkId", stopRequest.Result.ToString()},
+                {"Detail", "Game Server Version Update work request sent"}
+            });
 
         return await Result<Guid>.SuccessAsync();
     }
 
-    public async Task<IResult> RestartServerAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> RestartServerAsync(Guid id, Guid requestUserId)
     {
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
-        if (!foundServer.Succeeded || foundServer.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundServer.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
 
         var restartRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerRestart, foundServer.Result.HostId,
-            foundServer.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);
+            foundServer.Result.Id, requestUserId, _dateTime.NowDatabaseTime);
         if (!restartRequest.Succeeded)
-            return await Result<Guid>.FailAsync(restartRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to send game server restart work"},
+                    {"Error", restartRequest.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+            null, new Dictionary<string, string>
+            {
+                {"WorkId", restartRequest.Result.ToString()},
+                {"Detail", "Game Server Version Update work request sent"}
+            });
 
         return await Result<Guid>.SuccessAsync();
     }
 
-    public async Task<IResult> UpdateServerAsync(Guid id, Guid modifyingUserId)
+    public async Task<IResult> UpdateServerAsync(Guid id, Guid requestUserId)
     {
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
-        if (!foundServer.Succeeded || foundServer.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundServer.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
 
         var updateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUpdate, foundServer.Result.HostId,
-            foundServer.Result.Id, modifyingUserId, _dateTime.NowDatabaseTime);
+            foundServer.Result.Id, requestUserId, _dateTime.NowDatabaseTime);
         if (!updateRequest.Succeeded)
-            return await Result<Guid>.FailAsync(updateRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to send game server version update work"},
+                    {"Error", updateRequest.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+            null, new Dictionary<string, string>
+            {
+                {"WorkId", updateRequest.Result.ToString()},
+                {"Detail", "Game Server Version Update work request sent"}
+            });
 
         return await Result<Guid>.SuccessAsync();
     }

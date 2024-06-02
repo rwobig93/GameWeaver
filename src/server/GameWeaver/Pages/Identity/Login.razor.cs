@@ -2,7 +2,7 @@ using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Auth;
 using Application.Helpers.Integrations;
-using Application.Requests.v1.Identity.User;
+using Application.Requests.Identity.User;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;

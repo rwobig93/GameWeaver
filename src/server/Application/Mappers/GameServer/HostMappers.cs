@@ -2,7 +2,9 @@
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
+using Application.Requests.GameServer.Host;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 using Domain.Models.Host;
 using MemoryPack;
 
@@ -237,5 +239,28 @@ public static class HostMappers
     public static IEnumerable<WeaverWorkClient> ToClientWorks(this IEnumerable<WeaverWorkSlim> workSlims)
     {
         return workSlims.Select(x => x.ToClientWork()).ToList();
+    }
+
+    public static HostCreate ToCreate(this HostCreateRequest request)
+    {
+        return new HostCreate
+        {
+            OwnerId = request.OwnerId,
+            FriendlyName = request.Name,
+            Description = request.Description,
+            AllowedPorts = request.AllowedPorts
+        };
+    }
+
+    public static HostUpdate ToUpdate(this HostUpdateRequest request)
+    {
+        return new HostUpdate
+        {
+            Id = request.Id,
+            OwnerId = request.OwnerId,
+            FriendlyName = request.Name,
+            Description = request.Description,
+            AllowedPorts = request.AllowedPorts
+        };
     }
 }

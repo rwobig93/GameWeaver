@@ -7,5 +7,6 @@ public enum DatabaseActionType
     Delete = 2,
     Login = 3,
     Logout = 4,
-    Troubleshooting = 5
+    Troubleshooting = 5,
+    GameServerAction = 6
 }

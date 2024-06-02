@@ -152,11 +152,11 @@ public static class DependencyInjection
         services.AddHttpClient(ApiConstants.Clients.SteamUnauthenticated, options =>
         {
             options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrl);
-        });
+        }).ConfigureCertificateHandling(configuration);
         services.AddHttpClient(ApiConstants.Clients.SteamAuthenticated, options =>
         {
             options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrl);
-        });
+        }).ConfigureCertificateHandling(configuration);
 
         var mailConfig = configuration.GetMailSettings();
         services.AddFluentEmail(mailConfig.From, mailConfig.DisplayName)

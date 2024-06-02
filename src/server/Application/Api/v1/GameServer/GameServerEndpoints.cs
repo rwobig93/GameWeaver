@@ -6,6 +6,8 @@ using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
+using Application.Requests.GameServer.GameProfile;
+using Application.Requests.GameServer.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Settings.AppSettings;
@@ -257,37 +259,38 @@ public static class GameServerEndpoints
     /// <summary>
     /// Create a game server
     /// </summary>
-    /// <param name="createObject">Required properties to create a game server</param>
+    /// <param name="request">Required properties to create a game server</param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created game server</returns>
     [Authorize(PermissionConstants.Gameserver.Create)]
-    private static async Task<IResult<Guid>> Create([FromBody]GameServerCreate createObject, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    private static async Task<IResult<Guid>> Create([FromBody]GameServerCreateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            createObject.CreatedBy = currentUserId;
-            return await gameServerService.CreateAsync(createObject);
+            return await gameServerService.CreateAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update a game server's properties
     /// </summary>
-    /// <param name="updateObject">Required properties to update a game server</param>
+    /// <param name="request">Required properties to update a game server</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Gameserver.Update)]
-    private static async Task<IResult> Update([FromBody]GameServerUpdate updateObject, IGameServerService gameServerService)
+    private static async Task<IResult> Update([FromBody]GameServerUpdateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.UpdateAsync(updateObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
@@ -425,38 +428,44 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a configuration item
     /// </summary>
     /// <param name="createObject">Required properties to create a configuration item</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created configuration item</returns>
     [Authorize(PermissionConstants.Gameserver.CreateConfigurationItem)]
-    private static async Task<IResult<Guid>> CreateConfigurationItem([FromBody]ConfigurationItemCreate createObject, IGameServerService gameServerService)
+    private static async Task<IResult<Guid>> CreateConfigurationItem([FromBody]ConfigurationItemCreate createObject, IGameServerService gameServerService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.CreateConfigurationItemAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.CreateConfigurationItemAsync(createObject, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update a configuration items properties
     /// </summary>
     /// <param name="updateObject">Required properties to update a configuration item</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Gameserver.UpdateConfigurationItem)]
-    private static async Task<IResult> UpdateConfigurationItem([FromBody]ConfigurationItemUpdate updateObject, IGameServerService gameServerService)
+    private static async Task<IResult> UpdateConfigurationItem([FromBody]ConfigurationItemUpdate updateObject, IGameServerService gameServerService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.UpdateConfigurationItemAsync(updateObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateConfigurationItemAsync(updateObject, currentUserId);
         }
         catch (Exception ex)
         {
@@ -888,38 +897,43 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<GameProfileSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a game profile
     /// </summary>
-    /// <param name="createObject">Required properties to create a game profile</param>
+    /// <param name="request">Required properties to create a game profile</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created game profile</returns>
     [Authorize(PermissionConstants.Gameserver.CreateGameProfile)]
-    private static async Task<IResult<Guid>> CreateGameProfile([FromBody]GameProfileCreate createObject, IGameServerService gameServerService)
+    private static async Task<IResult<Guid>> CreateGameProfile([FromBody]GameProfileCreateRequest request, IGameServerService gameServerService,
+        ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.CreateGameProfileAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.CreateGameProfileAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update a game profiles properties
     /// </summary>
-    /// <param name="updateObject">Required properties to update a game profile</param>
+    /// <param name="request">Required properties to update a game profile</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Gameserver.UpdateGameProfile)]
-    private static async Task<IResult> UpdateGameProfile([FromBody]GameProfileUpdate updateObject, IGameServerService gameServerService)
+    private static async Task<IResult> UpdateGameProfile([FromBody]GameProfileUpdateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.UpdateGameProfileAsync(updateObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateGameProfileAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
@@ -1152,38 +1166,42 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<ModSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a mod
     /// </summary>
-    /// <param name="createObject">Required properties to create a mod</param>
+    /// <param name="request">Required properties to create a mod</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Id of the created mod</returns>
     [Authorize(PermissionConstants.Gameserver.CreateMod)]
-    private static async Task<IResult<Guid>> CreateMod([FromBody]ModCreate createObject, IGameServerService gameServerService)
+    private static async Task<IResult<Guid>> CreateMod([FromBody]ModCreate request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.CreateModAsync(createObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.CreateModAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<Guid>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update a mod's properties
     /// </summary>
     /// <param name="updateObject">Required properties to update a mod</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Gameserver.UpdateMod)]
-    private static async Task<IResult> UpdateMod([FromBody]ModUpdate updateObject, IGameServerService gameServerService)
+    private static async Task<IResult> UpdateMod([FromBody]ModUpdate updateObject, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.UpdateModAsync(updateObject);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateModAsync(updateObject, currentUserId);
         }
         catch (Exception ex)
         {
