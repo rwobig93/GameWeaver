@@ -54,11 +54,11 @@ public static class LocalResourceMappers
         };
     }
 
-    public static LocalResourceHost ToHost(this LocalResourceDb localResource, OsType osType)
+    public static LocalResourceHost ToHost(this LocalResourceDb localResource, Guid gameServerId, OsType osType)
     {
         return new LocalResourceHost
         {
-            GameserverId = localResource.GameServerId,
+            GameserverId = gameServerId,
             Name = localResource.Name,
             Path = osType switch
             {
@@ -77,16 +77,16 @@ public static class LocalResourceMappers
         };
     }
 
-    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceDb> localResourceDbs, OsType osType)
+    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceDb> localResourceDbs, Guid gameServerId, OsType osType)
     {
-        return localResourceDbs.Select(x => x.ToHost(osType));
+        return localResourceDbs.Select(x => x.ToHost(gameServerId, osType));
     }
 
-    public static LocalResourceHost ToHost(this LocalResourceSlim localResource, OsType osType)
+    public static LocalResourceHost ToHost(this LocalResourceSlim localResource, Guid gameServerId, OsType osType)
     {
         return new LocalResourceHost
         {
-            GameserverId = localResource.GameServerId,
+            GameserverId = gameServerId,
             Name = localResource.Name,
             Path = osType switch
             {
@@ -107,9 +107,9 @@ public static class LocalResourceMappers
         };
     }
 
-    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceSlim> localResources, OsType osType)
+    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceSlim> localResources, Guid gameServerId, OsType osType)
     {
-        return localResources.Select(x => x.ToHost(osType));
+        return localResources.Select(x => x.ToHost(gameServerId, osType));
     }
 
     public static LocalResourceCreate ToCreate(this LocalResourceSlim localResource)

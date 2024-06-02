@@ -892,7 +892,7 @@
             <param name="serializerService"></param>
             <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.WorkStatusUpdate(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.WorkStatusUpdate(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService,Microsoft.AspNetCore.Http.HttpContext)">
             <summary>
             Update the status of requested weaver work from the host
             </summary>
@@ -901,6 +901,7 @@
             <param name="currentUserService"></param>
             <param name="dateTimeService"></param>
             <param name="serializerService"></param>
+            <param name="context"></param>
             <returns></returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAll(Application.Services.GameServer.IHostService)">
@@ -1010,12 +1011,13 @@
             <param name="hostService"></param>
             <returns>Count of host registrations</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateRegistration(Application.Models.GameServer.HostRegistration.HostRegistrationUpdate,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateRegistration(Application.Requests.GameServer.Host.HostRegistrationUpdateRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a host registration's properties
             </summary>
             <param name="request">Required properties to update a host registration</param>
             <param name="hostService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchRegistrations(System.String,Application.Services.GameServer.IHostService)">
@@ -1060,12 +1062,13 @@
             <param name="hostService"></param>
             <returns>List of checkins for the host</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldCheckins(Domain.Enums.Lifecycle.CleanupTimeframe,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldCheckins(Domain.Enums.Lifecycle.CleanupTimeframe,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete host checkins older than the provided timeframe
             </summary>
             <param name="olderThan">0=OneMonth, 1=ThreeMonths, 2=SixMonths, 3=OneYear, 4=TenYears</param>
             <param name="hostService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchCheckins(System.String,Application.Services.GameServer.IHostService)">
@@ -1135,12 +1138,13 @@
             <param name="hostService"></param>
             <returns>All the current waiting weaver work jobs</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.CreateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkCreate,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.CreateWeaverWork(Application.Requests.GameServer.WeaverWork.WeaverWorkCreateRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create weaver work for a host
             </summary>
             <param name="request">Required properties to create weaver work for a host</param>
             <param name="hostService"></param>
+            <param name="currentUserService"></param>
             <returns>ID of the weaver work created</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.UpdateWeaverWork(Application.Models.GameServer.WeaverWork.WeaverWorkUpdate,Application.Services.GameServer.IHostService)">
@@ -1151,20 +1155,22 @@
             <param name="hostService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteWeaverWork(System.Int32,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteWeaverWork(System.Int32,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete weaver work
             </summary>
             <param name="id">Id of a weaver work</param>
             <param name="hostService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldWeaverWork(System.DateTime,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.DeleteOldWeaverWork(System.DateTime,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Delete weaver work older than a timeframe
             </summary>
             <param name="olderThan">Serializable DateTime, anything older than this datetime will be deleted</param>
             <param name="hostService"></param>
+            <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.SearchWeaverWork(System.String,Application.Services.GameServer.IHostService)">

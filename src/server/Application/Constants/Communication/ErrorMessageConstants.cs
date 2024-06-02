@@ -123,4 +123,11 @@ public static class ErrorMessageConstants
     {
         public const string NotFound = "Was unable to find a mod using the information provided, please verify the information provided";
     }
+
+    public static class WeaverWork
+    {
+        public const string NotFound = "Was unable to find weaver work using the information provided, please verify the information provided";
+        public const string InvalidWorkData = "Work data is null, please verify your input";
+        public const string InvalidDeserializedWorkData = "Deserialized work data is null, please verify your input";
+    }
 }

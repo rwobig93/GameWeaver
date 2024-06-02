@@ -13,6 +13,7 @@ public class ServerStateRecordsTableMsSql : IMsSqlEnforcedEntity
     // TODO: Add check if version is newer than application version, if it is stop with a failure since we don't want to clobber migrations
     public static readonly SqlTable Table = new()
     {
+        EnforcementOrder = 1,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))

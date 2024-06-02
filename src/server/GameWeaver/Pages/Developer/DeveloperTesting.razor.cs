@@ -83,11 +83,22 @@ public partial class DeveloperTesting : IAsyncDisposable
         Password = "dietpassword1",
         PasswordRcon = "dietrcon1",
         PasswordAdmin = "dietadmin1",
-        PortGame = 32000,
-        PortQuery = 42000,
-        PortRcon = 52000,
+        PortGame = 30010,
+        PortQuery = 40010,
+        PortRcon = 50010,
         Modded = false,
         Private = false
+    };
+    private readonly LocalResourceSlim _desiredResourceExecutable = new()
+    {
+        Name = "Dedicated Server Executable",
+        PathWindows = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping",
+        Startup = true,
+        StartupPriority = 0,
+        Type = ResourceType.Executable,
+        ContentType = ContentType.Raw,
+        Extension = "exe",
+        Args = "-log"
     };
     private readonly LocalResourceSlim _desiredResourceEngine = new()
     {
@@ -413,77 +424,6 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        var profileResources = await GameServerService.GetLocalResourcesForGameServerIdAsync(_selectedGameServer.Id);
-        var desiredResources = new List<LocalResourceSlim>
-        {
-            _desiredResourceEngine,
-            _desiredResourceGame,
-            _desiredResourceServerSettings
-        };
-
-        foreach (var resource in desiredResources)
-        {
-            var matchingResource = profileResources.Data.FirstOrDefault(x => x.PathWindows == resource.PathWindows && x.Type == resource.Type);
-            if (matchingResource is not null)
-            {
-                resource.Id = matchingResource.Id;
-                continue;
-            }
-            
-            var resourceCreate = resource.ToCreate();
-            resourceCreate.GameProfileId = _selectedGameServer.GameProfileId;
-            var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
-            if (!createRequest.Succeeded)
-            {
-                createRequest.Messages.ForEach(x => Snackbar.Add($"Failed to create resource for profile: {x}", Severity.Error));
-                return;
-            }
-
-            resource.Id = createRequest.Data;
-        }
-
-        foreach (var resource in desiredResources)
-        {
-            var resourcesRequest = await GameServerService.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
-            var resourceConfigItems = resourcesRequest.Succeeded ? resourcesRequest.Data.ToList() : [];
-            foreach (var configItem in resource.ConfigSets)
-            {
-                var matchingItem = configItem.DuplicateKey ? resourceConfigItems.FirstOrDefault(x =>
-                    x.Category == configItem.Category &&
-                    x.Key == configItem.Key &&
-                    x.Value == configItem.Value) :
-                    resourceConfigItems.FirstOrDefault(x => x.Category == configItem.Category && x.Key == configItem.Key);
-                if (matchingItem is not null && configItem.DuplicateKey)
-                {
-                    continue;
-                }
-                if (matchingItem is not null && configItem.Value == matchingItem.Value)
-                {
-                    continue;
-                }
-                
-                if (matchingItem is not null)
-                {
-                    var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value, ModifyingUserId = _loggedInUser.Id};
-                    var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate, _loggedInUser.Id);
-                    if (!updateRequest.Succeeded)
-                    {
-                        updateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                        return;
-                    }
-                    
-                    continue;
-                }
-            
-                var itemCreate = configItem.ToCreate();
-                itemCreate.LocalResourceId = resource.Id;
-                var createRequest = await GameServerService.CreateConfigurationItemAsync(itemCreate, _loggedInUser.Id);
-                if (createRequest.Succeeded) continue;
-                
-                createRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            }
-        }
-
         var hostUpdateRequest = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_selectedGameServer.Id, _loggedInUser.Id);
         if (!hostUpdateRequest.Succeeded)
         {
@@ -537,35 +477,77 @@ public partial class DeveloperTesting : IAsyncDisposable
             _defaultProfile.Id = matchingProfile.Data.Id;
         }
 
-        var resourceCreate = new LocalResourceCreate
-        {
-            GameProfileId = matchingProfile.Data.Id,
-            Name = "Dedicated Server Executable",
-            PathWindows = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping",
-            Startup = true,
-            StartupPriority = 0,
-            Type = ResourceType.Executable,
-            ContentType = ContentType.Raw,
-            Extension = "exe",
-            Args = "-log"
-        };
         var profileResources = await GameServerService.GetLocalResourcesByGameProfileIdAsync(matchingProfile.Data.Id);
-        var matchingResource = profileResources.Data.FirstOrDefault(x => x.Name == resourceCreate.Name && x.Type == resourceCreate.Type);
-        if (matchingResource is not null)
+        var desiredResources = new List<LocalResourceSlim>
         {
-            Snackbar.Add($"Default game profile is correct: [{matchingProfile.Data.Id}]{matchingProfile.Data.FriendlyName}");
-            _defaultProfile.Id = matchingProfile.Data.Id;
-            return;
+            _desiredResourceExecutable,
+            _desiredResourceEngine,
+            _desiredResourceGame,
+            _desiredResourceServerSettings
+        };
+
+        foreach (var resource in desiredResources)
+        {
+            var matchingResource = profileResources.Data.FirstOrDefault(x => x.PathWindows == resource.PathWindows && x.Type == resource.Type);
+            if (matchingResource is not null)
+            {
+                resource.Id = matchingResource.Id;
+                continue;
+            }
+            
+            var resourceCreate = resource.ToCreate();
+            resourceCreate.GameProfileId = matchingProfile.Data.Id;
+            
+            var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
+            if (!createRequest.Succeeded)
+            {
+                createRequest.Messages.ForEach(x => Snackbar.Add($"Failed to create resource for profile: {x}", Severity.Error));
+                return;
+            }
+
+            resource.Id = createRequest.Data;
         }
 
-        var resourceCreateRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
-        if (!resourceCreateRequest.Succeeded)
+        foreach (var resource in desiredResources)
         {
-            foreach (var message in resourceCreateRequest.Messages)
+            var resourcesRequest = await GameServerService.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
+            var resourceConfigItems = resourcesRequest.Succeeded ? resourcesRequest.Data.ToList() : [];
+            foreach (var configItem in resource.ConfigSets)
             {
-                Snackbar.Add(message, Severity.Error);
+                var matchingItem = configItem.DuplicateKey ? resourceConfigItems.FirstOrDefault(x =>
+                    x.Category == configItem.Category &&
+                    x.Key == configItem.Key &&
+                    x.Value == configItem.Value) :
+                    resourceConfigItems.FirstOrDefault(x => x.Category == configItem.Category && x.Key == configItem.Key);
+                if (matchingItem is not null && configItem.DuplicateKey)
+                {
+                    continue;
+                }
+                if (matchingItem is not null && configItem.Value == matchingItem.Value)
+                {
+                    continue;
+                }
+                
+                if (matchingItem is not null)
+                {
+                    var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value, ModifyingUserId = _loggedInUser.Id};
+                    var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate, _loggedInUser.Id);
+                    if (!updateRequest.Succeeded)
+                    {
+                        updateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                        return;
+                    }
+                    
+                    continue;
+                }
+            
+                var itemCreate = configItem.ToCreate();
+                itemCreate.LocalResourceId = resource.Id;
+                var createRequest = await GameServerService.CreateConfigurationItemAsync(itemCreate, _loggedInUser.Id);
+                if (createRequest.Succeeded) continue;
+                
+                createRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             }
-            return;
         }
         
         Snackbar.Add("Updated and enforced default game profile", Severity.Success);

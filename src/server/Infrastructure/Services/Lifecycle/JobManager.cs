@@ -65,6 +65,14 @@ public class JobManager : IJobManager
             if (!auditCleanup.Succeeded)
                 _logger.Error("Audit cleanup failed: {Error}", auditCleanup.Messages);
             
+            // TODO: Cleanup host registrations and their hosts if not registered after 24 hours by default, should be configurable
+            
+            // TODO: Cleanup non-default game profiles that aren't bound to any game servers
+            
+            // TODO: Cleanup old weaver work using a configurable timeframe
+            
+            // TODO: Cleanup old host checkins using a configurable timeframe
+            
             _logger.Debug("Finished daily cleanup");
         }
         catch (Exception ex)

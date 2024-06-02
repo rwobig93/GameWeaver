@@ -8,6 +8,7 @@ using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
 using Application.Requests.GameServer;
 using Application.Requests.GameServer.Host;
+using Application.Requests.GameServer.WeaverWork;
 using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
@@ -171,7 +172,9 @@ public static class HostEndpoints
             
             var checkInResponse = await hostService.CreateCheckInAsync(createCheckIn);
             if (!checkInResponse.Succeeded)
+            {
                 return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(checkInResponse.Messages);
+            }
 
             var nextHostWork = await hostService.GetWeaverWaitingWorkByHostIdAsync(currentUserId);
             return await Result<IEnumerable<WeaverWorkClient>>.SuccessAsync(nextHostWork.Data.ToClientWorks());
@@ -181,7 +184,7 @@ public static class HostEndpoints
             return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update the status of requested weaver work from the host
     /// </summary>
@@ -190,21 +193,23 @@ public static class HostEndpoints
     /// <param name="currentUserService"></param>
     /// <param name="dateTimeService"></param>
     /// <param name="serializerService"></param>
+    /// <param name="context"></param>
     /// <returns></returns>
     [Authorize(PermissionConstants.Hosts.WorkUpdate)]
     private static async Task<IResult> WorkStatusUpdate([FromBody]WeaverWorkUpdate request, IHostService hostService, ICurrentUserService currentUserService,
-        IDateTimeService dateTimeService, ISerializerService serializerService)
+        IDateTimeService dateTimeService, ISerializerService serializerService, HttpContext context)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-
+            var initiatorIp = context.GetConnectionIp();
+            
             request.CreatedBy = null;
             request.CreatedOn = null;
             request.LastModifiedBy = currentUserId;
             request.LastModifiedOn = dateTimeService.NowDatabaseTime;
 
-            return await hostService.UpdateWeaverWorkAsync(request);
+            return await hostService.UpdateWeaverWorkAsync(request, initiatorIp);
         }
         catch (Exception ex)
         {
@@ -491,19 +496,21 @@ public static class HostEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update a host registration's properties
     /// </summary>
     /// <param name="request">Required properties to update a host registration</param>
     /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.UpdateRegistration)]
-    private static async Task<IResult> UpdateRegistration([FromBody]HostRegistrationUpdate request, IHostService hostService)
+    private static async Task<IResult> UpdateRegistration([FromBody]HostRegistrationUpdateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await hostService.UpdateRegistrationAsync(request);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.UpdateRegistrationAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
@@ -620,19 +627,21 @@ public static class HostEndpoints
             return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete host checkins older than the provided timeframe
     /// </summary>
     /// <param name="olderThan">0=OneMonth, 1=ThreeMonths, 2=SixMonths, 3=OneYear, 4=TenYears</param>
     /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.DeleteOldCheckins)]
-    private static async Task<IResult> DeleteOldCheckins([FromBody]CleanupTimeframe olderThan, IHostService hostService)
+    private static async Task<IResult> DeleteOldCheckins([FromBody]CleanupTimeframe olderThan, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await hostService.DeleteAllOldCheckInsAsync(olderThan);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.DeleteAllOldCheckInsAsync(olderThan, currentUserId);
         }
         catch (Exception ex)
         {
@@ -807,19 +816,21 @@ public static class HostEndpoints
             return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create weaver work for a host
     /// </summary>
     /// <param name="request">Required properties to create weaver work for a host</param>
     /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>ID of the weaver work created</returns>
     [Authorize(PermissionConstants.Hosts.CreateWeaverWork)]
-    private static async Task<IResult<int>> CreateWeaverWork([FromBody]WeaverWorkCreate request, IHostService hostService)
+    private static async Task<IResult<int>> CreateWeaverWork([FromBody]WeaverWorkCreateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await hostService.CreateWeaverWorkAsync(request);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.CreateWeaverWorkAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
@@ -845,38 +856,42 @@ public static class HostEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete weaver work
     /// </summary>
     /// <param name="id">Id of a weaver work</param>
     /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
-    private static async Task<IResult> DeleteWeaverWork([FromQuery]int id, IHostService hostService)
+    private static async Task<IResult> DeleteWeaverWork([FromQuery]int id, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await hostService.DeleteWeaverWorkAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.DeleteWeaverWorkAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete weaver work older than a timeframe
     /// </summary>
     /// <param name="olderThan">Serializable DateTime, anything older than this datetime will be deleted</param>
     /// <param name="hostService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
-    private static async Task<IResult> DeleteOldWeaverWork([FromQuery]DateTime olderThan, IHostService hostService)
+    private static async Task<IResult> DeleteOldWeaverWork([FromQuery]DateTime olderThan, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await hostService.DeleteWeaverWorkOlderThanAsync(olderThan);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await hostService.DeleteWeaverWorkOlderThanAsync(olderThan, currentUserId);
         }
         catch (Exception ex)
         {

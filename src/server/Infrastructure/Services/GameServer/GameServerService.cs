@@ -244,9 +244,9 @@ public class GameServerService : IGameServerService
         gameServerHost.SteamToolId = foundGame.Result.SteamToolId;
 
         var gameServerResources = await GetLocalResourcesForGameServerIdAsync(gameServerHost.Id);
-        gameServerHost.Resources.AddRange(gameServerResources.Data.ToHosts(foundHost.Result.Os));
+        gameServerHost.Resources.AddRange(gameServerResources.Data.ToHosts(gameServerCreate.Result, foundHost.Result.Os));
         
-        var hostInstallRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerInstall, gameServerCreate.Result,
+        var hostInstallRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerInstall, foundHost.Result.Id,
             gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
         if (!hostInstallRequest.Succeeded)
         {
@@ -346,7 +346,8 @@ public class GameServerService : IGameServerService
                 var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
                 {
                     {"Detail", "Failed to delete server profile before game server deletion"},
-                    {"Error", profileDeleteRequest.Messages.ToString() ?? ""}
+                    {"Error", string.Join(Environment.NewLine , profileDeleteRequest.Messages)}
+                    // TODO: ToString doesn't display, do a join instead {"Error", profileDeleteRequest.Messages.ToString() ?? ""}
                 });
                 return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
             }
@@ -814,18 +815,6 @@ public class GameServerService : IGameServerService
         {
             return await Result.FailAsync(ErrorMessageConstants.LocalResources.NotFound);
         }
-        
-        var foundServer = await _gameServerRepository.GetByIdAsync(foundResource.Result.GameServerId);
-        if (foundServer.Result is null)
-        {
-            return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
-        }
-
-        var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
-        if (foundHost.Result is null)
-        {
-            return await Result.FailAsync(ErrorMessageConstants.Hosts.NotFound);
-        }
 
         var resourceDelete = await _gameServerRepository.DeleteLocalResourceAsync(id);
         if (!resourceDelete.Succeeded)
@@ -833,8 +822,6 @@ public class GameServerService : IGameServerService
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, foundResource.Result.Id, requestUserId, new Dictionary<string, 
                 string>
             {
-                {"GameServerId", foundServer.Result.Id.ToString()},
-                {"HostId", foundHost.Result.Id.ToString()},
                 {"Detail", "Failed to delete a local resource"},
                 {"Error", resourceDelete.ErrorMessage}
             });
@@ -843,70 +830,117 @@ public class GameServerService : IGameServerService
         
         // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
 
-        if (!sendUpdateToHost) return await Result.SuccessAsync();
-        
-        // Send local resource to the host game server to enforce state
-        var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigDelete, foundServer.Result.HostId,
-            foundResource.Result.ToHost(foundHost.Result.Os), requestUserId, _dateTime.NowDatabaseTime);
-        if (!configUpdateRequest.Succeeded)
-            return await Result<Guid>.FailAsync(configUpdateRequest.ErrorMessage);
-
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> UpdateLocalResourceOnGameServerAsync(Guid serverId, Guid resourceId, Guid modifyingUserId)
+    public async Task<IResult> UpdateLocalResourceOnGameServerAsync(Guid serverId, Guid resourceId, Guid requestUserId)
     {
-        // TODO: Handle single resource send with new framework like we do on update all resources on game server
         var foundServer = await _gameServerRepository.GetByIdAsync(serverId);
-        if (!foundServer.Succeeded || foundServer.Result is null)
+        if (foundServer.Result is null)
+        {
             return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
 
         var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
-        if (!foundHost.Succeeded || foundHost.Result is null)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundHost.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
+        }
 
-        var findRequest = await GetLocalResourceByIdAsync(resourceId);
-        if (!findRequest.Succeeded)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundResource = await GetLocalResourceByIdAsync(resourceId);
+        if (!foundResource.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
+                requestUserId, new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to get local resource for game server"},
+                    {"Error", foundResource.Messages.ToString() ?? ""}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
         var gameServerHost = new GameServerToHost
         {
             Id = foundServer.Result.Id,
-            Resources = new SerializableList<LocalResourceHost>([findRequest.Data.ToHost(foundHost.Result.Os)])
+            Resources = new SerializableList<LocalResourceHost>([foundResource.Data.ToHost(foundServer.Result.Id, foundHost.Result.Os)])
         };
         
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdate,
-            foundServer.Result.HostId, gameServerHost, modifyingUserId, _dateTime.NowDatabaseTime);
+            foundServer.Result.HostId, gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
-            return await Result.FailAsync(configUpdateRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
+                requestUserId, new Dictionary<string, string>
+                {
+                    {"HostId", foundHost.Result.Id.ToString()},
+                    {"Detail", "Failed to send local resource update request to host for game server"},
+                    {"Error", configUpdateRequest.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+            null, new Dictionary<string, string>
+            {
+                {"WorkId", configUpdateRequest.Result.ToString()},
+                {"Detail", "Game Server single local resource update work request sent"}
+            });
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> UpdateAllLocalResourcesOnGameServerAsync(Guid serverId, Guid modifyingUserId)
+    public async Task<IResult> UpdateAllLocalResourcesOnGameServerAsync(Guid serverId, Guid requestUserId)
     {
         var foundServer = await _gameServerRepository.GetByIdAsync(serverId);
-        if (!foundServer.Succeeded || foundServer.Result is null)
+        if (foundServer.Result is null)
+        {
             return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+        }
 
         var foundHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
-        if (!foundHost.Succeeded || foundHost.Result is null)
-            return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundHost.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
+        }
         
-        var resourcesRequest = await GetLocalResourcesForGameServerIdAsync(foundServer.Result.Id);
-        if (!resourcesRequest.Succeeded)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundResources = await GetLocalResourcesForGameServerIdAsync(foundServer.Result.Id);
+        if (!foundResources.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
+                requestUserId, new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to get local resources for game server"},
+                    {"Error", foundResources.Messages.ToString() ?? ""}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
         var gameServerHost = new GameServerToHost
         {
             Id = foundServer.Result.Id,
-            Resources = new SerializableList<LocalResourceHost>(resourcesRequest.Data.ToHosts(foundHost.Result.Os))
+            Resources = new SerializableList<LocalResourceHost>(foundResources.Data.ToHosts(foundServer.Result.Id, foundHost.Result.Os))
         };
         
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdateFull,
-            foundServer.Result.HostId, gameServerHost, modifyingUserId, _dateTime.NowDatabaseTime);
+            foundHost.Result.Id, gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
-            return await Result.FailAsync(configUpdateRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
+                requestUserId, new Dictionary<string, string>
+                {
+                    {"HostId", foundHost.Result.Id.ToString()},
+                    {"Detail", "Failed to send local resource update request to host for game server"},
+                    {"Error", configUpdateRequest.ErrorMessage}
+                });
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+            null, new Dictionary<string, string>
+            {
+                {"WorkId", configUpdateRequest.Result.ToString()},
+                {"Detail", "Game Server all local resource update work request sent"}
+            });
 
         return await Result.SuccessAsync();
     }

@@ -42,5 +42,6 @@ public enum AuditTableName
     TshootHostRegistrations = 516,
     TshootMods = 517,
     TshootNetwork = 518,
-    TshootWeaverWork = 519 
+    TshootWeaverWork = 519,
+    TshootHostAuth = 520
 }

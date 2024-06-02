@@ -4,6 +4,7 @@ using Application.Constants.GameServer;
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
+using Application.Helpers.GameServer;
 using Application.Helpers.Identity;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
@@ -18,6 +19,7 @@ using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer;
 using Application.Requests.GameServer.Host;
+using Application.Requests.GameServer.WeaverWork;
 using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
@@ -77,7 +79,7 @@ public class HostService : IHostService
             request.OwnerId = requestUserId;
         }
 
-        var hostCreate = new HostCreate
+        var createRequest = new HostCreate
         {
             OwnerId = request.OwnerId,
             PasswordHash = UrlHelpers.GenerateToken(),
@@ -98,11 +100,11 @@ public class HostService : IHostService
             DeletedOn = null
         };
 
-        var convertedCreate = hostCreate.ToCreateDb();
+        var convertedCreate = createRequest.ToCreateDb();
         
         // Create host to get the GUID to bind the request to for registering this host
-        var newHostRequest = await _hostRepository.CreateAsync(convertedCreate);
-        if (!newHostRequest.Succeeded)
+        var hostCreate = await _hostRepository.CreateAsync(convertedCreate);
+        if (!hostCreate.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostRegistrations, Guid.Empty, requestUserId,
                 new Dictionary<string, string>
@@ -110,18 +112,22 @@ public class HostService : IHostService
                     {"HostName", request.Name},
                     {"HostDescription", request.Description},
                     {"HostOwnerId", request.OwnerId.ToString()},
-                    {"HostAllowedPorts", request.AllowedPorts.ToString() ?? ""},
+                    {"HostAllowedPorts", request.AllowedPorts.ToString() ?? "[]"},
                     {"Detail", "Failed to create host for registration"},
-                    {"Error", newHostRequest.ErrorMessage}
+                    {"Error", hostCreate.ErrorMessage}
                 });
             return await Result<HostNewRegisterResponse>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
 
+        var createdHost = await _hostRepository.GetByIdAsync(hostCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Hosts, hostCreate.Result, requestUserId, DatabaseActionType.Create,
+            null, createdHost.Result);
+
         var registrationKey = UrlHelpers.GenerateToken();
 
-        var newRegistrationRequest = await _hostRepository.CreateRegistrationAsync(new HostRegistrationCreate
+        var registrationCreate = await _hostRepository.CreateRegistrationAsync(new HostRegistrationCreate
         {
-            HostId = newHostRequest.Result,
+            HostId = hostCreate.Result,
             Description = request.Description,
             Active = true,
             Key = registrationKey,
@@ -132,7 +138,7 @@ public class HostService : IHostService
             LastModifiedBy = null,
             LastModifiedOn = null
         });
-        if (!newRegistrationRequest.Succeeded)
+        if (!registrationCreate.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostRegistrations, Guid.Empty, requestUserId,
                 new Dictionary<string, string>
@@ -141,21 +147,25 @@ public class HostService : IHostService
                     {"HostDescription", request.Description},
                     {"HostOwnerId", request.OwnerId.ToString()},
                     {"HostAllowedPorts", request.AllowedPorts.ToString() ?? ""},
-                    {"CreatedHostId", newHostRequest.Result.ToString()},
+                    {"CreatedHostId", hostCreate.Result.ToString()},
                     {"Detail", "Failed to generate new registration for host registration but did create host"},
-                    {"Error", newRegistrationRequest.ErrorMessage}
+                    {"Error", registrationCreate.ErrorMessage}
                 });
             return await Result<HostNewRegisterResponse>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
 
+        var createdRegistration = await _hostRepository.GetRegistrationByIdAsync(registrationCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.HostRegistrations, registrationCreate.Result, requestUserId, DatabaseActionType.Create,
+            null, createdRegistration.Result);
+
         // Build the registration URI for the host to register with
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, ApiRouteConstants.GameServer.Host.RegistrationConfirm));
-        var registrationUriUser = QueryHelpers.AddQueryString(endpointUri.ToString(), HostConstants.QueryHostId, newHostRequest.Result.ToString());
+        var registrationUriUser = QueryHelpers.AddQueryString(endpointUri.ToString(), HostConstants.QueryHostId, hostCreate.Result.ToString());
         var registrationUriFull = QueryHelpers.AddQueryString(registrationUriUser, HostConstants.QueryHostRegisterKey, registrationKey);
         
         var response = new HostNewRegisterResponse
         {
-            HostId = newHostRequest.Result,
+            HostId = hostCreate.Result,
             Key = registrationKey,
             RegisterUrl = registrationUriFull
         };
@@ -180,20 +190,37 @@ public class HostService : IHostService
             return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.RegistrationNotFound);
         }
 
-        var registrationUpdate = foundRegistration.Result.ToUpdate();
-        registrationUpdate.Active = false;
-        registrationUpdate.ActivationDate = _dateTime.NowDatabaseTime;
-        registrationUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
-        registrationUpdate.LastModifiedBy = _serverState.SystemUserId;
-        registrationUpdate.ActivationPublicIp = registrationIp;
-        
-        await _hostRepository.UpdateRegistrationAsync(registrationUpdate);
-
         var foundHost = await _hostRepository.GetByIdAsync(request.HostId);
         if (foundHost.Result is null)
         {
             return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
+
+        var convertedUpdate = foundRegistration.Result.ToUpdate();
+        convertedUpdate.Active = false;
+        convertedUpdate.ActivationDate = _dateTime.NowDatabaseTime;
+        convertedUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
+        convertedUpdate.LastModifiedBy = _serverState.SystemUserId;
+        convertedUpdate.ActivationPublicIp = registrationIp;
+        
+        var registrationConfirm = await _hostRepository.UpdateRegistrationAsync(convertedUpdate);
+        if (!registrationConfirm.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootHostRegistrations, foundRegistration.Result.Id,
+                new Dictionary<string, string>
+                {
+                    {"SenderIp", registrationIp},
+                    {"ProvidedHostId", request.HostId.ToString()},
+                    {"ProvidedKey", request.Key},
+                    {"Detail", "Failed to confirm valid host registration via registration update"},
+                    {"Error", registrationConfirm.ErrorMessage}
+                });
+            return await Result<HostRegisterResponse>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var confirmedRegistration = await _hostRepository.GetRegistrationByIdAsync(foundRegistration.Result.Id);
+        await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.HostRegistrations, foundRegistration.Result.Id, DatabaseActionType.Update,
+            foundRegistration.Result, confirmedRegistration.Result);
 
         var hostUpdate = new HostUpdateDb()
         {
@@ -221,29 +248,59 @@ public class HostService : IHostService
         await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.Hosts, foundHost.Result.Id, DatabaseActionType.Update,
             foundHost.Result, updatedHost.Result);
 
+        var workHostDetail = await _hostRepository.SendWeaverWork(WeaverWorkTarget.HostDetail, foundHost.Result.Id, foundHost.Result.Id,
+            _serverState.SystemUserId, _dateTime.NowDatabaseTime);
+        if (!workHostDetail.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostRegistrations, foundRegistration.Result.Id,
+                _serverState.SystemUserId, new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to send host detail start work post host registration confirmation"},
+                    {"Error", workHostDetail.ErrorMessage}
+                });
+            return await Result<HostRegisterResponse>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundRegistration.Result.Id, _serverState.SystemUserId,
+            DatabaseActionType.GameServerAction, null, new Dictionary<string, string>
+            {
+                {"WorkId", workHostDetail.Result.ToString()},
+                {"Detail", "Host detail gather work request sent"}
+            });
+
         return await GetNewHostCredentials(request.HostId, _serverState.SystemUserId);
     }
 
-    private async Task<IResult<HostRegisterResponse>> GetNewHostCredentials(Guid hostId, Guid modifyingUserId)
+    private async Task<IResult<HostRegisterResponse>> GetNewHostCredentials(Guid hostId, Guid requestUserId)
     {
         var hostToken = UrlHelpers.GenerateToken();
         AccountHelpers.GenerateHashAndSalt(hostToken, HostConstants.HostPepper, out var salt, out var hash);
 
-        var foundHostRequest = await _hostRepository.GetByIdAsync(hostId);
-        if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
-            return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundHost = await _hostRepository.GetByIdAsync(hostId);
+        if (foundHost.Result is null)
+        {
+            return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
+        }
 
         var hostUpdate = new HostUpdateDb
         {
-            Id = foundHostRequest.Result.Id,
+            Id = foundHost.Result.Id,
             PasswordSalt = salt,
             PasswordHash = hash,
             LastModifiedOn = _dateTime.NowDatabaseTime,
-            LastModifiedBy = modifyingUserId
+            LastModifiedBy = requestUserId
         };
-        var hostUpdateRequest = await _hostRepository.UpdateAsync(hostUpdate);
-        if (!hostUpdateRequest.Succeeded)
-            return await Result<HostRegisterResponse>.FailAsync(hostUpdateRequest.ErrorMessage);
+        var updateHost = await _hostRepository.UpdateAsync(hostUpdate);
+        if (!updateHost.Succeeded)
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHosts, foundHost.Result.Id, requestUserId,
+                new Dictionary<string, string>
+                {
+                    {"Detail", "Failed to update host for new host credential generation"},
+                    {"Error", updateHost.ErrorMessage}
+                });
+            return await Result<HostRegisterResponse>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
 
         var response = new HostRegisterResponse
         {
@@ -258,12 +315,17 @@ public class HostService : IHostService
     {
         try
         {
-            var foundHost = await GetByIdAsync(request.HostId);
-            if (!foundHost.Succeeded)
+            var foundHost = await _hostRepository.GetByIdAsync(request.HostId);
+            if (foundHost.Result is null)
+            {
                 return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
-            var keyIsCorrect = await IsProvidedKeyCorrect(foundHost.Data.Id, request.HostToken);
+            }
+            
+            var keyIsCorrect = await IsProvidedKeyCorrect(foundHost.Result.Id, request.HostToken);
             if (!keyIsCorrect.Succeeded)
+            {
                 return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+            }
             
             var token = JwtHelpers.GenerateApiJwtEncryptedToken(GetHostClaims(request.HostId), _dateTime, _securityConfig, _appConfig);
 
@@ -280,21 +342,31 @@ public class HostService : IHostService
         }
         catch (Exception ex)
         {
-            return await Result<HostAuthResponse>.FailAsync(ex.Message);
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootHostAuth, Guid.Empty,
+                new Dictionary<string, string>
+                {
+                    {"ProvidedHostId", request.HostId.ToString()},
+                    {"ProvidedHostKey", request.HostToken},
+                    {"Detail", "Failure occurred handling host auth request"},
+                    {"Error", ex.Message}
+                });
+            return await Result<HostAuthResponse>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
     }
 
     public async Task<IResult> IsProvidedKeyCorrect(Guid hostId, string key)
     {
         var foundHost = await _hostRepository.GetByIdAsync(hostId);
-        if (!foundHost.Succeeded)
-            return await Result.FailAsync(foundHost.ErrorMessage);
         if (foundHost.Result is null)
-            return await Result.FailAsync(foundHost.ErrorMessage);
+        {
+            return await Result.FailAsync();
+        }
 
         var keyIsCorrect = AccountHelpers.IsPasswordCorrect(key, foundHost.Result.PasswordSalt, HostConstants.HostPepper, foundHost.Result.PasswordHash);
         if (!keyIsCorrect)
+        {
             return await Result.FailAsync();
+        }
 
         return await Result.SuccessAsync();
     }
@@ -544,25 +616,41 @@ public class HostService : IHostService
         return await Result<HostRegistrationFull>.SuccessAsync(foundRegistration.Result.ToFull());
     }
 
-    public async Task<IResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate request)
-    {
-        var createRequest = await _hostRepository.CreateRegistrationAsync(request);
-        if (!createRequest.Succeeded)
-            return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
-
-        return await Result<Guid>.SuccessAsync(createRequest.Result);
-    }
-
-    public async Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdate request)
+    public async Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdateRequest request, Guid requestUserId)
     {
         var foundRegistration = await _hostRepository.GetRegistrationByIdAsync(request.Id);
-        if (!foundRegistration.Succeeded || foundRegistration.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        if (foundRegistration.Result is null)
+        {
+            await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostRegistrations, Guid.Empty, requestUserId, 
+                new Dictionary<string, string>
+                {
+                    {"ProvidedRegistrationId", request.Id.ToString()},
+                    {"Detail", "Invalid host registration was provided in an attempt to be updated"},
+                    {"Error", foundRegistration.ErrorMessage}
+                });
+            return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.RegistrationNotFound);
+        }
 
-        request.LastModifiedOn = _dateTime.NowDatabaseTime;
-        var updateRegistrationRequest = await _hostRepository.UpdateRegistrationAsync(request);
+        var convertedRequest = request.ToUpdate();
+        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
+        convertedRequest.LastModifiedBy = requestUserId;
+        
+        var updateRegistrationRequest = await _hostRepository.UpdateRegistrationAsync(convertedRequest);
         if (!updateRegistrationRequest.Succeeded)
-            return await Result.FailAsync(updateRegistrationRequest.ErrorMessage);
+        {
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostRegistrations, foundRegistration.Result.Id,
+                requestUserId, new Dictionary<string, string>
+                {
+                    {"ProvidedRegistrationId", request.Id.ToString()},
+                    {"Detail", "Failed to update host registration"},
+                    {"Error", updateRegistrationRequest.ErrorMessage}
+                });
+            return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        var updatedRegistration = await _hostRepository.GetRegistrationByIdAsync(foundRegistration.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.HostRegistrations, foundRegistration.Result.Id, requestUserId, DatabaseActionType.Update,
+            foundRegistration.Result, updatedRegistration.Result);
 
         return await Result.SuccessAsync();
     }
@@ -654,34 +742,54 @@ public class HostService : IHostService
         return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckins.Result.ToFulls());
     }
 
-    public async Task<IResult> CreateCheckInAsync(HostCheckInCreate createObject)
+    public async Task<IResult> CreateCheckInAsync(HostCheckInCreate request)
     {
-        if (!float.IsNormal(createObject.CpuUsage) || !float.IsNormal(createObject.RamUsage) || !float.IsNormal(createObject.Uptime))
+        if (!float.IsNormal(request.CpuUsage) || !float.IsNormal(request.RamUsage) || !float.IsNormal(request.Uptime))
+        {
             return await Result.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
+        }
         
-        var createRequest = await _hostRepository.CreateCheckInAsync(createObject);
-        if (!createRequest.Succeeded)
-            return await Result.FailAsync(createRequest.ErrorMessage);
-
-        return await Result.SuccessAsync();
+        var checkInCreate = await _hostRepository.CreateCheckInAsync(request);
+        if (checkInCreate.Succeeded) return await Result.SuccessAsync();
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootHostCheckins, Guid.Empty,
+            new Dictionary<string, string>
+            {
+                {"ProvidedHostId", request.HostId.ToString()},
+                {"Detail", "Failed to create host checkin"},
+                {"Error", checkInCreate.ErrorMessage}
+            });
+        return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
-    public async Task<IResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id)
+    public async Task<IResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id, Guid requestUserId)
     {
-        var deleteRequest = await _hostRepository.DeleteAllCheckInsForHostIdAsync(id);
-        if (!deleteRequest.Succeeded)
-            return await Result<int>.FailAsync(deleteRequest.ErrorMessage);
-
-        return await Result<int>.SuccessAsync(deleteRequest.Result);
+        var checkInsDelete = await _hostRepository.DeleteAllCheckInsForHostIdAsync(id);
+        if (checkInsDelete.Succeeded) return await Result<int>.SuccessAsync(checkInsDelete.Result);
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostCheckins, Guid.Empty, requestUserId,
+            new Dictionary<string, string>
+            {
+                {"ProvidedHostId", id.ToString()},
+                {"Detail", "Failed to delete all checkins for host"},
+                {"Error", checkInsDelete.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
-    public async Task<IResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan)
+    public async Task<IResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan, Guid requestUserId)
     {
-        var deleteRequest = await _hostRepository.DeleteAllOldCheckInsAsync(olderThan);
-        if (!deleteRequest.Succeeded)
-            return await Result<int>.FailAsync(deleteRequest.ErrorMessage);
-
-        return await Result<int>.SuccessAsync(deleteRequest.Result);
+        var checkInDelete = await _hostRepository.DeleteAllOldCheckInsAsync(olderThan);
+        if (checkInDelete.Succeeded) return await Result<int>.SuccessAsync(checkInDelete.Result);
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostCheckins, Guid.Empty, requestUserId,
+            new Dictionary<string, string>
+            {
+                {"ProvidedTimeframe", olderThan.ToString()},
+                {"Detail", "Failed to delete old checkins for a given timeframe"},
+                {"Error", checkInDelete.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
     public async Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckInsAsync(string searchText)
@@ -806,45 +914,57 @@ public class HostService : IHostService
         return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
     }
 
-    public async Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreate createObject)
+    public async Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreateRequest request, Guid requestUserId)
     {
-        var createHostRequest = await _hostRepository.CreateWeaverWorkAsync(createObject);
-        if (!createHostRequest.Succeeded)
-            return await Result<int>.FailAsync(createHostRequest.ErrorMessage);
+        var convertedRequest = request.ToCreate();
+        convertedRequest.CreatedBy = requestUserId;
+        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
 
-        return await Result<int>.SuccessAsync(createHostRequest.Result);
+        var workCreate = await _hostRepository.CreateWeaverWorkAsync(convertedRequest);
+        if (workCreate.Succeeded) return await Result<int>.SuccessAsync(workCreate.Result);
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootWeaverWork, Guid.Empty, requestUserId,
+            new Dictionary<string, string>
+            {
+                {"ProvidedTarget", request.TargetType.ToString()},
+                {"ProvidedStatus", request.Status.ToString()},
+                {"ProvidedWorkData", request.WorkData?.ToString() ?? ""},
+                {"Detail", "Failed to create weaver work"},
+                {"Error", workCreate.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
-    public async Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject)
+    public async Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate request, string sourceIp = "")
     {
-        var foundHostRequest = await _hostRepository.GetWeaverWorkByIdAsync(updateObject.Id);
-        var hostId = foundHostRequest.Result?.HostId ?? Guid.Empty;
+        var foundHost = await _hostRepository.GetWeaverWorkByIdAsync(request.Id);
+        var hostId = foundHost.Result?.HostId ?? Guid.Empty;
 
         // Some updates like GameServerStateUpdate or HostDetail can come in without being bound to specific work
-        if (hostId == Guid.Empty && updateObject.TargetType is not WeaverWorkTarget.GameServerStateUpdate and not WeaverWorkTarget.HostDetail)
+        if (hostId == Guid.Empty && request.TargetType is not WeaverWorkTarget.GameServerStateUpdate and not WeaverWorkTarget.HostDetail)
         {
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
 
-        updateObject.HostId = hostId;
-        updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
+        request.HostId = hostId;
+        request.LastModifiedOn = _dateTime.NowDatabaseTime;
 
-        switch (updateObject.TargetType)
+        switch (request.TargetType)
         {
             case WeaverWorkTarget.GameServerStateUpdate:
-                var serverStateResult = await HandleUpdateGameServerState(updateObject);
+                var serverStateResult = await HandleUpdateGameServerState(request);
                 if (!serverStateResult.Succeeded)
-                    _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", updateObject.Id, updateObject.TargetType, serverStateResult.Messages);
-                updateObject.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
+                    _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", request.Id, request.TargetType, serverStateResult.Messages);
+                request.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.StatusUpdate:
-                _logger.Debug("Weaver work status update received: [{WorkId}]{WorkStatus}", updateObject.Id, updateObject.Status);
+                _logger.Debug("Weaver work status update received: [{WorkId}]{WorkStatus}", request.Id, request.Status);
                 break;
             case WeaverWorkTarget.HostDetail:
-                var hostDetailResult = await HandleHostDetail(updateObject);
+                var hostDetailResult = await HandleHostDetail(request, sourceIp);
                 if (!hostDetailResult.Succeeded)
-                    _logger.Error("Host detail update failed for [{WorkId}]{WorkType}: {Error}", updateObject.Id, updateObject.TargetType, hostDetailResult.Messages);
-                updateObject.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
+                    _logger.Error("Host detail update failed for [{WorkId}]{WorkType}: {Error}", request.Id, request.TargetType, hostDetailResult.Messages);
+                request.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.Host:
             case WeaverWorkTarget.HostStatusUpdate:
@@ -862,11 +982,11 @@ public class HostService : IHostService
             case WeaverWorkTarget.CurrentEnd:
             case null:
                 _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
-                    updateObject.Id, updateObject.TargetType);
+                    request.Id, request.TargetType);
                 break;
             default:
                 _logger.Warning("Weaver work type received doesn't have a handler yet so nothing is being done with it: [{WorkId}]{WorkType}",
-                    updateObject.Id, updateObject.TargetType);
+                    request.Id, request.TargetType);
                 break;
         }
 
@@ -876,71 +996,103 @@ public class HostService : IHostService
             return await Result.SuccessAsync();
         }
         
-        var updateWorkRequest = await _hostRepository.UpdateWeaverWorkAsync(updateObject);
-        if (!updateWorkRequest.Succeeded)
-            return await Result.FailAsync(updateWorkRequest.ErrorMessage);
-
-        if (updateObject.Status is not null)
+        var workUpdate = await _hostRepository.UpdateWeaverWorkAsync(request);
+        if (!workUpdate.Succeeded)
         {
-            _eventService.TriggerWeaverWorkStatus("HostServiceWorkUpdate", updateObject.ToEvent());
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootWeaverWork, Guid.Empty, hostId,
+                new Dictionary<string, string>
+                {
+                    {"WorkId", request.Id.ToString()},
+                    {"Detail", "Failed to update weaver work"},
+                    {"Error", workUpdate.ErrorMessage}
+                });
+            return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+        }
+
+        if (request.Status is not null)
+        {
+            _eventService.TriggerWeaverWorkStatus("HostServiceWorkUpdate", request.ToEvent());
         }
 
         return await Result.SuccessAsync();
     }
 
-    private async Task<IResult> HandleHostDetail(WeaverWorkUpdate updateObject)
+    private async Task<IResult> HandleHostDetail(WeaverWorkUpdate request, string sourceIp)
     {
         try
         {
-            if (updateObject.WorkData is null)
+            if (request.WorkData is null)
             {
-                return await Result.FailAsync("Host detail work data is null, unable to update detail");
+                return await Result.FailAsync(ErrorMessageConstants.WeaverWork.InvalidWorkData);
             }
         
-            var deserializedData = _serializerService.DeserializeMemory<HostDetailUpdate>(updateObject.WorkData);
+            var deserializedData = _serializerService.DeserializeMemory<HostDetailUpdate>(request.WorkData);
             if (deserializedData is null)
             {
-                return await Result.FailAsync("Deserialized host detail work data is null, unable to update detail");
+                return await Result.FailAsync(ErrorMessageConstants.WeaverWork.InvalidDeserializedWorkData);
             }
 
             var foundHost = await _hostRepository.GetByIdAsync(deserializedData.HostId);
             if (!foundHost.Succeeded || foundHost.Result is null)
             {
-                return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+                return await Result.FailAsync(ErrorMessageConstants.Hosts.NotFound);
             }
 
-            updateObject.HostId = foundHost.Result.Id;
+            request.HostId = foundHost.Result.Id;
 
-            var hostUpdate = deserializedData.ToUpdate();
-            // TODO: Pull public IP from the API request to inject
-            // hostUpdate.PublicIp = updateObject.PublicIp
-            hostUpdate.PrivateIp = hostUpdate.NetworkInterfaces?.FirstOrDefault()?.IpAddresses.FirstOrDefault();
-            hostUpdate.FriendlyName = string.IsNullOrWhiteSpace(foundHost.Result.FriendlyName) ? hostUpdate.Hostname : foundHost.Result.FriendlyName;
+            var convertedRequest = deserializedData.ToUpdate();
+            convertedRequest.PublicIp = sourceIp;
+            convertedRequest.PrivateIp = convertedRequest.NetworkInterfaces.GetPrimaryIp();
+            convertedRequest.FriendlyName = string.IsNullOrWhiteSpace(foundHost.Result.FriendlyName) ? convertedRequest.Hostname : foundHost.Result.FriendlyName;
 
-            var updateRequest = await _hostRepository.UpdateAsync(hostUpdate.ToUpdateDb());
-            if (!updateRequest.Succeeded)
+            var hostUpdate = await _hostRepository.UpdateAsync(convertedRequest.ToUpdateDb());
+            if (!hostUpdate.Succeeded)
             {
-                return await Result.FailAsync(updateRequest.ErrorMessage);
+                var tshootId = await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootWeaverWork, Guid.Empty,
+                    new Dictionary<string, string>
+                    {
+                        {"WorkId", request.Id.ToString()},
+                        {"HostId", request.HostId.ToString() ?? ""},
+                        {"Detail", "Failed to update host from weaver work host detail"},
+                        {"Error", hostUpdate.ErrorMessage}
+                    });
+                return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
             }
+
+            var updatedHost = await _hostRepository.GetByIdAsync(foundHost.Result.Id);
+            await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.Hosts, foundHost.Result.Id, DatabaseActionType.Update,
+                foundHost.Result, updatedHost.Result);
 
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync($"Failure occurred working with deserialized game server state update: {ex.Message}");
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootWeaverWork, Guid.Empty,
+                new Dictionary<string, string>
+                {
+                    {"WorkId", request.Id.ToString()},
+                    {"HostId", request.HostId.ToString() ?? ""},
+                    {"Detail", "Failed to handle host detail update from weaver work"},
+                    {"Error", ex.Message}
+                });
+            return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
     }
     
-    private async Task<IResult> HandleUpdateGameServerState(WeaverWorkUpdate updateObject)
+    private async Task<IResult> HandleUpdateGameServerState(WeaverWorkUpdate request)
     {
         try
         {
-            if (updateObject.WorkData is null)
-                return await Result.FailAsync("Game server state update work data is null, unable to update state");
+            if (request.WorkData is null)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.WeaverWork.InvalidWorkData);
+            }
         
-            var deserializedData = _serializerService.DeserializeMemory<GameServerStateUpdate>(updateObject.WorkData);
+            var deserializedData = _serializerService.DeserializeMemory<GameServerStateUpdate>(request.WorkData);
             if (deserializedData is null)
-                return await Result.FailAsync("Deserialized game server state update work data is null, unable to update state");
+            {
+                return await Result.FailAsync(ErrorMessageConstants.WeaverWork.InvalidDeserializedWorkData);
+            }
 
             var foundServer = await _gameServerRepository.GetByIdAsync(deserializedData.Id);
             if (!foundServer.Succeeded || foundServer.Result is null)
@@ -948,7 +1100,7 @@ public class HostService : IHostService
                 return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
             }
 
-            updateObject.HostId = foundServer.Result.HostId;
+            request.HostId = foundServer.Result.HostId;
 
             var gameServerUpdate = new GameServerUpdate {Id = foundServer.Result.Id, ServerState = deserializedData.ServerState};
             
@@ -965,13 +1117,14 @@ public class HostService : IHostService
             var updateGameServer = await _gameServerRepository.UpdateAsync(gameServerUpdate);
             if (!updateGameServer.Succeeded)
             {
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootWeaverWork, foundServer.Result.Id, new Dictionary<string, string>
-                {
-                    {"WorkId", updateObject.Id.ToString()},
-                    {"Detail", "Failed to update game server state from weaver work"},
-                    {"Error", updateGameServer.ErrorMessage}
-                });
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
+                var tshootId = await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootWeaverWork, foundServer.Result.Id, 
+                    new Dictionary<string, string>
+                    {
+                        {"WorkId", request.Id.ToString()},
+                        {"Detail", "Failed to update game server state from weaver work"},
+                        {"Error", updateGameServer.ErrorMessage}
+                    });
+                return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
             }
 
             var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundServer.Result.Id);
@@ -986,7 +1139,7 @@ public class HostService : IHostService
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             
             // State update is uninstalled, so we'll wrap up by deleting the game server
-            var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, updateObject.LastModifiedBy ?? Guid.Empty);
+            var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, request.LastModifiedBy ?? Guid.Empty);
             if (!deleteServerRequest.Succeeded)
             {
                 return await Result.FailAsync(deleteServerRequest.ErrorMessage);
@@ -999,39 +1152,67 @@ public class HostService : IHostService
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync($"Failure occurred working with deserialized game server state update: {ex.Message}");
+            var tshootId = await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootWeaverWork, Guid.Empty,
+                new Dictionary<string, string>
+                {
+                    {"WorkId", request.Id.ToString()},
+                    {"HostId", request.HostId.ToString() ?? ""},
+                    {"Detail", "Failed to handle game server state update from weaver work"},
+                    {"Error", ex.Message}
+                });
+            return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
     }
 
-    public async Task<IResult> DeleteWeaverWorkAsync(int id)
+    public async Task<IResult> DeleteWeaverWorkAsync(int id, Guid requestUserId)
     {
-        var foundHostRequest = await _hostRepository.GetWeaverWorkByIdAsync(id);
-        if (!foundHostRequest.Succeeded || foundHostRequest.Result is null)
-            return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var foundWork = await _hostRepository.GetWeaverWorkByIdAsync(id);
+        if (foundWork.Result is null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.WeaverWork.NotFound);
+        }
 
-        var deleteHostRequest = await _hostRepository.DeleteWeaverWorkAsync(id);
-        if (!deleteHostRequest.Succeeded)
-            return await Result.FailAsync(deleteHostRequest.ErrorMessage);
-
-        return await Result.SuccessAsync();
+        var workDelete = await _hostRepository.DeleteWeaverWorkAsync(id);
+        if (workDelete.Succeeded) return await Result.SuccessAsync();
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootWeaverWork, Guid.Empty, requestUserId,
+            new Dictionary<string, string>
+            {
+                {"WorkId", id.ToString()},
+                {"Detail", "Failed to delete weaver work"},
+                {"Error", workDelete.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
-    public async Task<IResult> DeleteWeaverWorkForHostAsync(Guid hostId)
+    public async Task<IResult> DeleteWeaverWorkForHostAsync(Guid hostId, Guid requestUserId)
     {
-        var deleteHostRequest = await _hostRepository.DeleteWeaverWorkForHostAsync(hostId);
-        if (!deleteHostRequest.Succeeded)
-            return await Result.FailAsync(deleteHostRequest.ErrorMessage);
-
-        return await Result.SuccessAsync();
+        var workDelete = await _hostRepository.DeleteWeaverWorkForHostAsync(hostId);
+        if (workDelete.Succeeded) return await Result.SuccessAsync();
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootWeaverWork, Guid.Empty, requestUserId,
+            new Dictionary<string, string>
+            {
+                {"HostId", hostId.ToString()},
+                {"Detail", "Failed to delete weaver work for host"},
+                {"Error", workDelete.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
-    public async Task<IResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan)
+    public async Task<IResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan, Guid requestUserId)
     {
-        var deleteHostRequest = await _hostRepository.DeleteWeaverWorkOlderThanAsync(olderThan);
-        if (!deleteHostRequest.Succeeded)
-            return await Result.FailAsync(deleteHostRequest.ErrorMessage);
-
-        return await Result.SuccessAsync();
+        var workDelete = await _hostRepository.DeleteWeaverWorkOlderThanAsync(olderThan);
+        if (workDelete.Succeeded) return await Result.SuccessAsync();
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootWeaverWork, Guid.Empty, requestUserId,
+            new Dictionary<string, string>
+            {
+                {"Timeframe", olderThan.ToString(DataConstants.DateTime.DisplayFormat)},
+                {"Detail", "Failed to delete weaver work for a given timeframe"},
+                {"Error", workDelete.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
     public async Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkAsync(string searchText)

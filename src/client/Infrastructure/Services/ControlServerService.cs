@@ -91,7 +91,7 @@ public class ControlServerService : IControlServerService
             return await Result<HostRegisterResponse>.SuccessAsync();
         }
         
-        if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
+        if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl, StringComparison.InvariantCultureIgnoreCase))
             return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");
 
         // Prep confirmation request
@@ -173,7 +173,7 @@ public class ControlServerService : IControlServerService
         // Token isn't within or over expiration threshold & we have the authorization token
         var expirationTime = Authorization.RefreshTokenExpiryTime - _dateTimeService.NowDatabaseTime;
         var expirationThreshold = TimeSpan.FromMinutes(_authConfig.CurrentValue.TokenRenewThresholdMinutes);
-        if (expirationTime.Minutes <= expirationThreshold.Minutes && !string.IsNullOrWhiteSpace(Authorization.Token))
+        if (expirationTime.TotalMinutes >= expirationThreshold.TotalMinutes && !string.IsNullOrWhiteSpace(Authorization.Token))
         {
             return await Result.SuccessAsync();
         }

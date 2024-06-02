@@ -263,4 +263,14 @@ public static class HostMappers
             AllowedPorts = request.AllowedPorts
         };
     }
+
+    public static HostRegistrationUpdate ToUpdate(this HostRegistrationUpdateRequest request)
+    {
+        return new HostRegistrationUpdate
+        {
+            Id = request.Id,
+            Description = request.Description,
+            Active = request.Active
+        };
+    }
 }
