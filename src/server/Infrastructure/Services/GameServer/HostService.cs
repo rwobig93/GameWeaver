@@ -1139,7 +1139,7 @@ public class HostService : IHostService
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             
             // State update is uninstalled, so we'll wrap up by deleting the game server
-            var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, request.LastModifiedBy ?? Guid.Empty);
+            var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id);
             if (!deleteServerRequest.Succeeded)
             {
                 return await Result.FailAsync(deleteServerRequest.ErrorMessage);

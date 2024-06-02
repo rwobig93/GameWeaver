@@ -372,7 +372,7 @@ public class GameServerService : IGameServerService
 
         if (!sendHostUninstall)
         {
-            var deleteRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, requestUserId);
+            var deleteRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id);
             if (!deleteRequest.Succeeded)
             {
                 var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
@@ -1197,7 +1197,7 @@ public class GameServerService : IGameServerService
             }
         }
 
-        var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(id, requestUserId);
+        var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(id);
         if (!profileDelete.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
@@ -1396,7 +1396,7 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(ErrorMessageConstants.Mods.NotFound);
         }
 
-        var modDelete = await _gameServerRepository.DeleteModAsync(id, requestUserId);
+        var modDelete = await _gameServerRepository.DeleteModAsync(id);
         if (!modDelete.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, foundMod.Result.Id, requestUserId,

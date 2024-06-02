@@ -247,7 +247,7 @@ public class GameService : IGameService
             List<string> errorMessages = [];
             foreach (var profile in assignedProfiles.Result?.ToList() ?? [])
             {
-                var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id, requestUserId);
+                var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id);
                 if (profileDeleteRequest.Succeeded) continue;
                 
                 errorMessages.Add(profileDeleteRequest.ErrorMessage);
@@ -271,7 +271,7 @@ public class GameService : IGameService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
 
-        var deleteRequest = await _gameRepository.DeleteAsync(id, requestUserId);
+        var deleteRequest = await _gameRepository.DeleteAsync(id);
         if (!deleteRequest.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, foundGame.Result.Id, requestUserId, new Dictionary<string, string>
