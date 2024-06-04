@@ -661,14 +661,6 @@
             <param name="gameServerService"></param>
             <returns>List of game profiles</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetGameProfilesByServerProcessName(System.String,Application.Services.GameServer.IGameServerService)">
-            <summary>
-            Get game profiles by server process name
-            </summary>
-            <param name="serverProcessName">Executable / Binary game server process name</param>
-            <param name="gameServerService"></param>
-            <returns>List of game profiles</returns>
-        </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.CreateGameProfile(Application.Requests.GameServer.GameProfile.GameProfileCreateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a game profile
@@ -972,13 +964,6 @@
             <param name="hostService"></param>
             <returns>List of hosts matching the search criteria</returns>
             <remarks>Search matches against FriendlyName, Description, PrivateIp and PublicIp</remarks>
-        </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrations(Application.Services.GameServer.IHostService)">
-            <summary>
-            Get all game server host registrations
-            </summary>
-            <param name="hostService"></param>
-            <returns>List of game server host registrations</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllRegistrationsPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>

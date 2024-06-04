@@ -35,11 +35,11 @@ public static class HostEndpoints
     /// <param name="app">Running application</param>
     public static void MapEndpointsHost(this IEndpointRouteBuilder app)
     {
-        app.MapPost(ApiRouteConstants.GameServer.Host.CreateRegistration, RegistrationGenerateNew).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.RegistrationConfirm, RegistrationConfirm).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.HostRegistration.Create, RegistrationGenerateNew).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.HostRegistration.Confirm, RegistrationConfirm).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.GetToken, GetToken).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.CheckIn, Checkin).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWorkStatus, WorkStatusUpdate).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.HostCheckins.CheckIn, Checkin).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.WeaverWork.UpdateStatus, WorkStatusUpdate).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAll, GetAll).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllPaginated, GetAllPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetById, GetById).ApiVersionOne();
@@ -48,31 +48,30 @@ public static class HostEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Host.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Host.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.Search, Search).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrations, GetAllRegistrations).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsPaginated, GetAllRegistrationsPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsActive, GetAllRegistrationsActive).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllRegistrationsInActive, GetAllRegistrationsInActive).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetRegistrationsCount, GetRegistrationsCount).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.UpdateRegistration, UpdateRegistration).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.SearchRegistrations, SearchRegistrations).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllCheckinsPaginated, GetAllCheckinsPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinCount, GetCheckinCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinById, GetCheckinById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetCheckinByHost, GetCheckinByHostId).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Host.DeleteOldCheckins, DeleteOldCheckins).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.SearchCheckins, SearchCheckins).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllWeaverWorkPaginated, GetAllWeaverWorkPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkCount, GetWeaverWorkCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkById, GetWeaverWorkById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkByStatus, GetWeaverWorkByStatus).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetWeaverWorkByType, GetWeaverWorkByType).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetWaitingWeaverWorkForHost, GetWaitingWeaverWorkForHost).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAllWaitingWeaverWorkForHost, GetAllWaitingWeaverWorkForHost).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.CreateWeaverWork, CreateWeaverWork).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.UpdateWeaverWork, UpdateWeaverWork).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Host.DeleteWeaverWork, DeleteWeaverWork).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Host.DeleteOldWeaverWork, DeleteOldWeaverWork).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.SearchWeaverWork, SearchWeaverWork).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostRegistration.GetAll, GetAllRegistrationsPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostRegistration.GetActive, GetAllRegistrationsActive).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostRegistration.GetInActive, GetAllRegistrationsInActive).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostRegistration.GetCount, GetRegistrationsCount).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.HostRegistration.Update, UpdateRegistration).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostRegistration.Search, SearchRegistrations).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostCheckins.GetAll, GetAllCheckinsPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostCheckins.GetCount, GetCheckinCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostCheckins.GetById, GetCheckinById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostCheckins.GetByHost, GetCheckinByHostId).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.HostCheckins.DeleteOld, DeleteOldCheckins).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.HostCheckins.Search, SearchCheckins).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetAll, GetAllWeaverWorkPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetCount, GetWeaverWorkCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetById, GetWeaverWorkById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetByStatus, GetWeaverWorkByStatus).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetByType, GetWeaverWorkByType).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetWaiting, GetWaitingWeaverWorkForHost).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetAllWaiting, GetAllWaitingWeaverWorkForHost).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.WeaverWork.Create, CreateWeaverWork).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.WeaverWork.Update, UpdateWeaverWork).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.WeaverWork.Delete, DeleteWeaverWork).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.WeaverWork.DeleteOld, DeleteOldWeaverWork).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.WeaverWork.Search, SearchWeaverWork).ApiVersionOne();
     }
 
     /// <summary>
@@ -390,25 +389,6 @@ public static class HostEndpoints
     }
     
     /// <summary>
-    /// Get all game server host registrations
-    /// </summary>
-    /// <param name="hostService"></param>
-    /// <returns>List of game server host registrations</returns>
-    [Authorize(PermissionConstants.Hosts.GetAllRegistrations)]
-    private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrations(IHostService hostService)
-    {
-        try
-        {
-            var allRegistrations = await hostService.GetAllRegistrationsAsync();
-            return await Result<IEnumerable<HostRegistrationFull>>.SuccessAsync(allRegistrations.Data);
-        }
-        catch (Exception ex)
-        {
-            return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(ex.Message);
-        }
-    }
-    
-    /// <summary>
     /// Get all registrations with pagination
     /// </summary>
     /// <param name="pageNumber">Page number to get</param>
@@ -429,9 +409,9 @@ public static class HostEndpoints
                 return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(result.Messages);
             
             var totalCountRequest = await hostService.GetRegistrationCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllRegistrationsPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostRegistration.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllRegistrationsPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostRegistration.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -558,9 +538,9 @@ public static class HostEndpoints
                 return await Result<IEnumerable<HostCheckInFull>>.FailAsync(result.Messages);
             
             var totalCountRequest = await hostService.GetCheckInCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllCheckinsPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllCheckinsPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -689,9 +669,9 @@ public static class HostEndpoints
                 return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await hostService.GetWeaverWorkCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllWeaverWorkPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllWeaverWorkPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);

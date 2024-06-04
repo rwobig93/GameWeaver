@@ -29,7 +29,7 @@ public static class GameServerEndpoints
     /// <param name="app">Running application</param>
     public static void MapEndpointsGameserver(this IEndpointRouteBuilder app)
     {
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAllPaginated, GetAllPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAll, GetAllPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetCount, GetCount).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetById, GetById).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetByServerName, GetByServerName).ApiVersionOne();
@@ -41,52 +41,51 @@ public static class GameServerEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Gameserver.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.Search, Search).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAllConfigurationItemsPaginated, GetAllConfigurationItemsPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetConfigurationItemsCount, GetConfigurationItemsCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetConfigurationItemById, GetConfigurationItemById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetConfigurationItemsByLocalResourceId, GetConfigurationItemsByLocalResourceId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.CreateConfigurationItem, CreateConfigurationItem).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateConfigurationItem, UpdateConfigurationItem).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Gameserver.DeleteConfigurationItem, DeleteConfigurationItem).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.SearchConfigurationItems, SearchConfigurationItems).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAllLocalResourcesPaginated, GetAllLocalResourcesPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetLocalResourcesCount, GetLocalResourcesCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetLocalResourceById, GetLocalResourceById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetLocalResourcesByGameProfileId, GetLocalResourcesByGameProfileId).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetLocalResourcesByGameServerId, GetLocalResourcesByGameServerId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.CreateLocalResource, CreateLocalResource).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateLocalResource, UpdateLocalResource).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Gameserver.DeleteLocalResource, DeleteLocalResource).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateLocalResourceOnGameServer, UpdateLocalResourceOnGameServer).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateAllLocalResourcesOnGameServer, UpdateAllLocalResourcesOnGameServer).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.SearchLocalResource, SearchLocalResource).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAllGameProfilesPaginated, GetAllGameProfilesPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetGameProfileCount, GetGameProfileCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetGameProfileById, GetGameProfileById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetGameProfileByFriendlyName, GetGameProfileByFriendlyName).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetGameProfilesByGameId, GetGameProfilesByGameId).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetGameProfilesByOwnerId, GetGameProfilesByOwnerId).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetGameProfilesByServerProcessName, GetGameProfilesByServerProcessName).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.CreateGameProfile, CreateGameProfile).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateGameProfile, UpdateGameProfile).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Gameserver.DeleteGameProfile, DeleteGameProfile).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.SearchGameProfiles, SearchGameProfiles).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetAllModsPaginated, GetAllModsPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModCount, GetModCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModById, GetModById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModByCurrentHash, GetModByCurrentHash).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModsByFriendlyName, GetModsByFriendlyName).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModsByGameId, GetModsByGameId).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModsBySteamGameId, GetModsBySteamGameId).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModBySteamId, GetModBySteamId).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetModsBySteamToolId, GetModsBySteamToolId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.CreateMod, CreateMod).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateMod, UpdateMod).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Gameserver.DeleteMod, DeleteMod).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Gameserver.SearchMods, SearchMods).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.ConfigItem.GetAll, GetAllConfigurationItemsPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.ConfigItem.GetCount, GetConfigurationItemsCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.ConfigItem.GetById, GetConfigurationItemById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.ConfigItem.GetByLocalResource, GetConfigurationItemsByLocalResourceId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.ConfigItem.Create, CreateConfigurationItem).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.ConfigItem.Update, UpdateConfigurationItem).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.ConfigItem.Delete, DeleteConfigurationItem).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.ConfigItem.Search, SearchConfigurationItems).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetAllLocalResourcesPaginated, GetAllLocalResourcesPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourcesCount, GetLocalResourcesCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourceById, GetLocalResourceById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourcesByGameProfileId, GetLocalResourcesByGameProfileId).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourcesByGameServerId, GetLocalResourcesByGameServerId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.LocalResource.CreateLocalResource, CreateLocalResource).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.LocalResource.UpdateLocalResource, UpdateLocalResource).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.LocalResource.DeleteLocalResource, DeleteLocalResource).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.SearchLocalResource, SearchLocalResource).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetAll, GetAllGameProfilesPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetCount, GetGameProfileCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetById, GetGameProfileById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetByFriendlyName, GetGameProfileByFriendlyName).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetByGameId, GetGameProfilesByGameId).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetByOwnerId, GetGameProfilesByOwnerId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.GameProfile.Create, CreateGameProfile).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.GameProfile.Update, UpdateGameProfile).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.GameProfile.Delete, DeleteGameProfile).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameProfile.Search, SearchGameProfiles).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetAll, GetAllModsPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetCount, GetModCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetById, GetModById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetByHash, GetModByCurrentHash).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetByFriendlyName, GetModsByFriendlyName).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetByGameId, GetModsByGameId).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetBySteamGameId, GetModsBySteamGameId).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetBySteamId, GetModBySteamId).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.GetBySteamToolId, GetModsBySteamToolId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Mod.Create, CreateMod).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Mod.Update, UpdateMod).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.Mod.Delete, DeleteMod).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Mod.Search, SearchMods).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.StartServer, StartServer).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.StopServer, StopServer).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.RestartServer, RestartServer).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateLocalResource, UpdateLocalResourceOnGameServer).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateAllLocalResources, UpdateAllLocalResourcesOnGameServer).ApiVersionOne();
     }
     
     /// <summary>
@@ -110,9 +109,9 @@ public static class GameServerEndpoints
                 return await Result<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameServerService.GetCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAllPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAllPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -360,9 +359,9 @@ public static class GameServerEndpoints
                 return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameServerService.GetConfigurationItemsCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAllConfigurationItemsPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.ConfigItem.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAllConfigurationItemsPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.ConfigItem.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -535,9 +534,9 @@ public static class GameServerEndpoints
                 return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameServerService.GetLocalResourcesCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAllLocalResourcesPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.GetAllLocalResourcesPaginated,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAllLocalResourcesPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.GetAllLocalResourcesPaginated,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -772,9 +771,9 @@ public static class GameServerEndpoints
                 return await Result<IEnumerable<GameProfileSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameServerService.GetGameProfileCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAllGameProfilesPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameProfile.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAllGameProfilesPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameProfile.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -880,25 +879,6 @@ public static class GameServerEndpoints
     }
     
     /// <summary>
-    /// Get game profiles by server process name
-    /// </summary>
-    /// <param name="serverProcessName">Executable / Binary game server process name</param>
-    /// <param name="gameServerService"></param>
-    /// <returns>List of game profiles</returns>
-    [Authorize(PermissionConstants.Gameserver.GetGameProfilesByServerProcessName)]
-    private static async Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByServerProcessName([FromQuery]string serverProcessName, IGameServerService gameServerService)
-    {
-        try
-        {
-            return await gameServerService.GetGameProfilesByServerProcessNameAsync(serverProcessName);
-        }
-        catch (Exception ex)
-        {
-            return await Result<IEnumerable<GameProfileSlim>>.FailAsync(ex.Message);
-        }
-    }
-
-    /// <summary>
     /// Create a game profile
     /// </summary>
     /// <param name="request">Required properties to create a game profile</param>
@@ -1003,9 +983,9 @@ public static class GameServerEndpoints
                 return await Result<IEnumerable<ModSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameServerService.GetModCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAllModsPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Mod.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAllModsPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Mod.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);

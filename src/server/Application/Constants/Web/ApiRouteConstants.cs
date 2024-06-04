@@ -8,11 +8,6 @@ public static class ApiRouteConstants
         public const string WhoAmI = "/api/whoami";
     }
 
-    public static class SignalRHubs
-    {
-        public const string GameServers = "/hubs/game-servers";
-    }
-
     public static class Monitoring
     {
         public const string Health = "/_health";
@@ -32,7 +27,6 @@ public static class ApiRouteConstants
             public const string Delete = "/api/identity/user";
             public const string Create = "/api/identity/user";
             public const string Register = "/api/identity/user/register";
-            public const string Login = "/api/identity/user/login";
             public const string Update = "/api/identity/user";
             public const string ResetPassword = "/api/identity/reset-password";
             public const string Enable = "/api/identity/user/enable";
@@ -85,110 +79,137 @@ public static class ApiRouteConstants
         }
     }
 
+    // TODO: Update endpoints on client before testing
     public static class GameServer
     {
         public static class Host
         {
-            public const string CreateRegistration = "/api/gameserver/host/create-registration";
-            public const string RegistrationConfirm = "/api/gameserver/host/registration-confirm";
-            public const string GetToken = "/api/gameserver/host/get-token";
-            public const string CheckIn = "/api/gameserver/host/checkin";
-            public const string UpdateWorkStatus = "/api/gameserver/host/work";
-            public const string GetAll = "/api/gameserver/host/get-all";
-            public const string GetAllPaginated = "/api/gameserver/host/get-all-paginated";
-            public const string GetById = "/api/gameserver/host/get-id";
-            public const string GetByHostname = "/api/gameserver/host/get-hostname";
-            public const string Create = "/api/gameserver/host/create";
-            public const string Update = "/api/gameserver/host/update";
-            public const string Delete = "/api/gameserver/host/delete";
-            public const string Search = "/api/gameserver/host/search";
-            public const string GetAllRegistrations = "/api/gameserver/host/get-all-registrations";
-            public const string GetAllRegistrationsPaginated = "/api/gameserver/host/get-all-registrations-paginated";
-            public const string GetAllRegistrationsActive = "/api/gameserver/host/get-all-registrations-active";
-            public const string GetAllRegistrationsInActive = "/api/gameserver/host/get-all-registrations-inactive";
-            public const string GetRegistrationsCount = "/api/gameserver/host/get-registrations-count";
-            public const string UpdateRegistration = "/api/gameserver/host/update-registration";
-            public const string SearchRegistrations = "/api/gameserver/host/search-registrations";
-            public const string GetAllCheckinsPaginated = "/api/gameserver/host/get-all-checkins-paginated";
-            public const string GetCheckinCount = "/api/gameserver/host/get-checkin-count";
-            public const string GetCheckinById = "/api/gameserver/host/get-checkin-id";
-            public const string GetCheckinByHost = "/api/gameserver/host/get-checkins-host";
-            public const string DeleteOldCheckins = "/api/gameserver/host/delete-old-checkins";
-            public const string SearchCheckins = "/api/gameserver/host/search-checkins";
-            public const string GetAllWeaverWorkPaginated = "/api/gameserver/host/get-all-weaverwork-paginated";
-            public const string GetWeaverWorkCount = "/api/gameserver/host/get-weaverwork-count";
-            public const string GetWeaverWorkById = "/api/gameserver/host/get-weaverwork-id";
-            public const string GetWeaverWorkByStatus = "/api/gameserver/host/get-weaverwork-status";
-            public const string GetWeaverWorkByType = "/api/gameserver/host/get-weaverwork-type";
-            public const string GetWaitingWeaverWorkForHost = "/api/gameserver/host/get-weaverwork-waiting";
-            public const string GetAllWaitingWeaverWorkForHost = "/api/gameserver/host/get-weaverwork-waiting-all";
-            public const string CreateWeaverWork = "/api/gameserver/host/create-weaverwork";
-            public const string UpdateWeaverWork = "/api/gameserver/host/update-weaverwork";
-            public const string DeleteWeaverWork = "/api/gameserver/host/delete-weaverwork";
-            public const string DeleteOldWeaverWork = "/api/gameserver/host/delete-old-weaverwork";
-            public const string SearchWeaverWork = "/api/gameserver/host/search-weaverwork";
+            public const string GetToken = "/api/host/get-token";
+            public const string GetAll = "/api/host/get-all";
+            public const string GetAllPaginated = "/api/host/get-all-paginated";
+            public const string GetById = "/api/host/get-id";
+            public const string GetByHostname = "/api/host/get-hostname";
+            public const string Create = "/api/host/create";
+            public const string Update = "/api/host/update";
+            public const string Delete = "/api/host/delete";
+            public const string Search = "/api/hosts/search";
+        }
+
+        public static class HostRegistration
+        {
+            public const string Create = "/api/host-registration/create";
+            public const string Confirm = "/api/host-registration/confirm";
+            public const string GetAll = "/api/host-registrations";
+            public const string GetActive = "/api/host-registrations/active";
+            public const string GetInActive = "/api/host-registrations/inactive";
+            public const string GetCount = "/api/host-registrations/count";
+            public const string Update = "/api/host-registration";
+            public const string Search = "/api/host-registrations/search";
+        }
+
+        public static class HostCheckins
+        {
+            public const string CheckIn = "/api/host-checkin/checkin";
+            public const string GetAll = "/api/host-checkins";
+            public const string GetCount = "/api/host-checkins/count";
+            public const string GetById = "/api/host-checkin/id";
+            public const string GetByHost = "/api/host-checkins/host";
+            public const string DeleteOld = "/api/host-checkins/old";
+            public const string Search = "/api/host-checkins/search";
+        }
+
+        public static class WeaverWork
+        {
+            public const string GetAll = "/api/weaver/works";
+            public const string GetCount = "/api/weaver/works/count";
+            public const string GetById = "/api/weaver/work/id";
+            public const string GetByStatus = "/api/weaver/works/status";
+            public const string GetByType = "/api/weaver/works/type";
+            public const string GetWaiting = "/api/weaver/works/waiting";
+            public const string GetAllWaiting = "/api/weaver/works/waiting";
+            public const string Create = "/api/weaver/work";
+            public const string Update = "/api/weaver/work";
+            public const string UpdateStatus = "/api/weaver/work/status";
+            public const string Delete = "/api/weaver/work";
+            public const string DeleteOld = "/api/weaver/works/old";
+            public const string Search = "/api/weaver/works/search";
         }
 
         public static class Gameserver
         {
-            public const string GetAllPaginated = "/api/gameserver/gameserver/get-all-paginated";
-            public const string GetCount = "/api/gameserver/gameserver/get-count";
-            public const string GetById = "/api/gameserver/gameserver/get-id";
-            public const string GetByServerName = "/api/gameserver/gameserver/get-servername";
-            public const string GetByGameId = "/api/gameserver/gameserver/get-game-id";
-            public const string GetByGameProfileId = "/api/gameserver/gameserver/get-game-gameprofile-id";
-            public const string GetByHostId = "/api/gameserver/gameserver/get-host-id";
-            public const string GetByOwnerId = "/api/gameserver/gameserver/get-owner-id";
-            public const string Create = "/api/gameserver/gameserver/create";
-            public const string Update = "/api/gameserver/gameserver/update";
-            public const string Delete = "/api/gameserver/gameserver/delete";
-            public const string Search = "/api/gameserver/gameserver/search";
-            public const string GetAllConfigurationItemsPaginated = "/api/gameserver/gameserver/get-all-configurationitems-paginated";
-            public const string GetConfigurationItemsCount = "/api/gameserver/gameserver/get-configurationitems-count";
-            public const string GetConfigurationItemById = "/api/gameserver/gameserver/get-configurationitem-id";
-            public const string GetConfigurationItemsByLocalResourceId = "/api/gameserver/gameserver/get-configurationitems-localresource-id";
-            public const string CreateConfigurationItem = "/api/gameserver/gameserver/create-configurationitem";
-            public const string UpdateConfigurationItem = "/api/gameserver/gameserver/update-configurationitem";
-            public const string DeleteConfigurationItem = "/api/gameserver/gameserver/delete-configurationitem";
-            public const string SearchConfigurationItems = "/api/gameserver/gameserver/search-configurationitems";
-            public const string GetAllLocalResourcesPaginated = "/api/gameserver/gameserver/get-all-localresources-paginated";
-            public const string GetLocalResourcesCount = "/api/gameserver/gameserver/get-localresources-count";
-            public const string GetLocalResourceById = "/api/gameserver/gameserver/get-localresource-id";
-            public const string GetLocalResourcesByGameProfileId = "/api/gameserver/gameserver/get-localresources-gameprofile-id";
-            public const string GetLocalResourcesByGameServerId = "/api/gameserver/gameserver/get-localresources-gameserver-id";
-            public const string CreateLocalResource = "/api/gameserver/gameserver/create-localresource";
-            public const string UpdateLocalResource = "/api/gameserver/gameserver/update-localresource";
-            public const string DeleteLocalResource = "/api/gameserver/gameserver/delete-localresource";
-            public const string UpdateLocalResourceOnGameServer = "/api/gameserver/gameserver/update-gameserver-resource";
-            public const string UpdateAllLocalResourcesOnGameServer = "/api/gameserver/gameserver/update-gameserver-all-resources";
-            public const string SearchLocalResource = "/api/gameserver/gameserver/search-localresource";
-            public const string GetAllGameProfilesPaginated = "/api/gameserver/gameserver/get-all-gameprofiles-paginated";
-            public const string GetGameProfileCount = "/api/gameserver/gameserver/get-gameprofile-count";
-            public const string GetGameProfileById = "/api/gameserver/gameserver/get-gameprofile-id";
-            public const string GetGameProfileByFriendlyName = "/api/gameserver/gameserver/get-gameprofile-friendlyname";
-            public const string GetGameProfilesByGameId = "/api/gameserver/gameserver/get-gameprofiles-gameid";
-            public const string GetGameProfilesByOwnerId = "/api/gameserver/gameserver/get-gameprofiles-ownerid";
-            public const string GetGameProfilesByServerProcessName = "/api/gameserver/gameserver/get-gameprofiles-serverprocessname";
-            public const string CreateGameProfile = "/api/gameserver/gameserver/create-gameprofile";
-            public const string UpdateGameProfile = "/api/gameserver/gameserver/update-gameprofile";
-            public const string DeleteGameProfile = "/api/gameserver/gameserver/delete-gameprofile";
-            public const string SearchGameProfiles = "/api/gameserver/gameserver/search-gameprofiles";
-            public const string GetAllModsPaginated = "/api/gameserver/gameserver/get-all-mods-paginated";
-            public const string GetModCount = "/api/gameserver/gameserver/get-mod-count";
-            public const string GetModById = "/api/gameserver/gameserver/get-mod-id";
-            public const string GetModByCurrentHash = "/api/gameserver/gameserver/get-mod-currenthash";
-            public const string GetModsByFriendlyName = "/api/gameserver/gameserver/get-mods-friendlyname";
-            public const string GetModsByGameId = "/api/gameserver/gameserver/get-mods-gameid";
-            public const string GetModsBySteamGameId = "/api/gameserver/gameserver/get-mods-steamgameid";
-            public const string GetModBySteamId = "/api/gameserver/gameserver/get-mod-steamid";
-            public const string GetModsBySteamToolId = "/api/gameserver/gameserver/get-mods-steamtoolid";
-            public const string CreateMod = "/api/gameserver/gameserver/create-mod";
-            public const string UpdateMod = "/api/gameserver/gameserver/update-mod";
-            public const string DeleteMod = "/api/gameserver/gameserver/delete-mod";
-            public const string SearchMods = "/api/gameserver/gameserver/search-mods";
-            public const string StartServer = "/api/gameserver/gameserver/start-server";
-            public const string StopServer = "/api/gameserver/gameserver/stop-server";
-            public const string RestartServer = "/api/gameserver/gameserver/restart-server";
+            public const string GetAll = "/api/gameservers";
+            public const string GetCount = "/api/gameservers/count";
+            public const string GetById = "/api/gameserver/id";
+            public const string GetByServerName = "/api/gameserver/servername";
+            public const string GetByGameId = "/api/gameservers/gameid";
+            public const string GetByGameProfileId = "/api/gameservers/gameprofileid";
+            public const string GetByHostId = "/api/gameservers/hostid";
+            public const string GetByOwnerId = "/api/gameservers/ownerid";
+            public const string Create = "/api/gameserver/create";
+            public const string Update = "/api/gameserver/update";
+            public const string Delete = "/api/gameserver/delete";
+            public const string Search = "/api/gameservers/search";
+            public const string StartServer = "/api/gameserver/action/start-server";
+            public const string StopServer = "/api/gameserver/action/stop-server";
+            public const string RestartServer = "/api/gameserver/action/restart-server";
+            public const string UpdateLocalResource = "/api/gameserver/action/local-resource";
+            public const string UpdateAllLocalResources = "/api/gameserver/action/local-resources";
+        }
+
+        public static class ConfigItem
+        {
+            public const string GetAll = "/api/configitems";
+            public const string GetCount = "/api/configitems/count";
+            public const string GetById = "/api/configitem/id";
+            public const string GetByLocalResource = "/api/configitems/localresource";
+            public const string Create = "/api/configitem";
+            public const string Update = "/api/configitem";
+            public const string Delete = "/api/configitem";
+            public const string Search = "/api/configitems/search";
+        }
+
+        public static class LocalResource
+        {
+            public const string GetAllLocalResourcesPaginated = "/api/local-resources";
+            public const string GetLocalResourcesCount = "/api/local-resources/count";
+            public const string GetLocalResourceById = "/api/local-resource/id";
+            public const string GetLocalResourcesByGameProfileId = "/api/local-resources/gameprofileid";
+            public const string GetLocalResourcesByGameServerId = "/api/local-resources/gameserverid";
+            public const string CreateLocalResource = "/api/local-resource";
+            public const string UpdateLocalResource = "/api/local-resource";
+            public const string DeleteLocalResource = "/api/local-resource";
+            public const string SearchLocalResource = "/api/local-resources/search";
+        }
+
+        public static class GameProfile
+        {
+            public const string GetAll = "/api/game-profiles";
+            public const string GetCount = "/api/game-profiles/count";
+            public const string GetById = "/api/game-profile/id";
+            public const string GetByFriendlyName = "/api/game-profile/friendlyname";
+            public const string GetByGameId = "/api/game-profiles/gameid";
+            public const string GetByOwnerId = "/api/game-profiles/ownerid";
+            public const string Create = "/api/game-profile";
+            public const string Update = "/api/game-profile";
+            public const string Delete = "/api/game-profile";
+            public const string Search = "/api/game-profiles/search";
+        }
+
+        public static class Mod
+        {
+            public const string GetAll = "/api/mods";
+            public const string GetCount = "/api/mod/count";
+            public const string GetById = "/api/mod/id";
+            public const string GetByHash = "/api/mod/hash";
+            public const string GetByFriendlyName = "/api/mods/friendlyname";
+            public const string GetByGameId = "/api/mods/gameid";
+            public const string GetBySteamGameId = "/api/mods/steamgameid";
+            public const string GetBySteamId = "/api/mod/steamid";
+            public const string GetBySteamToolId = "/api/mods/steamtoolid";
+            public const string Create = "/api/mod/create";
+            public const string Update = "/api/mod/update";
+            public const string Delete = "/api/mod/delete";
+            public const string Search = "/api/mods/search";
         }
 
         public static class Game
