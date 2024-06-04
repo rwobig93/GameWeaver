@@ -1,7 +1,4 @@
-﻿using Application.Constants.Communication;
-using Application.Helpers.Lifecycle;
-using Application.Helpers.Runtime;
-using Application.Mappers.GameServer;
+﻿using Application.Helpers.Runtime;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
@@ -12,8 +9,6 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.Database;
-using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
 using Infrastructure.Database.MsSql.Shared;
@@ -231,13 +226,13 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await _database.SaveData(GameServersTableMsSql.Delete, new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(GameServersTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -826,13 +821,13 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await _database.SaveData(GameProfilesTableMsSql.Delete, new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(GameProfilesTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -1096,13 +1091,13 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteModAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteModAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await _database.SaveData(ModsTableMsSql.Delete, new { Id = id });
+            await _database.SaveData(ModsTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)

@@ -17,7 +17,6 @@ using Application.Models.GameServer.WeaverWork;
 using Application.Models.Identity.Permission;
 using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
-using Application.Requests.GameServer;
 using Application.Requests.GameServer.Host;
 using Application.Requests.GameServer.WeaverWork;
 using Application.Responses.v1.GameServer;
@@ -1139,7 +1138,7 @@ public class HostService : IHostService
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             
             // State update is uninstalled, so we'll wrap up by deleting the game server
-            var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id);
+            var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, _serverState.SystemUserId);
             if (!deleteServerRequest.Succeeded)
             {
                 return await Result.FailAsync(deleteServerRequest.ErrorMessage);

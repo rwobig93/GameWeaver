@@ -28,22 +28,17 @@ public class GameServerService : IGameServerService
     private readonly IGameServerRepository _gameServerRepository;
     private readonly IDateTimeService _dateTime;
     private readonly IHostRepository _hostRepository;
-    private readonly ISerializerService _serializerService;
     private readonly IGameRepository _gameRepository;
-    private readonly IEventService _eventService;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
 
-    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository,
-        ISerializerService serializerService, IGameRepository gameRepository, IEventService eventService, IAuditTrailsRepository auditRepository,
-        IRunningServerState serverState)
+    public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository, IGameRepository gameRepository,
+        IAuditTrailsRepository auditRepository, IRunningServerState serverState)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
         _hostRepository = hostRepository;
-        _serializerService = serializerService;
         _gameRepository = gameRepository;
-        _eventService = eventService;
         _auditRepository = auditRepository;
         _serverState = serverState;
     }
@@ -372,7 +367,7 @@ public class GameServerService : IGameServerService
 
         if (!sendHostUninstall)
         {
-            var deleteRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id);
+            var deleteRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, requestUserId);
             if (!deleteRequest.Succeeded)
             {
                 var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
@@ -1197,7 +1192,7 @@ public class GameServerService : IGameServerService
             }
         }
 
-        var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(id);
+        var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(id, requestUserId);
         if (!profileDelete.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
@@ -1396,7 +1391,7 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(ErrorMessageConstants.Mods.NotFound);
         }
 
-        var modDelete = await _gameServerRepository.DeleteModAsync(id);
+        var modDelete = await _gameServerRepository.DeleteModAsync(id, requestUserId);
         if (!modDelete.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, foundMod.Result.Id, requestUserId,

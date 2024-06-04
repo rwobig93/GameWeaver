@@ -14,11 +14,11 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<HostDb>>> GetAllAsync();
     Task<DatabaseActionResult<IEnumerable<HostDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
-    Task<DatabaseActionResult<HostDb>> GetByIdAsync(Guid id);
-    Task<DatabaseActionResult<HostDb>> GetByHostnameAsync(string hostName);
+    Task<DatabaseActionResult<HostDb?>> GetByIdAsync(Guid id);
+    Task<DatabaseActionResult<HostDb?>> GetByHostnameAsync(string hostName);
     Task<DatabaseActionResult<Guid>> CreateAsync(HostCreateDb createObject);
     Task<DatabaseActionResult> UpdateAsync(HostUpdateDb updateObject);
-    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId);
+    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetAllRegistrationsAsync();
@@ -26,9 +26,9 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetAllActiveRegistrationsAsync();
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetAllInActiveRegistrationsAsync();
     Task<DatabaseActionResult<int>> GetRegistrationCountAsync();
-    Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByIdAsync(Guid id);
-    Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByHostIdAsync(Guid hostId);
-    Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByHostIdAndKeyAsync(Guid hostId, string key);
+    Task<DatabaseActionResult<HostRegistrationDb?>> GetRegistrationByIdAsync(Guid id);
+    Task<DatabaseActionResult<HostRegistrationDb?>> GetRegistrationByHostIdAsync(Guid hostId);
+    Task<DatabaseActionResult<HostRegistrationDb?>> GetRegistrationByHostIdAndKeyAsync(Guid hostId, string key);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetActiveRegistrationsByDescriptionAsync(string description);
     Task<DatabaseActionResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate createObject);
     Task<DatabaseActionResult> UpdateRegistrationAsync(HostRegistrationUpdate updateObject);
@@ -38,7 +38,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAfterAsync(DateTime afterDate);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCheckInCountAsync();
-    Task<DatabaseActionResult<HostCheckInDb>> GetCheckInByIdAsync(int id);
+    Task<DatabaseActionResult<HostCheckInDb?>> GetCheckInByIdAsync(int id);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetChecksInByHostIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsLatestByHostIdAsync(Guid id, int count);
     Task<DatabaseActionResult> CreateCheckInAsync(HostCheckInCreate createObject);
@@ -49,7 +49,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkAsync();
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetWeaverWorkCountAsync();
-    Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(int id);
+    Task<DatabaseActionResult<WeaverWorkDb?>> GetWeaverWorkByIdAsync(int id);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWorkByHostIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverWaitingWorkByHostIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetWeaverAllWaitingWorkByHostIdAsync(Guid id);

@@ -21,7 +21,7 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<GameServerDb?>> GetByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateAsync(GameServerCreate createObject);
     Task<DatabaseActionResult> UpdateAsync(GameServerUpdate updateObject);
-    Task<DatabaseActionResult> DeleteAsync(Guid id);
+    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<ConfigurationItemDb>>> GetAllConfigurationItemsAsync();
@@ -55,7 +55,7 @@ public interface IGameServerRepository
     // TODO: Ensure friendly name is validated, these should all be unique on creation and updates
     Task<DatabaseActionResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject);
     Task<DatabaseActionResult> UpdateGameProfileAsync(GameProfileUpdate updateObject);
-    Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id);
+    Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id, Guid requestUserId);
     Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> SearchGameProfilesAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> SearchGameProfilesPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<ModDb>>> GetAllModsAsync();
@@ -70,7 +70,7 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<IEnumerable<ModDb>>> GetModsBySteamToolIdAsync(int id);
     Task<DatabaseActionResult<Guid>> CreateModAsync(ModCreate createObject);
     Task<DatabaseActionResult> UpdateModAsync(ModUpdate updateObject);
-    Task<DatabaseActionResult> DeleteModAsync(Guid id);
+    Task<DatabaseActionResult> DeleteModAsync(Guid id, Guid requestUserId);
     Task<DatabaseActionResult<IEnumerable<ModDb>>> SearchModsAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<ModDb>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

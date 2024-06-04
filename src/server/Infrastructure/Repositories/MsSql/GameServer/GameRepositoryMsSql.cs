@@ -1,18 +1,13 @@
-﻿using Application.Helpers.Lifecycle;
-using Application.Helpers.Runtime;
-using Application.Mappers.GameServer;
+﻿using Application.Helpers.Runtime;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
-using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.Database;
-using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
 using Infrastructure.Database.MsSql.Shared;
@@ -24,14 +19,12 @@ public class GameRepositoryMsSql : IGameRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
-    private readonly IAuditTrailsRepository _auditRepository;
 
-    public GameRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IAuditTrailsRepository auditRepository)
+    public GameRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
-        _auditRepository = auditRepository;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameDb>>> GetAllAsync()
@@ -212,13 +205,13 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await _database.SaveData(GamesTableMsSql.Delete, new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(GamesTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)

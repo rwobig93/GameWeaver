@@ -20,7 +20,7 @@ public interface IGameRepository
     Task<DatabaseActionResult<GameDb?>> GetBySteamToolIdAsync(int id);
     Task<DatabaseActionResult<Guid>> CreateAsync(GameCreate createObject);
     Task<DatabaseActionResult> UpdateAsync(GameUpdate updateObject);
-    Task<DatabaseActionResult> DeleteAsync(Guid id);
+    Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<DatabaseActionResult<IEnumerable<GameDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<GameDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<DeveloperDb>>> GetAllDevelopersAsync();

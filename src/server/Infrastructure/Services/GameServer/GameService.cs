@@ -12,14 +12,11 @@ using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.Game;
 using Application.Services.GameServer;
-using Application.Services.Lifecycle;
 using Application.Services.System;
-using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.Database;
 using Domain.Enums.Lifecycle;
-using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;
 
@@ -27,22 +24,18 @@ public class GameService : IGameService
 {
     private readonly IGameRepository _gameRepository;
     private readonly IDateTimeService _dateTime;
-    private readonly IRunningServerState _serverState;
-    private readonly AppConfiguration _appConfig;
     private readonly IGameServerRepository _gameServerRepository;
     private readonly IEventService _eventService;
     private readonly IAuditTrailsRepository _auditRepository;
 
-    public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
-        IGameServerRepository gameServerRepository, IEventService eventService, IAuditTrailsRepository auditRepository)
+    public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IGameServerRepository gameServerRepository, IEventService eventService,
+        IAuditTrailsRepository auditRepository)
     {
         _gameRepository = gameRepository;
         _dateTime = dateTime;
-        _serverState = serverState;
         _gameServerRepository = gameServerRepository;
         _eventService = eventService;
         _auditRepository = auditRepository;
-        _appConfig = appConfig.Value;
     }
 
     public async Task<IResult<IEnumerable<GameSlim>>> GetAllAsync()
@@ -247,7 +240,7 @@ public class GameService : IGameService
             List<string> errorMessages = [];
             foreach (var profile in assignedProfiles.Result?.ToList() ?? [])
             {
-                var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id);
+                var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id, requestUserId);
                 if (profileDeleteRequest.Succeeded) continue;
                 
                 errorMessages.Add(profileDeleteRequest.ErrorMessage);
@@ -271,7 +264,7 @@ public class GameService : IGameService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
 
-        var deleteRequest = await _gameRepository.DeleteAsync(id);
+        var deleteRequest = await _gameRepository.DeleteAsync(id, requestUserId);
         if (!deleteRequest.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGames, foundGame.Result.Id, requestUserId, new Dictionary<string, string>

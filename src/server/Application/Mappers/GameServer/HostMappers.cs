@@ -4,7 +4,6 @@ using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
 using Application.Requests.GameServer.Host;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.GameServer;
 using Domain.Models.Host;
 using MemoryPack;
 

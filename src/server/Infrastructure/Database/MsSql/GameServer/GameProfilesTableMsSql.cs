@@ -40,11 +40,12 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER,
+                @DeletedBy UNIQUEIDENTIFIER,
                 @DeletedOn datetime2
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, LastModifiedBy = @DeletedBy
                 WHERE Id = @Id;
             end"
     };

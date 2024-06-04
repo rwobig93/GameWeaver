@@ -1,7 +1,5 @@
 ﻿using System.Globalization;
-using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
-using Application.Mappers.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
@@ -11,7 +9,6 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.Database;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
@@ -89,15 +86,15 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<HostDb>> GetByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<HostDb?>> GetByIdAsync(Guid id)
     {
-        DatabaseActionResult<HostDb> actionReturn = new();
+        DatabaseActionResult<HostDb?> actionReturn = new();
 
         try
         {
             var foundHost = (await _database.LoadData<HostDb, dynamic>(
                 HostsTableMsSql.GetById, new {Id = id})).FirstOrDefault();
-            actionReturn.Succeed(foundHost!);
+            actionReturn.Succeed(foundHost);
         }
         catch (Exception ex)
         {
@@ -107,15 +104,15 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<HostDb>> GetByHostnameAsync(string hostName)
+    public async Task<DatabaseActionResult<HostDb?>> GetByHostnameAsync(string hostName)
     {
-        DatabaseActionResult<HostDb> actionReturn = new();
+        DatabaseActionResult<HostDb?> actionReturn = new();
 
         try
         {
             var foundHost = (await _database.LoadData<HostDb, dynamic>(
                 HostsTableMsSql.GetByHostname, new {Hostname = hostName})).FirstOrDefault();
-            actionReturn.Succeed(foundHost!);
+            actionReturn.Succeed(foundHost);
         }
         catch (Exception ex)
         {
@@ -131,17 +128,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createdId = await _database.SaveDataReturnId(HostsTableMsSql.Insert, createObject);
-
-            var foundHost = await GetByIdAsync(createdId);
-
-            var convertedHost = foundHost.Result!.ToSlim();
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Hosts, foundHost.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, convertedHost);
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -158,19 +145,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            var beforeObject = (await _database.LoadData<HostDb, dynamic>(
-                HostsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-            
             await _database.SaveData(HostsTableMsSql.Update, updateObject);
-            
-            var afterObject = (await _database.LoadData<HostDb, dynamic>(
-                HostsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-
-            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Hosts, beforeObject!.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -181,25 +156,13 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            var foundHost = await GetByIdAsync(id);
-            if (!foundHost.Succeeded || foundHost.Result is null)
-                throw new Exception(foundHost.ErrorMessage);
-            
-            // Update user w/ a property that is modified, so we get the last updated on/by for the deleting user
-            var hostUpdate = new HostUpdateDb { Id = foundHost.Result.Id, LastModifiedOn = _dateTime.NowDatabaseTime, LastModifiedBy = modifyingUserId};
-            await UpdateAsync(hostUpdate);
-            await _database.SaveData(HostsTableMsSql.Delete, 
-                new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Hosts, id,
-                hostUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, hostUpdate);
-            
+            await _database.SaveData(HostsTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -340,15 +303,15 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<HostRegistrationDb?>> GetRegistrationByIdAsync(Guid id)
     {
-        DatabaseActionResult<HostRegistrationDb> actionReturn = new();
+        DatabaseActionResult<HostRegistrationDb?> actionReturn = new();
 
         try
         {
             var foundRegistration = (await _database.LoadData<HostRegistrationDb, dynamic>(
                 HostRegistrationsTableMsSql.GetById, new {Id = id})).FirstOrDefault();
-            actionReturn.Succeed(foundRegistration!);
+            actionReturn.Succeed(foundRegistration);
         }
         catch (Exception ex)
         {
@@ -358,15 +321,15 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByHostIdAsync(Guid hostId)
+    public async Task<DatabaseActionResult<HostRegistrationDb?>> GetRegistrationByHostIdAsync(Guid hostId)
     {
-        DatabaseActionResult<HostRegistrationDb> actionReturn = new();
+        DatabaseActionResult<HostRegistrationDb?> actionReturn = new();
 
         try
         {
             var foundRegistration = (await _database.LoadData<HostRegistrationDb, dynamic>(
                 HostRegistrationsTableMsSql.GetByHostId, new {HostId = hostId})).FirstOrDefault();
-            actionReturn.Succeed(foundRegistration!);
+            actionReturn.Succeed(foundRegistration);
         }
         catch (Exception ex)
         {
@@ -376,15 +339,15 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<HostRegistrationDb>> GetRegistrationByHostIdAndKeyAsync(Guid hostId, string key)
+    public async Task<DatabaseActionResult<HostRegistrationDb?>> GetRegistrationByHostIdAndKeyAsync(Guid hostId, string key)
     {
-        DatabaseActionResult<HostRegistrationDb> actionReturn = new();
+        DatabaseActionResult<HostRegistrationDb?> actionReturn = new();
 
         try
         {
             var foundRegistration = (await _database.LoadData<HostRegistrationDb, dynamic>(
                 HostRegistrationsTableMsSql.GetByHostIdAndKey, new {HostId = hostId, Key = key})).FirstOrDefault();
-            actionReturn.Succeed(foundRegistration!);
+            actionReturn.Succeed(foundRegistration);
         }
         catch (Exception ex)
         {
@@ -418,15 +381,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createdId = await _database.SaveDataReturnId(HostRegistrationsTableMsSql.Insert, createObject);
-
-            var foundRegistration = await GetRegistrationByIdAsync(createdId);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.HostRegistrations, foundRegistration.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundRegistration.Result!.ToFull());
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -443,19 +398,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            var beforeObject = (await _database.LoadData<HostDb, dynamic>(
-                HostRegistrationsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-            
             await _database.SaveData(HostRegistrationsTableMsSql.Update, updateObject);
-            
-            var afterObject = (await _database.LoadData<HostDb, dynamic>(
-                HostRegistrationsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-
-            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.HostRegistrations, beforeObject!.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -582,16 +525,16 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<HostCheckInDb>> GetCheckInByIdAsync(int id)
+    public async Task<DatabaseActionResult<HostCheckInDb?>> GetCheckInByIdAsync(int id)
     {
-        DatabaseActionResult<HostCheckInDb> actionReturn = new();
+        DatabaseActionResult<HostCheckInDb?> actionReturn = new();
 
         try
         {
             var foundCheckIn = (await _database.LoadData<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.GetById, new {Id = id})).FirstOrDefault();
             
-            actionReturn.Succeed(foundCheckIn!);
+            actionReturn.Succeed(foundCheckIn);
         }
         catch (Exception ex)
         {
@@ -646,7 +589,6 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             await _database.SaveDataReturnIntId(HostCheckInTableMsSql.Insert, createObject);
-
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -797,15 +739,15 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<WeaverWorkDb>> GetWeaverWorkByIdAsync(int id)
+    public async Task<DatabaseActionResult<WeaverWorkDb?>> GetWeaverWorkByIdAsync(int id)
     {
-        DatabaseActionResult<WeaverWorkDb> actionReturn = new();
+        DatabaseActionResult<WeaverWorkDb?> actionReturn = new();
 
         try
         {
             var foundWork = (await _database.LoadData<WeaverWorkDb, dynamic>(
                 WeaverWorksTableMsSql.GetById, new {Id = id})).FirstOrDefault();
-            actionReturn.Succeed(foundWork!);
+            actionReturn.Succeed(foundWork);
         }
         catch (Exception ex)
         {
@@ -929,10 +871,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createdId = await _database.SaveDataReturnIntId(WeaverWorksTableMsSql.Insert, createObject);
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -950,7 +889,6 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             await _database.SaveData(WeaverWorksTableMsSql.Update, updateObject);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -1007,24 +945,6 @@ public class HostRepositoryMsSql : IHostRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, WeaverWorksTableMsSql.DeleteOlderThan.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
-    public async Task<DatabaseActionResult> DeleteWeaverWorkAsync(Guid id)
-    {
-        DatabaseActionResult actionReturn = new();
-
-        try
-        {
-            await _database.SaveData(WeaverWorksTableMsSql.Delete, new {Id = id});
-            
-            actionReturn.Succeed();
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, WeaverWorksTableMsSql.Delete.Path, ex.Message);
         }
 
         return actionReturn;
