@@ -22,17 +22,26 @@ public class SteamApiService : ISteamApiService
         _serializerService = serializerService;
     }
 
-    public async Task<IResult<SteamApiResponse>> GetAllApps()
+    public async Task<IResult<SteamAppList>> GetAllApps()
     {
-        return await Result<SteamApiResponse>.FailAsync();
+        var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiUnauthenticated);
+        var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppList);
+        if (!response.IsSuccessStatusCode)
+        {
+            return await Result<SteamAppList>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
+        }
+
+        var convertedResponse = _serializerService.DeserializeJson<SteamApiResponse>(await response.Content.ReadAsStringAsync());
+
+        return await Result<SteamAppList>.FailAsync();
     }
 
     public async Task<IResult<SteamAppInfo?>> GetCurrentAppBuild(int appId)
     {
         try
         {
-            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamUnauthenticated);
-            var response = await httpClient.GetAsync(ApiConstants.Steam.AppInfo(appId));
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiUnauthenticated);
+            var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppInfo(appId));
             if (!response.IsSuccessStatusCode)
             {
                 return await Result<SteamAppInfo?>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
@@ -79,6 +88,11 @@ public class SteamApiService : ISteamApiService
                 {
                     appInfo.LastUpdatedUtc = DateTimeOffset.FromUnixTimeSeconds(convertedEpochTime).UtcDateTime;
                 }
+            }
+
+            if (string.IsNullOrWhiteSpace(appInfo.VersionBuild))
+            {
+                return await Result<SteamAppInfo?>.FailAsync("Build version received from the API is empty");
             }
 
             return await Result<SteamAppInfo?>.SuccessAsync(appInfo);

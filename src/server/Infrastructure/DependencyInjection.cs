@@ -149,13 +149,13 @@ public static class DependencyInjection
         {
             options.BaseAddress = new Uri(configuration.GetApplicationSettings().BaseUrl);
         }).ConfigureCertificateHandling(configuration);
-        services.AddHttpClient(ApiConstants.Clients.SteamUnauthenticated, options =>
+        services.AddHttpClient(ApiConstants.Clients.SteamApiUnauthenticated, options =>
         {
-            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrl);
+            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlApi);
         }).ConfigureCertificateHandling(configuration);
-        services.AddHttpClient(ApiConstants.Clients.SteamAuthenticated, options =>
+        services.AddHttpClient(ApiConstants.Clients.SteamStoreAuthenticated, options =>
         {
-            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrl);
+            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlStore);
         }).ConfigureCertificateHandling(configuration);
 
         var mailConfig = configuration.GetMailSettings();

@@ -207,5 +207,7 @@ public static class WebServerConfiguration
         
         hangfireJobs.AddOrUpdate("GameVersionCheck", () =>
             jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));
+        
+        // TODO: Add job for monitoring / checking on game server status and host status
     }
 }
