@@ -33,8 +33,8 @@ public partial class UserRoleDialog
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
-        _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Remove);
-        _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Add);
+        _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Remove);
+        _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Add);
     }
 
     private async Task GetRoleLists()

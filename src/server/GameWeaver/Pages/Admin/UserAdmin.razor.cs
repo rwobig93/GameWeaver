@@ -50,11 +50,11 @@ public partial class UserAdmin
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canResetPasswords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.ResetPassword);
-        _canDisableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Disable);
-        _canEnableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Enable);
-        _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.ServiceAccounts.Admin);
-        _canExportUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.Export);
+        _canResetPasswords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.ResetPassword);
+        _canDisableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.Disable);
+        _canEnableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.Enable);
+        _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.ServiceAccounts.Admin);
+        _canExportUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.Export);
 
         _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers;
     }

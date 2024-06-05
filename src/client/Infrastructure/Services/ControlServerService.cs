@@ -100,7 +100,7 @@ public class ControlServerService : IControlServerService
         var payload = new StringContent(_serializerService.SerializeJson(confirmRequest), Encoding.UTF8, "application/json");
 
         // Handle registration confirmation to the control server
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.RegistrationConfirm, payload);
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.HostRegistration.Confirm, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         var convertedResponse = _serializerService.DeserializeJson<HostRegisterResponse>(responseContent);
         if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
@@ -199,7 +199,7 @@ public class ControlServerService : IControlServerService
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
 
         // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.HostCheckins.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             return await Result<IEnumerable<WeaverWork>>.FailAsync(new List<WeaverWork>(), responseContent);
@@ -221,7 +221,7 @@ public class ControlServerService : IControlServerService
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
         
         // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.WeaverWork.UpdateStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
             return await Result.FailAsync(responseContent);

@@ -49,15 +49,15 @@ public static class GameServerEndpoints
         app.MapPost(ApiRouteConstants.GameServer.ConfigItem.Update, UpdateConfigurationItem).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.ConfigItem.Delete, DeleteConfigurationItem).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.ConfigItem.Search, SearchConfigurationItems).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetAllLocalResourcesPaginated, GetAllLocalResourcesPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourcesCount, GetLocalResourcesCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourceById, GetLocalResourceById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourcesByGameProfileId, GetLocalResourcesByGameProfileId).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetLocalResourcesByGameServerId, GetLocalResourcesByGameServerId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.LocalResource.CreateLocalResource, CreateLocalResource).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.LocalResource.UpdateLocalResource, UpdateLocalResource).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.LocalResource.DeleteLocalResource, DeleteLocalResource).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.LocalResource.SearchLocalResource, SearchLocalResource).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated, GetAllLocalResourcesPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetCount, GetLocalResourcesCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetById, GetLocalResourceById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetByGameProfileId, GetLocalResourcesByGameProfileId).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetForGameServerId, GetLocalResourcesByGameServerId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.LocalResource.Create, CreateLocalResource).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.LocalResource.Update, UpdateLocalResource).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.LocalResource.Delete, DeleteLocalResource).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.LocalResource.Search, SearchLocalResource).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetAll, GetAllGameProfilesPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetCount, GetGameProfileCount).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetById, GetGameProfileById).ApiVersionOne();
@@ -96,7 +96,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of game servers</returns>
-    [Authorize(PermissionConstants.Gameserver.GetAllPaginated)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameServerService gameServerService, 
         IOptions<AppConfiguration> appConfig)
     {
@@ -127,7 +127,7 @@ public static class GameServerEndpoints
     /// </summary>
     /// <param name="gameServerService"></param>
     /// <returns>Count of total game servers</returns>
-    [Authorize(PermissionConstants.Gameserver.GetCount)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.GetCount)]
     private static async Task<IResult<int>> GetCount(IGameServerService gameServerService)
     {
         try
@@ -146,7 +146,7 @@ public static class GameServerEndpoints
     /// <param name="id">Id of the game server</param>
     /// <param name="gameServerService"></param>
     /// <returns>Game server object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetById)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
     private static async Task<IResult<GameServerSlim>> GetById([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -165,7 +165,7 @@ public static class GameServerEndpoints
     /// <param name="serverName">Game server name</param>
     /// <param name="gameServerService"></param>
     /// <returns>Game server object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetByServerName)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
     private static async Task<IResult<GameServerSlim>> GetByServerName([FromQuery]string serverName, IGameServerService gameServerService)
     {
         try
@@ -184,7 +184,7 @@ public static class GameServerEndpoints
     /// <param name="id">Id of a game</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game servers</returns>
-    [Authorize(PermissionConstants.Gameserver.GetByGameId)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -203,7 +203,7 @@ public static class GameServerEndpoints
     /// <param name="id">Game profile id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game servers</returns>
-    [Authorize(PermissionConstants.Gameserver.GetByGameProfileId)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameProfileId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -223,7 +223,7 @@ public static class GameServerEndpoints
     /// <param name="id">Host id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game servers</returns>
-    [Authorize(PermissionConstants.Gameserver.GetByHostId)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -242,7 +242,7 @@ public static class GameServerEndpoints
     /// <param name="id">Id of the owner</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game servers</returns>
-    [Authorize(PermissionConstants.Gameserver.GetByOwnerId)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
     private static async Task<IResult<GameServerSlim>> GetByOwnerId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -262,7 +262,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created game server</returns>
-    [Authorize(PermissionConstants.Gameserver.Create)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Create)]
     private static async Task<IResult<Guid>> Create([FromBody]GameServerCreateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -283,7 +283,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.Update)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Update)]
     private static async Task<IResult> Update([FromBody]GameServerUpdateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -304,7 +304,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.Delete)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Delete)]
     private static async Task<IResult> Delete([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -325,7 +325,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>List of matching game servers</returns>
     /// <remarks>Searches by: OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
-    [Authorize(PermissionConstants.Gameserver.Search)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.Search)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
     {
         try
@@ -346,7 +346,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of configuration items</returns>
-    [Authorize(PermissionConstants.Gameserver.GetAllConfigurationItemsPaginated)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
@@ -377,7 +377,7 @@ public static class GameServerEndpoints
     /// </summary>
     /// <param name="gameServerService"></param>
     /// <returns>Count of configuration items</returns>
-    [Authorize(PermissionConstants.Gameserver.GetConfigurationItemsCount)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.GetCount)]
     private static async Task<IResult<int>> GetConfigurationItemsCount(IGameServerService gameServerService)
     {
         try
@@ -396,7 +396,7 @@ public static class GameServerEndpoints
     /// <param name="id">Configuration item id</param>
     /// <param name="gameServerService"></param>
     /// <returns>Configuration item object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetConfigurationItemById)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.Get)]
     private static async Task<IResult<ConfigurationItemSlim>> GetConfigurationItemById([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -415,7 +415,7 @@ public static class GameServerEndpoints
     /// <param name="id">Game profile id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of configuration items</returns>
-    [Authorize(PermissionConstants.Gameserver.GetConfigurationItemsByGameProfileId)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.Get)]
     private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByLocalResourceId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -435,7 +435,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created configuration item</returns>
-    [Authorize(PermissionConstants.Gameserver.CreateConfigurationItem)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.Create)]
     private static async Task<IResult<Guid>> CreateConfigurationItem([FromBody]ConfigurationItemCreate createObject, IGameServerService gameServerService,
         ICurrentUserService currentUserService)
     {
@@ -457,7 +457,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.UpdateConfigurationItem)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.Update)]
     private static async Task<IResult> UpdateConfigurationItem([FromBody]ConfigurationItemUpdate updateObject, IGameServerService gameServerService,
         ICurrentUserService currentUserService)
     {
@@ -479,7 +479,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.DeleteConfigurationItem)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.Delete)]
     private static async Task<IResult> DeleteConfigurationItem([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -500,7 +500,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>List of matching configuration items</returns>
     /// <remarks>Searches by: GameProfileId, Path, Category, Key, Value</remarks>
-    [Authorize(PermissionConstants.Gameserver.SearchConfigurationItems)]
+    [Authorize(PermissionConstants.GameServer.ConfigItem.Search)]
     private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItems([FromQuery]string searchText, IGameServerService gameServerService)
     {
         try
@@ -521,7 +521,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of local resources</returns>
-    [Authorize(PermissionConstants.Gameserver.GetAllLocalResourcesPaginated)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
@@ -534,9 +534,9 @@ public static class GameServerEndpoints
                 return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameServerService.GetLocalResourcesCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.GetAllLocalResourcesPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.GetAllLocalResourcesPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -552,7 +552,7 @@ public static class GameServerEndpoints
     /// </summary>
     /// <param name="gameServerService"></param>
     /// <returns>Count of total resources</returns>
-    [Authorize(PermissionConstants.Gameserver.GetLocalResourcesCount)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.GetCount)]
     private static async Task<IResult<int>> GetLocalResourcesCount(IGameServerService gameServerService)
     {
         try
@@ -571,7 +571,7 @@ public static class GameServerEndpoints
     /// <param name="id">Local resource id</param>
     /// <param name="gameServerService"></param>
     /// <returns>Local resource object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetLocalResourceById)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.Get)]
     private static async Task<IResult<LocalResourceSlim>> GetLocalResourceById([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -590,7 +590,7 @@ public static class GameServerEndpoints
     /// <param name="id">Game profile id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of local resources</returns>
-    [Authorize(PermissionConstants.Gameserver.GetLocalResourcesByGameProfileId)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.Get)]
     private static async Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameProfileId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -609,7 +609,7 @@ public static class GameServerEndpoints
     /// <param name="id">Game server id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of local resources</returns>
-    [Authorize(PermissionConstants.Gameserver.GetLocalResourcesByGameServerId)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.GetForGameServerId)]
     private static async Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameServerId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -629,7 +629,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created local resource</returns>
-    [Authorize(PermissionConstants.Gameserver.CreateLocalResource)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.Create)]
     private static async Task<IResult<Guid>> CreateLocalResource([FromBody]LocalResourceCreate createObject, IGameServerService gameServerService,
         ICurrentUserService currentUserService)
     {
@@ -651,7 +651,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.UpdateLocalResource)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.Update)]
     private static async Task<IResult> UpdateLocalResource([FromBody]LocalResourceUpdate updateObject, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -672,7 +672,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.DeleteLocalResource)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.Delete)]
     private static async Task<IResult> DeleteLocalResource([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -685,51 +685,7 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
-    /// <summary>
-    /// Update the local resource for the game server on the host
-    /// </summary>
-    /// <param name="serverId">Game server id</param>
-    /// <param name="resourceId">Local resource id</param>
-    /// <param name="gameServerService"></param>
-    /// <param name="currentUserService"></param>
-    /// <returns></returns>
-    [Authorize(PermissionConstants.Gameserver.UpdateLocalResourceOnGameServer)]
-    private static async Task<IResult> UpdateLocalResourceOnGameServer([FromQuery]Guid serverId, [FromQuery]Guid resourceId, IGameServerService gameServerService,
-        ICurrentUserService currentUserService)
-    {
-        try
-        {
-            var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.UpdateLocalResourceOnGameServerAsync(serverId, resourceId, currentUserId);
-        }
-        catch (Exception ex)
-        {
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
-        }
-    }
-    
-    /// <summary>
-    /// Update all local resources for the game server on the host
-    /// </summary>
-    /// <param name="serverId">Game server id</param>
-    /// <param name="gameServerService"></param>
-    /// <param name="currentUserService"></param>
-    /// <returns></returns>
-    [Authorize(PermissionConstants.Gameserver.UpdateAllLocalResourcesOnGameServer)]
-    private static async Task<IResult> UpdateAllLocalResourcesOnGameServer([FromQuery]Guid serverId, IGameServerService gameServerService, ICurrentUserService currentUserService)
-    {
-        try
-        {
-            var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.UpdateAllLocalResourcesOnGameServerAsync(serverId, currentUserId);
-        }
-        catch (Exception ex)
-        {
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
-        }
-    }
-    
+
     /// <summary>
     /// Search local resources by properties
     /// </summary>
@@ -737,7 +693,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>List of matching local resources</returns>
     /// <remarks>Searches by: GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
-    [Authorize(PermissionConstants.Gameserver.SearchLocalResource)]
+    [Authorize(PermissionConstants.GameServer.LocalResource.Search)]
     private static async Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResource([FromQuery]string searchText, IGameServerService gameServerService)
     {
         try
@@ -758,7 +714,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of game profiles</returns>
-    [Authorize(PermissionConstants.Gameserver.GetAllGameProfilesPaginated)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
@@ -789,7 +745,7 @@ public static class GameServerEndpoints
     /// </summary>
     /// <param name="gameServerService"></param>
     /// <returns>Count of total game profiles</returns>
-    [Authorize(PermissionConstants.Gameserver.GetGameProfileCount)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.GetCount)]
     private static async Task<IResult<int>> GetGameProfileCount(IGameServerService gameServerService)
     {
         try
@@ -808,7 +764,7 @@ public static class GameServerEndpoints
     /// <param name="id">Game profile Id</param>
     /// <param name="gameServerService"></param>
     /// <returns>Game profile object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetGameProfileById)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
     private static async Task<IResult<GameProfileSlim>> GetGameProfileById([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -827,7 +783,7 @@ public static class GameServerEndpoints
     /// <param name="friendlyName">Game profile friendly name</param>
     /// <param name="gameServerService"></param>
     /// <returns>Game profile object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetGameProfileByFriendlyName)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
     private static async Task<IResult<GameProfileSlim>> GetGameProfileByFriendlyName([FromQuery]string friendlyName, IGameServerService gameServerService)
     {
         try
@@ -846,7 +802,7 @@ public static class GameServerEndpoints
     /// <param name="id">Game id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game profiles</returns>
-    [Authorize(PermissionConstants.Gameserver.GetGameProfilesByGameId)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
     private static async Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByGameId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -865,7 +821,7 @@ public static class GameServerEndpoints
     /// <param name="id">Owner account id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game profiles</returns>
-    [Authorize(PermissionConstants.Gameserver.GetGameProfilesByOwnerId)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
     private static async Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByOwnerId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -885,7 +841,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created game profile</returns>
-    [Authorize(PermissionConstants.Gameserver.CreateGameProfile)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Create)]
     private static async Task<IResult<Guid>> CreateGameProfile([FromBody]GameProfileCreateRequest request, IGameServerService gameServerService,
         ICurrentUserService currentUserService)
     {
@@ -907,7 +863,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.UpdateGameProfile)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Update)]
     private static async Task<IResult> UpdateGameProfile([FromBody]GameProfileUpdateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -928,7 +884,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.DeleteGameProfile)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Delete)]
     private static async Task<IResult> DeleteGameProfile([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -949,7 +905,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>List of matching game profiles</returns>
     /// <remarks>Searches by: FriendlyName, OwnerId, GameId, ServerProcessName</remarks>
-    [Authorize(PermissionConstants.Gameserver.SearchGameProfiles)]
+    [Authorize(PermissionConstants.GameServer.GameProfile.Search)]
     private static async Task<IResult<IEnumerable<GameProfileSlim>>> SearchGameProfiles([FromQuery]string searchText, IGameServerService gameServerService)
     {
         try
@@ -970,7 +926,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of mods</returns>
-    [Authorize(PermissionConstants.Gameserver.GetAllModsPaginated)]
+    [Authorize(PermissionConstants.GameServer.Mod.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<ModSlim>>> GetAllModsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
@@ -1001,7 +957,7 @@ public static class GameServerEndpoints
     /// </summary>
     /// <param name="gameServerService"></param>
     /// <returns>Count of total mods</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModCount)]
+    [Authorize(PermissionConstants.GameServer.Mod.GetCount)]
     private static async Task<IResult<int>> GetModCount(IGameServerService gameServerService)
     {
         try
@@ -1020,7 +976,7 @@ public static class GameServerEndpoints
     /// <param name="id">Mod id</param>
     /// <param name="gameServerService"></param>
     /// <returns>Mod object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModById)]
+    [Authorize(PermissionConstants.GameServer.Mod.Get)]
     private static async Task<IResult<ModSlim>> GetModById([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -1039,7 +995,7 @@ public static class GameServerEndpoints
     /// <param name="hash">Mod hash</param>
     /// <param name="gameServerService"></param>
     /// <returns>Mod object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModByCurrentHash)]
+    [Authorize(PermissionConstants.GameServer.Mod.Get)]
     private static async Task<IResult<ModSlim>> GetModByCurrentHash([FromQuery]string hash, IGameServerService gameServerService)
     {
         try
@@ -1058,7 +1014,7 @@ public static class GameServerEndpoints
     /// <param name="friendlyName">Mod friendly name</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of mods</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModsByFriendlyName)]
+    [Authorize(PermissionConstants.GameServer.Mod.Get)]
     private static async Task<IResult<IEnumerable<ModSlim>>> GetModsByFriendlyName([FromQuery]string friendlyName, IGameServerService gameServerService)
     {
         try
@@ -1077,7 +1033,7 @@ public static class GameServerEndpoints
     /// <param name="id">Game id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of mods</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModsByGameId)]
+    [Authorize(PermissionConstants.GameServer.Mod.Get)]
     private static async Task<IResult<IEnumerable<ModSlim>>> GetModsByGameId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
@@ -1096,7 +1052,7 @@ public static class GameServerEndpoints
     /// <param name="id">Steam Game Id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of mods</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModsBySteamGameId)]
+    [Authorize(PermissionConstants.GameServer.Mod.Get)]
     private static async Task<IResult<IEnumerable<ModSlim>>> GetModsBySteamGameId([FromQuery]int id, IGameServerService gameServerService)
     {
         try
@@ -1115,7 +1071,7 @@ public static class GameServerEndpoints
     /// <param name="id">Mod steam id</param>
     /// <param name="gameServerService"></param>
     /// <returns>Mod object</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModBySteamId)]
+    [Authorize(PermissionConstants.GameServer.Mod.Get)]
     private static async Task<IResult<ModSlim>> GetModBySteamId([FromQuery]string id, IGameServerService gameServerService)
     {
         try
@@ -1134,7 +1090,7 @@ public static class GameServerEndpoints
     /// <param name="id">Steam tool id</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of mods</returns>
-    [Authorize(PermissionConstants.Gameserver.GetModsBySteamToolId)]
+    [Authorize(PermissionConstants.GameServer.Mod.Get)]
     private static async Task<IResult<IEnumerable<ModSlim>>> GetModsBySteamToolId([FromQuery]int id, IGameServerService gameServerService)
     {
         try
@@ -1154,7 +1110,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created mod</returns>
-    [Authorize(PermissionConstants.Gameserver.CreateMod)]
+    [Authorize(PermissionConstants.GameServer.Mod.Create)]
     private static async Task<IResult<Guid>> CreateMod([FromBody]ModCreate request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -1175,7 +1131,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.UpdateMod)]
+    [Authorize(PermissionConstants.GameServer.Mod.Update)]
     private static async Task<IResult> UpdateMod([FromBody]ModUpdate updateObject, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -1196,7 +1152,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.DeleteMod)]
+    [Authorize(PermissionConstants.GameServer.Mod.Delete)]
     private static async Task<IResult> DeleteMod([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -1217,7 +1173,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>List of matching mods</returns>
     /// <remarks>Searches by: GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
-    [Authorize(PermissionConstants.Gameserver.SearchMods)]
+    [Authorize(PermissionConstants.GameServer.Mod.Search)]
     private static async Task<IResult<IEnumerable<ModSlim>>> SearchMods([FromQuery]string searchText, IGameServerService gameServerService)
     {
         try
@@ -1237,7 +1193,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.StartServer)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.StartServer)]
     private static async Task<IResult> StartServer([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -1258,7 +1214,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.StopServer)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.StopServer)]
     private static async Task<IResult> StopServer([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -1279,7 +1235,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Gameserver.RestartServer)]
+    [Authorize(PermissionConstants.GameServer.Gameserver.RestartServer)]
     private static async Task<IResult> RestartServer([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
@@ -1290,6 +1246,50 @@ public static class GameServerEndpoints
         catch (Exception ex)
         {
             return await Result.FailAsync(ex.Message);
+        }
+    }
+        
+    /// <summary>
+    /// Update the local resource for the game server on the host
+    /// </summary>
+    /// <param name="serverId">Game server id</param>
+    /// <param name="resourceId">Local resource id</param>
+    /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.GameServer.Gameserver.UpdateLocalResource)]
+    private static async Task<IResult> UpdateLocalResourceOnGameServer([FromQuery]Guid serverId, [FromQuery]Guid resourceId, IGameServerService gameServerService,
+        ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateLocalResourceOnGameServerAsync(serverId, resourceId, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Update all local resources for the game server on the host
+    /// </summary>
+    /// <param name="serverId">Game server id</param>
+    /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.GameServer.Gameserver.UpdateAllLocalResources)]
+    private static async Task<IResult> UpdateAllLocalResourcesOnGameServer([FromQuery]Guid serverId, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.UpdateAllLocalResourcesOnGameServerAsync(serverId, currentUserId);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
 }

@@ -106,7 +106,7 @@ public partial class SecuritySettings
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canGenerateApiTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.GenerateToken);
+        _canGenerateApiTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.GenerateToken);
     }
 
     private async Task UpdatePageElementStates()

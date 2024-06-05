@@ -81,7 +81,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Host ID, Key and full registration confirmation URI for the new host to complete registration</returns>
-    [Authorize(PermissionConstants.Hosts.CreateRegistration)]
+    [Authorize(PermissionConstants.GameServer.HostRegistration.Create)]
     private static async Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(HostRegistrationCreateRequest request, IHostService hostService,
         ICurrentUserService currentUserService)
     {
@@ -148,7 +148,7 @@ public static class HostEndpoints
     /// <param name="dateTimeService"></param>
     /// <param name="serializerService"></param>
     /// <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
-    [Authorize(PermissionConstants.Hosts.CheckIn)]
+    [Authorize(PermissionConstants.GameServer.HostCheckins.CheckIn)]
     private static async Task<IResult<IEnumerable<WeaverWorkClient>>> Checkin([FromBody]HostCheckInRequest request, IHostService hostService, ICurrentUserService currentUserService,
         IDateTimeService dateTimeService, ISerializerService serializerService)
     {
@@ -193,7 +193,7 @@ public static class HostEndpoints
     /// <param name="serializerService"></param>
     /// <param name="context"></param>
     /// <returns></returns>
-    [Authorize(PermissionConstants.Hosts.WorkUpdate)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.UpdateStatus)]
     private static async Task<IResult> WorkStatusUpdate([FromBody]WeaverWorkUpdate request, IHostService hostService, ICurrentUserService currentUserService,
         IDateTimeService dateTimeService, ISerializerService serializerService, HttpContext context)
     {
@@ -220,7 +220,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="hostService"></param>
     /// <returns>List of game server hosts</returns>
-    [Authorize(PermissionConstants.Hosts.GetAll)]
+    [Authorize(PermissionConstants.GameServer.Hosts.GetAll)]
     private static async Task<IResult<IEnumerable<HostSlim>>> GetAll(IHostService hostService)
     {
         try
@@ -241,7 +241,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of game server hosts</returns>
-    [Authorize(PermissionConstants.Hosts.GetAllPaginated)]
+    [Authorize(PermissionConstants.GameServer.Hosts.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<HostSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService, 
         IOptions<AppConfiguration> appConfig)
     {
@@ -273,7 +273,7 @@ public static class HostEndpoints
     /// <param name="id">Id of the host to retrieve</param>
     /// <param name="hostService"></param>
     /// <returns>Host object</returns>
-    [Authorize(PermissionConstants.Hosts.Get)]
+    [Authorize(PermissionConstants.GameServer.Hosts.Get)]
     private static async Task<IResult<HostSlim>> GetById([FromQuery]Guid id, IHostService hostService)
     {
         try
@@ -292,7 +292,7 @@ public static class HostEndpoints
     /// <param name="hostname"></param>
     /// <param name="hostService"></param>
     /// <returns>Host object</returns>
-    [Authorize(PermissionConstants.Hosts.Get)]
+    [Authorize(PermissionConstants.GameServer.Hosts.Get)]
     private static async Task<IResult<HostSlim>> GetByHostname([FromQuery]string hostname, IHostService hostService)
     {
         try
@@ -312,7 +312,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>ID of the host that was created</returns>
-    [Authorize(PermissionConstants.Hosts.Create)]
+    [Authorize(PermissionConstants.GameServer.Hosts.Create)]
     private static async Task<IResult<Guid>> Create([FromBody]HostCreateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -333,7 +333,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with any context messages</returns>
-    [Authorize(PermissionConstants.Hosts.Update)]
+    [Authorize(PermissionConstants.GameServer.Hosts.Update)]
     private static async Task<IResult> Update([FromBody]HostUpdateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -354,7 +354,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Hosts.Delete)]
+    [Authorize(PermissionConstants.GameServer.Hosts.Delete)]
     private static async Task<IResult> Delete([FromQuery]Guid id, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -375,7 +375,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <returns>List of hosts matching the search criteria</returns>
     /// <remarks>Search matches against FriendlyName, Description, PrivateIp and PublicIp</remarks>
-    [Authorize(PermissionConstants.Hosts.Search)]
+    [Authorize(PermissionConstants.GameServer.Hosts.Search)]
     private static async Task<IResult<IEnumerable<HostSlim>>> Search([FromQuery]string searchText, IHostService hostService)
     {
         try
@@ -396,7 +396,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of host registrations</returns>
-    [Authorize(PermissionConstants.Hosts.GetAllRegistrationsPaginated)]
+    [Authorize(PermissionConstants.GameServer.HostRegistration.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService,
         IOptions<AppConfiguration> appConfig)
     {
@@ -427,7 +427,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="hostService"></param>
     /// <returns>List of host registrations</returns>
-    [Authorize(PermissionConstants.Hosts.GetAllRegistrationsActive)]
+    [Authorize(PermissionConstants.GameServer.HostRegistration.GetAllActive)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsActive(IHostService hostService)
     {
         try
@@ -445,7 +445,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="hostService"></param>
     /// <returns>List of host registrations</returns>
-    [Authorize(PermissionConstants.Hosts.GetAllRegistrationsInActive)]
+    [Authorize(PermissionConstants.GameServer.HostRegistration.GetAllInActive)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsInActive(IHostService hostService)
     {
         try
@@ -463,7 +463,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="hostService"></param>
     /// <returns>Count of host registrations</returns>
-    [Authorize(PermissionConstants.Hosts.GetRegistrationsCount)]
+    [Authorize(PermissionConstants.GameServer.HostRegistration.GetCount)]
     private static async Task<IResult<int>> GetRegistrationsCount(IHostService hostService)
     {
         try
@@ -483,7 +483,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Hosts.UpdateRegistration)]
+    [Authorize(PermissionConstants.GameServer.HostRegistration.Update)]
     private static async Task<IResult> UpdateRegistration([FromBody]HostRegistrationUpdateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -504,7 +504,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <returns>List of matching registrations</returns>
     /// <remarks>Searches by HostId, Key, Description and Public Ip</remarks>
-    [Authorize(PermissionConstants.Hosts.SearchRegistrations)]
+    [Authorize(PermissionConstants.GameServer.HostRegistration.Search)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrations([FromQuery]string searchText, IHostService hostService)
     {
         try
@@ -525,7 +525,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of host checkins</returns>
-    [Authorize(PermissionConstants.Hosts.GetAllCheckinsPaginated)]
+    [Authorize(PermissionConstants.GameServer.HostCheckins.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckinsPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IHostService hostService, IOptions<AppConfiguration> appConfig)
     {
@@ -556,7 +556,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="hostService"></param>
     /// <returns>Count of host checkins</returns>
-    [Authorize(PermissionConstants.Hosts.GetCheckinCount)]
+    [Authorize(PermissionConstants.GameServer.HostCheckins.GetCount)]
     private static async Task<IResult<int>> GetCheckinCount(IHostService hostService)
     {
         try
@@ -575,7 +575,7 @@ public static class HostEndpoints
     /// <param name="id">Id of the checkin</param>
     /// <param name="hostService"></param>
     /// <returns>Host checkin</returns>
-    [Authorize(PermissionConstants.Hosts.GetCheckin)]
+    [Authorize(PermissionConstants.GameServer.HostCheckins.Get)]
     private static async Task<IResult<HostCheckInFull>> GetCheckinById([FromQuery]int id, IHostService hostService)
     {
         try
@@ -594,7 +594,7 @@ public static class HostEndpoints
     /// <param name="id">Id of the host</param>
     /// <param name="hostService"></param>
     /// <returns>List of checkins for the host</returns>
-    [Authorize(PermissionConstants.Hosts.GetCheckinByHost)]
+    [Authorize(PermissionConstants.GameServer.HostCheckins.GetByHost)]
     private static async Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckinByHostId([FromQuery]Guid id, IHostService hostService)
     {
         try
@@ -614,7 +614,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Hosts.DeleteOldCheckins)]
+    [Authorize(PermissionConstants.GameServer.HostCheckins.DeleteOld)]
     private static async Task<IResult> DeleteOldCheckins([FromBody]CleanupTimeframe olderThan, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -635,7 +635,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <returns>List of matching host checkins</returns>
     /// <remarks>Searches by: HostId</remarks>
-    [Authorize(PermissionConstants.Hosts.SearchCheckins)]
+    [Authorize(PermissionConstants.GameServer.HostCheckins.Search)]
     private static async Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckins([FromQuery]string searchText, IHostService hostService)
     {
         try
@@ -656,7 +656,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of weaver work</returns>
-    [Authorize(PermissionConstants.Hosts.GetAllWeaverWorkPaginated)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize,
         IHostService hostService, IOptions<AppConfiguration> appConfig)
     {
@@ -687,7 +687,7 @@ public static class HostEndpoints
     /// </summary>
     /// <param name="hostService"></param>
     /// <returns>Weaver work count</returns>
-    [Authorize(PermissionConstants.Hosts.GetWeaverWorkCount)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.GetCount)]
     private static async Task<IResult<int>> GetWeaverWorkCount(IHostService hostService)
     {
         try
@@ -706,7 +706,7 @@ public static class HostEndpoints
     /// <param name="id">Id of the weaver work</param>
     /// <param name="hostService"></param>
     /// <returns>Weaver work object</returns>
-    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Get)]
     private static async Task<IResult<WeaverWorkSlim>> GetWeaverWorkById([FromQuery]int id, IHostService hostService)
     {
         try
@@ -725,7 +725,7 @@ public static class HostEndpoints
     /// <param name="status">0=Waiting, 1=PickedUp, 2=InProgress, 3=Completed, 4=Cancelled, 5=Failed</param>
     /// <param name="hostService"></param>
     /// <returns>List of weaver work matching the status</returns>
-    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Get)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByStatus([FromQuery]WeaverWorkState status, IHostService hostService)
     {
         try
@@ -745,7 +745,7 @@ public static class HostEndpoints
     /// 203=GameServerUninstall, 204=GameServerStateUpdate</param>
     /// <param name="hostService"></param>
     /// <returns>List of weaver work matching the target type</returns>
-    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Get)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByType([FromQuery]WeaverWorkTarget target, IHostService hostService)
     {
         try
@@ -764,7 +764,7 @@ public static class HostEndpoints
     /// <param name="id">Id of the host to get weaver work for</param>
     /// <param name="hostService"></param>
     /// <returns>Up to 10 of the latest weaver work jobs</returns>
-    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Get)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWaitingWeaverWorkForHost([FromQuery]Guid id, IHostService hostService)
     {
         try
@@ -783,7 +783,7 @@ public static class HostEndpoints
     /// <param name="id">Id of the host to get weaver work for</param>
     /// <param name="hostService"></param>
     /// <returns>All the current waiting weaver work jobs</returns>
-    [Authorize(PermissionConstants.Hosts.GetWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Get)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWaitingWeaverWorkForHost([FromQuery]Guid id, IHostService hostService)
     {
         try
@@ -803,7 +803,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>ID of the weaver work created</returns>
-    [Authorize(PermissionConstants.Hosts.CreateWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Create)]
     private static async Task<IResult<int>> CreateWeaverWork([FromBody]WeaverWorkCreateRequest request, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -823,7 +823,7 @@ public static class HostEndpoints
     /// <param name="request">Weaver work properties to update</param>
     /// <param name="hostService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Hosts.UpdateWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Update)]
     private static async Task<IResult> UpdateWeaverWork([FromBody]WeaverWorkUpdate request, IHostService hostService)
     {
         try
@@ -843,7 +843,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Delete)]
     private static async Task<IResult> DeleteWeaverWork([FromQuery]int id, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -864,7 +864,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Hosts.DeleteWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Delete)]
     private static async Task<IResult> DeleteOldWeaverWork([FromQuery]DateTime olderThan, IHostService hostService, ICurrentUserService currentUserService)
     {
         try
@@ -885,7 +885,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <returns>List of matching weaver work</returns>
     /// <remarks>Search by: HostId</remarks>
-    [Authorize(PermissionConstants.Hosts.SearchWeaverWork)]
+    [Authorize(PermissionConstants.GameServer.WeaverWork.Search)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWork([FromQuery]string searchText, IHostService hostService)
     {
         try

@@ -21,4 +21,25 @@ public static class ReflectionHelpers
             .Where(t => t.GetInterfaces().Contains(type))
             .Select(t => (T) Activator.CreateInstance(t)!)
             .ToList();
+    
+    public static List<string> GetConstantsRecursively(Type type)
+    {
+        // Get all public static fields of the type
+        var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+            .Where(f => f is {IsLiteral: true, IsInitOnly: false});
+
+        // Add the constant values to the list
+        var constants = fields.Select(field => field.GetValue(null))
+            .OfType<object>()
+            .Select(value => value.ToString()!)
+            .ToList();
+
+        // Recursively process nested types
+        foreach (var nestedType in type.GetNestedTypes(BindingFlags.Public))
+        {
+            constants.AddRange(GetConstantsRecursively(nestedType));
+        }
+
+        return constants;
+    }
 }

@@ -149,11 +149,11 @@ public static class ApiRouteConstants
             public const string Update = "/api/gameserver/update";
             public const string Delete = "/api/gameserver/delete";
             public const string Search = "/api/gameservers/search";
-            public const string StartServer = "/api/gameserver/action/start-server";
-            public const string StopServer = "/api/gameserver/action/stop-server";
-            public const string RestartServer = "/api/gameserver/action/restart-server";
-            public const string UpdateLocalResource = "/api/gameserver/action/local-resource";
-            public const string UpdateAllLocalResources = "/api/gameserver/action/local-resources";
+            public const string StartServer = "/api/gameserver/start";
+            public const string StopServer = "/api/gameserver/stop";
+            public const string RestartServer = "/api/gameserver/restart";
+            public const string UpdateLocalResource = "/api/gameserver/update/local-resource";
+            public const string UpdateAllLocalResources = "/api/gameserver/update/local-resources";
         }
 
         public static class ConfigItem
@@ -170,15 +170,15 @@ public static class ApiRouteConstants
 
         public static class LocalResource
         {
-            public const string GetAllLocalResourcesPaginated = "/api/local-resources";
-            public const string GetLocalResourcesCount = "/api/local-resources/count";
-            public const string GetLocalResourceById = "/api/local-resource/id";
-            public const string GetLocalResourcesByGameProfileId = "/api/local-resources/gameprofileid";
-            public const string GetLocalResourcesByGameServerId = "/api/local-resources/gameserverid";
-            public const string CreateLocalResource = "/api/local-resource";
-            public const string UpdateLocalResource = "/api/local-resource";
-            public const string DeleteLocalResource = "/api/local-resource";
-            public const string SearchLocalResource = "/api/local-resources/search";
+            public const string GetAllPaginated = "/api/local-resources";
+            public const string GetCount = "/api/local-resources/count";
+            public const string GetById = "/api/local-resource/id";
+            public const string GetByGameProfileId = "/api/local-resources/gameprofileid";
+            public const string GetForGameServerId = "/api/local-resources/gameserverid";
+            public const string Create = "/api/local-resource";
+            public const string Update = "/api/local-resource";
+            public const string Delete = "/api/local-resource";
+            public const string Search = "/api/local-resources/search";
         }
 
         public static class GameProfile
@@ -225,42 +225,49 @@ public static class ApiRouteConstants
             public const string Update = "/api/gameserver/game/update";
             public const string Delete = "/api/gameserver/game/delete";
             public const string Search = "/api/gameserver/game/search";
-            public const string GetAllDevelopersPaginated = "/api/gameserver/game/get-all-developers-paginated";
-            public const string GetDevelopersCount = "/api/gameserver/game/get-developers-count";
-            public const string GetDeveloperById = "/api/gameserver/game/get-developer-id";
-            public const string GetDeveloperByName = "/api/gameserver/game/get-developer-name";
-            public const string GetDevelopersByGameId = "/api/gameserver/game/get-developers-gameid";
-            public const string CreateDeveloper = "/api/gameserver/game/create-developer";
-            public const string DeleteDeveloper = "/api/gameserver/game/delete-developer";
-            public const string SearchDevelopers = "/api/gameserver/game/search-developers";
-            public const string GetAllPublishersPaginated = "/api/gameserver/game/get-all-publishers-paginated";
-            public const string GetPublishersCount = "/api/gameserver/game/get-publishers-count";
-            public const string GetPublisherById = "/api/gameserver/game/get-publisher-id";
-            public const string GetPublisherByName = "/api/gameserver/game/get-publisher-name";
-            public const string GetPublishersByGameId = "/api/gameserver/game/get-publishers-gameid";
-            public const string CreatePublisher = "/api/gameserver/game/create-publisher";
-            public const string DeletePublisher = "/api/gameserver/game/delete-publisher";
-            public const string SearchPublishers = "/api/gameserver/game/search-publishers";
-            public const string GetAllGameGenresPaginated = "/api/gameserver/game/get-all-gamegenres-paginated";
-            public const string GetGameGenresCount = "/api/gameserver/game/get-gamegenres-count";
-            public const string GetGameGenreById = "/api/gameserver/game/get-gamegenre-id";
-            public const string GetGameGenreByName = "/api/gameserver/game/get-gamegenre-name";
-            public const string GetGameGenresByGameId = "/api/gameserver/game/get-gamegenres-gameid";
-            public const string CreateGameGenre = "/api/gameserver/game/create-gamegenre";
-            public const string DeleteGameGenre = "/api/gameserver/game/delete-gamegenre";
-            public const string SearchGameGenres = "/api/gameserver/game/search-gamegenres";
+        }
+
+        public static class GameGenre
+        {
+            public const string GetAll = "/api/game-genres";
+            public const string GetCount = "/api/game-genre/count";
+            public const string GetById = "/api/game-genre/id";
+            public const string GetByName = "/api/game-genre/name";
+            public const string GetByGameId = "/api/game-genres/gameid";
+            public const string Create = "/api/game-genre";
+            public const string Delete = "/api/game-genre";
+            public const string Search = "/api/game-genres/search";
+        }
+
+        public static class Developer
+        {
+            public const string GetAll = "/api/developers";
+            public const string GetCount = "/api/developer/count";
+            public const string GetById = "/api/developer/id";
+            public const string GetByName = "/api/developer/name";
+            public const string GetByGameId = "/api/developers/gameid";
+            public const string Create = "/api/developer";
+            public const string Delete = "/api/developer";
+            public const string Search = "/api/developers/search";
+        }
+
+        public static class Publisher
+        {
+            public const string GetAll = "/api/publishers";
+            public const string GetCount = "/api/publisher/count";
+            public const string GetById = "/api/publisher/id";
+            public const string GetByName = "/api/publisher/name";
+            public const string GetByGameId = "/api/publishers/gameid";
+            public const string Create = "/api/publisher";
+            public const string Delete = "/api/publisher";
+            public const string Search = "/api/publishers/search";
         }
 
         public static class Network
         {
-            public const string GameserverConnectable = "/api/network/gameserver-connectable";
-            public const string IsPortOpen = "/api/network/is-port-open";
+            public const string GameserverConnectable = "/api/network/gameserver/connectable";
+            public const string IsPortOpen = "/api/network/port/open";
         }
-    }
-
-    public static class Example
-    {
-        public const string Weather = "/api/example/weather";
     }
 }
 

@@ -24,11 +24,11 @@ public partial class NavMenu
     private async Task GetPermissions()
     {
         var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
-        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.View);
-        _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Jobs.View);
-        _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.View);
-        _canViewRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.View);
-        _canViewAuditTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Audit.View);
-        _isDeveloper = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Developer.Dev);
+        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.View);
+        _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Jobs.View);
+        _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.View);
+        _canViewRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.View);
+        _canViewAuditTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Audit.View);
+        _isDeveloper = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.AppDevelopment.Dev);
     }
 }

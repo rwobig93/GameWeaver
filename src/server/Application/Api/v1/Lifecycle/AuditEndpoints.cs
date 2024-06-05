@@ -35,7 +35,7 @@ public static class AuditEndpoints
     /// </summary>
     /// <param name="auditService"></param>
     /// <returns>List of all audit trails</returns>
-    [Authorize(PermissionConstants.Audit.View)]
+    [Authorize(PermissionConstants.System.Audit.View)]
     private static async Task<IResult<List<AuditTrailResponse>>> GetAllTrails(IAuditTrailService auditService)
     {
         try
@@ -58,7 +58,7 @@ public static class AuditEndpoints
     /// <param name="id">GUID ID of the audit trail</param>
     /// <param name="auditService"></param>
     /// <returns>Detail regarding the specified audit trail</returns>
-    [Authorize(PermissionConstants.Audit.View)]
+    [Authorize(PermissionConstants.System.Audit.View)]
     private static async Task<IResult<AuditTrailResponse>> GetAuditTrailById([FromQuery]Guid id, IAuditTrailService auditService)
     {
         try
@@ -84,7 +84,7 @@ public static class AuditEndpoints
     /// <param name="id">GUID ID of the user modifying entities</param>
     /// <param name="auditService"></param>
     /// <returns>List of all audit trails where an entity was modified by the specified user</returns>
-    [Authorize(PermissionConstants.Audit.View)]
+    [Authorize(PermissionConstants.System.Audit.View)]
     private static async Task<IResult<List<AuditTrailResponse>>> GetAuditTrailsByChangedBy([FromQuery]Guid id, IAuditTrailService auditService)
     {
         try
@@ -107,7 +107,7 @@ public static class AuditEndpoints
     /// <param name="id">GUID ID of the entity that was modified</param>
     /// <param name="auditService"></param>
     /// <returns>List of all audit trails where the specified entity ID is the modified entity</returns>
-    [Authorize(PermissionConstants.Audit.View)]
+    [Authorize(PermissionConstants.System.Audit.View)]
     private static async Task<IResult<List<AuditTrailResponse>>> GetAuditTrailsByRecordId([FromQuery]Guid id, IAuditTrailService auditService)
     {
         try
@@ -139,7 +139,7 @@ public static class AuditEndpoints
     /// </param>
     /// <param name="auditService"></param>
     /// <returns></returns>
-    [Authorize(PermissionConstants.Audit.DeleteOld)]
+    [Authorize(PermissionConstants.System.Audit.DeleteOld)]
     private static async Task<IResult> Delete(CleanupTimeframe olderThan, IAuditTrailService auditService)
     {
         try

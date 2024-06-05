@@ -38,7 +38,7 @@ public partial class AccountSettings
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canChangeEmail = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.ChangeEmail);
+        _canChangeEmail = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.ChangeEmail);
     }
 
     private async Task UpdateAccount()

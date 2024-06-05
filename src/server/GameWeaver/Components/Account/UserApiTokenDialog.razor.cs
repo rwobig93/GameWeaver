@@ -45,7 +45,7 @@ public partial class UserApiTokenDialog
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canGenerateTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.GenerateToken);
+        _canGenerateTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.GenerateToken);
     }
 
     private async Task ValidateTokenAction()

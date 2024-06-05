@@ -33,7 +33,7 @@ public partial class RoleCreateDialog
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Create);
+        _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Create);
     }
     
     private async Task Save()

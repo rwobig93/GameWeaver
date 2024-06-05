@@ -13,11 +13,22 @@ public class ApiConstants
     {
         public static class Host
         {
-            public const string GetRegistration = "/api/gameserver/host/get-registration";
-            public const string RegistrationConfirm = "/api/gameserver/host/registration-confirm";
-            public const string GetToken = "/api/gameserver/host/get-token";
-            public const string CheckIn = "/api/gameserver/host/checkin";
-            public const string UpdateWorkStatus = "/api/gameserver/host/work";
+            public const string GetToken = "/api/host/get-token";
+        }
+
+        public static class HostRegistration
+        {
+            public const string Confirm = "/api/host-registration/confirm";
+        }
+
+        public static class HostCheckins
+        {
+            public const string CheckIn = "/api/host-checkin/checkin";
+        }
+
+        public static class WeaverWork
+        {
+            public const string UpdateStatus = "/api/weaver/work/status";
         }
     }
 }

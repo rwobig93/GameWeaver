@@ -96,20 +96,20 @@ public partial class UserView
     private async Task GetPermissions()
     {
         _currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canEditUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Edit);
-        _canDisableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Disable);
-        _canEnableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Enable);
-        _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.View);
-        _canAddRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Add);
-        _canRemoveRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Remove);
-        _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
-        _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
-        _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
-        _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.ViewExtAttrs);
-        _canAdminEmail = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.AdminEmail);
+        _canEditUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.Edit);
+        _canDisableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.Disable);
+        _canEnableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.Enable);
+        _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Roles.View);
+        _canAddRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Roles.Add);
+        _canRemoveRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Roles.Remove);
+        _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Permissions.View);
+        _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Permissions.Add);
+        _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Permissions.Remove);
+        _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.ViewExtAttrs);
+        _canAdminEmail = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.AdminEmail);
         if (_viewingUser.AccountType != AccountType.Service) return;
         
-        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.ServiceAccounts.Admin);
+        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.ServiceAccounts.Admin);
         if (_canAdminServiceAccount) return;
 
         // If not a service account admin check if the user has a dynamic permission to administrate this service account

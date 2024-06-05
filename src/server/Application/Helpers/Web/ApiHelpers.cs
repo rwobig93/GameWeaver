@@ -55,4 +55,12 @@ public static class ApiHelpers
     {
         return (pageNumber + 1) * pageSize < totalCount ? baseUrl.GetPaginatedUrl(endpoint, pageNumber + 1, pageSize) : null;
     }
+    
+    public static string ToFullUrl(this string uri, string hostOrigin)
+    {
+        if (hostOrigin.EndsWith('/'))
+            hostOrigin = hostOrigin[..^1];
+        
+        return string.Concat(hostOrigin, uri);
+    }
 }

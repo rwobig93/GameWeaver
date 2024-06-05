@@ -35,8 +35,8 @@ public partial class RolePermissionDialog
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
-        _canRemovePermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Remove);
-        _canAddPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Add);
+        _canRemovePermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Permissions.Remove);
+        _canAddPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Permissions.Add);
     }
 
     private async Task GetPermissionLists()

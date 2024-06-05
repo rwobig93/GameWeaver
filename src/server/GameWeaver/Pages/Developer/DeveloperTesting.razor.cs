@@ -314,8 +314,8 @@ public partial class DeveloperTesting : IAsyncDisposable
     private async Task GetPermissions()
     {
         var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
-        _isContributor = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Developer.Contributor);
-        _isTester = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Developer.Tester);
+        _isContributor = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.AppDevelopment.Contributor);
+        _isTester = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.AppDevelopment.Tester);
     }
 
     private async Task UpdateLoggedInUser()

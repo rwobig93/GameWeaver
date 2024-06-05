@@ -34,30 +34,30 @@ public static class GameEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Game.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Game.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Game.Search, Search).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetAllDevelopersPaginated, GetAllDevelopersPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetDevelopersCount, GetDevelopersCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetDeveloperById, GetDeveloperById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetDeveloperByName, GetDeveloperByName).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetDevelopersByGameId, GetDevelopersByGameId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Game.CreateDeveloper, CreateDeveloper).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Game.DeleteDeveloper, DeleteDeveloper).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.SearchDevelopers, SearchDevelopers).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetAllPublishersPaginated, GetAllPublishersPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetPublishersCount, GetPublishersCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetPublisherById, GetPublisherById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetPublisherByName, GetPublisherByName).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetPublishersByGameId, GetPublishersByGameId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Game.CreatePublisher, CreatePublisher).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Game.DeletePublisher, DeletePublisher).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.SearchPublishers, SearchPublishers).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetAllGameGenresPaginated, GetAllGameGenresPaginated).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetGameGenresCount, GetGameGenresCount).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetGameGenreById, GetGameGenreById).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetGameGenreByName, GetGameGenreByName).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.GetGameGenresByGameId, GetGameGenresByGameId).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Game.CreateGameGenre, CreateGameGenre).ApiVersionOne();
-        app.MapDelete(ApiRouteConstants.GameServer.Game.DeleteGameGenre, DeleteGameGenre).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Game.SearchGameGenres, SearchGameGenres).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Developer.GetAll, GetAllDevelopersPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Developer.GetCount, GetDevelopersCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Developer.GetById, GetDeveloperById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Developer.GetByName, GetDeveloperByName).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Developer.GetByGameId, GetDevelopersByGameId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Developer.Create, CreateDeveloper).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.Developer.Delete, DeleteDeveloper).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Developer.Search, SearchDevelopers).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Publisher.GetAll, GetAllPublishersPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Publisher.GetCount, GetPublishersCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Publisher.GetById, GetPublisherById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Publisher.GetByName, GetPublisherByName).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Publisher.GetByGameId, GetPublishersByGameId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Publisher.Create, CreatePublisher).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.Publisher.Delete, DeletePublisher).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Publisher.Search, SearchPublishers).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameGenre.GetAll, GetAllGameGenresPaginated).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameGenre.GetCount, GetGameGenresCount).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameGenre.GetById, GetGameGenreById).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameGenre.GetByName, GetGameGenreByName).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameGenre.GetByGameId, GetGameGenresByGameId).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.GameGenre.Create, CreateGameGenre).ApiVersionOne();
+        app.MapDelete(ApiRouteConstants.GameServer.GameGenre.Delete, DeleteGameGenre).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.GameGenre.Search, SearchGameGenres).ApiVersionOne();
     }
     
     /// <summary>
@@ -68,7 +68,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of games</returns>
-    [Authorize(PermissionConstants.Game.GetAllPaginated)]
+    [Authorize(PermissionConstants.GameServer.Game.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<GameSlim>>> GetAllPaginated(int pageNumber, int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
@@ -99,7 +99,7 @@ public static class GameEndpoints
     /// </summary>
     /// <param name="gameService"></param>
     /// <returns>Count of total games</returns>
-    [Authorize(PermissionConstants.Game.GetCount)]
+    [Authorize(PermissionConstants.GameServer.Game.GetCount)]
     private static async Task<IResult<int>> GetCount(IGameService gameService)
     {
         try
@@ -118,7 +118,7 @@ public static class GameEndpoints
     /// <param name="id">Game Id</param>
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
-    [Authorize(PermissionConstants.Game.Get)]
+    [Authorize(PermissionConstants.GameServer.Game.Get)]
     private static async Task<IResult<GameSlim>> GetById(Guid id, IGameService gameService)
     {
         try
@@ -137,7 +137,7 @@ public static class GameEndpoints
     /// <param name="steamName">Game steam name</param>
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
-    [Authorize(PermissionConstants.Game.Get)]
+    [Authorize(PermissionConstants.GameServer.Game.Get)]
     private static async Task<IResult<IEnumerable<GameSlim>>> GetBySteamName(string steamName, IGameService gameService)
     {
         try
@@ -156,7 +156,7 @@ public static class GameEndpoints
     /// <param name="friendlyName">Game friendly name</param>
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
-    [Authorize(PermissionConstants.Game.Get)]
+    [Authorize(PermissionConstants.GameServer.Game.Get)]
     private static async Task<IResult<GameSlim>> GetByFriendlyName(string friendlyName, IGameService gameService)
     {
         try
@@ -175,7 +175,7 @@ public static class GameEndpoints
     /// <param name="id">Game steam id</param>
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
-    [Authorize(PermissionConstants.Game.Get)]
+    [Authorize(PermissionConstants.GameServer.Game.Get)]
     private static async Task<IResult<GameSlim>> GetBySteamGameId(int id, IGameService gameService)
     {
         try
@@ -194,7 +194,7 @@ public static class GameEndpoints
     /// <param name="id">Game steam tool id</param>
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
-    [Authorize(PermissionConstants.Game.Get)]
+    [Authorize(PermissionConstants.GameServer.Game.Get)]
     private static async Task<IResult<GameSlim>> GetBySteamToolId(int id, IGameService gameService)
     {
         try
@@ -214,7 +214,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created game</returns>
-    [Authorize(PermissionConstants.Game.Create)]
+    [Authorize(PermissionConstants.GameServer.Game.Create)]
     private static async Task<IResult<Guid>> Create(GameCreateRequest request, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -235,7 +235,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Game.Update)]
+    [Authorize(PermissionConstants.GameServer.Game.Update)]
     private static async Task<IResult> Update(GameUpdateRequest request, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -256,7 +256,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Game.Delete)]
+    [Authorize(PermissionConstants.GameServer.Game.Delete)]
     private static async Task<IResult> Delete(Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -277,7 +277,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>List of games</returns>
     /// <remarks>Searches by: FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
-    [Authorize(PermissionConstants.Game.Search)]
+    [Authorize(PermissionConstants.GameServer.Game.Search)]
     private static async Task<IResult<IEnumerable<GameSlim>>> Search(string searchText, IGameService gameService)
     {
         try
@@ -298,7 +298,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of developers</returns>
-    [Authorize(PermissionConstants.Game.GetAllDevelopersPaginated)]
+    [Authorize(PermissionConstants.GameServer.Developer.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<DeveloperSlim>>> GetAllDevelopersPaginated(int pageNumber, int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
@@ -311,9 +311,9 @@ public static class GameEndpoints
                 return await Result<IEnumerable<DeveloperSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameService.GetDevelopersCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllDevelopersPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Developer.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllDevelopersPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Developer.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<DeveloperSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -329,7 +329,7 @@ public static class GameEndpoints
     /// </summary>
     /// <param name="gameService"></param>
     /// <returns>Count of total developers</returns>
-    [Authorize(PermissionConstants.Game.GetDevelopersCount)]
+    [Authorize(PermissionConstants.GameServer.Developer.GetCount)]
     private static async Task<IResult<int>> GetDevelopersCount(IGameService gameService)
     {
         try
@@ -348,7 +348,7 @@ public static class GameEndpoints
     /// <param name="id">Developer id</param>
     /// <param name="gameService"></param>
     /// <returns>Developer object</returns>
-    [Authorize(PermissionConstants.Game.GetDeveloper)]
+    [Authorize(PermissionConstants.GameServer.Developer.Get)]
     private static async Task<IResult<DeveloperSlim>> GetDeveloperById(Guid id, IGameService gameService)
     {
         try
@@ -367,7 +367,7 @@ public static class GameEndpoints
     /// <param name="name">Developer name</param>
     /// <param name="gameService"></param>
     /// <returns>Developer object</returns>
-    [Authorize(PermissionConstants.Game.GetDeveloper)]
+    [Authorize(PermissionConstants.GameServer.Developer.Get)]
     private static async Task<IResult<DeveloperSlim>> GetDeveloperByName(string name, IGameService gameService)
     {
         try
@@ -386,7 +386,7 @@ public static class GameEndpoints
     /// <param name="id">Game id</param>
     /// <param name="gameService"></param>
     /// <returns>List of developers</returns>
-    [Authorize(PermissionConstants.Game.GetDevelopers)]
+    [Authorize(PermissionConstants.GameServer.Developer.Get)]
     private static async Task<IResult<IEnumerable<DeveloperSlim>>> GetDevelopersByGameId(Guid id, IGameService gameService)
     {
         try
@@ -406,7 +406,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created developer</returns>
-    [Authorize(PermissionConstants.Game.CreateDeveloper)]
+    [Authorize(PermissionConstants.GameServer.Developer.Create)]
     private static async Task<IResult<Guid>> CreateDeveloper(DeveloperCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -427,7 +427,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Game.DeleteDeveloper)]
+    [Authorize(PermissionConstants.GameServer.Developer.Delete)]
     private static async Task<IResult> DeleteDeveloper(Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -447,7 +447,7 @@ public static class GameEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="gameService"></param>
     /// <returns>List of developers</returns>
-    [Authorize(PermissionConstants.Game.SearchDevelopers)]
+    [Authorize(PermissionConstants.GameServer.Developer.Search)]
     private static async Task<IResult<IEnumerable<DeveloperSlim>>> SearchDevelopers(string searchText, IGameService gameService)
     {
         try
@@ -468,7 +468,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of publishers</returns>
-    [Authorize(PermissionConstants.Game.GetAllPublishersPaginated)]
+    [Authorize(PermissionConstants.GameServer.Publisher.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<PublisherSlim>>> GetAllPublishersPaginated(int pageNumber, int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
@@ -481,9 +481,9 @@ public static class GameEndpoints
                 return await Result<IEnumerable<PublisherSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameService.GetPublishersCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllPublishersPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Publisher.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllPublishersPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Publisher.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<PublisherSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -499,7 +499,7 @@ public static class GameEndpoints
     /// </summary>
     /// <param name="gameService"></param>
     /// <returns>Count of total publishers</returns>
-    [Authorize(PermissionConstants.Game.GetPublishersCount)]
+    [Authorize(PermissionConstants.GameServer.Publisher.GetCount)]
     private static async Task<IResult<int>> GetPublishersCount(IGameService gameService)
     {
         try
@@ -518,7 +518,7 @@ public static class GameEndpoints
     /// <param name="id">Publisher id</param>
     /// <param name="gameService"></param>
     /// <returns>Publisher object</returns>
-    [Authorize(PermissionConstants.Game.GetPublisher)]
+    [Authorize(PermissionConstants.GameServer.Publisher.Get)]
     private static async Task<IResult<PublisherSlim>> GetPublisherById(Guid id, IGameService gameService)
     {
         try
@@ -537,7 +537,7 @@ public static class GameEndpoints
     /// <param name="name">Publisher name</param>
     /// <param name="gameService"></param>
     /// <returns>Publisher object</returns>
-    [Authorize(PermissionConstants.Game.GetPublisher)]
+    [Authorize(PermissionConstants.GameServer.Publisher.Get)]
     private static async Task<IResult<PublisherSlim>> GetPublisherByName(string name, IGameService gameService)
     {
         try
@@ -556,7 +556,7 @@ public static class GameEndpoints
     /// <param name="id">Game id</param>
     /// <param name="gameService"></param>
     /// <returns>List of publishers</returns>
-    [Authorize(PermissionConstants.Game.GetPublishers)]
+    [Authorize(PermissionConstants.GameServer.Publisher.Get)]
     private static async Task<IResult<IEnumerable<PublisherSlim>>> GetPublishersByGameId(Guid id, IGameService gameService)
     {
         try
@@ -576,7 +576,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created publisher</returns>
-    [Authorize(PermissionConstants.Game.CreatePublisher)]
+    [Authorize(PermissionConstants.GameServer.Publisher.Create)]
     private static async Task<IResult<Guid>> CreatePublisher(PublisherCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -597,7 +597,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Game.DeletePublisher)]
+    [Authorize(PermissionConstants.GameServer.Publisher.Delete)]
     private static async Task<IResult> DeletePublisher(Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -618,7 +618,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>List of publishers</returns>
     /// <remarks>Searches by: Name</remarks>
-    [Authorize(PermissionConstants.Game.SearchPublishers)]
+    [Authorize(PermissionConstants.GameServer.Publisher.Search)]
     private static async Task<IResult<IEnumerable<PublisherSlim>>> SearchPublishers(string searchText, IGameService gameService)
     {
         try
@@ -639,7 +639,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="appConfig"></param>
     /// <returns>List of game genres</returns>
-    [Authorize(PermissionConstants.Game.GetAllGameGenresPaginated)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<GameGenreSlim>>> GetAllGameGenresPaginated(int pageNumber, int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
@@ -652,9 +652,9 @@ public static class GameEndpoints
                 return await Result<IEnumerable<GameGenreSlim>>.FailAsync(result.Messages);
             
             var totalCountRequest = await gameService.GetGameGenresCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllGameGenresPaginated,
+            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameGenre.GetAll,
                 pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllGameGenresPaginated,
+            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameGenre.GetAll,
                 pageNumber, pageSize, totalCountRequest.Data);
             
             return await PaginatedResult<IEnumerable<GameGenreSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
@@ -670,7 +670,7 @@ public static class GameEndpoints
     /// </summary>
     /// <param name="gameService"></param>
     /// <returns>Count of total game genres</returns>
-    [Authorize(PermissionConstants.Game.GetGameGenresCount)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.GetCount)]
     private static async Task<IResult<int>> GetGameGenresCount(IGameService gameService)
     {
         try
@@ -689,7 +689,7 @@ public static class GameEndpoints
     /// <param name="id">Game genre id</param>
     /// <param name="gameService"></param>
     /// <returns>Game genre object</returns>
-    [Authorize(PermissionConstants.Game.GetGameGenre)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
     private static async Task<IResult<GameGenreSlim>> GetGameGenreById(Guid id, IGameService gameService)
     {
         try
@@ -708,7 +708,7 @@ public static class GameEndpoints
     /// <param name="name">Game genre name</param>
     /// <param name="gameService"></param>
     /// <returns>Game genre object</returns>
-    [Authorize(PermissionConstants.Game.GetGameGenre)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
     private static async Task<IResult<GameGenreSlim>> GetGameGenreByName(string name, IGameService gameService)
     {
         try
@@ -727,7 +727,7 @@ public static class GameEndpoints
     /// <param name="id">Game id</param>
     /// <param name="gameService"></param>
     /// <returns>List of game genres</returns>
-    [Authorize(PermissionConstants.Game.GetGameGenres)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
     private static async Task<IResult<IEnumerable<GameGenreSlim>>> GetGameGenresByGameId(Guid id, IGameService gameService)
     {
         try
@@ -747,7 +747,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created game genre</returns>
-    [Authorize(PermissionConstants.Game.CreateGameGenre)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.Create)]
     private static async Task<IResult<Guid>> CreateGameGenre(GameGenreCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -768,7 +768,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
-    [Authorize(PermissionConstants.Game.DeleteGameGenre)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.Delete)]
     private static async Task<IResult> DeleteGameGenre(Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
@@ -789,7 +789,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>List of game genres</returns>
     /// <remarks>Searches by: Name, Description</remarks>
-    [Authorize(PermissionConstants.Game.SearchGameGenres)]
+    [Authorize(PermissionConstants.GameServer.GameGenre.Search)]
     private static async Task<IResult<IEnumerable<GameGenreSlim>>> SearchGameGenres(string searchText, IGameService gameService)
     {
         try

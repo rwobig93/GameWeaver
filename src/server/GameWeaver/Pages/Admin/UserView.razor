@@ -3,7 +3,7 @@
 @using GameWeaver.Converters
 
 @attribute [Route(AppRouteConstants.Admin.UserView)]
-@attribute [Authorize(PermissionConstants.Users.View)]
+@attribute [Authorize(PermissionConstants.Identity.Users.View)]
 
 @if (_invalidDataProvided)
 {

@@ -90,14 +90,14 @@ public partial class RoleView
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
-        _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Add);
-        _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Remove);
-        _canEditRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Edit);
-        _canDeleteRole = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Delete);
-        _canViewPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.View);
-        _canAddPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Add);
-        _canRemovePermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Permissions.Remove);
-        _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Users.View);
+        _canAddRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Add);
+        _canRemoveRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Remove);
+        _canEditRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Edit);
+        _canDeleteRole = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Delete);
+        _canViewPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Permissions.View);
+        _canAddPermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Permissions.Add);
+        _canRemovePermissions = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Permissions.Remove);
+        _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.View);
     }
 
     private async Task Save()

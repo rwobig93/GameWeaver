@@ -584,25 +584,6 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResourceOnGameServer(System.Guid,System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
-            <summary>
-            Update the local resource for the game server on the host
-            </summary>
-            <param name="serverId">Game server id</param>
-            <param name="resourceId">Local resource id</param>
-            <param name="gameServerService"></param>
-            <param name="currentUserService"></param>
-            <returns></returns>
-        </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateAllLocalResourcesOnGameServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
-            <summary>
-            Update all local resources for the game server on the host
-            </summary>
-            <param name="serverId">Game server id</param>
-            <param name="gameServerService"></param>
-            <param name="currentUserService"></param>
-            <returns></returns>
-        </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.SearchLocalResource(System.String,Application.Services.GameServer.IGameServerService)">
             <summary>
             Search local resources by properties
@@ -832,6 +813,25 @@
             <param name="gameServerService"></param>
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateLocalResourceOnGameServer(System.Guid,System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update the local resource for the game server on the host
+            </summary>
+            <param name="serverId">Game server id</param>
+            <param name="resourceId">Local resource id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
+        </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.UpdateAllLocalResourcesOnGameServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+            <summary>
+            Update all local resources for the game server on the host
+            </summary>
+            <param name="serverId">Game server id</param>
+            <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
+            <returns></returns>
         </member>
         <member name="T:Application.Api.v1.GameServer.HostEndpoints">
             <summary>

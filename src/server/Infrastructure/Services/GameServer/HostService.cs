@@ -377,8 +377,8 @@ public class HostService : IHostService
             new(ClaimTypes.NameIdentifier, hostId.ToString()),
             new(ClaimTypes.Email, $"{hostId.ToString()}@host.game.weaver"),
             new(ClaimTypes.Name, $"{hostId.ToString()}@host.game.weaver"),
-            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.CheckIn),
-            new(ApplicationClaimTypes.Permission, PermissionConstants.Hosts.WorkUpdate)
+            new(ApplicationClaimTypes.Permission, PermissionConstants.GameServer.HostCheckins.CheckIn),
+            new(ApplicationClaimTypes.Permission, PermissionConstants.GameServer.WeaverWork.UpdateStatus)
         };
     }
 
