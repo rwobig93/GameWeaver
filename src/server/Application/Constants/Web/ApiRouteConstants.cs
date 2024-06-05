@@ -125,8 +125,8 @@ public static class ApiRouteConstants
             public const string GetById = "/api/weaver/work/id";
             public const string GetByStatus = "/api/weaver/works/status";
             public const string GetByType = "/api/weaver/works/type";
-            public const string GetWaiting = "/api/weaver/works/waiting";
-            public const string GetAllWaiting = "/api/weaver/works/waiting";
+            public const string GetWaitingForHost = "/api/weaver/works/waiting";
+            public const string GetAllWaitingForHost = "/api/weaver/works/waiting";
             public const string Create = "/api/weaver/work";
             public const string Update = "/api/weaver/work";
             public const string UpdateStatus = "/api/weaver/work/status";
