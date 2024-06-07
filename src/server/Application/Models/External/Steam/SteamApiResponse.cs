@@ -4,6 +4,6 @@ namespace Application.Models.External.Steam;
 
 public class SteamApiResponse
 {
-    public JsonElement data { get; set; }
-    public bool success { get; set; }
+    public JsonElement Data { get; set; }
+    public bool Success { get; set; }
 }

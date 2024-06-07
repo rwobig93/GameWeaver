@@ -22,25 +22,31 @@ public class SteamApiService : ISteamApiService
         _serializerService = serializerService;
     }
 
-    public async Task<IResult<SteamAppList>> GetAllApps()
+    public async Task<IResult<IEnumerable<SteamApiApp>>> GetAllApps()
     {
-        var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiUnauthenticated);
-        var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppList);
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            return await Result<SteamAppList>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiComUnauthenticated);
+            var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppList);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await Result<IEnumerable<SteamApiApp>>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
+            }
+
+            var convertedResponse = _serializerService.DeserializeJson<SteamApiAppListResponse>(await response.Content.ReadAsStringAsync());
+            return await Result<IEnumerable<SteamApiApp>>.SuccessAsync(convertedResponse.AppList.Apps);
         }
-
-        var convertedResponse = _serializerService.DeserializeJson<SteamApiResponse>(await response.Content.ReadAsStringAsync());
-
-        return await Result<SteamAppList>.FailAsync();
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<SteamApiApp>>.FailAsync($"SteamApiAppList Error: {ex.Message}");
+        }
     }
 
     public async Task<IResult<SteamAppInfo?>> GetCurrentAppBuild(int appId)
     {
         try
         {
-            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiUnauthenticated);
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiNetUnauthenticated);
             var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppInfo(appId));
             if (!response.IsSuccessStatusCode)
             {
@@ -49,7 +55,7 @@ public class SteamApiService : ISteamApiService
             
             var convertedResponse = _serializerService.DeserializeJson<SteamApiResponse>(await response.Content.ReadAsStringAsync());
 
-            var appIdRoot = convertedResponse.data.GetNestedValue(appId.ToString());
+            var appIdRoot = convertedResponse.Data.GetNestedValue(appId.ToString());
             if (appIdRoot is null)
             {
                 return await Result<SteamAppInfo?>.FailAsync($"App Id '{appId}' doesn't exist in the data payload");

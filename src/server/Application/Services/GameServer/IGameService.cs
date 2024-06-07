@@ -13,11 +13,11 @@ public interface IGameService
     Task<IResult<IEnumerable<GameSlim>>> GetAllAsync();
     Task<IResult<IEnumerable<GameSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
-    Task<IResult<GameSlim>> GetByIdAsync(Guid id);
+    Task<IResult<GameSlim?>> GetByIdAsync(Guid id);
     Task<IResult<IEnumerable<GameSlim>>> GetBySteamNameAsync(string steamName);
-    Task<IResult<GameSlim>> GetByFriendlyNameAsync(string friendlyName);
-    Task<IResult<GameSlim>> GetBySteamGameIdAsync(int id);
-    Task<IResult<GameSlim>> GetBySteamToolIdAsync(int id);
+    Task<IResult<GameSlim?>> GetByFriendlyNameAsync(string friendlyName);
+    Task<IResult<GameSlim?>> GetBySteamGameIdAsync(int id);
+    Task<IResult<GameSlim?>> GetBySteamToolIdAsync(int id);
     Task<IResult<Guid>> CreateAsync(GameCreateRequest request, Guid requestUserId);
     Task<IResult> UpdateAsync(GameUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId);
@@ -26,8 +26,8 @@ public interface IGameService
     Task<IResult<IEnumerable<DeveloperSlim>>> GetAllDevelopersAsync();
     Task<IResult<IEnumerable<DeveloperSlim>>> GetAllDevelopersPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetDevelopersCountAsync();
-    Task<IResult<DeveloperSlim>> GetDeveloperByIdAsync(Guid id);
-    Task<IResult<DeveloperSlim>> GetDeveloperByNameAsync(string name);
+    Task<IResult<DeveloperSlim?>> GetDeveloperByIdAsync(Guid id);
+    Task<IResult<DeveloperSlim?>> GetDeveloperByNameAsync(string name);
     Task<IResult<IEnumerable<DeveloperSlim>>> GetDevelopersByGameIdAsync(Guid id);
     Task<IResult<Guid>> CreateDeveloperAsync(DeveloperCreate request, Guid requestUserId);
     Task<IResult> DeleteDeveloperAsync(Guid id, Guid requestUserId);
@@ -36,8 +36,8 @@ public interface IGameService
     Task<IResult<IEnumerable<PublisherSlim>>> GetAllPublishersAsync();
     Task<IResult<IEnumerable<PublisherSlim>>> GetAllPublishersPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetPublishersCountAsync();
-    Task<IResult<PublisherSlim>> GetPublisherByIdAsync(Guid id);
-    Task<IResult<PublisherSlim>> GetPublisherByNameAsync(string name);
+    Task<IResult<PublisherSlim?>> GetPublisherByIdAsync(Guid id);
+    Task<IResult<PublisherSlim?>> GetPublisherByNameAsync(string name);
     Task<IResult<IEnumerable<PublisherSlim>>> GetPublishersByGameIdAsync(Guid id);
     Task<IResult<Guid>> CreatePublisherAsync(PublisherCreate request, Guid requestUserId);
     Task<IResult> DeletePublisherAsync(Guid id, Guid requestUserId);
@@ -46,8 +46,8 @@ public interface IGameService
     Task<IResult<IEnumerable<GameGenreSlim>>> GetAllGameGenresAsync();
     Task<IResult<IEnumerable<GameGenreSlim>>> GetAllGameGenresPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetGameGenresCountAsync();
-    Task<IResult<GameGenreSlim>> GetGameGenreByIdAsync(Guid id);
-    Task<IResult<GameGenreSlim>> GetGameGenreByNameAsync(string name);
+    Task<IResult<GameGenreSlim?>> GetGameGenreByIdAsync(Guid id);
+    Task<IResult<GameGenreSlim?>> GetGameGenreByNameAsync(string name);
     Task<IResult<IEnumerable<GameGenreSlim>>> GetGameGenresByGameIdAsync(Guid id);
     Task<IResult<Guid>> CreateGameGenreAsync(GameGenreCreate createObject, Guid requestUserId);
     Task<IResult> DeleteGameGenreAsync(Guid id, Guid requestUserId);

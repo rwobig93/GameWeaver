@@ -62,7 +62,9 @@ public class JobManager : IJobManager
         {
             var auditCleanup = await _auditService.DeleteOld(_lifecycleConfig.AuditLogLifetime);
             if (!auditCleanup.Succeeded)
+            {
                 _logger.Error("Audit cleanup failed: {Error}", auditCleanup.Messages);
+            }
             
             // TODO: Cleanup host registrations and their hosts if not registered after 24 hours by default, should be configurable
             
@@ -141,7 +143,7 @@ public class JobManager : IJobManager
             try
             {
                 var foundGame = await _gameService.GetByIdAsync(gameId);
-                if (!foundGame.Succeeded)
+                if (foundGame.Data is null)
                 {
                     _logger.Error("Failed to find game pulled from game server list: {GameId}", gameId);
                     continue;
@@ -205,5 +207,37 @@ public class JobManager : IJobManager
         }
         
         _logger.Debug("Finished game version check job");
+    }
+
+    public async Task DailySteamSync()
+    {
+        var allSteamApps = await _steamApiService.GetAllApps();
+        if (!allSteamApps.Succeeded)
+        {
+            _logger.Error("Failed to get all steam apps from the Steam API: {Error}", allSteamApps.Messages);
+            return;
+        }
+        
+        // TODO: Make filter terms configurable
+        var serverApps = allSteamApps.Data.Where(x => x.Name.Contains("server", StringComparison.CurrentCultureIgnoreCase));
+        foreach (var serverApp in serverApps)
+        {
+            var matchingGame = await _gameService.GetBySteamToolIdAsync(serverApp.AppId);
+            if (matchingGame.Data is not null)
+            {
+                _logger.Verbose("Found matching game with tool id from steam: [{ToolId}]{GameName} => {GameId}",
+                    matchingGame.Data.SteamToolId, matchingGame.Data.SteamName, matchingGame.Data.Id);
+                continue;
+            }
+
+            var createdGame = await _gameService.CreateAsync(new GameCreateRequest
+            {
+                Name = serverApp.Name,
+                SteamToolId = serverApp.AppId
+            }, _serverState.SystemUserId);
+            
+            _logger.Information("Created missing server app from steam: [{ToolId}]{GameName} => {GameId}",
+                serverApp.AppId, serverApp.Name, createdGame.Data);
+        }
     }
 }

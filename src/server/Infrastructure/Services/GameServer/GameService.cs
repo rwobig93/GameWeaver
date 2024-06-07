@@ -65,15 +65,15 @@ public class GameService : IGameService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<GameSlim>> GetByIdAsync(Guid id)
+    public async Task<IResult<GameSlim?>> GetByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetByIdAsync(id);
         if (request.Result is null)
         {
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+            return await Result<GameSlim?>.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
 
-        return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<GameSlim>>> GetBySteamNameAsync(string steamName)
@@ -85,37 +85,37 @@ public class GameService : IGameService
         return await Result<IEnumerable<GameSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameSlim>());
     }
 
-    public async Task<IResult<GameSlim>> GetByFriendlyNameAsync(string friendlyName)
+    public async Task<IResult<GameSlim?>> GetByFriendlyNameAsync(string friendlyName)
     {
         var request = await _gameRepository.GetByFriendlyNameAsync(friendlyName);
         if (request.Result is null)
         {
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+            return await Result<GameSlim?>.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
 
-        return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<GameSlim>> GetBySteamGameIdAsync(int id)
+    public async Task<IResult<GameSlim?>> GetBySteamGameIdAsync(int id)
     {
         var request = await _gameRepository.GetBySteamGameIdAsync(id);
         if (request.Result is null)
         {
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+            return await Result<GameSlim?>.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
 
-        return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<GameSlim>> GetBySteamToolIdAsync(int id)
+    public async Task<IResult<GameSlim?>> GetBySteamToolIdAsync(int id)
     {
         var request = await _gameRepository.GetBySteamToolIdAsync(id);
         if (request.Result is null)
         {
-            return await Result<GameSlim>.FailAsync(ErrorMessageConstants.Games.NotFound);
+            return await Result<GameSlim?>.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
 
-        return await Result<GameSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<Guid>> CreateAsync(GameCreateRequest request, Guid requestUserId)
@@ -325,26 +325,26 @@ public class GameService : IGameService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<DeveloperSlim>> GetDeveloperByIdAsync(Guid id)
+    public async Task<IResult<DeveloperSlim?>> GetDeveloperByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetDeveloperByIdAsync(id);
         if (request.Result is null)
         {
-            return await Result<DeveloperSlim>.FailAsync(ErrorMessageConstants.Developers.NotFound);
+            return await Result<DeveloperSlim?>.FailAsync(ErrorMessageConstants.Developers.NotFound);
         }
 
-        return await Result<DeveloperSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<DeveloperSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<DeveloperSlim>> GetDeveloperByNameAsync(string name)
+    public async Task<IResult<DeveloperSlim?>> GetDeveloperByNameAsync(string name)
     {
         var request = await _gameRepository.GetDeveloperByNameAsync(name);
         if (request.Result is null)
         {
-            return await Result<DeveloperSlim>.FailAsync(ErrorMessageConstants.Developers.NotFound);
+            return await Result<DeveloperSlim?>.FailAsync(ErrorMessageConstants.Developers.NotFound);
         }
 
-        return await Result<DeveloperSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<DeveloperSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<DeveloperSlim>>> GetDevelopersByGameIdAsync(Guid id)
@@ -446,26 +446,26 @@ public class GameService : IGameService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<PublisherSlim>> GetPublisherByIdAsync(Guid id)
+    public async Task<IResult<PublisherSlim?>> GetPublisherByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetPublisherByIdAsync(id);
         if (request.Result is null)
         {
-            return await Result<PublisherSlim>.FailAsync(ErrorMessageConstants.Publishers.NotFound);
+            return await Result<PublisherSlim?>.FailAsync(ErrorMessageConstants.Publishers.NotFound);
         }
 
-        return await Result<PublisherSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<PublisherSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<PublisherSlim>> GetPublisherByNameAsync(string name)
+    public async Task<IResult<PublisherSlim?>> GetPublisherByNameAsync(string name)
     {
         var request = await _gameRepository.GetPublisherByNameAsync(name);
         if (request.Result is null)
         {
-            return await Result<PublisherSlim>.FailAsync(ErrorMessageConstants.Publishers.NotFound);
+            return await Result<PublisherSlim?>.FailAsync(ErrorMessageConstants.Publishers.NotFound);
         }
 
-        return await Result<PublisherSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<PublisherSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<PublisherSlim>>> GetPublishersByGameIdAsync(Guid id)
@@ -567,26 +567,26 @@ public class GameService : IGameService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<GameGenreSlim>> GetGameGenreByIdAsync(Guid id)
+    public async Task<IResult<GameGenreSlim?>> GetGameGenreByIdAsync(Guid id)
     {
         var request = await _gameRepository.GetGameGenreByIdAsync(id);
         if (request.Result is null)
         {
-            return await Result<GameGenreSlim>.FailAsync(ErrorMessageConstants.GameGenres.NotFound);
+            return await Result<GameGenreSlim?>.FailAsync(ErrorMessageConstants.GameGenres.NotFound);
         }
 
-        return await Result<GameGenreSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameGenreSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<GameGenreSlim>> GetGameGenreByNameAsync(string name)
+    public async Task<IResult<GameGenreSlim?>> GetGameGenreByNameAsync(string name)
     {
         var request = await _gameRepository.GetGameGenreByNameAsync(name);
         if (request.Result is null)
         {
-            return await Result<GameGenreSlim>.FailAsync(ErrorMessageConstants.GameGenres.NotFound);
+            return await Result<GameGenreSlim?>.FailAsync(ErrorMessageConstants.GameGenres.NotFound);
         }
 
-        return await Result<GameGenreSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameGenreSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<GameGenreSlim>>> GetGameGenresByGameIdAsync(Guid id)
