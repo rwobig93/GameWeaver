@@ -199,14 +199,10 @@ public static class WebServerConfiguration
         var hangfireJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
         var jobManager = scope.ServiceProvider.GetRequiredService<IJobManager>();
         
-        hangfireJobs.AddOrUpdate("UserHousekeeping", () =>
-            jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
-        
-        hangfireJobs.AddOrUpdate("DailyCleanup", () =>
-            jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
-        
-        hangfireJobs.AddOrUpdate("GameVersionCheck", () =>
-            jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));
+        hangfireJobs.AddOrUpdate("UserHousekeeping", () => jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
+        hangfireJobs.AddOrUpdate("DailySystemCleanup", () => jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
+        hangfireJobs.AddOrUpdate("GameVersionCheck", () => jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));
+        hangfireJobs.AddOrUpdate("DailySteamSync", () => jobManager.DailySteamSync(), JobHelpers.CronString.Daily);
         
         // TODO: Add job for monitoring / checking on game server status and host status
     }

@@ -1,4 +1,5 @@
-﻿using Application.Models.GameServer.GameUpdate;
+﻿using Application.Helpers.GameServer;
+using Application.Models.GameServer.GameUpdate;
 using Application.Repositories.Identity;
 using Application.Requests.GameServer.Game;
 using Application.Services.External;
@@ -230,14 +231,32 @@ public class JobManager : IJobManager
                 continue;
             }
 
-            var createdGame = await _gameService.CreateAsync(new GameCreateRequest
+            var serverAppNameSanitized = serverApp.Name.SanitizeFromSteam();
+            var baseGame = allSteamApps.Data.FirstOrDefault(x => x.Name.Contains(serverAppNameSanitized));
+
+            var gameCreate = await _gameService.CreateAsync(new GameCreateRequest
             {
-                Name = serverApp.Name,
+                Name = serverAppNameSanitized,
+                SteamGameId = baseGame?.AppId ?? 0,
                 SteamToolId = serverApp.AppId
             }, _serverState.SystemUserId);
+            if (!gameCreate.Succeeded)
+            {
+                _logger.Error("Failed to create server app game from steam: [{ToolId}]{Error}", serverApp.AppId, gameCreate.Messages);
+                continue;
+            }
             
             _logger.Information("Created missing server app from steam: [{ToolId}]{GameName} => {GameId}",
-                serverApp.AppId, serverApp.Name, createdGame.Data);
+                serverApp.AppId, serverApp.Name, gameCreate.Data);
+
+            if (baseGame is null)
+            {
+                _logger.Warning("Unable to find base game for server app from steam: [{ToolId}]{GameName} => {GameId}",
+                    serverApp.AppId, serverApp.Name, gameCreate.Data);
+                continue;
+            }
+            
+            // TODO: Get base game details then enrich new game: https://store.steampowered.com/api/appdetails?appids=443030
         }
     }
 }
