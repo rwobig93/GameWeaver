@@ -18,7 +18,6 @@ using Application.Requests.GameServer.GameServer;
 using Application.Requests.GameServer.Host;
 using Application.Services.External;
 using Application.Services.GameServer;
-using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
 using GameWeaver.Helpers;
 
@@ -26,8 +25,6 @@ namespace GameWeaver.Pages.Developer;
 
 public partial class DeveloperTesting : IAsyncDisposable
 {
-    [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private INetworkService NetworkService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IGameService GameService { get; init; } = null!;
@@ -42,7 +39,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private string _serverIp = "";
-    private int _serverPort = 0;
+    private int _serverPort;
     private string _serverStatus = "";
     private NetworkProtocol _serverProtocol = NetworkProtocol.Tcp;
     private GameSource _serverSource = GameSource.Steam;
@@ -59,11 +56,11 @@ public partial class DeveloperTesting : IAsyncDisposable
     private HostCheckInFull? _latestHostCheckin;
     private bool _workInProgress;
     private SteamAppInfo _steamAppInfo = new();
-    private ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
-    private ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
-    private List<ChartSeries> _cpuUsage = [];
-    private List<ChartSeries> _ramUsage = [];
-    private List<ChartSeries> _netUsage = [];
+    private readonly ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
+    private readonly ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
+    private readonly List<ChartSeries> _cpuUsage = [];
+    private readonly List<ChartSeries> _ramUsage = [];
+    private readonly List<ChartSeries> _netUsage = [];
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -235,12 +232,12 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
         
         var matchingGameRequest = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
-        if (matchingGameRequest.Succeeded)
+        if (matchingGameRequest.Data is not null)
         {
             _desiredGame.Id = matchingGameRequest.Data.Id;
         }
         
-        if (matchingGameRequest.Succeeded)
+        if (matchingGameRequest.Data is not null)
         {
             var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGameRequest.Data.DefaultGameProfileId);
             if (matchingProfile.Succeeded)
@@ -395,7 +392,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         };
         
         var matchingGameRequest = await GameService.GetBySteamToolIdAsync(gameCreate.SteamToolId);
-        if (matchingGameRequest.Succeeded)
+        if (matchingGameRequest.Data is not null)
         {
             Snackbar.Add($"Found Game: [{matchingGameRequest.Data.Id}]{matchingGameRequest.Data.FriendlyName}");
             _desiredGame.Id = matchingGameRequest.Data.Id;
@@ -436,7 +433,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private async Task EnforceDefaultGameProfile()
     {
         var matchingGame = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
-        if (!matchingGame.Succeeded)
+        if (matchingGame.Data is null)
         {
             Snackbar.Add($"Game '{_desiredGame.FriendlyName}' wasn't found, please create it first", Severity.Error);
             return;
@@ -570,7 +567,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
         
         var matchingGame = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
-        if (!matchingGame.Succeeded)
+        if (matchingGame.Data is null)
         {
             Snackbar.Add($"Game '{_desiredGame.FriendlyName}' wasn't found, please create it first", Severity.Error);
             return;

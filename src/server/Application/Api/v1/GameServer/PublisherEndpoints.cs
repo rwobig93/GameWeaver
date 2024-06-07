@@ -88,7 +88,7 @@ public static class PublisherEndpoints
     /// <param name="gameService"></param>
     /// <returns>Publisher object</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.Get)]
-    private static async Task<IResult<PublisherSlim>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<PublisherSlim?>> GetById(Guid id, IGameService gameService)
     {
         try
         {
@@ -96,7 +96,7 @@ public static class PublisherEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<PublisherSlim>.FailAsync(ex.Message);
+            return await Result<PublisherSlim?>.FailAsync(ex.Message);
         }
     }
     
@@ -107,7 +107,7 @@ public static class PublisherEndpoints
     /// <param name="gameService"></param>
     /// <returns>Publisher object</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.Get)]
-    private static async Task<IResult<PublisherSlim>> GetByName(string name, IGameService gameService)
+    private static async Task<IResult<PublisherSlim?>> GetByName(string name, IGameService gameService)
     {
         try
         {
@@ -115,7 +115,7 @@ public static class PublisherEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<PublisherSlim>.FailAsync(ex.Message);
+            return await Result<PublisherSlim?>.FailAsync(ex.Message);
         }
     }
     

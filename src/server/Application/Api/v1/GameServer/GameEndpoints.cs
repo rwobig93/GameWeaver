@@ -1,10 +1,7 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
-using Application.Models.GameServer.GameGenre;
-using Application.Models.GameServer.Publishers;
 using Application.Requests.GameServer.Game;
 using Application.Services.GameServer;
 using Application.Services.Identity;
@@ -95,7 +92,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetById(Guid id, IGameService gameService)
     {
         try
         {
@@ -103,7 +100,7 @@ public static class GameEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameSlim>.FailAsync(ex.Message);
+            return await Result<GameSlim?>.FailAsync(ex.Message);
         }
     }
     
@@ -133,7 +130,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim>> GetByFriendlyName(string friendlyName, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetByFriendlyName(string friendlyName, IGameService gameService)
     {
         try
         {
@@ -141,7 +138,7 @@ public static class GameEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameSlim>.FailAsync(ex.Message);
+            return await Result<GameSlim?>.FailAsync(ex.Message);
         }
     }
     
@@ -152,7 +149,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim>> GetBySteamGameId(int id, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetBySteamGameId(int id, IGameService gameService)
     {
         try
         {
@@ -160,7 +157,7 @@ public static class GameEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameSlim>.FailAsync(ex.Message);
+            return await Result<GameSlim?>.FailAsync(ex.Message);
         }
     }
     
@@ -171,7 +168,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim>> GetBySteamToolId(int id, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetBySteamToolId(int id, IGameService gameService)
     {
         try
         {
@@ -179,7 +176,7 @@ public static class GameEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameSlim>.FailAsync(ex.Message);
+            return await Result<GameSlim?>.FailAsync(ex.Message);
         }
     }
 

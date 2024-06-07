@@ -88,7 +88,7 @@ public static class GameGenreEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game genre object</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
-    private static async Task<IResult<GameGenreSlim>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<GameGenreSlim?>> GetById(Guid id, IGameService gameService)
     {
         try
         {
@@ -96,7 +96,7 @@ public static class GameGenreEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameGenreSlim>.FailAsync(ex.Message);
+            return await Result<GameGenreSlim?>.FailAsync(ex.Message);
         }
     }
     
@@ -107,7 +107,7 @@ public static class GameGenreEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game genre object</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
-    private static async Task<IResult<GameGenreSlim>> GetByName(string name, IGameService gameService)
+    private static async Task<IResult<GameGenreSlim?>> GetByName(string name, IGameService gameService)
     {
         try
         {
@@ -115,7 +115,7 @@ public static class GameGenreEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameGenreSlim>.FailAsync(ex.Message);
+            return await Result<GameGenreSlim?>.FailAsync(ex.Message);
         }
     }
     

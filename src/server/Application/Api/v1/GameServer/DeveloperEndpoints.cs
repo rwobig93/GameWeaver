@@ -88,7 +88,7 @@ public static class DeveloperEndpoints
     /// <param name="gameService"></param>
     /// <returns>Developer object</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Get)]
-    private static async Task<IResult<DeveloperSlim>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<DeveloperSlim?>> GetById(Guid id, IGameService gameService)
     {
         try
         {
@@ -96,7 +96,7 @@ public static class DeveloperEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<DeveloperSlim>.FailAsync(ex.Message);
+            return await Result<DeveloperSlim?>.FailAsync(ex.Message);
         }
     }
     
@@ -107,7 +107,7 @@ public static class DeveloperEndpoints
     /// <param name="gameService"></param>
     /// <returns>Developer object</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Get)]
-    private static async Task<IResult<DeveloperSlim>> GetByName(string name, IGameService gameService)
+    private static async Task<IResult<DeveloperSlim?>> GetByName(string name, IGameService gameService)
     {
         try
         {
@@ -115,7 +115,7 @@ public static class DeveloperEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<DeveloperSlim>.FailAsync(ex.Message);
+            return await Result<DeveloperSlim?>.FailAsync(ex.Message);
         }
     }
     

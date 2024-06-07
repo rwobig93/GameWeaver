@@ -1,26 +1,16 @@
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Mappers.GameServer;
 using Application.Models.GameServer.Host;
-using Application.Models.GameServer.HostCheckIn;
-using Application.Models.GameServer.HostRegistration;
-using Application.Models.GameServer.WeaverWork;
 using Application.Requests.GameServer.Host;
-using Application.Requests.GameServer.WeaverWork;
 using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
-using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
-using Domain.Enums.GameServer;
-using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using HostCheckInRequest = Application.Requests.GameServer.Host.HostCheckInRequest;
 
 namespace Application.Api.v1.GameServer;
 
