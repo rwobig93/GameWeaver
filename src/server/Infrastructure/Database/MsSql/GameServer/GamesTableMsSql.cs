@@ -49,7 +49,10 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
                     [LastModifiedOn] datetime2 NULL,
                     [IsDeleted] BIT NOT NULL,
-                    [DeletedOn] datetime2 NULL
+                    [DeletedOn] datetime2 NULL,
+                    [SupportsWindows] int NOT NULL,
+                    [SupportsLinux] int NOT NULL,
+                    [SupportsMac] int NOT NULL
                 )
             end"
     };
@@ -218,19 +221,22 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @CreatedOn datetime2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
                 @LastModifiedOn datetime2,
-                @IsDeleted BIT
+                @IsDeleted BIT,
+                @SupportsWindows int,
+                @SupportsLinux int,
+                @SupportsMac int
             AS
             begin
                 INSERT into dbo.[{Table.TableName}]  (FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, LatestBuildVersion, UrlBackground, UrlLogo,
                                                       UrlLogoSmall, UrlWebsite, ControllerSupport, DescriptionShort, DescriptionLong, DescriptionAbout, PriceInitial, PriceCurrent,
                                                       PriceDiscount, MetaCriticScore, UrlMetaCriticPage, RequirementsPcMinimum, RequirementsPcRecommended, RequirementsMacMinimum,
                                                       RequirementsMacRecommended, RequirementsLinuxMinimum, RequirementsLinuxRecommended, CreatedBy, CreatedOn, LastModifiedBy,
-                                                      LastModifiedOn, IsDeleted)
+                                                      LastModifiedOn, IsDeleted, SupportsWindows, SupportsLinux, SupportsMac)
                 OUTPUT INSERTED.Id
                 VALUES (@FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @LatestBuildVersion, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
                         @ControllerSupport, @DescriptionShort, @DescriptionLong, @DescriptionAbout, @PriceInitial, @PriceCurrent, @PriceDiscount, @MetaCriticScore,
                         @UrlMetaCriticPage, @RequirementsPcMinimum, @RequirementsPcRecommended, @RequirementsMacMinimum, @RequirementsMacRecommended, @RequirementsLinuxMinimum,
-                        @RequirementsLinuxRecommended, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted);
+                        @RequirementsLinuxRecommended, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @SupportsWindows, @SupportsLinux, @SupportsMac);
             end"
     };
     
@@ -318,7 +324,10 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
                 @LastModifiedOn datetime2 = null,
                 @IsDeleted BIT = null,
-                @DeletedOn datetime2 = null
+                @DeletedOn datetime2 = null,
+                @SupportsWindows BIT = null,
+                @SupportsLinux BIT = null,
+                @SupportsMac BIT = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
@@ -338,7 +347,9 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     RequirementsLinuxMinimum = COALESCE(@RequirementsLinuxMinimum, RequirementsLinuxMinimum),
                     RequirementsLinuxRecommended = COALESCE(@RequirementsLinuxRecommended, RequirementsLinuxRecommended), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
                     CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
-                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
+                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
+                    SupportsWindows = COALESCE(@SupportsWindows, SupportsWindows), SupportsLinux = COALESCE(@SupportsLinux, SupportsLinux),
+                    SupportsMac = COALESCE(@SupportsMac, SupportsMac)
                 WHERE Id = @Id;
             end"
     };

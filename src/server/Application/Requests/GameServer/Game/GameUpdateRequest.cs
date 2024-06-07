@@ -15,4 +15,7 @@ public class GameUpdateRequest
     public string? DescriptionLong { get; set; }
     public string? DescriptionAbout { get; set; }
     public string? UrlMetaCriticPage { get; set; }
+    public bool? SupportsWindows { get; set; }
+    public bool? SupportsLinux { get; set; }
+    public bool? SupportsMac { get; set; }
 }

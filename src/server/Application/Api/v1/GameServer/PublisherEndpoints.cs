@@ -7,6 +7,7 @@ using Application.Services.Identity;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Application.Api.v1.GameServer;
@@ -38,7 +39,7 @@ public static class PublisherEndpoints
     /// <param name="appConfig"></param>
     /// <returns>List of publishers</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.GetAllPaginated)]
-    private static async Task<IResult<IEnumerable<PublisherSlim>>> GetAllPaginated(int pageNumber, int pageSize, IGameService gameService,
+    private static async Task<IResult<IEnumerable<PublisherSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
         try
@@ -88,7 +89,7 @@ public static class PublisherEndpoints
     /// <param name="gameService"></param>
     /// <returns>Publisher object</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.Get)]
-    private static async Task<IResult<PublisherSlim?>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<PublisherSlim?>> GetById([FromQuery]Guid id, IGameService gameService)
     {
         try
         {
@@ -107,7 +108,7 @@ public static class PublisherEndpoints
     /// <param name="gameService"></param>
     /// <returns>Publisher object</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.Get)]
-    private static async Task<IResult<PublisherSlim?>> GetByName(string name, IGameService gameService)
+    private static async Task<IResult<PublisherSlim?>> GetByName([FromQuery]string name, IGameService gameService)
     {
         try
         {
@@ -126,7 +127,7 @@ public static class PublisherEndpoints
     /// <param name="gameService"></param>
     /// <returns>List of publishers</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.Get)]
-    private static async Task<IResult<IEnumerable<PublisherSlim>>> GetByGameId(Guid id, IGameService gameService)
+    private static async Task<IResult<IEnumerable<PublisherSlim>>> GetByGameId([FromQuery]Guid id, IGameService gameService)
     {
         try
         {
@@ -146,7 +147,7 @@ public static class PublisherEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created publisher</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.Create)]
-    private static async Task<IResult<Guid>> Create(PublisherCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult<Guid>> Create([FromBody]PublisherCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -167,7 +168,7 @@ public static class PublisherEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.Publisher.Delete)]
-    private static async Task<IResult> Delete(Guid id, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult> Delete([FromQuery]Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -188,7 +189,7 @@ public static class PublisherEndpoints
     /// <returns>List of publishers</returns>
     /// <remarks>Searches by: Name</remarks>
     [Authorize(PermissionConstants.GameServer.Publisher.Search)]
-    private static async Task<IResult<IEnumerable<PublisherSlim>>> Search(string searchText, IGameService gameService)
+    private static async Task<IResult<IEnumerable<PublisherSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {
         try
         {

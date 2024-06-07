@@ -38,6 +38,9 @@ public class GameFull
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
+    public bool SupportsWindows { get; set; }
+    public bool SupportsLinux { get; set; }
+    public bool SupportsMac { get; set; }
     public List<GameGenreSlim> Genres { get; set; } = [];
     public List<PublisherSlim> Publishers { get; set; } = [];
     public List<DeveloperSlim> Developers { get; set; } = [];

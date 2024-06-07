@@ -6,4 +6,7 @@ public class GameCreateRequest
     public string Description { get; set; } = "";
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
+    public bool SupportsWindows { get; set; }
+    public bool SupportsLinux { get; set; }
+    public bool SupportsMac { get; set; }
 }

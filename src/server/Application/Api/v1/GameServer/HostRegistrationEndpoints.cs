@@ -41,7 +41,7 @@ public static class HostRegistrationEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Host ID, Key and full registration confirmation URI for the new host to complete registration</returns>
     [Authorize(PermissionConstants.GameServer.HostRegistration.Create)]
-    private static async Task<IResult<HostNewRegisterResponse>> Create(HostRegistrationCreateRequest request, IHostService hostService,
+    private static async Task<IResult<HostNewRegisterResponse>> Create([FromBody]HostRegistrationCreateRequest request, IHostService hostService,
         ICurrentUserService currentUserService)
     {
         try
@@ -63,7 +63,7 @@ public static class HostRegistrationEndpoints
     /// <param name="context"></param>
     /// <returns>Host ID and Host Token for use when authenticating the host</returns>
     [AllowAnonymous]
-    private static async Task<IResult<HostRegisterResponse>> Confirm(HostRegistrationConfirmRequest request, IHostService hostService, HttpContext context)
+    private static async Task<IResult<HostRegisterResponse>> Confirm([FromBody]HostRegistrationConfirmRequest request, IHostService hostService, HttpContext context)
     {
         try
         {

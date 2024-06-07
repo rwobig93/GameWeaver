@@ -8,6 +8,7 @@ using Application.Services.Identity;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Application.Api.v1.GameServer;
@@ -42,7 +43,7 @@ public static class GameEndpoints
     /// <param name="appConfig"></param>
     /// <returns>List of games</returns>
     [Authorize(PermissionConstants.GameServer.Game.GetAllPaginated)]
-    private static async Task<IResult<IEnumerable<GameSlim>>> GetAllPaginated(int pageNumber, int pageSize, IGameService gameService,
+    private static async Task<IResult<IEnumerable<GameSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
         try
@@ -92,7 +93,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim?>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetById([FromQuery]Guid id, IGameService gameService)
     {
         try
         {
@@ -111,7 +112,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<IEnumerable<GameSlim>>> GetBySteamName(string steamName, IGameService gameService)
+    private static async Task<IResult<IEnumerable<GameSlim>>> GetBySteamName([FromQuery]string steamName, IGameService gameService)
     {
         try
         {
@@ -130,7 +131,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim?>> GetByFriendlyName(string friendlyName, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetByFriendlyName([FromQuery]string friendlyName, IGameService gameService)
     {
         try
         {
@@ -149,7 +150,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim?>> GetBySteamGameId(int id, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetBySteamGameId([FromQuery]int id, IGameService gameService)
     {
         try
         {
@@ -168,7 +169,7 @@ public static class GameEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game object</returns>
     [Authorize(PermissionConstants.GameServer.Game.Get)]
-    private static async Task<IResult<GameSlim?>> GetBySteamToolId(int id, IGameService gameService)
+    private static async Task<IResult<GameSlim?>> GetBySteamToolId([FromQuery]int id, IGameService gameService)
     {
         try
         {
@@ -188,7 +189,7 @@ public static class GameEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created game</returns>
     [Authorize(PermissionConstants.GameServer.Game.Create)]
-    private static async Task<IResult<Guid>> Create(GameCreateRequest request, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult<Guid>> Create([FromBody]GameCreateRequest request, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -209,7 +210,7 @@ public static class GameEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.Game.Update)]
-    private static async Task<IResult> Update(GameUpdateRequest request, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult> Update([FromBody]GameUpdateRequest request, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -230,7 +231,7 @@ public static class GameEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.Game.Delete)]
-    private static async Task<IResult> Delete(Guid id, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult> Delete([FromQuery]Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -251,7 +252,7 @@ public static class GameEndpoints
     /// <returns>List of games</returns>
     /// <remarks>Searches by: FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
     [Authorize(PermissionConstants.GameServer.Game.Search)]
-    private static async Task<IResult<IEnumerable<GameSlim>>> Search(string searchText, IGameService gameService)
+    private static async Task<IResult<IEnumerable<GameSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {
         try
         {

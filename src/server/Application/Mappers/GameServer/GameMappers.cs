@@ -36,7 +36,10 @@ public static class GameMappers
             RequirementsMacMinimum = gameDb.RequirementsMacMinimum,
             RequirementsMacRecommended = gameDb.RequirementsMacRecommended,
             RequirementsLinuxMinimum = gameDb.RequirementsLinuxMinimum,
-            RequirementsLinuxRecommended = gameDb.RequirementsLinuxRecommended
+            RequirementsLinuxRecommended = gameDb.RequirementsLinuxRecommended,
+            SupportsWindows = gameDb.SupportsWindows,
+            SupportsLinux = gameDb.SupportsLinux,
+            SupportsMac = gameDb.SupportsMac
         };
     }
     
@@ -78,7 +81,10 @@ public static class GameMappers
             CreatedBy = gameDb.CreatedBy,
             CreatedOn = gameDb.CreatedOn,
             LastModifiedBy = gameDb.LastModifiedBy,
-            LastModifiedOn = gameDb.LastModifiedOn
+            LastModifiedOn = gameDb.LastModifiedOn,
+            SupportsWindows = gameDb.SupportsWindows,
+            SupportsLinux = gameDb.SupportsLinux,
+            SupportsMac = gameDb.SupportsMac
         };
     }
 
@@ -116,6 +122,9 @@ public static class GameMappers
             CreatedOn = gameDb.CreatedOn,
             LastModifiedBy = gameDb.LastModifiedBy,
             LastModifiedOn = gameDb.LastModifiedOn,
+            SupportsWindows = gameDb.SupportsWindows,
+            SupportsLinux = gameDb.SupportsLinux,
+            SupportsMac = gameDb.SupportsMac,
             Genres = [],
             Publishers = [],
             Developers = []
@@ -129,7 +138,10 @@ public static class GameMappers
             FriendlyName = request.Name,
             SteamGameId = request.SteamGameId,
             SteamToolId = request.SteamToolId,
-            DescriptionShort = request.Description
+            DescriptionShort = request.Description,
+            SupportsWindows = request.SupportsWindows,
+            SupportsLinux = request.SupportsLinux,
+            SupportsMac = request.SupportsMac
         };
     }
 
@@ -149,7 +161,10 @@ public static class GameMappers
             DescriptionShort = request.DescriptionShort,
             DescriptionLong = request.DescriptionLong,
             DescriptionAbout = request.DescriptionAbout,
-            UrlMetaCriticPage = request.UrlMetaCriticPage
+            UrlMetaCriticPage = request.UrlMetaCriticPage,
+            SupportsWindows = request.SupportsWindows,
+            SupportsLinux = request.SupportsLinux,
+            SupportsMac = request.SupportsMac
         };
     }
 }

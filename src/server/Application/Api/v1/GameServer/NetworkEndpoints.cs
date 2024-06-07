@@ -32,7 +32,7 @@ public static class NetworkEndpoints
     /// <param name="networkService"></param>
     /// <returns>Boolean indicating a game server is connectable</returns>
     [Authorize(PermissionConstants.GameServer.Network.GameserverConnectable)]
-    private static async Task<IResult<bool>> GameserverConnectable(GameServerConnectivityCheck check, INetworkService networkService)
+    private static async Task<IResult<bool>> GameserverConnectable([FromBody]GameServerConnectivityCheck check, INetworkService networkService)
     {
         try
         {

@@ -46,7 +46,7 @@ public static class HostEndpoints
     /// - Expiration time returned is in GMT/UTC
     /// </remarks>
     [AllowAnonymous]
-    private static async Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request, IHostService hostService)
+    private static async Task<IResult<HostAuthResponse>> GetToken([FromBody]HostAuthRequest request, IHostService hostService)
     {
         try
         {

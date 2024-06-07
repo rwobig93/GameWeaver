@@ -36,4 +36,7 @@ public class GameDb : IAuditableEntity<Guid>
     public DateTime? LastModifiedOn { get; set; }
     public bool IsDeleted { get; set; }
     public DateTime? DeletedOn { get; set; }
+    public bool SupportsWindows { get; set; }
+    public bool SupportsLinux { get; set; }
+    public bool SupportsMac { get; set; }
 }

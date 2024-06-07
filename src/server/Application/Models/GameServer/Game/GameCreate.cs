@@ -32,4 +32,7 @@ public class GameCreate
     public bool IsDeleted { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
+    public bool SupportsWindows { get; set; }
+    public bool SupportsLinux { get; set; }
+    public bool SupportsMac { get; set; }
 }

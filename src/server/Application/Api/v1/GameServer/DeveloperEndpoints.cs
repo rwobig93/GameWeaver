@@ -7,6 +7,7 @@ using Application.Services.Identity;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Application.Api.v1.GameServer;
@@ -38,7 +39,7 @@ public static class DeveloperEndpoints
     /// <param name="appConfig"></param>
     /// <returns>List of developers</returns>
     [Authorize(PermissionConstants.GameServer.Developer.GetAllPaginated)]
-    private static async Task<IResult<IEnumerable<DeveloperSlim>>> GetAllPaginated(int pageNumber, int pageSize, IGameService gameService,
+    private static async Task<IResult<IEnumerable<DeveloperSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
         try
@@ -88,7 +89,7 @@ public static class DeveloperEndpoints
     /// <param name="gameService"></param>
     /// <returns>Developer object</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Get)]
-    private static async Task<IResult<DeveloperSlim?>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<DeveloperSlim?>> GetById([FromQuery]Guid id, IGameService gameService)
     {
         try
         {
@@ -107,7 +108,7 @@ public static class DeveloperEndpoints
     /// <param name="gameService"></param>
     /// <returns>Developer object</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Get)]
-    private static async Task<IResult<DeveloperSlim?>> GetByName(string name, IGameService gameService)
+    private static async Task<IResult<DeveloperSlim?>> GetByName([FromQuery]string name, IGameService gameService)
     {
         try
         {
@@ -126,7 +127,7 @@ public static class DeveloperEndpoints
     /// <param name="gameService"></param>
     /// <returns>List of developers</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Get)]
-    private static async Task<IResult<IEnumerable<DeveloperSlim>>> GetByGameId(Guid id, IGameService gameService)
+    private static async Task<IResult<IEnumerable<DeveloperSlim>>> GetByGameId([FromQuery]Guid id, IGameService gameService)
     {
         try
         {
@@ -146,7 +147,7 @@ public static class DeveloperEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created developer</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Create)]
-    private static async Task<IResult<Guid>> Create(DeveloperCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult<Guid>> Create([FromBody]DeveloperCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -167,7 +168,7 @@ public static class DeveloperEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Delete)]
-    private static async Task<IResult> Delete(Guid id, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult> Delete([FromQuery]Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -187,7 +188,7 @@ public static class DeveloperEndpoints
     /// <param name="gameService"></param>
     /// <returns>List of developers</returns>
     [Authorize(PermissionConstants.GameServer.Developer.Search)]
-    private static async Task<IResult<IEnumerable<DeveloperSlim>>> Search(string searchText, IGameService gameService)
+    private static async Task<IResult<IEnumerable<DeveloperSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {
         try
         {

@@ -7,6 +7,7 @@ using Application.Services.Identity;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
 namespace Application.Api.v1.GameServer;
@@ -38,7 +39,7 @@ public static class GameGenreEndpoints
     /// <param name="appConfig"></param>
     /// <returns>List of game genres</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.GetAllPaginated)]
-    private static async Task<IResult<IEnumerable<GameGenreSlim>>> GetAllPaginated(int pageNumber, int pageSize, IGameService gameService,
+    private static async Task<IResult<IEnumerable<GameGenreSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameService gameService,
         IOptions<AppConfiguration> appConfig)
     {
         try
@@ -88,7 +89,7 @@ public static class GameGenreEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game genre object</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
-    private static async Task<IResult<GameGenreSlim?>> GetById(Guid id, IGameService gameService)
+    private static async Task<IResult<GameGenreSlim?>> GetById([FromQuery]Guid id, IGameService gameService)
     {
         try
         {
@@ -107,7 +108,7 @@ public static class GameGenreEndpoints
     /// <param name="gameService"></param>
     /// <returns>Game genre object</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
-    private static async Task<IResult<GameGenreSlim?>> GetByName(string name, IGameService gameService)
+    private static async Task<IResult<GameGenreSlim?>> GetByName([FromQuery]string name, IGameService gameService)
     {
         try
         {
@@ -126,7 +127,7 @@ public static class GameGenreEndpoints
     /// <param name="gameService"></param>
     /// <returns>List of game genres</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.Get)]
-    private static async Task<IResult<IEnumerable<GameGenreSlim>>> GetByGameId(Guid id, IGameService gameService)
+    private static async Task<IResult<IEnumerable<GameGenreSlim>>> GetByGameId([FromQuery]Guid id, IGameService gameService)
     {
         try
         {
@@ -146,7 +147,7 @@ public static class GameGenreEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created game genre</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.Create)]
-    private static async Task<IResult<Guid>> Create(GameGenreCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult<Guid>> Create([FromBody]GameGenreCreate createObject, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -167,7 +168,7 @@ public static class GameGenreEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.GameGenre.Delete)]
-    private static async Task<IResult> Delete(Guid id, IGameService gameService, ICurrentUserService currentUserService)
+    private static async Task<IResult> Delete([FromQuery]Guid id, IGameService gameService, ICurrentUserService currentUserService)
     {
         try
         {
@@ -188,7 +189,7 @@ public static class GameGenreEndpoints
     /// <returns>List of game genres</returns>
     /// <remarks>Searches by: Name, Description</remarks>
     [Authorize(PermissionConstants.GameServer.GameGenre.Search)]
-    private static async Task<IResult<IEnumerable<GameGenreSlim>>> Search(string searchText, IGameService gameService)
+    private static async Task<IResult<IEnumerable<GameGenreSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {
         try
         {

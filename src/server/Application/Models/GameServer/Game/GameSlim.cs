@@ -29,4 +29,7 @@ public class GameSlim
     public string RequirementsMacRecommended { get; set; } = "";
     public string RequirementsLinuxMinimum { get; set; } = "";
     public string RequirementsLinuxRecommended { get; set; } = "";
+    public bool SupportsWindows { get; set; }
+    public bool SupportsLinux { get; set; }
+    public bool SupportsMac { get; set; }
 }
