@@ -1,5 +1,10 @@
 ﻿using Application.Helpers.GameServer;
+using Application.Mappers.GameServer;
+using Application.Models.GameServer.Developers;
+using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameUpdate;
+using Application.Models.GameServer.Publishers;
+using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Requests.GameServer.Game;
 using Application.Services.External;
@@ -27,10 +32,11 @@ public class JobManager : IJobManager
     private readonly IGameService _gameService;
     private readonly ISteamApiService _steamApiService;
     private readonly IRunningServerState _serverState;
+    private readonly IGameRepository _gameRepository;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
         IOptions<SecurityConfiguration> securityConfig, IAuditTrailService auditService, IOptions<LifecycleConfiguration> lifecycleConfig,
-        IGameServerService gameServerService, IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState)
+        IGameServerService gameServerService, IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -41,6 +47,7 @@ public class JobManager : IJobManager
         _gameService = gameService;
         _steamApiService = steamApiService;
         _serverState = serverState;
+        _gameRepository = gameRepository;
         _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
@@ -256,7 +263,70 @@ public class JobManager : IJobManager
                 continue;
             }
             
-            // TODO: Get base game details then enrich new game: https://store.steampowered.com/api/appdetails?appids=443030
+            var baseGameDetails = await _steamApiService.GetAppDetail(baseGame.AppId);
+            if (baseGameDetails.Data is null)
+            {
+                _logger.Error("Failed to get base game details from steam: [{ToolId}/{GameId}]{Error}",
+                    serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                continue;
+            }
+
+            var convertedGameUpdate = baseGameDetails.Data.ToUpdate(gameCreate.Data);
+            convertedGameUpdate.LastModifiedBy = _serverState.SystemUserId;
+            convertedGameUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
+            
+            var gameUpdate = await _gameRepository.UpdateAsync(convertedGameUpdate);
+            if (!gameUpdate.Succeeded)
+            {
+                _logger.Error("Failed to get update game with details from steam: [{ToolId}/{GameId}]{Error}",
+                    serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                continue;
+            }
+            
+            foreach (var publisher in baseGameDetails.Data.Publishers)
+            {
+                var createPublisher = await _gameService.CreatePublisherAsync(new PublisherCreate
+                {
+                    GameId = gameCreate.Data,
+                    Name = publisher
+                }, _serverState.SystemUserId);
+                if (!createPublisher.Succeeded)
+                {
+                    _logger.Error("Failed to create publisher for game: [{ToolId}/{GameId}]{Error}",
+                        serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                }
+            }
+
+            foreach (var developer in baseGameDetails.Data.Developers)
+            {
+                var createDeveloper = await _gameService.CreateDeveloperAsync(new DeveloperCreate
+                {
+                    GameId = gameCreate.Data,
+                    Name = developer
+                }, _serverState.SystemUserId);
+                if (!createDeveloper.Succeeded)
+                {
+                    _logger.Error("Failed to create developer for game: [{ToolId}/{GameId}]{Error}",
+                        serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                }
+            }
+
+            foreach (var genre in baseGameDetails.Data.Genres)
+            {
+                var createGenre = await _gameService.CreateGameGenreAsync(new GameGenreCreate
+                {
+                    GameId = gameCreate.Data,
+                    Name = genre.Description,
+                    Description = $"[{genre.Id}]{genre.Description}"
+                }, _serverState.SystemUserId);
+                if (!createGenre.Succeeded)
+                {
+                    _logger.Error("Failed to create genre for game: [{ToolId}/{GameId}]{Error}",
+                        serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                }
+            }
+            
+            _logger.Information("Successfully synchronized game from steam: [{ToolId}/{GameId}]", serverApp.AppId, baseGame.AppId);
         }
     }
 }

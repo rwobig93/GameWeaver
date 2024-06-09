@@ -1,3 +1,4 @@
+using Application.Models.External.Steam;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Requests.GameServer.Game;
@@ -165,6 +166,39 @@ public static class GameMappers
             SupportsWindows = request.SupportsWindows,
             SupportsLinux = request.SupportsLinux,
             SupportsMac = request.SupportsMac
+        };
+    }
+
+    public static GameUpdate ToUpdate(this SteamAppDetailResponseJson? response, Guid gameId)
+    {
+        if (response is null)
+        {
+            return new GameUpdate {Id = gameId};
+        }
+
+        return new GameUpdate
+        {
+            Id = gameId,
+            SteamName = response.Name,
+            SteamGameId = response.Steam_AppId,
+            UrlBackground = response.Background_Raw,
+            UrlLogo = response.Header_Image,
+            ControllerSupport = response.Controller_Support,
+            DescriptionShort = response.Short_Description,
+            DescriptionLong = response.Detailed_Description,
+            DescriptionAbout = response.About_The_Game,
+            PriceInitial = response.Price_Overview.Final_Formatted,
+            PriceCurrent = response.Price_Overview.Final_Formatted,
+            PriceDiscount = response.Price_Overview.Discount_Percent,
+            RequirementsPcMinimum = response.PcRequirementsResponseJson.Minimum,
+            RequirementsPcRecommended = response.PcRequirementsResponseJson.Recommended,
+            RequirementsMacMinimum = response.MacRequirementsResponseJson.Minimum,
+            RequirementsMacRecommended = response.MacRequirementsResponseJson.Recommended,
+            RequirementsLinuxMinimum = response.LinuxRequirementsResponseJson.Minimum,
+            RequirementsLinuxRecommended = response.LinuxRequirementsResponseJson.Recommended,
+            SupportsWindows = response.Platforms.Windows,
+            SupportsLinux = response.Platforms.Linux,
+            SupportsMac = response.Platforms.Mac
         };
     }
 }

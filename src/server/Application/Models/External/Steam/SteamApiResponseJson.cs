@@ -2,7 +2,7 @@
 
 namespace Application.Models.External.Steam;
 
-public class SteamApiResponse
+public class SteamApiResponseJson
 {
     public JsonElement Data { get; set; }
     public bool Success { get; set; }

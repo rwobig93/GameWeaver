@@ -22,7 +22,7 @@ public class SteamApiService : ISteamApiService
         _serializerService = serializerService;
     }
 
-    public async Task<IResult<IEnumerable<SteamApiApp>>> GetAllApps()
+    public async Task<IResult<IEnumerable<SteamApiAppResponseJson>>> GetAllApps()
     {
         try
         {
@@ -30,15 +30,15 @@ public class SteamApiService : ISteamApiService
             var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppList);
             if (!response.IsSuccessStatusCode)
             {
-                return await Result<IEnumerable<SteamApiApp>>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
+                return await Result<IEnumerable<SteamApiAppResponseJson>>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
             }
 
-            var convertedResponse = _serializerService.DeserializeJson<SteamApiAppListResponse>(await response.Content.ReadAsStringAsync());
-            return await Result<IEnumerable<SteamApiApp>>.SuccessAsync(convertedResponse.AppList.Apps);
+            var convertedResponse = _serializerService.DeserializeJson<SteamApiAppListRootResponseJson>(await response.Content.ReadAsStringAsync());
+            return await Result<IEnumerable<SteamApiAppResponseJson>>.SuccessAsync(convertedResponse.AppListResponseJson.Apps);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<SteamApiApp>>.FailAsync($"SteamApiAppList Error: {ex.Message}");
+            return await Result<IEnumerable<SteamApiAppResponseJson>>.FailAsync($"SteamApiAppList Error: {ex.Message}");
         }
     }
 
@@ -53,7 +53,7 @@ public class SteamApiService : ISteamApiService
                 return await Result<SteamAppInfo?>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
             }
             
-            var convertedResponse = _serializerService.DeserializeJson<SteamApiResponse>(await response.Content.ReadAsStringAsync());
+            var convertedResponse = _serializerService.DeserializeJson<SteamApiResponseJson>(await response.Content.ReadAsStringAsync());
 
             var appIdRoot = convertedResponse.Data.GetNestedValue(appId.ToString());
             if (appIdRoot is null)
@@ -106,6 +106,26 @@ public class SteamApiService : ISteamApiService
         catch (Exception ex)
         {
             return await Result<SteamAppInfo?>.FailAsync($"Failure occurred getting app version: {ex.Message}");
+        }
+    }
+
+    public async Task<IResult<SteamAppDetailResponseJson?>> GetAppDetail(int appId)
+    {
+        try
+        {
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiComUnauthenticated);
+            var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppList);
+            if (!response.IsSuccessStatusCode)
+            {
+                return await Result<SteamAppDetailResponseJson?>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
+            }
+
+            var convertedResponse = _serializerService.DeserializeJson<SteamAppDetailResponseJson>(await response.Content.ReadAsStringAsync());
+            return await Result<SteamAppDetailResponseJson?>.SuccessAsync(convertedResponse);
+        }
+        catch (Exception ex)
+        {
+            return await Result<SteamAppDetailResponseJson?>.FailAsync($"SteamAppDetail Error: {ex.Message}");
         }
     }
 }
