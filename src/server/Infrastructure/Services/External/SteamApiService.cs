@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Application.Constants.Web;
+using Application.Helpers.External;
 using Application.Helpers.Runtime;
 using Application.Models.External.Steam;
 using Application.Services.External;
@@ -26,7 +27,7 @@ public class SteamApiService : ISteamApiService
     {
         try
         {
-            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiComUnauthenticated);
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiPoweredComUnauthenticated);
             var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppList);
             if (!response.IsSuccessStatusCode)
             {
@@ -34,7 +35,7 @@ public class SteamApiService : ISteamApiService
             }
 
             var convertedResponse = _serializerService.DeserializeJson<SteamApiAppListRootResponseJson>(await response.Content.ReadAsStringAsync());
-            return await Result<IEnumerable<SteamApiAppResponseJson>>.SuccessAsync(convertedResponse.AppListResponseJson.Apps);
+            return await Result<IEnumerable<SteamApiAppResponseJson>>.SuccessAsync(convertedResponse.AppList.Apps);
         }
         catch (Exception ex)
         {
@@ -113,14 +114,19 @@ public class SteamApiService : ISteamApiService
     {
         try
         {
-            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamApiComUnauthenticated);
-            var response = await httpClient.GetAsync(ApiConstants.Steam.ApiAppList);
+            var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamStoreUnauthenticated);
+            var response = await httpClient.GetAsync(ApiConstants.Steam.StoreAppDetails(appId));
             if (!response.IsSuccessStatusCode)
             {
                 return await Result<SteamAppDetailResponseJson?>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
             }
 
-            var convertedResponse = _serializerService.DeserializeJson<SteamAppDetailResponseJson>(await response.Content.ReadAsStringAsync());
+            var convertedResponse = _serializerService.ParseSteamAppDetailJson(await response.Content.ReadAsStringAsync());
+            if (convertedResponse is null)
+            {
+                return await Result<SteamAppDetailResponseJson?>.FailAsync("Failed to parse app detail response");
+            }
+            
             return await Result<SteamAppDetailResponseJson?>.SuccessAsync(convertedResponse);
         }
         catch (Exception ex)

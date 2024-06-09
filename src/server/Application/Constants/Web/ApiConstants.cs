@@ -14,14 +14,15 @@ public static class ApiConstants
     {
         public const string GameWeaverDefault = "Default";
         public const string SteamApiNetUnauthenticated = "Steam-ApiNet-Unauthenticated";
-        public const string SteamApiComUnauthenticated = "Steam-ApiCom-Unauthenticated";
+        public const string SteamApiPoweredComUnauthenticated = "Steam-ApiPoweredCom-Unauthenticated";
         public const string SteamStoreAuthenticated = "Steam-Store-Authenticated";
+        public const string SteamStoreUnauthenticated = "Steam-Store-Unauthenticated";
     }
 
     public static class Steam
     {
         public const string BaseUrlApiNet = "https://api.steamcmd.net";
-        public const string BaseUrlApiCom = "https://api.steamcmd.com";
+        public const string BaseUrlApiPoweredCom = "https://api.steampowered.com";
         public const string BaseUrlStore = "https://store.steampowered.com";
         public static string ApiAppList => "/ISteamApps/GetAppList/v2/?";
         public static string ApiServersAtAddress(string ip) => $"/ISteamApps/GetServersAtAddress/v1/?addr={ip}";
@@ -34,7 +35,7 @@ public static class ApiConstants
                    $"include_hardware=false&last_appid={lastAppId}&max_results={maxResults}";
         }
         
-        public static string StoreAppDetails(int appId) => $"{BaseUrlStore}/api/appdetails?appids={appId}";
+        public static string StoreAppDetails(int appId) => $"/api/appdetails?appids={appId}";
         
     }
 }

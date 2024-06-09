@@ -239,7 +239,9 @@ public class JobManager : IJobManager
             }
 
             var serverAppNameSanitized = serverApp.Name.SanitizeFromSteam();
-            var baseGame = allSteamApps.Data.FirstOrDefault(x => x.Name.Contains(serverAppNameSanitized));
+            var baseGame = allSteamApps.Data.FirstOrDefault(x =>
+                x.AppId != serverApp.AppId &&
+                x.Name.Contains(serverAppNameSanitized));
 
             var gameCreate = await _gameService.CreateAsync(new GameCreateRequest
             {

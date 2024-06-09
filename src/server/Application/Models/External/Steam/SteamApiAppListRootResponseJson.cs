@@ -2,5 +2,5 @@
 
 public class SteamApiAppListRootResponseJson
 {
-    public required SteamApiAppListResponseJson AppListResponseJson { get; set; }
+    public required SteamApiAppListResponseJson AppList { get; set; }
 }
