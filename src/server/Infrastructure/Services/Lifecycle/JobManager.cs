@@ -1,6 +1,7 @@
 ﻿using Application.Helpers.GameServer;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Developers;
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
@@ -238,14 +239,19 @@ public class JobManager : IJobManager
                 continue;
             }
 
+            // TODO: We are still getting base games for packs, skins, dlc, ect | Need to find a better way to filter or get the next match and get details until we get desired
             var serverAppNameSanitized = serverApp.Name.SanitizeFromSteam();
             var baseGame = allSteamApps.Data.FirstOrDefault(x =>
                 x.AppId != serverApp.AppId &&
+                !x.Name.EndsWith(" beta", StringComparison.InvariantCultureIgnoreCase) &&
+                !x.Name.EndsWith(" test", StringComparison.InvariantCultureIgnoreCase) &&
+                !x.Name.EndsWith(" demo", StringComparison.InvariantCultureIgnoreCase) &&
+                !x.Name.Contains("developer build", StringComparison.InvariantCultureIgnoreCase) &&
                 x.Name.Contains(serverAppNameSanitized));
-
+            
             var gameCreate = await _gameService.CreateAsync(new GameCreateRequest
             {
-                Name = serverAppNameSanitized,
+                Name = serverApp.Name,
                 SteamGameId = baseGame?.AppId ?? 0,
                 SteamToolId = serverApp.AppId
             }, _serverState.SystemUserId);
@@ -260,15 +266,29 @@ public class JobManager : IJobManager
 
             if (baseGame is null)
             {
-                _logger.Warning("Unable to find base game for server app from steam: [{ToolId}]{GameName} => {GameId}",
+                _logger.Information("Unable to find base game for server app from steam: [{ToolId}]{GameName} => {GameId}",
                     serverApp.AppId, serverApp.Name, gameCreate.Data);
+            
+                var gameUpdateSlim = await _gameRepository.UpdateAsync(new GameUpdate
+                {
+                    Id = gameCreate.Data,
+                    SteamName = serverApp.Name,
+                    FriendlyName = serverAppNameSanitized,
+                    LastModifiedBy = _serverState.SystemUserId,
+                    LastModifiedOn = _dateTime.NowDatabaseTime
+                });
+                if (!gameUpdateSlim.Succeeded)
+                {
+                    _logger.Error("Failed to get update game without base game details from steam: [{ToolId}]{Error}", serverApp.AppId, gameCreate.Messages);
+                }
+
                 continue;
             }
             
             var baseGameDetails = await _steamApiService.GetAppDetail(baseGame.AppId);
             if (baseGameDetails.Data is null)
             {
-                _logger.Error("Failed to get base game details from steam: [{ToolId}/{GameId}]{Error}",
+                _logger.Information("Failed to get base game details from steam: [{ToolId}/{GameId}]{Error}",
                     serverApp.AppId, baseGame.AppId, gameCreate.Messages);
                 continue;
             }
@@ -276,6 +296,8 @@ public class JobManager : IJobManager
             var convertedGameUpdate = baseGameDetails.Data.ToUpdate(gameCreate.Data);
             convertedGameUpdate.LastModifiedBy = _serverState.SystemUserId;
             convertedGameUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
+            convertedGameUpdate.SteamName = serverApp.Name;
+            convertedGameUpdate.FriendlyName = baseGameDetails.Data.Name;
             
             var gameUpdate = await _gameRepository.UpdateAsync(convertedGameUpdate);
             if (!gameUpdate.Succeeded)
