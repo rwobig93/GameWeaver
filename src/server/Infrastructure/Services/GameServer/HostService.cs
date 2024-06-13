@@ -654,6 +654,24 @@ public class HostService : IHostService
         return await Result.SuccessAsync();
     }
 
+    public async Task<IResult<int>> DeleteRegistrationsOlderThanAsync(Guid requestUserId, int olderThanHours = 24)
+    {
+        var registrationsDelete = await _hostRepository.DeleteRegistrationsOlderThanAsync(olderThanHours);
+        if (registrationsDelete.Succeeded)
+        {
+            return await Result<int>.SuccessAsync(registrationsDelete.Result);
+        }
+        
+        var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostRegistrations, Guid.Empty,
+            requestUserId, new Dictionary<string, string>
+            {
+                {"ProvidedHoursToDelete", olderThanHours.ToString()},
+                {"Detail", "Failed to delete old host registrations"},
+                {"Error", registrationsDelete.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+    }
+
     public async Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsAsync(string searchText)
     {
         var foundRegistrations = await _hostRepository.SearchRegistrationsAsync(searchText);

@@ -267,10 +267,11 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE TableName LIKE '%' + @SearchTerm + '%'
-                    OR RecordId LIKE '%' + @SearchTerm + '%'
-                    OR Action LIKE '%' + @SearchTerm + '%'
-                    OR Before LIKE '%' + @SearchTerm + '%'
-                    OR After LIKE '%' + @SearchTerm + '%'
+                    OR a.RecordId LIKE '%' + @SearchTerm + '%'
+                    OR a.Action LIKE '%' + @SearchTerm + '%'
+                    OR a.Before LIKE '%' + @SearchTerm + '%'
+                    OR a.After LIKE '%' + @SearchTerm + '%'
+                    OR a.Id LIKE '%' + @SearchTerm + '%'
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

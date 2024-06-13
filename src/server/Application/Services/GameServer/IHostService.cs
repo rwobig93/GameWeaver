@@ -35,6 +35,7 @@ public interface IHostService
     Task<IResult<HostRegistrationFull>> GetRegistrationByIdAsync(Guid id);
     Task<IResult<HostRegistrationFull>> GetRegistrationByHostIdAsync(Guid hostId);
     Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdateRequest request, Guid requestUserId);
+    Task<IResult<int>> DeleteRegistrationsOlderThanAsync(Guid requestUserId, int olderThanHours = 24);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsAsync(string searchText);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAsync();

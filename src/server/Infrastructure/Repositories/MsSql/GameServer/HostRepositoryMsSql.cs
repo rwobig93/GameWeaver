@@ -22,14 +22,12 @@ public class HostRepositoryMsSql : IHostRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
-    private readonly IAuditTrailsRepository _auditRepository;
 
-    public HostRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IAuditTrailsRepository auditRepository)
+    public HostRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
-        _auditRepository = auditRepository;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<HostDb>>> GetAllAsync()
@@ -404,6 +402,24 @@ public class HostRepositoryMsSql : IHostRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, HostRegistrationsTableMsSql.Update.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> DeleteRegistrationsOlderThanAsync(int olderThanHours = 24)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var cleanupTimestamp = _dateTime.NowDatabaseTime.AddHours(-olderThanHours).ToString(CultureInfo.CurrentCulture);
+            var rowsDeleted = await _database.SaveData(HostRegistrationsTableMsSql.DeleteOlderThan, new { OlderThan = cleanupTimestamp });
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostRegistrationsTableMsSql.DeleteOlderThan.Path, ex.Message);
         }
 
         return actionReturn;

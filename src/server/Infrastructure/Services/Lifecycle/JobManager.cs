@@ -34,10 +34,12 @@ public class JobManager : IJobManager
     private readonly ISteamApiService _steamApiService;
     private readonly IRunningServerState _serverState;
     private readonly IGameRepository _gameRepository;
+    private readonly IHostService _hostService;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
         IOptions<SecurityConfiguration> securityConfig, IAuditTrailService auditService, IOptions<LifecycleConfiguration> lifecycleConfig,
-        IGameServerService gameServerService, IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository)
+        IGameServerService gameServerService, IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository,
+        IHostService hostService)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -49,6 +51,7 @@ public class JobManager : IJobManager
         _steamApiService = steamApiService;
         _serverState = serverState;
         _gameRepository = gameRepository;
+        _hostService = hostService;
         _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
@@ -74,8 +77,14 @@ public class JobManager : IJobManager
             {
                 _logger.Error("Audit cleanup failed: {Error}", auditCleanup.Messages);
             }
+            _logger.Information("Daily Cleanup: Cleaned {RecordCount} audit records", auditCleanup.Data);
             
-            // TODO: Cleanup host registrations and their hosts if not registered after 24 hours by default, should be configurable
+            var hostRegistrationCleanup = await _hostService.DeleteRegistrationsOlderThanAsync(_serverState.SystemUserId, _lifecycleConfig.HostRegistrationCleanupHours);
+            if (!hostRegistrationCleanup.Succeeded)
+            {
+                _logger.Error("Host registration cleanup failed: {Error}", hostRegistrationCleanup.Messages);
+            }
+            _logger.Information("Daily Cleanup: Cleaned {RecordCount} host registration records", hostRegistrationCleanup.Data);
             
             // TODO: Cleanup non-default game profiles that aren't bound to any game servers
             

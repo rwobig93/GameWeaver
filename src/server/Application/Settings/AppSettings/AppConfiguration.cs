@@ -15,6 +15,7 @@ public class AppConfiguration : IAppSettingsSection
     // ReSharper disable once CollectionNeverUpdated.Global
     [UrlList]
     public List<string> AlternativeUrls { get; set; } = [];
-
+    
+    [Range(100, 100_000)]
     public int ApiPaginatedMaxPageSize { get; set; } = 1000;
 }

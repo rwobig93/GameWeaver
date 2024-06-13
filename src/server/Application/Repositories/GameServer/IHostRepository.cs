@@ -32,6 +32,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetActiveRegistrationsByDescriptionAsync(string description);
     Task<DatabaseActionResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate createObject);
     Task<DatabaseActionResult> UpdateRegistrationAsync(HostRegistrationUpdate updateObject);
+    Task<DatabaseActionResult<int>> DeleteRegistrationsOlderThanAsync(int olderThanHours = 24);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> SearchRegistrationsAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAsync();

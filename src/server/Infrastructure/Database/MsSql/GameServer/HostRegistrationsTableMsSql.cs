@@ -249,4 +249,20 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
+    
+    public static readonly SqlStoredProcedure DeleteOlderThan = new()
+    {
+        Table = Table,
+        Action = "DeleteOlderThan",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteOlderThan]
+                @OlderThan DATETIME2
+            AS
+            begin
+                DELETE
+                FROM dbo.[{Table.TableName}] h
+                WHERE h.Active = 0
+                    AND h.CreatedOn < @OlderThan;
+            end"
+    };
 }
