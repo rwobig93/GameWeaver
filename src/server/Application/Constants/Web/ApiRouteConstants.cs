@@ -79,7 +79,6 @@ public static class ApiRouteConstants
         }
     }
 
-    // TODO: Update endpoints on client before testing
     public static class GameServer
     {
         public static class Host

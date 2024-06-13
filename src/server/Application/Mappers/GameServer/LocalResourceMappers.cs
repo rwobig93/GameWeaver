@@ -14,7 +14,6 @@ public static class LocalResourceMappers
         {
             Id = localResourceDb.Id,
             GameProfileId = localResourceDb.GameProfileId,
-            GameServerId = localResourceDb.GameServerId,
             Name = localResourceDb.Name,
             PathWindows = localResourceDb.PathWindows,
             PathLinux = localResourceDb.PathLinux,
@@ -23,7 +22,6 @@ public static class LocalResourceMappers
             StartupPriority = localResourceDb.StartupPriority,
             Type = localResourceDb.Type,
             ContentType = localResourceDb.ContentType,
-            Extension = localResourceDb.Extension,
             Args = localResourceDb.Args,
             ConfigSets = []
         };
@@ -40,7 +38,6 @@ public static class LocalResourceMappers
         {
             Id = localResource.Id,
             GameProfileId = localResource.GameProfileId,
-            GameServerId = localResource.GameServerId,
             Name = localResource.Name,
             PathWindows = localResource.PathWindows,
             PathLinux = localResource.PathLinux,
@@ -49,7 +46,6 @@ public static class LocalResourceMappers
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
             Args = localResource.Args
         };
     }
@@ -71,7 +67,6 @@ public static class LocalResourceMappers
             Startup = localResource.Startup,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
             Args = localResource.Args,
             ConfigSets = []
         };
@@ -100,7 +95,6 @@ public static class LocalResourceMappers
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
             Args = localResource.Args,
             ConfigSets = new SerializableList<ConfigurationItemHost>(localResource.ConfigSets.ToHosts()),
             Id = localResource.Id
@@ -117,7 +111,6 @@ public static class LocalResourceMappers
         return new LocalResourceCreate
         {
             GameProfileId = localResource.GameProfileId,
-            GameServerId = localResource.GameServerId,
             Name = localResource.Name,
             PathWindows = localResource.PathWindows,
             PathLinux = localResource.PathLinux,
@@ -126,7 +119,6 @@ public static class LocalResourceMappers
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
             Args = localResource.Args
         };
     }

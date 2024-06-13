@@ -7,8 +7,7 @@ public static class LocalResourceHelpers
     public static string GetFullPath(this LocalResource localResource)
     {
         var gameServerPath = Path.Join(OsHelpers.GetDefaultGameServerPath(), localResource.GameserverId.ToString());
-        var localResourcePath = string.IsNullOrWhiteSpace(localResource.Extension) ? localResource.Path : $"{localResource.Path}.{localResource.Extension}";
-        return Path.Join(gameServerPath, localResourcePath);
+        return Path.Join(gameServerPath, localResource.Path);
     }
 
     public static string UpdateWithServerValues(this GameServerLocal gameServer, string value)

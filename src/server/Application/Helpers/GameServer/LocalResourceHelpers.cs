@@ -14,7 +14,6 @@ public static class LocalResourceHelpers
                 (x.PathLinux.Length > 0 && x.PathLinux == resource.PathLinux) &&
                 (x.PathMac.Length > 0 && x.PathMac == resource.PathMac) &&
                 x.Type == resource.Type &&
-                x.Extension == resource.Extension &&
                 x.Args == resource.Args);
             
             if (matchingResource is null)

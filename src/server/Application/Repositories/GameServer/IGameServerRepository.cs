@@ -52,7 +52,6 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName);
-    // TODO: Ensure friendly name is validated, these should all be unique on creation and updates
     Task<DatabaseActionResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject);
     Task<DatabaseActionResult> UpdateGameProfileAsync(GameProfileUpdate updateObject);
     Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id, Guid requestUserId);

@@ -457,8 +457,6 @@ public class GameServerService : IGameServerService
                 
                 var gameServerDirectory = gameServer.GetInstallDirectory();
                 var fullPath = Path.Combine(gameServerDirectory, binary.Path);
-                if (!fullPath.EndsWith(binary.Extension) && !string.IsNullOrWhiteSpace(binary.Extension))
-                    fullPath = $"{fullPath}.{binary.Extension}";
 
                 if (!File.Exists(fullPath))
                 {

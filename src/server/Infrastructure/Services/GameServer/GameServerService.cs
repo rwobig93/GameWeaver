@@ -735,9 +735,6 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
         }
         
-        // TODO: Decide on data validation framework / method
-        request.Extension = request.Extension.Replace(".", "");
-        
         var resourceCreate = await _gameServerRepository.CreateLocalResourceAsync(request);
         if (!resourceCreate.Succeeded)
         {

@@ -163,7 +163,6 @@ public static class GameServerEndpoints
     {
         try
         {
-            // TODO: Get by methods for game server service (and repository) needs to return IEnumerable instead of first since they are 1:many not 1:1
             return await gameServerService.GetByGameProfileIdAsync(id);
         }
         catch (Exception ex)

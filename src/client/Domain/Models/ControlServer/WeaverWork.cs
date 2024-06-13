@@ -6,7 +6,6 @@ namespace Domain.Models.ControlServer;
 [MemoryPackable(SerializeLayout.Explicit)]
 public partial class WeaverWork
 {
-    // TODO: Add pack order to each [MemoryPackable] object since order makes a difference, best to be explicit in this case
     [MemoryPackOrder(0)]
     public int Id { get; set; }
     [MemoryPackOrder(1)]

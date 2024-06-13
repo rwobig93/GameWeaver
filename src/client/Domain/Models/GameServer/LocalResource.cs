@@ -22,11 +22,9 @@ public partial class LocalResource
     [MemoryPackOrder(6)]
     public ContentType ContentType { get; set; }
     [MemoryPackOrder(7)]
-    public string Extension { get; set; } = "";
-    [MemoryPackOrder(8)]
     public string Args { get; set; } = "";
-    [MemoryPackOrder(9)]
+    [MemoryPackOrder(8)]
     public SerializableList<ConfigurationItemLocal> ConfigSets { get; set; } = [];
-    [MemoryPackOrder(10)]
+    [MemoryPackOrder(9)]
     public Guid Id { get; set; }
 }

@@ -7,7 +7,6 @@ public class LocalResourceSlim
 {
     public Guid Id { get; set; }
     public Guid GameProfileId { get; set; }
-    public Guid GameServerId { get; set; }
     public string Name { get; set; } = "";
     public string PathWindows { get; set; } = "";
     public string PathLinux { get; set; } = "";
@@ -16,7 +15,6 @@ public class LocalResourceSlim
     public int StartupPriority { get; set; }
     public ResourceType Type { get; set; }
     public ContentType ContentType { get; set; }
-    public string Extension { get; set; } = "";
     public string Args { get; set; } = "";
     public IEnumerable<ConfigurationItemSlim> ConfigSets { get; set; } = [];
 }

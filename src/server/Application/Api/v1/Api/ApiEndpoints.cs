@@ -40,7 +40,6 @@ public static class ApiEndpoints
     {
         try
         {
-            // TODO: Look into adding claim for API access vs manually passing token from user auth for authorization handling
             var response = await accountService.GetApiAuthToken(tokenRequest); 
             return response;
         }

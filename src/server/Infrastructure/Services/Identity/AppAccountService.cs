@@ -343,7 +343,7 @@ public class AppAccountService : IAppAccountService
             return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.Users.AccountLockedOutError);
         }
 
-        // Provided api token is correct so we reset previous bad password attempts
+        // Provided api token is correct, so we reset previous bad password attempts
         userSecurity.BadPasswordAttempts = 0;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());

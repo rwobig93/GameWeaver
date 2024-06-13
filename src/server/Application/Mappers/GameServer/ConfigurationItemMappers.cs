@@ -80,7 +80,6 @@ public static class ConfigurationItemMappers
             GameserverId = new Guid(),
             Path = configDb.Path,
             Startup = false,
-            Extension = Path.GetExtension(configDb.Path),
             Type = ResourceType.ConfigFile,
             ConfigSets = [configDb.ToHost()]
         };

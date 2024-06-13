@@ -94,7 +94,6 @@ public partial class DeveloperTesting : IAsyncDisposable
         StartupPriority = 0,
         Type = ResourceType.Executable,
         ContentType = ContentType.Raw,
-        Extension = "exe",
         Args = "-log"
     };
     private readonly LocalResourceSlim _desiredResourceEngine = new()
@@ -105,7 +104,6 @@ public partial class DeveloperTesting : IAsyncDisposable
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
         ContentType = ContentType.Ini,
-        Extension = "ini",
         ConfigSets =
         [
             new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Content", DuplicateKey = true },
@@ -131,7 +129,6 @@ public partial class DeveloperTesting : IAsyncDisposable
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
         ContentType = ContentType.Ini,
-        Extension = "ini",
         ConfigSets =
         [
             new ConfigurationItemSlim { Category = "/script/engine.gamesession", Key = "MaxPlayers", Value = "70"},
@@ -145,7 +142,6 @@ public partial class DeveloperTesting : IAsyncDisposable
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
         ContentType = ContentType.Ini,
-        Extension = "ini",
         ConfigSets =
         [
             new ConfigurationItemSlim { Category = "ServerSettings", Key = "AdminPassword", Value = "%%%PASSWORD_ADMIN%%%"},

@@ -1731,7 +1731,6 @@
             <b>int</b> StartupPriority<br/>
             <b>Domain.Enums.GameServer.ResourceType</b> Type<br/>
             <b>Domain.Enums.GameServer.ContentType</b> ContentType<br/>
-            <b>string</b> Extension<br/>
             <b>string</b> Args<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.ConfigurationItem.ConfigurationItemHost&gt;</b> ConfigSets<br/>
             <b>System.Guid</b> Id<br/>

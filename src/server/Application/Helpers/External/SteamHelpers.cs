@@ -17,7 +17,6 @@ public static class SteamHelpers
             if (!dynamicValueElement.TryGetProperty("data", out var dataElement)) return null;
             
             var dataJson = dataElement.GetRawText();
-            // TODO: dataJson is expected JSON formatted text but parsedResponse isn't getting values from any properties
             var parsedResponse = serializer.DeserializeJson<SteamAppDetailResponseJson>(dataJson);
             return parsedResponse;
         }
