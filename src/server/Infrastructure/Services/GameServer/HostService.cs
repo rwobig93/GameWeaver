@@ -794,7 +794,7 @@ public class HostService : IHostService
         return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
-    public async Task<IResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan, Guid requestUserId)
+    public async Task<IResult<int>> DeleteAllOldCheckInsAsync(DateTime olderThan, Guid requestUserId)
     {
         var checkInDelete = await _hostRepository.DeleteAllOldCheckInsAsync(olderThan);
         if (checkInDelete.Succeeded) return await Result<int>.SuccessAsync(checkInDelete.Result);
@@ -802,7 +802,7 @@ public class HostService : IHostService
         var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootHostCheckins, Guid.Empty, requestUserId,
             new Dictionary<string, string>
             {
-                {"ProvidedTimeframe", olderThan.ToString()},
+                {"ProvidedTimeframe", olderThan.ToString(DataConstants.DateTime.DisplayFormat)},
                 {"Detail", "Failed to delete old checkins for a given timeframe"},
                 {"Error", checkInDelete.ErrorMessage}
             });
@@ -1217,10 +1217,13 @@ public class HostService : IHostService
         return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
     }
 
-    public async Task<IResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan, Guid requestUserId)
+    public async Task<IResult<int>> DeleteWeaverWorkOlderThanAsync(DateTime olderThan, Guid requestUserId)
     {
         var workDelete = await _hostRepository.DeleteWeaverWorkOlderThanAsync(olderThan);
-        if (workDelete.Succeeded) return await Result.SuccessAsync();
+        if (workDelete.Succeeded)
+        {
+            return await Result<int>.SuccessAsync(workDelete.Result);
+        }
         
         var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootWeaverWork, Guid.Empty, requestUserId,
             new Dictionary<string, string>

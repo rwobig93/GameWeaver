@@ -171,17 +171,18 @@ public static class HostCheckinEndpoints
     /// <summary>
     /// Delete host checkins older than the provided timeframe
     /// </summary>
-    /// <param name="olderThan">0=OneMonth, 1=ThreeMonths, 2=SixMonths, 3=OneYear, 4=TenYears</param>
+    /// <param name="olderThanDays">Number of days to remove checkins after</param>
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.HostCheckins.DeleteOld)]
-    private static async Task<IResult> DeleteOld([FromBody]CleanupTimeframe olderThan, IHostService hostService, ICurrentUserService currentUserService)
+    private static async Task<IResult> DeleteOld([FromBody]int olderThanDays, IHostService hostService, ICurrentUserService currentUserService, IDateTimeService dateTime)
     {
         try
         {
+            var workCleanupTimestamp = dateTime.NowDatabaseTime.AddDays(-olderThanDays);
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await hostService.DeleteAllOldCheckInsAsync(olderThan, currentUserId);
+            return await hostService.DeleteAllOldCheckInsAsync(workCleanupTimestamp, currentUserId);
         }
         catch (Exception ex)
         {

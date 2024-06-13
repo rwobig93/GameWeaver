@@ -44,7 +44,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsLatestByHostIdAsync(Guid id, int count);
     Task<DatabaseActionResult> CreateCheckInAsync(HostCheckInCreate createObject);
     Task<DatabaseActionResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id);
-    Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan);
+    Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(DateTime olderThan);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkAsync();
@@ -61,7 +61,7 @@ public interface IHostRepository
     Task<DatabaseActionResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject);
     Task<DatabaseActionResult> DeleteWeaverWorkAsync(int id);
     Task<DatabaseActionResult> DeleteWeaverWorkForHostAsync(Guid hostId);
-    Task<DatabaseActionResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan);
+    Task<DatabaseActionResult<int>> DeleteWeaverWorkOlderThanAsync(DateTime olderThan);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkAsync(string searchText);
     Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

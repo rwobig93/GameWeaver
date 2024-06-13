@@ -16,6 +16,7 @@ using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
+using Domain.Enums.Lifecycle;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.Lifecycle;
@@ -35,11 +36,12 @@ public class JobManager : IJobManager
     private readonly IRunningServerState _serverState;
     private readonly IGameRepository _gameRepository;
     private readonly IHostService _hostService;
+    private readonly IGameServerRepository _gameServerRepository;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
         IOptions<SecurityConfiguration> securityConfig, IAuditTrailService auditService, IOptions<LifecycleConfiguration> lifecycleConfig,
         IGameServerService gameServerService, IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository,
-        IHostService hostService)
+        IHostService hostService, IGameServerRepository gameServerRepository)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -52,6 +54,7 @@ public class JobManager : IJobManager
         _serverState = serverState;
         _gameRepository = gameRepository;
         _hostService = hostService;
+        _gameServerRepository = gameServerRepository;
         _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
@@ -75,22 +78,46 @@ public class JobManager : IJobManager
             var auditCleanup = await _auditService.DeleteOld(_lifecycleConfig.AuditLogLifetime);
             if (!auditCleanup.Succeeded)
             {
-                _logger.Error("Audit cleanup failed: {Error}", auditCleanup.Messages);
+                _logger.Error("Daily Cleanup: Audit cleanup failed: {Error}", auditCleanup.Messages);
             }
             _logger.Information("Daily Cleanup: Cleaned {RecordCount} audit records", auditCleanup.Data);
             
             var hostRegistrationCleanup = await _hostService.DeleteRegistrationsOlderThanAsync(_serverState.SystemUserId, _lifecycleConfig.HostRegistrationCleanupHours);
             if (!hostRegistrationCleanup.Succeeded)
             {
-                _logger.Error("Host registration cleanup failed: {Error}", hostRegistrationCleanup.Messages);
+                _logger.Error("Daily Cleanup: Host registration cleanup failed: {Error}", hostRegistrationCleanup.Messages);
             }
             _logger.Information("Daily Cleanup: Cleaned {RecordCount} host registration records", hostRegistrationCleanup.Data);
             
             // TODO: Cleanup non-default game profiles that aren't bound to any game servers
+            var allGameProfiles = await _gameServerRepository.GetAllGameProfilesAsync();
+            var allGameServers = await _gameServerRepository.GetAllAsync();
+            var allGames = await _gameRepository.GetAllAsync();
+            foreach (var gameProfile in allGameProfiles.Result?.ToList() ?? [])
+            {
+                var assignedServer = allGameServers.Result?.FirstOrDefault(x => x.GameProfileId == gameProfile.Id || x.ParentGameProfileId == gameProfile.Id);
+                var assignedGame = allGames.Result?.FirstOrDefault(x => x.DefaultGameProfileId == gameProfile.Id);
+                if (assignedServer is null && assignedGame is null)
+                {
+                    // TODO: Cleanup profile based on results
+                }
+            }
             
-            // TODO: Cleanup old weaver work using a configurable timeframe
+            var workCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.WeaverWorkCleanupAfterDays);
+            var weaverWorkCleanup = await _hostService.DeleteWeaverWorkOlderThanAsync(workCleanupTimestamp, _serverState.SystemUserId);
+            if (!weaverWorkCleanup.Succeeded)
+            {
+                _logger.Error("Daily Cleanup: Weaver work cleanup failed: {Error}", weaverWorkCleanup.Messages);
+            }
+            _logger.Information("Daily Cleanup: Cleaned {RecordCount} weaver work records", weaverWorkCleanup.Data);
             
-            // TODO: Cleanup old host checkins using a configurable timeframe
+            var hostCheckInCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.HostCheckInCleanupAfterDays);
+            var hostCheckInCleanup = await _hostService.DeleteAllOldCheckInsAsync(hostCheckInCleanupTimestamp, _serverState.SystemUserId);
+            if (!hostCheckInCleanup.Succeeded)
+            {
+                _logger.Error("Daily Cleanup: Host checkin cleanup failed: {Error}", hostCheckInCleanup.Messages);
+            }
+            _logger.Information("Daily Cleanup: Cleaned {RecordCount} host checkin records", hostCheckInCleanup.Data);
             
             _logger.Debug("Finished daily cleanup");
         }

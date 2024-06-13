@@ -632,23 +632,13 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan)
+    public async Task<DatabaseActionResult<int>> DeleteAllOldCheckInsAsync(DateTime olderThan)
     {
         DatabaseActionResult<int> actionReturn = new();
 
         try
         {
-            var cleanupTimestamp = olderThan switch
-            {
-                CleanupTimeframe.OneMonth => _dateTime.NowDatabaseTime.AddMonths(-1).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.ThreeMonths => _dateTime.NowDatabaseTime.AddMonths(-3).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.SixMonths => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.OneYear => _dateTime.NowDatabaseTime.AddYears(-1).ToString(CultureInfo.CurrentCulture),
-                CleanupTimeframe.TenYears => _dateTime.NowDatabaseTime.AddYears(-10).ToString(CultureInfo.CurrentCulture),
-                _ => _dateTime.NowDatabaseTime.AddMonths(-6).ToString(CultureInfo.CurrentCulture)
-            };
-
-            var rowsDeleted = await _database.SaveData(HostCheckInTableMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});
+            var rowsDeleted = await _database.SaveData(HostCheckInTableMsSql.DeleteOlderThan, new { OlderThan = olderThan });
             actionReturn.Succeed(rowsDeleted);
         }
         catch (Exception ex)
@@ -949,7 +939,7 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan)
+    public async Task<DatabaseActionResult<int>> DeleteWeaverWorkOlderThanAsync(DateTime olderThan)
     {
         DatabaseActionResult<int> actionReturn = new();
 

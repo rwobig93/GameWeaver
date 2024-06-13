@@ -18,4 +18,12 @@ public class LifecycleConfiguration : IAppSettingsSection
 
     [Range(0, 8_760)]
     public int HostRegistrationCleanupHours { get; set; } = 24;
+
+    [Range(1, 3_650)]
+    public int WeaverWorkCleanupAfterDays { get; set; } = 90;
+
+    [Range(1, 365)]
+    public int HostCheckInCleanupAfterDays { get; set; } = 14;
+
+    public bool CleanupUnusedGameProfiles { get; set; } = true;
 }
