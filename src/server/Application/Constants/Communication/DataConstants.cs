@@ -1,4 +1,4 @@
-﻿namespace Application.Constants.Web;
+﻿namespace Application.Constants.Communication;
 
 public static class DataConstants
 {
@@ -12,5 +12,10 @@ public static class DataConstants
         public const string DisplayFormat = "MM/dd/yyyy hh:mm:ss tt zzz";
         public const string TimeShortFormat = "hh:mm:ss";
         public const string FileNameFormat = "ddMMyyyyHHmmss";
+    }
+
+    public static class Logging
+    {
+        public const string JobDailyCleanup = "DAILY_CLEANUP ::";
     }
 }

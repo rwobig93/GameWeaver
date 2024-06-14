@@ -1,4 +1,5 @@
-﻿using Application.Helpers.GameServer;
+﻿using Application.Constants.Communication;
+using Application.Helpers.GameServer;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
@@ -78,18 +79,17 @@ public class JobManager : IJobManager
             var auditCleanup = await _auditService.DeleteOld(_lifecycleConfig.AuditLogLifetime);
             if (!auditCleanup.Succeeded)
             {
-                _logger.Error("Daily Cleanup: Audit cleanup failed: {Error}", auditCleanup.Messages);
+                _logger.Error("{LogPrefix} Audit cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, auditCleanup.Messages);
             }
-            _logger.Information("Daily Cleanup: Cleaned {RecordCount} audit records", auditCleanup.Data);
+            _logger.Information("{LogPrefix} Cleaned {RecordCount} audit records", DataConstants.Logging.JobDailyCleanup, auditCleanup.Data);
             
             var hostRegistrationCleanup = await _hostService.DeleteRegistrationsOlderThanAsync(_serverState.SystemUserId, _lifecycleConfig.HostRegistrationCleanupHours);
             if (!hostRegistrationCleanup.Succeeded)
             {
-                _logger.Error("Daily Cleanup: Host registration cleanup failed: {Error}", hostRegistrationCleanup.Messages);
+                _logger.Error("{LogPrefix} Host registration cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, hostRegistrationCleanup.Messages);
             }
-            _logger.Information("Daily Cleanup: Cleaned {RecordCount} host registration records", hostRegistrationCleanup.Data);
+            _logger.Information("{LogPrefix} Cleaned {RecordCount} host registration records", DataConstants.Logging.JobDailyCleanup, hostRegistrationCleanup.Data);
             
-            // TODO: Cleanup non-default game profiles that aren't bound to any game servers
             var allGameProfiles = await _gameServerRepository.GetAllGameProfilesAsync();
             var allGameServers = await _gameServerRepository.GetAllAsync();
             var allGames = await _gameRepository.GetAllAsync();
@@ -97,33 +97,44 @@ public class JobManager : IJobManager
             {
                 var assignedServer = allGameServers.Result?.FirstOrDefault(x => x.GameProfileId == gameProfile.Id || x.ParentGameProfileId == gameProfile.Id);
                 var assignedGame = allGames.Result?.FirstOrDefault(x => x.DefaultGameProfileId == gameProfile.Id);
-                if (assignedServer is null && assignedGame is null)
+                if (assignedServer is not null || assignedGame is not null)
                 {
-                    // TODO: Cleanup profile based on results
+                    continue;
                 }
+                
+                var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(gameProfile.Id, _serverState.SystemUserId);
+                if (!profileDelete.Succeeded)
+                {
+                    _logger.Error("{LogPrefix} Failed to delete unassigned game profile [{GameProfileId}]: {Error}",
+                        DataConstants.Logging.JobDailyCleanup, gameProfile.Id, profileDelete.ErrorMessage);
+                    continue;
+                }
+                    
+                _logger.Information("{LogPrefix} Deleted unassigned game profile: [{GameProfileId}]{GameProfileName}",
+                    DataConstants.Logging.JobDailyCleanup, gameProfile.Id, gameProfile.FriendlyName);
             }
             
             var workCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.WeaverWorkCleanupAfterDays);
             var weaverWorkCleanup = await _hostService.DeleteWeaverWorkOlderThanAsync(workCleanupTimestamp, _serverState.SystemUserId);
             if (!weaverWorkCleanup.Succeeded)
             {
-                _logger.Error("Daily Cleanup: Weaver work cleanup failed: {Error}", weaverWorkCleanup.Messages);
+                _logger.Error("{LogPrefix} Weaver work cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, weaverWorkCleanup.Messages);
             }
-            _logger.Information("Daily Cleanup: Cleaned {RecordCount} weaver work records", weaverWorkCleanup.Data);
+            _logger.Information("{LogPrefix} Cleaned {RecordCount} weaver work records", DataConstants.Logging.JobDailyCleanup, weaverWorkCleanup.Data);
             
             var hostCheckInCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.HostCheckInCleanupAfterDays);
             var hostCheckInCleanup = await _hostService.DeleteAllOldCheckInsAsync(hostCheckInCleanupTimestamp, _serverState.SystemUserId);
             if (!hostCheckInCleanup.Succeeded)
             {
-                _logger.Error("Daily Cleanup: Host checkin cleanup failed: {Error}", hostCheckInCleanup.Messages);
+                _logger.Error("{LogPrefix} Host checkin cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, hostCheckInCleanup.Messages);
             }
-            _logger.Information("Daily Cleanup: Cleaned {RecordCount} host checkin records", hostCheckInCleanup.Data);
+            _logger.Information("{LogPrefix} Cleaned {RecordCount} host checkin records", DataConstants.Logging.JobDailyCleanup, hostCheckInCleanup.Data);
             
             _logger.Debug("Finished daily cleanup");
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Daily cleanup failed: {Error}", ex.Message);
+            _logger.Error(ex, "{LogPrefix} Daily cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, ex.Message);
         }
     }
 
@@ -131,7 +142,9 @@ public class JobManager : IJobManager
     {
         // If account lockout threshold is 0 minutes then accounts are locked until unlocked by an administrator
         if (_securityConfig.AccountLockoutMinutes == 0)
+        {
             return;
+        }
 
         var allLockedOutUsers = await _userRepository.GetAllLockedOutAsync();
         if (!allLockedOutUsers.Succeeded || allLockedOutUsers.Result is null)
