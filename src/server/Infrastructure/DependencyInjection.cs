@@ -367,7 +367,6 @@ public static class DependencyInjection
                 bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
                 bearer.AutomaticRefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
                 bearer.RefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
-                bearer.SaveToken = true;
 
                 bearer.Events = new JwtBearerEvents
                 {

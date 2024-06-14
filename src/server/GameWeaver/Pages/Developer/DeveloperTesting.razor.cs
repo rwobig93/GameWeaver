@@ -735,7 +735,6 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
         
-        // TODO: Add host registration token cleanup after configured time period if it hasn't been used
         _registrationToken = registerRequest.Data.RegisterUrl;
         var copyResult = await WebClientService.InvokeClipboardCopy(registerRequest.Data.RegisterUrl);
         if (!copyResult.Succeeded)
