@@ -57,6 +57,39 @@
                 </MudItem>
             }
         </MudTabPanel>
+        <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="Device Sessions">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Device Sessions</MudText>
+            </MudItem>
+            <MudItem xs="16" sm="20" md="28" lg="36">
+                <MudTable Items="@_userClientSessions" ReadOnly="true" Elevation="6">
+                    <ToolBarContent>
+                        <MudContainer Class="d-flex flex-wrap gap-4">
+                            <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                     IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
+                                <MudMenuItem IconColor="Color.Error" OnClick="ForceLogin" Icon="@Icons.Material.Filled.Update">Logout Of All Devices</MudMenuItem>
+                            </MudMenu>
+                        </MudContainer>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>State</MudTh>
+                        <MudTh>Session Id (Last 12)</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Devices"/></MudTd>
+                        <MudTd DataLabel="State">@context.Description</MudTd>
+                        <MudTd DataLabel="SessionId)">@context.Value[^12..]</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText>No Device Sessions Found</MudText>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudText>Loading...</MudText>
+                    </LoadingContent>
+                </MudTable>
+            </MudItem>
+        </MudTabPanel>
         <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="Password">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Change Password</MudText>

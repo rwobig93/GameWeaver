@@ -149,7 +149,7 @@ public static class HostCheckinEndpoints
     }
     
     /// <summary>
-    /// Get a host checkins by the host Id
+    /// Get a host checkins by the host ID
     /// </summary>
     /// <param name="id">Id of the host</param>
     /// <param name="hostService"></param>
@@ -173,6 +173,7 @@ public static class HostCheckinEndpoints
     /// <param name="olderThanDays">Number of days to remove checkins after</param>
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
+    /// <param name="dateTime"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.HostCheckins.DeleteOld)]
     private static async Task<IResult> DeleteOld([FromBody]int olderThanDays, IHostService hostService, ICurrentUserService currentUserService, IDateTimeService dateTime)

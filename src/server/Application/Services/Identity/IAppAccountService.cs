@@ -30,8 +30,8 @@ public interface IAppAccountService
     Task<IResult> ForgotPasswordConfirmationAsync(Guid userId, string confirmationCode, string password, string confirmPassword);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
-    Task<IResult> ForceUserLogin(Guid userId);
-    Task<IResult> ForceUserPasswordReset(Guid userId);
+    Task<IResult> ForceUserLogin(Guid userId, Guid requestUserId);
+    Task<IResult> ForceUserPasswordReset(Guid userId, Guid requestUserId);
     Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled);
     Task<IResult> SetTwoFactorKey(Guid userId, string key);
     Task<IResult<bool>> DoesCurrentSessionNeedReAuthenticated();

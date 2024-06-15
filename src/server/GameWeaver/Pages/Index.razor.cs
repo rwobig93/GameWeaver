@@ -21,19 +21,10 @@ public partial class Index
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try
+        if (firstRender)
         {
-            if (firstRender)
-            {
-                await UpdateLoggedInUser();
-                await GetPermissions();
-                StateHasChanged();
-            }
-        }
-        catch
-        {
-            // User has old saved token, so we'll force a local storage clear and de-authenticate then redirect due to being unauthorized
-            await AccountService.LogoutGuiAsync(Guid.Empty);
+            await UpdateLoggedInUser();
+            await GetPermissions();
             StateHasChanged();
         }
     }

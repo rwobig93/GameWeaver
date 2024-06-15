@@ -11,7 +11,7 @@
         <ToolBarContent>
             <MudContainer Class="d-flex flex-row gap-3">
                 <MudText Typo="Typo.h6" Class="pr-2 my-2">Users</MudText>
-                @if (_canEnableUsers || _canDisableUsers || _canResetPasswords)
+                @if (_canEnableUsers || _canDisableUsers || _canResetPasswords || _canForceLogin)
                 {
                     <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
                              IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
@@ -29,6 +29,11 @@
                         {
                             <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="@ForcePasswordResets"
                                          Icon="@Icons.Material.Filled.LockReset">Reset Password</MudMenuItem>
+                        }
+                        @if (_canForceLogin)
+                        {
+                            <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedItems.Count < 1)" OnClick="@ForceLogin"
+                                         Icon="@Icons.Material.Filled.Login">Force Logout</MudMenuItem>
                         }
                     </MudMenu>
                 }

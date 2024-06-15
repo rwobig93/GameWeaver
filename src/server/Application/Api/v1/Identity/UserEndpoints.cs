@@ -322,17 +322,19 @@ public static class UserEndpoints
     /// </summary>
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="accountService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns></returns>
     /// <remarks>
     /// - User will be forced to re-authenticate after initiating a reset
     /// - Password reset email will be sent to the user's email address
     /// </remarks>
     [Authorize(Policy = PermissionConstants.Identity.Users.ResetPassword)]
-    private static async Task<IResult> ResetPassword(Guid userId, IAppAccountService accountService)
+    private static async Task<IResult> ResetPassword(Guid userId, IAppAccountService accountService, ICurrentUserService currentUserService)
     {
         try
         {
-            var resetRequest = await accountService.ForceUserPasswordReset(userId);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            var resetRequest = await accountService.ForceUserPasswordReset(userId, currentUserId);
             if (!resetRequest.Succeeded) return resetRequest;
             return await Result.SuccessAsync("Successfully reset password, email has been sent to the user to finish the reset");
         }

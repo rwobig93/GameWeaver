@@ -55,8 +55,16 @@ public static class PermissionHelpers
     {
         return
         [
+            // Preferences
             PermissionConstants.Identity.Preferences.ChangeTheme,
+            
+            // System
             PermissionConstants.System.Jobs.View,
+            PermissionConstants.System.Audit.View,
+            PermissionConstants.System.Audit.Search,
+            PermissionConstants.System.Audit.Export,
+            
+            // Permissions & Roles
             PermissionConstants.Identity.Permissions.View,
             PermissionConstants.Identity.Permissions.Add,
             PermissionConstants.Identity.Permissions.Remove,
@@ -66,6 +74,8 @@ public static class PermissionHelpers
             PermissionConstants.Identity.Roles.Delete,
             PermissionConstants.Identity.Roles.Add,
             PermissionConstants.Identity.Roles.Remove,
+            
+            // Users & Accounts
             PermissionConstants.Identity.Users.View,
             PermissionConstants.Identity.Users.Edit,
             PermissionConstants.Identity.Users.Create,
@@ -74,9 +84,6 @@ public static class PermissionHelpers
             PermissionConstants.Identity.Users.Enable,
             PermissionConstants.Identity.Users.ResetPassword,
             PermissionConstants.Identity.Users.ChangeEmail,
-            PermissionConstants.System.Audit.View,
-            PermissionConstants.System.Audit.Search,
-            PermissionConstants.System.Audit.Export,
             PermissionConstants.Identity.ServiceAccounts.View
         ];
     }

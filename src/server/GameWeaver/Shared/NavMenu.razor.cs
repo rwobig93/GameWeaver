@@ -24,6 +24,11 @@ public partial class NavMenu
     private async Task GetPermissions()
     {
         var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
+        if (currentUser is null)
+        {
+            return;
+        }
+        
         _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.View);
         _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Jobs.View);
         _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.View);

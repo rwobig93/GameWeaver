@@ -4,6 +4,7 @@ using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
+using Application.Models.Identity.UserExtensions;
 using Domain.Enums.Identity;
 using GameWeaver.Components.Identity;
 
@@ -42,6 +43,7 @@ public partial class UserView
     private bool _canViewExtendedAttrs;
     private bool _canAdminServiceAccount;
     private bool _canAdminEmail;
+    private bool _canForceLogin;
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -107,6 +109,7 @@ public partial class UserView
         _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Permissions.Remove);
         _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.ViewExtAttrs);
         _canAdminEmail = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.AdminEmail);
+        _canForceLogin = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.ForceLogin);
         if (_viewingUser.AccountType != AccountType.Service) return;
         
         _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.ServiceAccounts.Admin);
@@ -265,5 +268,22 @@ public partial class UserView
         _processingEmailChange = false;
         StateHasChanged();
         Snackbar.Add(emailChangeRequest.Messages.First(), Severity.Success);
+    }
+    
+    private async Task ForceLogin()
+    {
+        var requestUserId = CurrentUserService.GetIdFromPrincipal(_currentUser);
+        var result = await AccountService.ForceUserLogin(_viewingUser.Id, requestUserId);
+        if (!result.Succeeded)
+        {
+            result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+        }
+        else
+        {
+            result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
+            Snackbar.Add("Successfully logged out all user device sessions!");
+            await GetViewingUser();
+            StateHasChanged();
+        }
     }
 }

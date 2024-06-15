@@ -20,6 +20,7 @@ public static class PermissionConstants
             public const string ViewExtAttrs = "Permissions.Identity.Users.ViewExtAttrs";
             public const string ChangeEmail = "Permissions.Identity.Users.ChangeEmail";
             public const string AdminEmail = "Permissions.Identity.Users.AdminEmail";
+            public const string ForceLogin = "Permissions.Identity.Users.ForceLogin";
         }
 
         public static class ServiceAccounts

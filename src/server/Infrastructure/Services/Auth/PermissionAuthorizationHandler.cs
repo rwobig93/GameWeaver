@@ -48,8 +48,8 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             var currentAuthState = await _accountService.GetCurrentAuthState(userId);
             var redirectReason = currentAuthState.Data switch
             {
-                AuthState.LoginRequired => LoginRedirectReason.SessionExpired,
-                _ => LoginRedirectReason.FullLoginTimeout
+                AuthState.LoginRequired => LoginRedirectReason.ReAuthenticationForce,
+                _ => LoginRedirectReason.SessionExpired
             };
             _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(redirectReason), true);
             return;
@@ -58,7 +58,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         // User has an expired session, let's try re-authenticating them using the refresh token
         if (context.User == UserConstants.ExpiredPrincipal)
         {
-            var reAuthenticationSuccess = await AttemptReAuthentication();
+            var reAuthenticationSuccess = await AttemptReAuthentication(userId);
             if (!reAuthenticationSuccess)
             {
                 context.Fail();
@@ -76,7 +76,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         var sessionNeedsReAuthenticated = (await _accountService.DoesCurrentSessionNeedReAuthenticated()).Data;
         if (sessionNeedsReAuthenticated)
         {
-            var reAuthenticationSuccess = await AttemptReAuthentication();
+            var reAuthenticationSuccess = await AttemptReAuthentication(userId);
             if (!reAuthenticationSuccess)
             {
                 context.Fail();
@@ -85,8 +85,8 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
                 return;
             }
             
-            _navigationManager.NavigateTo(_navigationManager.Uri, true);
             context.Fail();
+            _navigationManager.NavigateTo(_navigationManager.Uri, true);
             return;
         }
 
@@ -111,19 +111,23 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         context.Fail();
     }
 
-    private async Task<bool> AttemptReAuthentication()
+    private async Task<bool> AttemptReAuthentication(Guid? userId = null)
     {
         var response = await _accountService.ReAuthUsingRefreshTokenAsync();
-        if (response.Succeeded) return true;
+        if (response.Succeeded)
+        {
+            return true;
+        }
         
         // Using refresh token failed, user must do a fresh login
-        await LogoutAndClearCache();
+        await LogoutAndClearCache(userId);
         return false;
     }
 
-    private async Task LogoutAndClearCache()
+    private async Task LogoutAndClearCache(Guid? userId = null)
     {
-        await _accountService.LogoutGuiAsync(Guid.Empty);
+        var logoutUserId = userId ?? Guid.Empty;
+        await _accountService.LogoutGuiAsync(logoutUserId);
         var loginUriFull = QueryHelpers.AddQueryString(
             AppRouteConstants.Identity.Login, LoginRedirectConstants.RedirectParameter, nameof(LoginRedirectReason.SessionExpired));
         

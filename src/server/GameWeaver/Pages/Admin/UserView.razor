@@ -46,6 +46,12 @@ else
                        OnClick="@ChangeEmail">Change Email
             </MudButton>
         }
+        @if (_canForceLogin)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login"
+                       OnClick="@ForceLogin">Force Logout
+            </MudButton>
+        }
         @if (_editMode)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 
@@ -78,7 +84,7 @@ else
             <MudTextField @bind-Value="_viewingUser.LastName" Label="Last Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudCheckBox @bind-Checked="_viewingUser.AuthState" Converter="@(new AuthStateConverter())" Label="Is Enabled" Disabled="@(!_enableEditable)"
+            <MudCheckBox @bind-Value="_viewingUser.AuthState" Converter="@(new AuthStateConverter())" Label="Is Enabled" Disabled="@(!_enableEditable)"
                          Class="pe-4"/>
             <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>

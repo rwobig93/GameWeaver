@@ -20,8 +20,6 @@ public partial class ConfirmEmail
             await StartEmailConfirmation();
             StateHasChanged();
         }
-
-        await Task.CompletedTask;
     }
 
     private void ParseParametersFromUri()

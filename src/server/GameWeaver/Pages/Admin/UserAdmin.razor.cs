@@ -24,12 +24,14 @@ public partial class UserAdmin
     private string _searchString = "";
     private int _totalUsers;
 
+    private Guid _currentUserId;
     private bool _canEnableUsers;
     private bool _canDisableUsers;
     private bool _canResetPasswords;
     private bool _allowUserSelection;
     private bool _canAdminServiceAccounts;
     private bool _canExportUsers;
+    private bool _canForceLogin;
 
     private bool _dense = true;
     private bool _hover = true;
@@ -50,14 +52,21 @@ public partial class UserAdmin
 
     private async Task GetPermissions()
     {
-        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
+        if (currentUser is null)
+        {
+            return;
+        }
+        
+        _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canResetPasswords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.ResetPassword);
         _canDisableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.Disable);
         _canEnableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.Enable);
         _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.ServiceAccounts.Admin);
         _canExportUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.Export);
+        _canForceLogin = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.ForceLogin);
 
-        _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers;
+        _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers || _canForceLogin;
     }
     
     private async Task<TableData<AppUserSlim>> ServerReload(TableState state)
@@ -169,12 +178,46 @@ public partial class UserAdmin
                 continue;
             }
             
-            var result = await AccountService.ForceUserPasswordReset(account.Id);
+            var result = await AccountService.ForceUserPasswordReset(account.Id, _currentUserId);
             if (!result.Succeeded)
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             else
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
         }
+    }
+
+    private async Task ForceLogin()
+    {
+        if (!_canForceLogin)
+        {
+            Snackbar.Add("You don't have permission to reset passwords, how'd you initiate this request!?", Severity.Error);
+            return;
+        }
+
+        List<string> errorMessages = [];
+
+        foreach (var account in _selectedItems)
+        {
+            if (account.AccountType != AccountType.User)
+            {
+                Snackbar.Add($"Account {account.Username} is a service account, can't force a login for {account.AccountType} accounts",
+                    Severity.Error);
+                continue;
+            }
+            
+            var result = await AccountService.ForceUserLogin(account.Id, _currentUserId);
+            if (!result.Succeeded)
+            {
+                errorMessages.AddRange(result.Messages);
+            }
+        }
+
+        if (errorMessages.Count != 0)
+        {
+            errorMessages.ForEach(x => Snackbar.Add(x, Severity.Error));
+        }
+
+        Snackbar.Add("Finished clearing device session for selected accounts", Severity.Success);
     }
 
     private void ViewUser(Guid userId)

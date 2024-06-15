@@ -647,7 +647,7 @@
         </member>
         <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.GetByHostId(System.Guid,Application.Services.GameServer.IHostService)">
             <summary>
-            Get a host checkins by the host Id
+            Get a host checkins by the host ID
             </summary>
             <param name="id">Id of the host</param>
             <param name="hostService"></param>
@@ -660,6 +660,7 @@
             <param name="olderThanDays">Number of days to remove checkins after</param>
             <param name="hostService"></param>
             <param name="currentUserService"></param>
+            <param name="dateTime"></param>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.Search(System.String,Application.Services.GameServer.IHostService)">
@@ -1544,12 +1545,13 @@
             <param name="currentUserService"></param>
             <returns></returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.UserEndpoints.ResetPassword(System.Guid,Application.Services.Identity.IAppAccountService)">
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.ResetPassword(System.Guid,Application.Services.Identity.IAppAccountService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Reset the password of the specified user account
             </summary>
             <param name="userId">GUID ID of the user</param>
             <param name="accountService"></param>
+            <param name="currentUserService"></param>
             <returns></returns>
             <remarks>
             - User will be forced to re-authenticate after initiating a reset

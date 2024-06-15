@@ -31,7 +31,6 @@ public partial class SettingsMenu
             await GetPermissions();
             await GetClientTimezone();
             StateHasChanged();
-            await Task.CompletedTask;
         }
     }
     
