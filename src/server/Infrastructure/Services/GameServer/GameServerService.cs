@@ -193,7 +193,6 @@ public class GameServerService : IGameServerService
             }
         }
 
-        // TODO: Remove ServerProcessName, we look at processes based on directory so we have no need to know the process name anymore
         var createdGameProfile = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
             FriendlyName = $"Server Profile - {request.Name}",
@@ -341,8 +340,7 @@ public class GameServerService : IGameServerService
                 var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
                 {
                     {"Detail", "Failed to delete server profile before game server deletion"},
-                    {"Error", string.Join(Environment.NewLine , profileDeleteRequest.Messages)}
-                    // TODO: ToString doesn't display, do a join instead {"Error", profileDeleteRequest.Messages.ToString() ?? ""}
+                    {"Error", profileDeleteRequest.Messages.ToString() ?? ""}
                 });
                 return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
             }
@@ -691,7 +689,7 @@ public class GameServerService : IGameServerService
                     resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
                 }
             
-                finalResourceList.AddRange(convertedResources);
+                finalResourceList.MergeResources(convertedResources);
             }
         }
 
@@ -703,8 +701,6 @@ public class GameServerService : IGameServerService
             {
                 resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
             }
-            // TODO: Add ignore key to ConfigurationItem for priority during inheritance checking
-            // TODO: Remove GameServerId from LocalResource since we want all profile config on the profile and not the server
             
             finalResourceList.MergeResources(convertedResources);
         }
@@ -1039,18 +1035,7 @@ public class GameServerService : IGameServerService
 
         return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result.ToSlims());
     }
-
-    public async Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName)
-    {
-        var request = await _gameServerRepository.GetGameProfilesByServerProcessNameAsync(serverProcessName);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameProfileSlim>>.FailAsync(request.ErrorMessage);
-        if (request.Result is null)
-            return await Result<IEnumerable<GameProfileSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
-
-        return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result.ToSlims());
-    }
-
+    
     public async Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreateRequest request, Guid requestUserId)
     {
         if (string.IsNullOrWhiteSpace(request.Name))

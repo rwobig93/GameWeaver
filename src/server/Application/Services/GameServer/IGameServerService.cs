@@ -55,7 +55,6 @@ public interface IGameServerService
     Task<IResult<GameProfileSlim>> GetGameProfileByFriendlyNameAsync(string friendlyName);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByGameIdAsync(Guid id);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByOwnerIdAsync(Guid id);
-    Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName);
     Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreateRequest request, Guid requestUserId);
     Task<IResult> UpdateGameProfileAsync(GameProfileUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteGameProfileAsync(Guid id, Guid requestUserId);

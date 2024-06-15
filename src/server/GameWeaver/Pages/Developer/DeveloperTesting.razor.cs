@@ -72,7 +72,6 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly GameProfileSlim _defaultProfile = new()
     {
         FriendlyName = "Conan Exiles - Profile",
-        ServerProcessName = "ConanSandboxServer.exe"
     };
     private readonly GameServerSlim _desiredGameServer = new()
     {

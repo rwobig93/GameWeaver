@@ -768,25 +768,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         return actionReturn;
     }
-
-    public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName)
-    {
-        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
-
-        try
-        {
-            var foundProfile = await _database.LoadData<GameProfileDb, dynamic>(
-                GameProfilesTableMsSql.GetByServerProcessName, new {ServerProcessName = serverProcessName});
-            actionReturn.Succeed(foundProfile);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetByServerProcessName.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
+    
     public async Task<DatabaseActionResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();

@@ -1,4 +1,7 @@
-﻿namespace Application.Helpers.Runtime;
+﻿using System.Net;
+using System.Net.Sockets;
+
+namespace Application.Helpers.Runtime;
 
 public static class NetworkHelpers
 {
@@ -42,5 +45,32 @@ public static class NetworkHelpers
         }
 
         return parsedPorts;
+    }
+    
+    public static async Task<string?> ParseIpFromIpOrHost(string ipOrHost)
+    {
+        if (IPAddress.TryParse(ipOrHost, out var ip))
+        {
+            return ip.ToString();
+        }
+        
+        // The input is a hostname, perform DNS lookup
+        try
+        {
+            var addresses = await Dns.GetHostAddressesAsync(ipOrHost);
+            foreach (var address in addresses)
+            {
+                if (address.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return address.ToString();
+                }
+            }
+            
+            return addresses[0].ToString();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
     }
 }

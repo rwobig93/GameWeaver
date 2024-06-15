@@ -237,41 +237,6 @@ public class GameServerService : IGameServerService
             }
         }
     }
-    
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(Guid id)
-    {
-        // From Powershell server-watcher.ps1 script
-        // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
-        //
-        // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_status "443030" +quit
-        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
-        
-        // Another option, check game id via API: https://api.steamcmd.net/v1/info/$steamAppId
-        //  $jsonContent = $response | ConvertFrom-Json
-        //  $version = $jsonContent.data."$steamAppId".depots.branches.public.buildid
-        //  $timeUpdated = $jsonContent.data."$steamAppId".depots.branches.public.timeupdated
-        //  $epoch = [DateTime]::new(1970, 1, 1, 0, 0, 0, [DateTimeKind]::Utc)
-        //  $releaseDate = $epoch.AddSeconds($timeUpdated)
-        await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
-    }
-
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(Guid id, Mod mod)
-    {
-        // https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?itemcount=1&publishedfileids%5B0%5D=3120364390
-        // See: https://www.reddit.com/r/Steam/comments/30l5au/web_api_for_workshop_items/
-        // response.publishedfiledetails.publishedfileid
-        // response.publishedfiledetails.hcontent_file
-        // response.publishedfiledetails.title
-        // response.publishedfiledetails.time_created
-        // response.publishedfiledetails.time_updated
-        await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
-    }
 
     public async Task<IResult<Guid>> Create(GameServerLocal gameServer)
     {
@@ -331,9 +296,7 @@ public class GameServerService : IGameServerService
         // steamcmd.exe +login anonymous +workshop_download_item {steamGameId} {workshopItemId} +quit
         // See: https://steamcommunity.com/app/346110/discussions/10/530649887212662565/?l=hungarian#c521643320353037920
         await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
+        return await Result.FailAsync("This method isn't implemented yet");
     }
 
     public async Task<IResult> UninstallGame(Guid id)
@@ -360,9 +323,7 @@ public class GameServerService : IGameServerService
     {
         // Delete mod directory and cleanup GameServer object
         await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
+        return await Result.FailAsync("This method isn't implemented yet");
     }
 
     private void DeleteOldBackups(string backupPath)
@@ -550,14 +511,11 @@ public class GameServerService : IGameServerService
     {
         try
         {
-            // TODO: Getting error on realtime update: Failure updating local weaver work status occurred: [0]"Weaver work with Id [0] doesn't exist"
-            // Before error: Realtime server state has changed from expected: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024" [Expected]Unknown [Current]Shutdown
-            // Before error: Successfully updated gameserver: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024"
-            // Before error: Adding weaver work update: [0]Completed
-            // Before error: Sending outgoing communication => 0
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            {
                 return await Result<ServerState>.FailAsync(gameServerRequest.Messages);
+            }
             
             var gameServer = gameServerRequest.Data;
 
@@ -684,7 +642,6 @@ public class GameServerService : IGameServerService
         var filePath = configFile.GetFullPath();
         var fileContent = new StringBuilder();
 
-        // TODO: Load raw file, check if each line exists, if not add it for a successful merge
         foreach (var configItem in configFile.ConfigSets)
         {
             fileContent.Append(configItem.Value);
@@ -763,7 +720,6 @@ public class GameServerService : IGameServerService
                 }
                 default:
                 {
-                    // TODO: Implement XML content
                     errorMessages.Add($"Config file content type '{configFile.ContentType}' isn't currently supported");
                     continue;
                 }

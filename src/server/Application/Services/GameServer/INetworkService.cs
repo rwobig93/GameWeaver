@@ -7,5 +7,5 @@ namespace Application.Services.GameServer;
 public interface INetworkService
 {
     Task<IResult<bool>> IsGameServerConnectableAsync(GameServerConnectivityCheck check);
-    Task<IResult<bool>> IsPortOpenAsync(string ipAddress, int port, NetworkProtocol protocol, int timeoutMilliseconds);
+    Task<IResult<bool>> IsPortOpenAsync(string ipOrHost, int port, NetworkProtocol protocol, int timeoutMilliseconds);
 }

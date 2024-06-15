@@ -198,7 +198,6 @@ public class ControlServerService : IControlServerService
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
 
-        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
         var response = await httpClient.PostAsync(ApiConstants.GameServer.HostCheckins.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
@@ -220,7 +219,6 @@ public class ControlServerService : IControlServerService
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
         
-        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
         var response = await httpClient.PostAsync(ApiConstants.GameServer.WeaverWork.UpdateStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)

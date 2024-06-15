@@ -300,7 +300,6 @@ public class JobManager : IJobManager
             return;
         }
         
-        // TODO: Make filter terms configurable
         var serverApps = allSteamApps.Data.Where(x => x.Name.Contains("server", StringComparison.CurrentCultureIgnoreCase));
         foreach (var serverApp in serverApps)
         {

@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using Application.Helpers.Runtime;
 using Application.Models.GameServer.Network;
 using Application.Services.GameServer;
 using Domain.Contracts;
@@ -33,7 +34,6 @@ public class NetworkService : INetworkService
 
             if (check.Source == GameSource.Steam)
             {
-                // TODO: Figure out path forward, SteamQueryNet doesn't have native timeout and doesn't seem to get server data, QueryMaster gets packet header failure
                 var serverQuery = ServerQuery.GetServerInstance(EngineType.Source, check.HostIp, (ushort)check.PortQuery, 
                     sendTimeout: check.TimeoutMilliseconds, receiveTimeout: check.TimeoutMilliseconds, throwExceptions: true);
 
@@ -46,8 +46,6 @@ public class NetworkService : INetworkService
                 return await Result<bool>.SuccessAsync(true);
             }
 
-            // TODO: Port checking works for both UDP & TCP, since steam queries varies per game we should be getting server info from the
-            //       server configuration itself, define modular way to do so based on configuration items
             var portOpenCheck = await IsPortOpenAsync(check.HostIp, check.PortGame, check.Protocol, check.TimeoutMilliseconds);
             if (portOpenCheck.Data)
                 return await Result<bool>.SuccessAsync(true);
@@ -61,10 +59,16 @@ public class NetworkService : INetworkService
         }
     }
 
-    public async Task<IResult<bool>> IsPortOpenAsync(string ipAddress, int port, NetworkProtocol protocol, int timeoutMilliseconds)
+    public async Task<IResult<bool>> IsPortOpenAsync(string ipOrHost, int port, NetworkProtocol protocol, int timeoutMilliseconds)
     {
         try
         {
+            var parsedIp = await NetworkHelpers.ParseIpFromIpOrHost(ipOrHost);
+            if (parsedIp is null)
+            {
+                return await Result<bool>.FailAsync(false, "Failed to parse provided IP or Hostname into a usable IP Address");
+            }
+            
             switch (protocol)
             {
                 case NetworkProtocol.Tcp:
@@ -72,8 +76,7 @@ public class NetworkService : INetworkService
                     using var tcpClient = new TcpClient();
                     tcpClient.Client.SendTimeout = timeoutMilliseconds;
                     tcpClient.Client.ReceiveTimeout = timeoutMilliseconds;
-                    // TODO: Resolve host if hostname or loopback is provided instead
-                    var connectTask = tcpClient.BeginConnect(IPAddress.Parse(ipAddress), port, null, null);
+                    var connectTask = tcpClient.BeginConnect(IPAddress.Parse(parsedIp), port, null, null);
                     var connectResponseReceived = connectTask.AsyncWaitHandle.WaitOne(timeoutMilliseconds);
                     tcpClient.Close();
 
@@ -84,7 +87,7 @@ public class NetworkService : INetworkService
                     using var udpClient = new UdpClient();
                     udpClient.Client.SendTimeout = timeoutMilliseconds;
                     udpClient.Client.ReceiveTimeout = timeoutMilliseconds;
-                    udpClient.Connect(ipAddress, port);
+                    udpClient.Connect(parsedIp, port);
                     await udpClient.SendAsync(new byte[69]);
                     var receiveTask = udpClient.BeginReceive(null, null);
                     var responseReceived = receiveTask.AsyncWaitHandle.WaitOne(timeoutMilliseconds);
@@ -93,7 +96,7 @@ public class NetworkService : INetworkService
                     return await Result<bool>.SuccessAsync(responseReceived);
                 }
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(protocol), protocol, null);
+                    return await Result<bool>.FailAsync(false, $"Invalid protocol type provided: {nameof(protocol)} => {protocol}");
             }
         }
         catch
