@@ -54,23 +54,30 @@ public class AppPermissionService : IAppPermissionService
 
     private async Task<bool> CanUserDoThisAction(Guid modifyingUserId, string claimValue)
     {
-        // If the user is the system user they have full reign so we let them past the permission validation
-        if (modifyingUserId == _serverState.SystemUserId) return true;
+        // If the user is the system user they have full reign, so we let them past the permission validation
+        if (modifyingUserId == _serverState.SystemUserId)
+        {
+            return true;
+        }
         
         // If the user is an admin we let them do whatever they want
         var modifyingUserIsAdmin = await IsUserAdmin(modifyingUserId);
         if (modifyingUserIsAdmin)
+        {
             return true;
+        }
 
         // If the permission is a dynamic permission and the user is a moderator they can administrate the permission
         if (claimValue.StartsWith("Dynamic."))
         {
             var modifyingUserIsModerator = await IsUserModerator(modifyingUserId);
             if (modifyingUserIsModerator)
+            {
                 return true;
+            }
         }
         
-        // If a user has the permission and they've been given access to add/remove permissions then they are good to go,
+        // If a user has the permission, and they've been given access to add/remove permissions then they are good to go,
         //    otherwise they can't add/remove a permission they themselves don't have
         var invokingUserHasRequestingPermission = await UserIncludingRolesHasPermission(modifyingUserId, claimValue);
         return invokingUserHasRequestingPermission.Data;

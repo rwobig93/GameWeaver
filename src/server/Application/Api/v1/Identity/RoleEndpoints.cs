@@ -29,7 +29,7 @@ public static class RoleEndpoints
         app.MapGet(ApiRouteConstants.Identity.Role.GetById, GetById).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.Identity.Role.Delete, DeleteRole).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.Role.Create, CreateRole).ApiVersionOne();
-        app.MapPut(ApiRouteConstants.Identity.Role.Update, UpdateRole).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.Identity.Role.Update, UpdateRole).ApiVersionOne();
         
         // Users
         app.MapGet(ApiRouteConstants.Identity.Role.GetRolesForUser, GetRolesForUser).ApiVersionOne();

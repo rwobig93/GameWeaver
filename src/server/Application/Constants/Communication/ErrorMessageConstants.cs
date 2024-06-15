@@ -42,6 +42,7 @@ public static class ErrorMessageConstants
 
     public static class Permissions
     {
+        public const string NotFound = "Was unable to find a permission using the information provided";
         public const string PermissionError = "You aren't authorized to do that, please go away";
         public const string CannotAdministrateMissingPermission =
             "You don't have the permission you are attempting to add/remove so you also can't administrate this permission";
@@ -50,6 +51,7 @@ public static class ErrorMessageConstants
 
     public static class Roles
     {
+        public const string NotFound = "Was unable to find a role using the information provided";
         public const string CannotAdministrateAdminRole = "You aren't a valid role level to administrate this role";
         public const string AdminSelfPowerRemovalError =
             "You can't remove admin access from yourself, another admin will have to revoke your access";

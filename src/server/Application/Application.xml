@@ -653,11 +653,11 @@
             <param name="hostService"></param>
             <returns>List of checkins for the host</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.DeleteOld(Domain.Enums.Lifecycle.CleanupTimeframe,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.DeleteOld(System.Int32,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService)">
             <summary>
             Delete host checkins older than the provided timeframe
             </summary>
-            <param name="olderThan">0=OneMonth, 1=ThreeMonths, 2=SixMonths, 3=OneYear, 4=TenYears</param>
+            <param name="olderThanDays">Number of days to remove checkins after</param>
             <param name="hostService"></param>
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
@@ -692,13 +692,6 @@
             <remarks>
             - Expiration time returned is in GMT/UTC
             </remarks>
-        </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAll(Application.Services.GameServer.IHostService)">
-            <summary>
-            Get all game server hosts
-            </summary>
-            <param name="hostService"></param>
-            <returns>List of game server hosts</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>

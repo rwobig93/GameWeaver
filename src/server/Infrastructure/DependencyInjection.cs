@@ -173,13 +173,14 @@ public static class DependencyInjection
         services.AddScoped<IWebClientService, WebClientService>();
     }
 
-    // ReSharper disable once UnusedMethodReturnValue.Local
-    private static IHttpClientBuilder ConfigureCertificateHandling(this IHttpClientBuilder httpClientBuilder, IConfiguration configuration)
+    private static void ConfigureCertificateHandling(this IHttpClientBuilder httpClientBuilder, IConfiguration configuration)
     {
         if (!configuration.GetSecuritySettings().TrustAllCertificates)
-            return httpClientBuilder;
+        {
+            return;
+        }
         
-        return httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
+        httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
         {
             return new HttpClientHandler()
             {
@@ -219,7 +220,7 @@ public static class DependencyInjection
         });
         services.Configure<SecurityStampValidatorOptions>(options =>
         {
-            options.ValidationInterval = TimeSpan.FromSeconds(securitySettings.PermissionValidationIntervalSeconds);
+            options.ValidationInterval = TimeSpan.FromSeconds(securitySettings.SecurityStampValidationIntervalMinutes);
         });
     }
 
@@ -365,8 +366,8 @@ public static class DependencyInjection
                 bearer.RequireHttpsMetadata = true;
                 bearer.SaveToken = true;
                 bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
-                bearer.AutomaticRefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
-                bearer.RefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
+                bearer.AutomaticRefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
+                bearer.RefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
 
                 bearer.Events = new JwtBearerEvents
                 {

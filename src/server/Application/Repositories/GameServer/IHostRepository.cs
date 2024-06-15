@@ -4,7 +4,6 @@ using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
-using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 
 namespace Application.Repositories.GameServer;

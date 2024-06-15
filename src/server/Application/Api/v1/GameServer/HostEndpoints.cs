@@ -26,12 +26,11 @@ public static class HostEndpoints
     public static void MapEndpointsHost(this IEndpointRouteBuilder app)
     {
         app.MapPost(ApiRouteConstants.GameServer.Host.GetToken, GetToken).ApiVersionOne();
-        app.MapGet(ApiRouteConstants.GameServer.Host.GetAll, GetAll).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetAllPaginated, GetAllPaginated).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetById, GetById).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.GetByHostname, GetByHostname).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Host.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Host.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.Host.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Host.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Host.Search, Search).ApiVersionOne();
     }
@@ -55,24 +54,6 @@ public static class HostEndpoints
         catch (Exception ex)
         {
             return await Result<HostAuthResponse>.FailAsync(ex.Message);
-        }
-    }
-
-    /// <summary>
-    /// Get all game server hosts
-    /// </summary>
-    /// <param name="hostService"></param>
-    /// <returns>List of game server hosts</returns>
-    [Authorize(PermissionConstants.GameServer.Hosts.GetAll)]
-    private static async Task<IResult<IEnumerable<HostSlim>>> GetAll(IHostService hostService)
-    {
-        try
-        {
-            return await hostService.GetAllAsync();
-        }
-        catch (Exception ex)
-        {
-            return await Result<IEnumerable<HostSlim>>.FailAsync(ex.Message);
         }
     }
     

@@ -33,7 +33,7 @@ public static class UserEndpoints
         app.MapGet(ApiRouteConstants.Identity.User.GetByUsername, GetUserByUsername).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetFullByUsername, GetFullUserByUsername).ApiVersionOne();
         
-        app.MapPut(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
 
         app.MapPost(ApiRouteConstants.Identity.User.Create, CreateUser).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.User.Register, Register).ApiVersionOne();

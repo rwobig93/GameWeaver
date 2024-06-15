@@ -83,14 +83,13 @@ public static class ApiRouteConstants
     {
         public static class Host
         {
-            public const string GetToken = "/api/host/get-token";
-            public const string GetAll = "/api/host/get-all";
-            public const string GetAllPaginated = "/api/host/get-all-paginated";
-            public const string GetById = "/api/host/get-id";
-            public const string GetByHostname = "/api/host/get-hostname";
-            public const string Create = "/api/host/create";
-            public const string Update = "/api/host/update";
-            public const string Delete = "/api/host/delete";
+            public const string GetToken = "/api/host/token";
+            public const string GetAllPaginated = "/api/hosts";
+            public const string GetById = "/api/host/id";
+            public const string GetByHostname = "/api/host/hostname";
+            public const string Create = "/api/host";
+            public const string Update = "/api/host";
+            public const string Delete = "/api/host";
             public const string Search = "/api/hosts/search";
         }
 
@@ -124,7 +123,7 @@ public static class ApiRouteConstants
             public const string GetById = "/api/weaver/work/id";
             public const string GetByStatus = "/api/weaver/works/status";
             public const string GetByType = "/api/weaver/works/type";
-            public const string GetWaitingForHost = "/api/weaver/works/waiting";
+            public const string GetWaitingForHost = "/api/weaver/work/waiting";
             public const string GetAllWaitingForHost = "/api/weaver/works/waiting";
             public const string Create = "/api/weaver/work";
             public const string Update = "/api/weaver/work";
@@ -144,9 +143,9 @@ public static class ApiRouteConstants
             public const string GetByGameProfileId = "/api/gameservers/gameprofileid";
             public const string GetByHostId = "/api/gameservers/hostid";
             public const string GetByOwnerId = "/api/gameservers/ownerid";
-            public const string Create = "/api/gameserver/create";
-            public const string Update = "/api/gameserver/update";
-            public const string Delete = "/api/gameserver/delete";
+            public const string Create = "/api/gameserver";
+            public const string Update = "/api/gameserver";
+            public const string Delete = "/api/gameserver";
             public const string Search = "/api/gameservers/search";
             public const string StartServer = "/api/gameserver/start";
             public const string StopServer = "/api/gameserver/stop";
@@ -205,24 +204,24 @@ public static class ApiRouteConstants
             public const string GetBySteamGameId = "/api/mods/steamgameid";
             public const string GetBySteamId = "/api/mod/steamid";
             public const string GetBySteamToolId = "/api/mods/steamtoolid";
-            public const string Create = "/api/mod/create";
-            public const string Update = "/api/mod/update";
-            public const string Delete = "/api/mod/delete";
+            public const string Create = "/api/mod";
+            public const string Update = "/api/mod";
+            public const string Delete = "/api/mod";
             public const string Search = "/api/mods/search";
         }
 
         public static class Game
         {
-            public const string GetAllPaginated = "/api/gameserver/game/get-all-paginated";
-            public const string GetCount = "/api/gameserver/game/get-count";
-            public const string GetById = "/api/gameserver/game/get-id";
-            public const string GetBySteamName = "/api/gameserver/game/get-steamname";
-            public const string GetByFriendlyName = "/api/gameserver/game/get-friendlyname";
-            public const string GetBySteamGameId = "/api/gameserver/game/get-steamgameid";
-            public const string GetBySteamToolId = "/api/gameserver/game/get-steamtoolid";
-            public const string Create = "/api/gameserver/game/create";
-            public const string Update = "/api/gameserver/game/update";
-            public const string Delete = "/api/gameserver/game/delete";
+            public const string GetAllPaginated = "/api/gameserver/games";
+            public const string GetCount = "/api/gameserver/game/count";
+            public const string GetById = "/api/gameserver/game/id";
+            public const string GetBySteamName = "/api/gameserver/game/steamname";
+            public const string GetByFriendlyName = "/api/gameserver/game/friendlyname";
+            public const string GetBySteamGameId = "/api/gameserver/game/steamgameid";
+            public const string GetBySteamToolId = "/api/gameserver/game/steamtoolid";
+            public const string Create = "/api/gameserver/game";
+            public const string Update = "/api/gameserver/game";
+            public const string Delete = "/api/gameserver/game";
             public const string Search = "/api/gameserver/game/search";
         }
 

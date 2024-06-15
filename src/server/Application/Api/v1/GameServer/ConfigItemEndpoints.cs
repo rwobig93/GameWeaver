@@ -26,7 +26,7 @@ public static class ConfigItemEndpoints
         app.MapGet(ApiRouteConstants.GameServer.ConfigItem.GetById, GetById).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.ConfigItem.GetByLocalResource, GetByLocalResourceId).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.ConfigItem.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.ConfigItem.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.ConfigItem.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.ConfigItem.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.ConfigItem.Search, Search).ApiVersionOne();
     }

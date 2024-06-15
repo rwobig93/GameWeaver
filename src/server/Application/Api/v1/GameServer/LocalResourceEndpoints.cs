@@ -27,7 +27,7 @@ public static class LocalResourceEndpoints
         app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetByGameProfileId, GetByGameProfileId).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.LocalResource.GetForGameServerId, GetForGameServerId).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.LocalResource.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.LocalResource.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.LocalResource.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.LocalResource.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.LocalResource.Search, Search).ApiVersionOne();
     }

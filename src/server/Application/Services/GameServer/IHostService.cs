@@ -7,7 +7,6 @@ using Application.Requests.GameServer.WeaverWork;
 using Application.Responses.v1.GameServer;
 using Domain.Contracts;
 using Domain.Enums.GameServer;
-using Domain.Enums.Lifecycle;
 
 namespace Application.Services.GameServer;
 

@@ -29,7 +29,7 @@ public static class GameEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Game.GetBySteamGameId, GetBySteamGameId).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Game.GetBySteamToolId, GetBySteamToolId).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Game.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Game.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.Game.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Game.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Game.Search, Search).ApiVersionOne();
     }

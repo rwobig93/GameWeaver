@@ -29,7 +29,7 @@ public static class HostRegistrationEndpoints
         app.MapGet(ApiRouteConstants.GameServer.HostRegistration.GetActive, GetAllActive).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.HostRegistration.GetInActive, GetAllInActive).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.HostRegistration.GetCount, GetCount).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.HostRegistration.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.HostRegistration.Update, Update).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.HostRegistration.Search, Search).ApiVersionOne();
     }
 

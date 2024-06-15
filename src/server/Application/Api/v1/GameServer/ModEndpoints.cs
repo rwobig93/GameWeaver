@@ -31,7 +31,7 @@ public static class ModEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Mod.GetBySteamId, GetBySteamId).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Mod.GetBySteamToolId, GetBySteamToolId).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Mod.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Mod.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.Mod.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Mod.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Mod.Search, Search).ApiVersionOne();
     }

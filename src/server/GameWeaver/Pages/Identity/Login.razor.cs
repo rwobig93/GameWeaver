@@ -73,7 +73,9 @@ public partial class Login
     private void HandleRedirectReasons()
     {
         if (string.IsNullOrWhiteSpace(RedirectReason))
+        {
             return;
+        }
 
         switch (RedirectReason)
         {

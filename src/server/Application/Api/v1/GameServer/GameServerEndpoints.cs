@@ -33,7 +33,7 @@ public static class GameServerEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetByHostId, GetByHostId).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.GetByOwnerId, GetByOwnerId).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.Gameserver.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.Gameserver.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Gameserver.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.Search, Search).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.StartServer, StartServer).ApiVersionOne();

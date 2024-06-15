@@ -1037,7 +1037,7 @@ public class AppAccountService : IAppAccountService
         }
         catch
         {
-            // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
+            // Since Blazor Server pre-rendering has the state received twice, and we can't have JSInterop run while rendering is occurring
             //   we have to do this to keep our sanity, would love to find a working solution to this at some point
             return "";
         }
@@ -1050,21 +1050,29 @@ public class AppAccountService : IAppAccountService
             var authToken = await GetAuthTokenFromSession();
             var sessionIsValid = JwtHelpers.IsJwtValid(authToken, _securityConfig, _appConfig);
             if (!sessionIsValid)
+            {
                 return await Result<bool>.SuccessAsync(true);
+            }
 
             var currentUserId = JwtHelpers.GetJwtUserId(authToken);
             var localStorageRequest = await GetLocalStorage();
             if (!localStorageRequest.Succeeded)
-                return await Result<bool>.FailAsync(localStorageRequest.Messages);
+            {
+                return await Result<bool>.FailAsync(true, localStorageRequest.Messages);
+            }
         
             // Validate if the current clientId needs to re-authenticate due to permission changes
             var clientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
                 currentUserId, ExtendedAttributeType.UserClientId, localStorageRequest.Data.ClientId ?? "");
             if (!clientIdRequest.Succeeded || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
-                return await Result<bool>.FailAsync(ErrorMessageConstants.Authentication.TokenInvalidError);
+            {
+                return await Result<bool>.FailAsync(true, ErrorMessageConstants.Authentication.TokenInvalidError);
+            }
 
             if (clientIdRequest.Result.FirstOrDefault()!.Description == UserClientIdState.ReAuthNeeded.ToString())
+            {
                 return await Result<bool>.SuccessAsync(true);
+            }
 
             // Session doesn't need re-auth
             return await Result<bool>.SuccessAsync(false);
@@ -1076,7 +1084,7 @@ public class AppAccountService : IAppAccountService
         }
     }
 
-    public async Task<IResult<bool>> IsUserRequiredToReAuthenticate(Guid userId)
+    public async Task<IResult<bool>> IsRequiredToDoFullReAuthentication(Guid userId)
     {
         try
         {
@@ -1106,6 +1114,18 @@ public class AppAccountService : IAppAccountService
         {
             return await Result<bool>.FailAsync(true, ex.Message);
         }
+    }
+
+    public async Task<IResult<AuthState>> GetCurrentAuthState(Guid userId)
+    {
+            
+        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        if (userSecurity.Result is null)
+        {
+            return await Result<AuthState>.SuccessAsync(AuthState.Unknown);
+        }
+        
+        return await Result<AuthState>.SuccessAsync(userSecurity.Result.AuthState);
     }
 
     public async Task<IResult> SetAuthState(Guid userId, AuthState authState)

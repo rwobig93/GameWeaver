@@ -260,9 +260,9 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 DELETE
-                FROM dbo.[{Table.TableName}] h
-                WHERE h.Active = 0
-                    AND h.CreatedOn < @OlderThan;
+                FROM dbo.[{Table.TableName}]
+                WHERE Active = 0
+                    AND CreatedOn < @OlderThan;
             end"
     };
 }

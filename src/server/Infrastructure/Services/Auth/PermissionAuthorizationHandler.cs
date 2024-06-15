@@ -1,12 +1,16 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Identity;
+using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
 using Application.Services.Identity;
+using Application.Settings;
+using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.Auth;
 
@@ -15,12 +19,14 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     private readonly IAppAccountService _accountService;
     private readonly NavigationManager _navigationManager;
     private readonly ILogger _logger;
+    private readonly IOptions<AppConfiguration> _appSettings;
     
-    public PermissionAuthorizationHandler(IAppAccountService accountService, NavigationManager navigationManager, ILogger logger)
+    public PermissionAuthorizationHandler(IAppAccountService accountService, NavigationManager navigationManager, ILogger logger, IOptions<AppConfiguration> appSettings)
     {
         _accountService = accountService;
         _navigationManager = navigationManager;
         _logger = logger;
+        _appSettings = appSettings;
     }
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
@@ -29,6 +35,23 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         if (context.User == UserConstants.UnauthenticatedPrincipal)
         {
             context.Fail();
+            return;
+        }
+        
+        // Validate if user is required to do a full re-authentication
+        var userId = context.User.Claims.GetId();
+        var userRequiredToFullAuth = (await _accountService.IsRequiredToDoFullReAuthentication(userId)).Data;
+        if (userRequiredToFullAuth)
+        {
+            await _accountService.LogoutGuiAsync(userId);
+            context.Fail();
+            var currentAuthState = await _accountService.GetCurrentAuthState(userId);
+            var redirectReason = currentAuthState.Data switch
+            {
+                AuthState.LoginRequired => LoginRedirectReason.SessionExpired,
+                _ => LoginRedirectReason.FullLoginTimeout
+            };
+            _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(redirectReason), true);
             return;
         }
 
@@ -40,22 +63,12 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             {
                 context.Fail();
                 await Task.CompletedTask;
+                _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(LoginRedirectReason.SessionExpired), true);
                 return;
             }
             
             _navigationManager.NavigateTo(_navigationManager.Uri, true);
             context.Fail();
-            return;
-        }
-        
-        // Validate if user is required to do a full re-authentication
-        var userId = context.User.Claims.GetId();
-        var userRequiredToFullAuth = (await _accountService.IsUserRequiredToReAuthenticate(userId)).Data;
-        if (userRequiredToFullAuth)
-        {
-            await _accountService.LogoutGuiAsync(userId);
-            context.Fail();
-            await Task.CompletedTask;
             return;
         }
         
@@ -68,6 +81,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             {
                 context.Fail();
                 await Task.CompletedTask;
+                _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(LoginRedirectReason.SessionExpired), true);
                 return;
             }
             

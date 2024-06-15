@@ -29,7 +29,7 @@ public static class GameProfileEndpoints
         app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetByGameId, GetByGameId).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.GameProfile.GetByOwnerId, GetByOwnerId).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.GameProfile.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.GameProfile.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.GameProfile.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.GameProfile.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.GameProfile.Search, Search).ApiVersionOne();
     }

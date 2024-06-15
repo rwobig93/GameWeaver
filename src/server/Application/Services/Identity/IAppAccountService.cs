@@ -35,7 +35,8 @@ public interface IAppAccountService
     Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled);
     Task<IResult> SetTwoFactorKey(Guid userId, string key);
     Task<IResult<bool>> DoesCurrentSessionNeedReAuthenticated();
-    Task<IResult<bool>> IsUserRequiredToReAuthenticate(Guid userId);
+    Task<IResult<bool>> IsRequiredToDoFullReAuthentication(Guid userId);
+    Task<IResult<AuthState>> GetCurrentAuthState(Guid userId);
     Task<IResult> SetAuthState(Guid userId, AuthState authState);
     Task<IResult> GenerateUserApiToken(Guid userId, UserApiTokenTimeframe timeframe, string description);
     Task<IResult> DeleteUserApiToken(Guid userId, string value);

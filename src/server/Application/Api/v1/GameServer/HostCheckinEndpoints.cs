@@ -10,7 +10,6 @@ using Application.Services.Identity;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
-using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;

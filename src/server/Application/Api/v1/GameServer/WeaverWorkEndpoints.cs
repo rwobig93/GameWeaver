@@ -32,7 +32,7 @@ public static class WeaverWorkEndpoints
         app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetWaitingForHost, GetWaitingForHost).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.WeaverWork.GetAllWaitingForHost, GetAllWaitingForHost).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.WeaverWork.Create, Create).ApiVersionOne();
-        app.MapPost(ApiRouteConstants.GameServer.WeaverWork.Update, Update).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.GameServer.WeaverWork.Update, Update).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.WeaverWork.UpdateStatus, WorkStatusUpdate).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.WeaverWork.Delete, Delete).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.WeaverWork.DeleteOld, DeleteOld).ApiVersionOne();
