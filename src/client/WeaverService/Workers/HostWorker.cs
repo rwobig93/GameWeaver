@@ -68,7 +68,6 @@ public class HostWorker : BackgroundService
         
         ThreadHelper.QueueWork(_ => UpdateHostDetail());
         
-        // TODO: Implement Sqlite for host work tracking, for now we'll serialize/deserialize a json file
         await base.StartAsync(stoppingToken);
     }
 
@@ -250,8 +249,6 @@ public class HostWorker : BackgroundService
             return;
         }
         
-        // TODO: Add checking on in progress weaver work that hasn't had a heartbeat / update in awhile
-        
         // Work is waiting, and we have available queue space, adding next work to the thread pool
         var attemptCount = 0;
         while (inProgressCount.Data < _generalConfig.Value.SimultaneousQueueWorkCountMax)
@@ -309,8 +306,6 @@ public class HostWorker : BackgroundService
             switch (work.TargetType)
             {
                 case WeaverWorkTarget.HostStatusUpdate:
-                    // TODO: Implement host status update
-                    break;
                 case WeaverWorkTarget.HostDetail:
                     UpdateHostDetail(work);
                     break;

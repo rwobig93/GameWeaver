@@ -13,7 +13,7 @@ public class ApiConstants
     {
         public static class Host
         {
-            public const string GetToken = "/api/host/get-token";
+            public const string GetToken = "/api/host/token";
         }
 
         public static class HostRegistration

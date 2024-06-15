@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using System.Security.Claims;
+using Application.Constants.GameServer;
 using Application.Constants.Identity;
 using Application.Helpers.Web;
 using Application.Responses.v1.Identity;
@@ -132,6 +133,22 @@ public static class AccountHelpers
         catch (Exception)
         {
             return Guid.Empty;
+        }
+    }
+
+    public static bool IsHostPrincipal(this IEnumerable<Claim> principalClaims)
+    {
+        try
+        {
+            var convertedClaims = principalClaims as Claim[] ?? principalClaims.ToArray();
+            var hostEmail = convertedClaims.FirstOrDefault(x => x.Type == ClaimTypes.Email && x.Value.EndsWith(HostConstants.HostPrincipalSuffix));
+            var hostName = convertedClaims.FirstOrDefault(x => x.Type == ClaimTypes.Name && x.Value.EndsWith(HostConstants.HostPrincipalSuffix));
+
+            return hostEmail is not null & hostName is not null;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 }

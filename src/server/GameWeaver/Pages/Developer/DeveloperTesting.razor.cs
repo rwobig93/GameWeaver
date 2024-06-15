@@ -89,7 +89,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceExecutable = new()
     {
         Name = "Dedicated Server Executable",
-        PathWindows = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping",
+        PathWindows = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping.exe",
         Startup = true,
         StartupPriority = 0,
         Type = ResourceType.Executable,
@@ -99,7 +99,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceEngine = new()
     {
         Name = "Config - Engine",
-        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Engine",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Engine.ini",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
@@ -124,7 +124,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceGame = new()
     {
         Name = "Config - Game",
-        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Game",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Game.ini",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
@@ -137,7 +137,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceServerSettings = new()
     {
         Name = "Config - ServerSettings",
-        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/ServerSettings",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/ServerSettings.ini",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,

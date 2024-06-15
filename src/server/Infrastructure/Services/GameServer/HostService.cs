@@ -375,8 +375,8 @@ public class HostService : IHostService
         return new List<Claim>()
         {
             new(ClaimTypes.NameIdentifier, hostId.ToString()),
-            new(ClaimTypes.Email, $"{hostId.ToString()}@host.game.weaver"),
-            new(ClaimTypes.Name, $"{hostId.ToString()}@host.game.weaver"),
+            new(ClaimTypes.Email, $"{hostId.ToString()}{HostConstants.HostPrincipalSuffix}"),
+            new(ClaimTypes.Name, $"{hostId.ToString()}{HostConstants.HostPrincipalSuffix}"),
             new(ApplicationClaimTypes.Permission, PermissionConstants.GameServer.HostCheckins.CheckIn),
             new(ApplicationClaimTypes.Permission, PermissionConstants.GameServer.WeaverWork.UpdateStatus)
         };

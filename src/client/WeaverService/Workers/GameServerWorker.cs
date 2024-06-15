@@ -42,12 +42,8 @@ public class GameServerWorker : BackgroundService
     {
         _logger.Debug("Started {ServiceName} service", nameof(GameServerWorker));
 
-        // TODO: First check updates from Unknown to something, need to not send an update on that as the weaver work item doesn't exist
-        // Realtime server state has changed from expected: [b6741ece-10c5-4aac-aecf-b10a69489d7e]"Test Conan Exiles Server - Wednesday, May 15, 2024" [Expected]Unknown [Current]Shutdown
-        // [Error] Failure updating local weaver work status occurred: [0]"Weaver work with Id [0] doesn't exist"
         await CheckGameServersRealtimeState();
         
-        // TODO: Implement Sqlite for game server state tracking, for now we'll serialize/deserialize a json file
         await base.StartAsync(stoppingToken);
     }
 
@@ -102,8 +98,6 @@ public class GameServerWorker : BackgroundService
             _logger.Verbose("No gameserver work waiting, moving on");
             return;
         }
-        
-        // TODO: Add checking on in progress weaver work that hasn't had a heartbeat / update in awhile
         
         // Work is waiting, and we have available queue space, adding next work to the thread pool
         var attemptCount = 0;
@@ -161,8 +155,10 @@ public class GameServerWorker : BackgroundService
     {
         _lastStateCheck ??= _dateTimeService.NowDatabaseTime;
 
-        // TODO: Add configurable value for game server realtime state check
-        if (_dateTimeService.NowDatabaseTime < _lastStateCheck.Value.AddSeconds(30)) return;
+        if (_dateTimeService.NowDatabaseTime < _lastStateCheck.Value.AddSeconds(_generalConfig.Value.GameServerStatusCheckIntervalSeconds))
+        {
+            return;
+        }
 
         var allGameServers = await _gameServerService.GetAll();
 
@@ -179,7 +175,6 @@ public class GameServerWorker : BackgroundService
                 continue;
             }
             
-            // TODO: Add a handling mechanism for these states based on a timeout period
             switch (realtimeState)
             {
                 case ServerState.Shutdown when
@@ -412,6 +407,7 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
         
+        // TODO: Enforcement fails aren't being reported, need to return them to the control server for user display
         var startResult = await _gameServerService.StartServer(gameServerLocal.Data.Id);
         if (!startResult.Succeeded)
         {
@@ -436,7 +432,6 @@ public class GameServerWorker : BackgroundService
         
         while (true)
         {
-            // TODO: Add configurable spin-up timeout for calculating a stalled gameserver since this varies based on mods and system resources
             if ((_dateTimeService.NowDatabaseTime - waitingStartTime).Minutes > 15)
             {
                 await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Stalled);
@@ -585,7 +580,6 @@ public class GameServerWorker : BackgroundService
 
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Updating);
         
-        // TODO: Get server build version from steam output and update the game server w/ the new version
         await _gameServerService.InstallOrUpdateGame(gameServerLocal.Data.Id, true);
         _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Data.Id, gameServerLocal.Data.ServerName);
         
@@ -607,7 +601,6 @@ public class GameServerWorker : BackgroundService
         var overlappingListeningSockets = deserializedGameServer.GetListeningSockets();
         if (overlappingListeningSockets.Count > 0)
         {
-            // TODO: Handle overlapping port state on control server
             work.SendGameServerUpdate(WeaverWorkState.Failed, new GameServerStateUpdate
             {
                 Id = deserializedGameServer.Id,
@@ -776,6 +769,7 @@ public class GameServerWorker : BackgroundService
         var gameServerUpdated = foundGameServer.Data;
         gameServerUpdated.Resources = deserializedServer.Resources;
 
+        // TODO: Enforcement fails aren't being reported, need to return them to the control server for user display
         var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
         if (!gameServerLocalUpdateRequest.Succeeded)
         {
