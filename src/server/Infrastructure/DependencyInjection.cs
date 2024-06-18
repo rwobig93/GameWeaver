@@ -332,6 +332,7 @@ public static class DependencyInjection
                 services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
                 services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
                 services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
+                services.AddSingleton<INotifyRecordRepository, NotifyRecordRepositoryMsSql>();
                 // GameServer Database Repositories
                 services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
                 services.AddSingleton<IGameRepository, GameRepositoryMsSql>();

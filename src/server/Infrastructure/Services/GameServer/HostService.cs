@@ -15,6 +15,7 @@ using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
 using Application.Models.Identity.Permission;
+using Application.Models.Lifecycle;
 using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.Host;
@@ -46,10 +47,11 @@ public class HostService : IHostService
     private readonly IEventService _eventService;
     private readonly IGameRepository _gameRepository;
     private readonly IAuditTrailsRepository _auditRepository;
+    private readonly INotifyRecordRepository _recordRepository;
 
     public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
         IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService,
-        IEventService eventService, IGameRepository gameRepository, IAuditTrailsRepository auditRepository)
+        IEventService eventService, IGameRepository gameRepository, IAuditTrailsRepository auditRepository, INotifyRecordRepository recordRepository)
     {
         _hostRepository = hostRepository;
         _dateTime = dateTime;
@@ -60,6 +62,7 @@ public class HostService : IHostService
         _eventService = eventService;
         _gameRepository = gameRepository;
         _auditRepository = auditRepository;
+        _recordRepository = recordRepository;
         _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
     }
@@ -954,8 +957,8 @@ public class HostService : IHostService
 
     public async Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate request, string sourceIp = "")
     {
-        var foundHost = await _hostRepository.GetWeaverWorkByIdAsync(request.Id);
-        var hostId = foundHost.Result?.HostId ?? Guid.Empty;
+        var foundWork = await _hostRepository.GetWeaverWorkByIdAsync(request.Id);
+        var hostId = foundWork.Result?.HostId ?? Guid.Empty;
 
         // Some updates like GameServerStateUpdate or HostDetail can come in without being bound to specific work
         if (hostId == Guid.Empty && request.TargetType is not WeaverWorkTarget.GameServerStateUpdate and not WeaverWorkTarget.HostDetail)
@@ -971,16 +974,60 @@ public class HostService : IHostService
             case WeaverWorkTarget.GameServerStateUpdate:
                 var serverStateResult = await HandleUpdateGameServerState(request);
                 if (!serverStateResult.Succeeded)
+                {
                     _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", request.Id, request.TargetType, serverStateResult.Messages);
+                }
                 request.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.StatusUpdate:
-                _logger.Debug("Weaver work status update received: [{WorkId}]{WorkStatus}", request.Id, request.Status);
+                if (request.Status == WeaverWorkState.Failed)
+                {
+                    var recordId = foundWork.Result?.TargetType switch
+                    {
+                        WeaverWorkTarget.StatusUpdate => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.Host => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.HostStatusUpdate => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.HostDetail => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.GameServer => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.GameServerInstall => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerUpdate => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerUninstall => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerStateUpdate => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.GameServerStart => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerStop => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerRestart => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerConfigNew => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.GameServerConfigUpdate => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.GameServerConfigDelete => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.GameServerConfigUpdateFull => foundWork.Result?.HostId ?? Guid.Empty,
+                        WeaverWorkTarget.CurrentEnd => foundWork.Result?.HostId ?? Guid.Empty,
+                        null => foundWork.Result?.HostId ?? Guid.Empty,
+                        _ => Guid.Empty
+                    };
+
+                    var messages = request.WorkData is null? [] : _serializerService.DeserializeMemory<List<string>>(request.WorkData);
+                    foreach (var message in messages ?? [])
+                    {
+                        await _recordRepository.CreateAsync(new NotifyRecordCreate
+                        {
+                            RecordId = recordId,
+                            Timestamp = _dateTime.NowDatabaseTime,
+                            Message = message,
+                            Detail = null
+                        });
+                    }
+                }
+                else
+                {
+                    _logger.Debug("Weaver work status update received: [{WorkId}]{WorkStatus}", request.Id, request.Status);
+                }
                 break;
             case WeaverWorkTarget.HostDetail:
                 var hostDetailResult = await HandleHostDetail(request, sourceIp);
                 if (!hostDetailResult.Succeeded)
+                {
                     _logger.Error("Host detail update failed for [{WorkId}]{WorkType}: {Error}", request.Id, request.TargetType, hostDetailResult.Messages);
+                }
                 request.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.Host:
@@ -1142,6 +1189,48 @@ public class HostService : IHostService
                         {"Error", updateGameServer.ErrorMessage}
                     });
                 return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            }
+
+            if (gameServerUpdate.ServerBuildVersion is not null)
+            {
+                var versionRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+                {
+                    RecordId = foundServer.Result.Id,
+                    Timestamp = _dateTime.NowDatabaseTime,
+                    Message = "Server Version Updated",
+                    Detail = $"Build Version Updated To: {gameServerUpdate.ServerBuildVersion}"
+                });
+                if (!versionRecordCreate.Succeeded)
+                {
+                    await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootWeaverWork, foundServer.Result.Id, 
+                        new Dictionary<string, string>
+                        {
+                            {"WorkId", request.Id.ToString()},
+                            {"Detail", "Failed to create version change notify record from weaver work for game server"},
+                            {"Error", versionRecordCreate.ErrorMessage}
+                        });
+                }
+            }
+
+            if (gameServerUpdate.ServerState != foundServer.Result.ServerState)
+            {
+                var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+                {
+                    RecordId = foundServer.Result.Id,
+                    Timestamp = _dateTime.NowDatabaseTime,
+                    Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+                    Detail = $"Server State Change: {foundServer.Result.ServerState} => {gameServerUpdate.ServerState}"
+                });
+                if (!stateRecordCreate.Succeeded)
+                {
+                    await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootWeaverWork, foundServer.Result.Id, 
+                        new Dictionary<string, string>
+                        {
+                            {"WorkId", request.Id.ToString()},
+                            {"Detail", "Failed to create state change notify record from weaver work for game server"},
+                            {"Error", updateGameServer.ErrorMessage}
+                        });
+                }
             }
 
             var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundServer.Result.Id);
