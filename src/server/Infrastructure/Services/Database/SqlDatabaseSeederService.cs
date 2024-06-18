@@ -276,7 +276,6 @@ public class SqlDatabaseSeederService : IHostedService
 
     private async Task EnforceServerStateRecords()
     {
-        // TODO: State record 1.0.0 is being created before most actual version number records
         var existingStateRecord = await _serverStateRepository.GetLatestAsync();
         if (!existingStateRecord.Succeeded)
         {

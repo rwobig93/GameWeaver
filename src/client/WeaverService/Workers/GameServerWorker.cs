@@ -407,7 +407,6 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
         
-        // TODO: Enforcement fails aren't being reported, need to return them to the control server for user display
         var startResult = await _gameServerService.StartServer(gameServerLocal.Data.Id);
         if (!startResult.Succeeded)
         {
@@ -769,7 +768,6 @@ public class GameServerWorker : BackgroundService
         var gameServerUpdated = foundGameServer.Data;
         gameServerUpdated.Resources = deserializedServer.Resources;
 
-        // TODO: Enforcement fails aren't being reported, need to return them to the control server for user display
         var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
         if (!gameServerLocalUpdateRequest.Succeeded)
         {
