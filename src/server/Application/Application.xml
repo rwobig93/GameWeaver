@@ -106,7 +106,7 @@
             <param name="searchText">Text to search for</param>
             <param name="gameServerService"></param>
             <returns>List of matching configuration items</returns>
-            <remarks>Searches by: GameProfileId, Path, Category, Key, Value</remarks>
+            <remarks>Searches by: ID, GameProfileId, Path, Category, Key, Value</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.DeveloperEndpoints.MapEndpointsDeveloper(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -180,6 +180,7 @@
             <param name="searchText">Text to search for</param>
             <param name="gameService"></param>
             <returns>List of developers</returns>
+            <remarks>Searches by: ID, Name</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameEndpoints.MapEndpointsGame(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -278,7 +279,7 @@
             <param name="searchText">Text to search with</param>
             <param name="gameService"></param>
             <returns>List of games</returns>
-            <remarks>Searches by: FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
+            <remarks>Searches by: ID, FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameGenreEndpoints.MapEndpointsGameGenre(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -352,7 +353,7 @@
             <param name="searchText">Text to search for</param>
             <param name="gameService"></param>
             <returns>List of game genres</returns>
-            <remarks>Searches by: Name, Description</remarks>
+            <remarks>Searches by: ID, Name, Description</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameProfileEndpoints.MapEndpointsGameProfile(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -443,7 +444,7 @@
             <param name="searchText">Text to search for</param>
             <param name="gameServerService"></param>
             <returns>List of matching game profiles</returns>
-            <remarks>Searches by: FriendlyName, OwnerId, GameId, ServerProcessName</remarks>
+            <remarks>Searches by: ID, FriendlyName, OwnerId, GameId, ServerProcessName</remarks>
         </member>
         <member name="T:Application.Api.v1.GameServer.GameServerEndpoints">
             <summary>
@@ -555,7 +556,7 @@
             <param name="searchText">Text to search</param>
             <param name="gameServerService"></param>
             <returns>List of matching game servers</returns>
-            <remarks>Searches by: OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
+            <remarks>Searches by: ID, OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.StartServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
@@ -670,7 +671,7 @@
             <param name="searchText">Text to search by</param>
             <param name="hostService"></param>
             <returns>List of matching host checkins</returns>
-            <remarks>Searches by: HostId</remarks>
+            <remarks>Searches by: ID, HostId</remarks>
         </member>
         <member name="T:Application.Api.v1.GameServer.HostEndpoints">
             <summary>
@@ -754,7 +755,7 @@
             <param name="searchText">Text to search by</param>
             <param name="hostService"></param>
             <returns>List of hosts matching the search criteria</returns>
-            <remarks>Search matches against FriendlyName, Description, PrivateIp and PublicIp</remarks>
+            <remarks>Search matches against ID, FriendlyName, Description, PrivateIp and PublicIp</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostRegistrationEndpoints.MapEndpointsHostRegistration(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -827,7 +828,7 @@
             <param name="searchText">Text to search by</param>
             <param name="hostService"></param>
             <returns>List of matching registrations</returns>
-            <remarks>Searches by HostId, Key, Description and Public Ip</remarks>
+            <remarks>Searches by ID, HostId, Key, Description and Public Ip</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.MapEndpointsLocalResource(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -910,7 +911,7 @@
             <param name="searchText">Text to search for</param>
             <param name="gameServerService"></param>
             <returns>List of matching local resources</returns>
-            <remarks>Searches by: GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
+            <remarks>Searches by: ID, GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.ModEndpoints.MapEndpointsMod(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -1025,7 +1026,7 @@
             <param name="searchText">Text to search</param>
             <param name="gameServerService"></param>
             <returns>List of matching mods</returns>
-            <remarks>Searches by: GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
+            <remarks>Searches by: ID, GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
         </member>
         <member name="T:Application.Api.v1.GameServer.NetworkEndpoints">
             <summary>
@@ -1129,7 +1130,7 @@
             <param name="searchText">Text to search for</param>
             <param name="gameService"></param>
             <returns>List of publishers</returns>
-            <remarks>Searches by: Name</remarks>
+            <remarks>Searches by: ID, Name</remarks>
         </member>
         <member name="M:Application.Api.v1.GameServer.WeaverWorkEndpoints.MapEndpointsWeaverWork(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
@@ -1249,7 +1250,7 @@
             <param name="searchText">Text to search for</param>
             <param name="hostService"></param>
             <returns>List of matching weaver work</returns>
-            <remarks>Search by: HostId</remarks>
+            <remarks>Search by: ID, HostId</remarks>
         </member>
         <member name="T:Application.Api.v1.Identity.PermissionEndpoints">
             <summary>

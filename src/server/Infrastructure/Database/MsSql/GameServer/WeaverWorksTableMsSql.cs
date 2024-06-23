@@ -252,7 +252,8 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.HostId LIKE '%' + @SearchTerm + '%';
+                WHERE w.Id LIKE '%' + @SearchTerm + '%'
+                    OR w.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -271,7 +272,8 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE w.Id LIKE '%' + @SearchTerm + '%'
+                    OR w.HostId LIKE '%' + @SearchTerm + '%'
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

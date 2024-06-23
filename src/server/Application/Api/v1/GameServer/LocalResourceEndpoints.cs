@@ -212,7 +212,7 @@ public static class LocalResourceEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of matching local resources</returns>
-    /// <remarks>Searches by: GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
+    /// <remarks>Searches by: ID, GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
     [Authorize(PermissionConstants.GameServer.LocalResource.Search)]
     private static async Task<IResult<IEnumerable<LocalResourceSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
     {

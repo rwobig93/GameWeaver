@@ -192,7 +192,7 @@ public static class ConfigItemEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of matching configuration items</returns>
-    /// <remarks>Searches by: GameProfileId, Path, Category, Key, Value</remarks>
+    /// <remarks>Searches by: ID, GameProfileId, Path, Category, Key, Value</remarks>
     [Authorize(PermissionConstants.GameServer.ConfigItem.Search)]
     private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
     {

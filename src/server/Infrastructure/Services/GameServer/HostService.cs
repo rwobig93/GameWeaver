@@ -329,7 +329,7 @@ public class HostService : IHostService
                 return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
             }
             
-            var token = JwtHelpers.GenerateApiJwtEncryptedToken(GetHostClaims(request.HostId), _dateTime, _securityConfig, _appConfig);
+            var token = JwtHelpers.GenerateHostJwtEncryptedToken(GetHostClaims(request.HostId), _dateTime, _securityConfig, _appConfig);
 
             var tokenExpiration = JwtHelpers.GetJwtExpirationTime(token);
 
@@ -380,8 +380,8 @@ public class HostService : IHostService
             new(ClaimTypes.NameIdentifier, hostId.ToString()),
             new(ClaimTypes.Email, $"{hostId.ToString()}{HostConstants.HostPrincipalSuffix}"),
             new(ClaimTypes.Name, $"{hostId.ToString()}{HostConstants.HostPrincipalSuffix}"),
-            new(ApplicationClaimTypes.Permission, PermissionConstants.GameServer.HostCheckins.CheckIn),
-            new(ApplicationClaimTypes.Permission, PermissionConstants.GameServer.WeaverWork.UpdateStatus)
+            new(ClaimConstants.Permission, PermissionConstants.GameServer.HostCheckins.CheckIn),
+            new(ClaimConstants.Permission, PermissionConstants.GameServer.WeaverWork.UpdateStatus)
         };
     }
 

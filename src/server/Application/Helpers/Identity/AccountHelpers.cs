@@ -136,15 +136,46 @@ public static class AccountHelpers
         }
     }
 
-    public static bool IsHostPrincipal(this IEnumerable<Claim> principalClaims)
+    public static bool IsHostAuthenticated(this IEnumerable<Claim> principalClaims)
     {
         try
         {
             var convertedClaims = principalClaims as Claim[] ?? principalClaims.ToArray();
-            var hostEmail = convertedClaims.FirstOrDefault(x => x.Type == ClaimTypes.Email && x.Value.EndsWith(HostConstants.HostPrincipalSuffix));
-            var hostName = convertedClaims.FirstOrDefault(x => x.Type == ClaimTypes.Name && x.Value.EndsWith(HostConstants.HostPrincipalSuffix));
+            var hostAuth = convertedClaims.FirstOrDefault(x => x is {Type: ClaimConstants.AuthenticationType, Value: ClaimConstants.AuthType.Host});
 
-            return hostEmail is not null & hostName is not null;
+            return hostAuth is not null;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    
+    public static bool IsApiAuthenticated(this IEnumerable<Claim> principalClaims)
+    {
+        try
+        {
+            var convertedClaims = principalClaims as Claim[] ?? principalClaims.ToArray();
+            var apiAuth = convertedClaims.FirstOrDefault(x => x is {Type: ClaimConstants.AuthenticationType, Value: ClaimConstants.AuthType.Api});
+
+            return apiAuth is not null;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    
+    public static bool IsHostOrApiAuthenticated(this IEnumerable<Claim> principalClaims)
+    {
+        try
+        {
+            var convertedClaims = principalClaims as Claim[] ?? principalClaims.ToArray();
+            var hostOrApiAuth = convertedClaims.FirstOrDefault(x =>
+                x is {Type: ClaimConstants.AuthenticationType, Value: ClaimConstants.AuthType.Api or ClaimConstants.AuthType.Host
+            });
+
+            return hostOrApiAuth is not null;
         }
         catch (Exception)
         {

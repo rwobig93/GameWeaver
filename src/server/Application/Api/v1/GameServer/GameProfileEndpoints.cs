@@ -232,7 +232,7 @@ public static class GameProfileEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of matching game profiles</returns>
-    /// <remarks>Searches by: FriendlyName, OwnerId, GameId, ServerProcessName</remarks>
+    /// <remarks>Searches by: ID, FriendlyName, OwnerId, GameId, ServerProcessName</remarks>
     [Authorize(PermissionConstants.GameServer.GameProfile.Search)]
     private static async Task<IResult<IEnumerable<GameProfileSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
     {

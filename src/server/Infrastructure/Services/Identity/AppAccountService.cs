@@ -314,7 +314,9 @@ public class AppAccountService : IAppAccountService
     {
         var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(tokenRequest.Username)).Result;
         if (userSecurity is null)
+        {
             return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+        }
         
         return userSecurity.AuthState switch
         {
@@ -341,7 +343,9 @@ public class AppAccountService : IAppAccountService
 
             // Account isn't locked out yet but a bad api token was provided
             if (userSecurity.BadPasswordAttempts < _securityConfig.MaxBadPasswordAttempts)
+            {
                 return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+            }
 
             // Account is now locked out due to bad api tokens being provided
             userSecurity.AuthState = AuthState.LockedOut;
@@ -355,7 +359,9 @@ public class AppAccountService : IAppAccountService
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Succeeded)
+        {
             return await Result<ApiTokenResponse>.FailAsync(updateSecurity.ErrorMessage);
+        }
 
         var token = await GenerateJwtAsync(userSecurity.ToUserDb(), true);
         var response = new ApiTokenResponse() {Token = token, TokenExpiration = JwtHelpers.GetJwtExpirationTime(token)};

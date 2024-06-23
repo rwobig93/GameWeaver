@@ -196,7 +196,7 @@ public static class HostCheckinEndpoints
     /// <param name="searchText">Text to search by</param>
     /// <param name="hostService"></param>
     /// <returns>List of matching host checkins</returns>
-    /// <remarks>Searches by: HostId</remarks>
+    /// <remarks>Searches by: ID, HostId</remarks>
     [Authorize(PermissionConstants.GameServer.HostCheckins.Search)]
     private static async Task<IResult<IEnumerable<HostCheckInFull>>> Search([FromQuery]string searchText, IHostService hostService)
     {

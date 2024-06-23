@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
 using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Filters;
 using Application.Helpers.Auth;
@@ -215,7 +216,7 @@ public static class DependencyInjection
             foreach (var permission in PermissionHelpers.GetAllBuiltInPermissions())
             {
                 options.AddPolicy(permission, policy => policy.RequireClaim(
-                    ApplicationClaimTypes.Permission, permission));
+                    ClaimConstants.Permission, permission));
             }
         });
         services.Configure<SecurityStampValidatorOptions>(options =>

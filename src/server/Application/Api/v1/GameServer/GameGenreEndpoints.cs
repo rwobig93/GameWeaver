@@ -187,7 +187,7 @@ public static class GameGenreEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="gameService"></param>
     /// <returns>List of game genres</returns>
-    /// <remarks>Searches by: Name, Description</remarks>
+    /// <remarks>Searches by: ID, Name, Description</remarks>
     [Authorize(PermissionConstants.GameServer.GameGenre.Search)]
     private static async Task<IResult<IEnumerable<GameGenreSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {

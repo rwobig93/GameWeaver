@@ -236,7 +236,9 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.IsDeleted = 0 AND m.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE m.IsDeleted = 0
+                    AND m.Id LIKE '%' + @SearchTerm + '%'
+                    OR m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'
@@ -259,7 +261,9 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.IsDeleted = 0 AND m.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE m.IsDeleted = 0
+                    AND m.Id LIKE '%' + @SearchTerm + '%'
+                    OR m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'

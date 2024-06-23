@@ -147,7 +147,8 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.Name LIKE '%' + @SearchTerm + '%'
+                WHERE g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.Name LIKE '%' + @SearchTerm + '%'
                     OR g.Description LIKE '%' + @SearchTerm + '%';
             end"
     };
@@ -167,7 +168,8 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.Name LIKE '%' + @SearchTerm + '%'
+                WHERE g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.Name LIKE '%' + @SearchTerm + '%'
                     OR g.Description LIKE '%' + @SearchTerm + '%'
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"

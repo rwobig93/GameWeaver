@@ -150,7 +150,8 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.BuildVersion LIKE '%' + @SearchTerm + '%';
             end"
     };
@@ -170,7 +171,8 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.GameId LIKE '%' + @SearchTerm + '%'
                     OR g.BuildVersion LIKE '%' + @SearchTerm + '%'
                 ORDER BY g.BuildVersionReleased DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"

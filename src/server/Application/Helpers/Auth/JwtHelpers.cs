@@ -4,6 +4,7 @@ using System.Text;
 using Application.Constants.Identity;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using FluentEmail.Core;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Helpers.Auth;
@@ -101,8 +102,11 @@ public static class JwtHelpers
     public static string GenerateUserJwtEncryptedToken(IEnumerable<Claim> claims, IDateTimeService dateTime, SecurityConfiguration securityConfig,
         AppConfiguration appConfig)
     {
+        var updatedClaims = claims.ToList();
+        updatedClaims.Add(new Claim(ClaimConstants.AuthenticationType, ClaimConstants.AuthType.User));
+        
         var token = new JwtSecurityToken(
-            claims: claims,
+            claims: updatedClaims,
             notBefore: GetJwtValidBeforeTime(dateTime),
             expires: GetUserJwtExpirationTime(dateTime, securityConfig),
             signingCredentials: GetSigningCredentials(securityConfig),
@@ -115,8 +119,28 @@ public static class JwtHelpers
     public static string GenerateApiJwtEncryptedToken(IEnumerable<Claim> claims, IDateTimeService dateTime, SecurityConfiguration securityConfig,
         AppConfiguration appConfig)
     {
+        var updatedClaims = claims.ToList();
+        updatedClaims.Add(new Claim(ClaimConstants.AuthenticationType, ClaimConstants.AuthType.Api));
+        
         var token = new JwtSecurityToken(
-            claims: claims,
+            claims: updatedClaims,
+            notBefore: GetJwtValidBeforeTime(dateTime),
+            expires: GetApiJwtExpirationTime(dateTime, securityConfig),
+            signingCredentials: GetSigningCredentials(securityConfig),
+            issuer: GetJwtIssuer(appConfig),
+            audience: GetJwtAudience(appConfig));
+        
+        return JwtHandler.WriteToken(token);
+    }
+
+    public static string GenerateHostJwtEncryptedToken(IEnumerable<Claim> claims, IDateTimeService dateTime, SecurityConfiguration securityConfig,
+        AppConfiguration appConfig)
+    {
+        var updatedClaims = claims.ToList();
+        updatedClaims.Add(new Claim(ClaimConstants.AuthenticationType, ClaimConstants.AuthType.Host));
+        
+        var token = new JwtSecurityToken(
+            claims: updatedClaims,
             notBefore: GetJwtValidBeforeTime(dateTime),
             expires: GetApiJwtExpirationTime(dateTime, securityConfig),
             signingCredentials: GetSigningCredentials(securityConfig),

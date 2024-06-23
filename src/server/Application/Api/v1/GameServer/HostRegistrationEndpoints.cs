@@ -191,7 +191,7 @@ public static class HostRegistrationEndpoints
     /// <param name="searchText">Text to search by</param>
     /// <param name="hostService"></param>
     /// <returns>List of matching registrations</returns>
-    /// <remarks>Searches by HostId, Key, Description and Public Ip</remarks>
+    /// <remarks>Searches by ID, HostId, Key, Description and Public Ip</remarks>
     [Authorize(PermissionConstants.GameServer.HostRegistration.Search)]
     private static async Task<IResult<IEnumerable<HostRegistrationFull>>> Search([FromQuery]string searchText, IHostService hostService)
     {

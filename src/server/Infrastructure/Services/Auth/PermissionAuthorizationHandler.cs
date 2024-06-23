@@ -31,20 +31,14 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
-        // If there are no claims the user isn't authenticated as we always have at least a NameIdentifier in our generated JWT
-        // if (context.User == UserConstants.UnauthenticatedPrincipal)
-        // {
-        //     context.Fail();
-        //     return;
-        // }
         if (!context.User.Identity?.IsAuthenticated ?? true)
         {
             context.Fail();
             return;
         }
 
-        // Validate host principal to short-circuit more decision-making if the principal is a host
-        if (context.User.Claims.IsHostPrincipal())
+        // Validate host and api authentications to short-circuit more decision-making if the auth is short-lived and wouldn't have local storage
+        if (context.User.Claims.IsHostOrApiAuthenticated())
         {
             await ValidatePrincipalPermissions(context, requirement);
             return;
@@ -116,7 +110,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     {
         // If active session is valid and not expired validate permissions via claims
         var permissions = context.User.Claims.Where(x =>
-            x.Type == ApplicationClaimTypes.Permission && x.Value == requirement.Permission);
+            x.Type == ClaimConstants.Permission && x.Value == requirement.Permission);
         if (permissions.Any())
         {
             context.Succeed(requirement);

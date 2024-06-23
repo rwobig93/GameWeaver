@@ -192,7 +192,8 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%'
                     OR h.[Key] LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%';
@@ -214,7 +215,8 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%'
                     OR h.[Key] LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%'

@@ -187,6 +187,7 @@ public static class DeveloperEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="gameService"></param>
     /// <returns>List of developers</returns>
+    /// <remarks>Searches by: ID, Name</remarks>
     [Authorize(PermissionConstants.GameServer.Developer.Search)]
     private static async Task<IResult<IEnumerable<DeveloperSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {

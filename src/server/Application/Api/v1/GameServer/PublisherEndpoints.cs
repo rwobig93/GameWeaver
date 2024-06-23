@@ -187,7 +187,7 @@ public static class PublisherEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="gameService"></param>
     /// <returns>List of publishers</returns>
-    /// <remarks>Searches by: Name</remarks>
+    /// <remarks>Searches by: ID, Name</remarks>
     [Authorize(PermissionConstants.GameServer.Publisher.Search)]
     private static async Task<IResult<IEnumerable<PublisherSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {

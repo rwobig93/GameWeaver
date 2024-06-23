@@ -140,7 +140,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT c.*
                 FROM dbo.[{Table.TableName}] c
-                WHERE c.LocalResourceId LIKE '%' + @SearchTerm + '%'
+                WHERE c.Id LIKE '%' + @SearchTerm + '%'
+                    OR c.LocalResourceId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'
@@ -164,7 +165,8 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT c.*
                 FROM dbo.[{Table.TableName}] c
-                WHERE c.LocalResourceId LIKE '%' + @SearchTerm + '%'
+                WHERE c.Id LIKE '%' + @SearchTerm + '%'
+                    OR c.LocalResourceId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'

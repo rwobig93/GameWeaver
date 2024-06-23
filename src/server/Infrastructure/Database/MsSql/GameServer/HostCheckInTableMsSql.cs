@@ -160,7 +160,8 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%';
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -179,7 +180,8 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%'
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

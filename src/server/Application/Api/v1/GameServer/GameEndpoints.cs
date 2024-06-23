@@ -250,7 +250,7 @@ public static class GameEndpoints
     /// <param name="searchText">Text to search with</param>
     /// <param name="gameService"></param>
     /// <returns>List of games</returns>
-    /// <remarks>Searches by: FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
+    /// <remarks>Searches by: ID, FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
     [Authorize(PermissionConstants.GameServer.Game.Search)]
     private static async Task<IResult<IEnumerable<GameSlim>>> Search([FromQuery]string searchText, IGameService gameService)
     {

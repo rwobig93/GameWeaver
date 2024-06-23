@@ -290,7 +290,7 @@ public static class ModEndpoints
     /// <param name="searchText">Text to search</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of matching mods</returns>
-    /// <remarks>Searches by: GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
+    /// <remarks>Searches by: ID, GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
     [Authorize(PermissionConstants.GameServer.Mod.Search)]
     private static async Task<IResult<IEnumerable<ModSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
     {

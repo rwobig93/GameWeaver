@@ -198,7 +198,7 @@ public static class HostEndpoints
     /// <param name="searchText">Text to search by</param>
     /// <param name="hostService"></param>
     /// <returns>List of hosts matching the search criteria</returns>
-    /// <remarks>Search matches against FriendlyName, Description, PrivateIp and PublicIp</remarks>
+    /// <remarks>Search matches against ID, FriendlyName, Description, PrivateIp and PublicIp</remarks>
     [Authorize(PermissionConstants.GameServer.Hosts.Search)]
     private static async Task<IResult<IEnumerable<HostSlim>>> Search([FromQuery]string searchText, IHostService hostService)
     {

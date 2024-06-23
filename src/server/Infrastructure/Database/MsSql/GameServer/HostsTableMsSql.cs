@@ -185,7 +185,9 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0 AND h.Hostname LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0
+                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
@@ -209,7 +211,9 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0 AND h.Hostname LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0
+                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'

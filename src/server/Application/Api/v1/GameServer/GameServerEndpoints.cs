@@ -278,7 +278,7 @@ public static class GameServerEndpoints
     /// <param name="searchText">Text to search</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of matching game servers</returns>
-    /// <remarks>Searches by: OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
+    /// <remarks>Searches by: ID, OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
     [Authorize(PermissionConstants.GameServer.Gameserver.Search)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
     {

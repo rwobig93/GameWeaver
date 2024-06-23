@@ -307,7 +307,7 @@ public static class WeaverWorkEndpoints
     /// <param name="searchText">Text to search for</param>
     /// <param name="hostService"></param>
     /// <returns>List of matching weaver work</returns>
-    /// <remarks>Search by: HostId</remarks>
+    /// <remarks>Search by: ID, HostId</remarks>
     [Authorize(PermissionConstants.GameServer.WeaverWork.Search)]
     private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> Search([FromQuery]string searchText, IHostService hostService)
     {
