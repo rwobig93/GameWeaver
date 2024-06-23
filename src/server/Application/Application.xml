@@ -1703,6 +1703,7 @@
             <b>string</b> IpAddress<br/>
             <b>string</b> ExtHostname<br/>
             <b>int</b> PortGame<br/>
+            <b>int</b> PortPeer<br/>
             <b>int</b> PortQuery<br/>
             <b>int</b> PortRcon<br/>
             <b>bool</b> Modded<br/>

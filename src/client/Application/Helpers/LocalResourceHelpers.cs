@@ -17,7 +17,7 @@ public static class LocalResourceHelpers
             .Replace("%%%PASSWORD%%%", gameServer.Password)
             .Replace("%%%QUERY_PORT%%%", gameServer.PortQuery.ToString())
             .Replace("%%%GAME_PORT%%%", gameServer.PortGame.ToString())
-            .Replace("%%%GAME_PORT_PEER%%%", (gameServer.PortGame + 1).ToString())
+            .Replace("%%%GAME_PORT_PEER%%%", (gameServer.PortPeer).ToString())
             .Replace("%%%PASSWORD_ADMIN%%%", gameServer.PasswordAdmin)
             .Replace("%%%PASSWORD_RCON%%%", gameServer.PasswordRcon);
     }

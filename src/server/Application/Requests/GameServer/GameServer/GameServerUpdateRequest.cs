@@ -11,6 +11,7 @@ public class GameServerUpdateRequest
     public string? PasswordRcon { get; set; }
     public string? PasswordAdmin { get; set; }
     public int? PortGame { get; set; }
+    public int? PortPeer { get; set; }
     public int? PortQuery { get; set; }
     public int? PortRcon { get; set; }
     public bool? Modded { get; set; }

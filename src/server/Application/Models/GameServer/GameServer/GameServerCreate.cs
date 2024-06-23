@@ -18,6 +18,7 @@ public class GameServerCreate
     public string PrivateIp { get; set; } = "";
     public string ExternalHostname { get; set; } = "";
     public int PortGame { get; set; } = 0;
+    public int PortPeer { get; set; } = 0;
     public int PortQuery { get; set; } = 0;
     public int PortRcon { get; set; } = 0;
     public bool Modded { get; set; } = false;

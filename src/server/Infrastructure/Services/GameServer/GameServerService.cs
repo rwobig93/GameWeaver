@@ -162,6 +162,9 @@ public class GameServerService : IGameServerService
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
+
+        // Most games that don't expose peer port configuration use the next port after the game port, so we'll default to that if 0 is provided
+        request.PortPeer = request.PortPeer == 0 ? request.PortGame + 1 : request.PortPeer;
         
         var allowedHostPorts = NetworkHelpers.GetPortsFromRangeList(foundHost.Result?.ToSlim().AllowedPorts);
         var desiredPorts = request.GetUsedPorts();

@@ -12,6 +12,7 @@ public class GameServerCreateRequest
     public string PasswordAdmin { get; set; } = "";
     public string ExternalUrl { get; set; } = "";
     public int PortGame { get; set; } = 0;
+    public int PortPeer { get; set; } = 0;
     public int PortQuery { get; set; } = 0;
     public int PortRcon { get; set; } = 0;
     public bool Modded { get; set; } = false;

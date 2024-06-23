@@ -33,21 +33,23 @@ public partial class GameServerToHost
     [MemoryPackOrder(11)]
     public int PortGame { get; set; } = 0;
     [MemoryPackOrder(12)]
-    public int PortQuery { get; set; } = 0;
+    public int PortPeer { get; set; } = 0;
     [MemoryPackOrder(13)]
-    public int PortRcon { get; set; }
+    public int PortQuery { get; set; } = 0;
     [MemoryPackOrder(14)]
-    public bool Modded { get; set; }
+    public int PortRcon { get; set; }
     [MemoryPackOrder(15)]
-    public string ManualRootUrl { get; set; } = "";
+    public bool Modded { get; set; }
     [MemoryPackOrder(16)]
-    public string ServerProcessName { get; set; } = "";
+    public string ManualRootUrl { get; set; } = "";
     [MemoryPackOrder(17)]
-    public ServerState ServerState { get; set; }
+    public string ServerProcessName { get; set; } = "";
     [MemoryPackOrder(18)]
-    public GameSource Source { get; set; }
+    public ServerState ServerState { get; set; }
     [MemoryPackOrder(19)]
-    public SerializableList<Mod> ModList { get; set; } = [];
+    public GameSource Source { get; set; }
     [MemoryPackOrder(20)]
+    public SerializableList<Mod> ModList { get; set; } = [];
+    [MemoryPackOrder(21)]
     public SerializableList<LocalResource> Resources { get; set; } = [];
 }

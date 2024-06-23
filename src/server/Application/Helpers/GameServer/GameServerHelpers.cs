@@ -8,8 +8,7 @@ public static class GameServerHelpers
 {
     public static List<int> GetUsedPorts(this GameServerDb gameServer)
     {
-        // TODO: Add PortPeer for more granular port control, most games use the next port after the game port but few are configurable
-        return [gameServer.PortGame, gameServer.PortGame + 1, gameServer.PortQuery, gameServer.PortRcon];
+        return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];
     }
 
     public static List<int> GetUsedPorts(this IEnumerable<GameServerDb> gameServers)
@@ -19,7 +18,7 @@ public static class GameServerHelpers
     
     public static List<int> GetUsedPorts(this GameServerCreate gameServer)
     {
-        return [gameServer.PortGame, gameServer.PortGame + 1, gameServer.PortQuery, gameServer.PortRcon];
+        return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];
     }
 
     public static List<int> GetUsedPorts(this IEnumerable<GameServerCreate> gameServers)
@@ -29,7 +28,7 @@ public static class GameServerHelpers
     
     public static List<int> GetUsedPorts(this GameServerCreateRequest gameServer)
     {
-        return [gameServer.PortGame, gameServer.PortGame + 1, gameServer.PortQuery, gameServer.PortRcon];
+        return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];
     }
 
     public static List<int> GetUsedPorts(this IEnumerable<GameServerCreateRequest> gameServers)

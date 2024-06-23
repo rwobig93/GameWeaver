@@ -14,7 +14,7 @@ public static class GameServerHelpers
     {
         return OsHelpers.GetListeningSockets().Where(x =>
             x.Port == gameServerLocal.PortGame ||
-            x.Port == gameServerLocal.PortGame + 1 ||
+            x.Port == gameServerLocal.PortPeer ||
             x.Port == gameServerLocal.PortQuery)
             .ToList();
     }

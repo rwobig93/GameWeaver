@@ -19,6 +19,7 @@ public class GameServerSlim
     public string PrivateIp { get; set; } = "";
     public string ExternalHostname { get; set; } = "";
     public int PortGame { get; set; }
+    public int PortPeer { get; set; }
     public int PortQuery { get; set; }
     public int PortRcon { get; set; }
     public bool Modded { get; set; }
