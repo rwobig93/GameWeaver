@@ -502,9 +502,10 @@ public class GameServerService : IGameServerService
             });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
-        
-        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
-        // TODO: Diff will be config before and after for the local resource
+
+        var createdConfigItem = await _gameServerRepository.GetConfigurationItemByIdAsync(configItemCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, DatabaseActionType.Update,
+            null, createdConfigItem.Result);
 
         return await Result<Guid>.SuccessAsync(configItemCreate.Result);
     }
@@ -528,9 +529,10 @@ public class GameServerService : IGameServerService
             });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
-        
-        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
-        // TODO: Diff will be config before and after for the local resource
+
+        var updatedConfigItem = await _gameServerRepository.GetConfigurationItemByIdAsync(foundConfig.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundConfig.Result.LocalResourceId, requestUserId,
+            DatabaseActionType.Update, foundConfig.Result, updatedConfigItem.Result);
         
         return await Result.SuccessAsync();
     }
@@ -554,9 +556,9 @@ public class GameServerService : IGameServerService
             });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
-        
-        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
-        // TODO: Diff will be config before and after for the local resource
+
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundConfig.Result.LocalResourceId, requestUserId,
+            DatabaseActionType.Update, foundConfig.Result);
 
         return await Result.SuccessAsync();
     }
@@ -743,7 +745,9 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
         
-        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
+        var createdResource = await _gameServerRepository.GetLocalResourceByIdAsync(resourceCreate.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, resourceCreate.Result, requestUserId, DatabaseActionType.Create,
+            null, createdResource.Result);
 
         return await Result<Guid>.SuccessAsync(resourceCreate.Result);
     }
@@ -791,7 +795,9 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
         
-        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
+        var updatedResource = await _gameServerRepository.GetLocalResourceByIdAsync(foundResource.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, DatabaseActionType.Update,
+            foundResource.Result, updatedResource.Result);
 
         return await Result.SuccessAsync();
     }
@@ -816,7 +822,8 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
         }
         
-        // TODO: Add audit properties to LocalResource then add an audit trail for local resource update for the config item's bound local resource
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, DatabaseActionType.Delete,
+            foundResource.Result);
 
         return await Result.SuccessAsync();
     }

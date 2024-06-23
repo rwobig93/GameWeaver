@@ -23,6 +23,10 @@ public static class LocalResourceMappers
             Type = localResourceDb.Type,
             ContentType = localResourceDb.ContentType,
             Args = localResourceDb.Args,
+            CreatedBy = localResourceDb.CreatedBy,
+            CreatedOn = localResourceDb.CreatedOn,
+            LastModifiedBy = localResourceDb.LastModifiedBy,
+            LastModifiedOn = localResourceDb.LastModifiedOn,
             ConfigSets = []
         };
     }
@@ -46,7 +50,9 @@ public static class LocalResourceMappers
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Args = localResource.Args
+            Args = localResource.Args,
+            LastModifiedBy = localResource.LastModifiedBy,
+            LastModifiedOn = localResource.LastModifiedOn
         };
     }
 
@@ -119,7 +125,11 @@ public static class LocalResourceMappers
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Args = localResource.Args
+            Args = localResource.Args,
+            CreatedBy = localResource.CreatedBy,
+            CreatedOn = localResource.CreatedOn,
+            LastModifiedBy = localResource.LastModifiedBy,
+            LastModifiedOn = localResource.LastModifiedOn
         };
     }
 }

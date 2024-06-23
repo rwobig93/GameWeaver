@@ -16,5 +16,9 @@ public class LocalResourceSlim
     public ResourceType Type { get; set; }
     public ContentType ContentType { get; set; }
     public string Args { get; set; } = "";
+    public Guid CreatedBy { get; set; }
+    public DateTime CreatedOn { get; set; }
+    public Guid? LastModifiedBy { get; set; }
+    public DateTime? LastModifiedOn { get; set; }
     public IEnumerable<ConfigurationItemSlim> ConfigSets { get; set; } = [];
 }

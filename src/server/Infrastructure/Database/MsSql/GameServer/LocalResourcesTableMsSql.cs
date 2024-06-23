@@ -26,9 +26,13 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                     [PathMac] NVARCHAR(128) NOT NULL,
                     [Startup] BIT NOT NULL,
                     [StartupPriority] int NOT NULL,
-                    [Type] int NOT NULL,
-                    [ContentType] int NOT NULL,
-                    [Args] NVARCHAR(128) NOT NULL
+                    [Type] INT NOT NULL,
+                    [ContentType] INT NOT NULL,
+                    [Args] NVARCHAR(128) NOT NULL,
+                    [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
+                    [CreatedOn] DATETIME2 NOT NULL,
+                    [LastModifiedBy] UNIQUEIDENTIFIER NULL,
+                    [LastModifiedOn] DATETIME2 NULL
                 )
             end"
     };
@@ -120,15 +124,21 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @PathLinux NVARCHAR(128),
                 @PathMac NVARCHAR(128),
                 @Startup BIT,
-                @StartupPriority int,
-                @Type int,
-                @ContentType int,
-                @Args NVARCHAR(128)
+                @StartupPriority INT,
+                @Type INT,
+                @ContentType INT,
+                @Args NVARCHAR(128),
+                @CreatedBy UNIQUEIDENTIFIER,
+                @CreatedOn DATETIME2,
+                @LastModifiedBy UNIQUEIDENTIFIER,
+                @LastModifiedOn DATETIME2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args)
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, CreatedBy, CreatedOn,
+                                                     LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args);
+                VALUES (@GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @CreatedBy, @CreatedOn,
+                        @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -145,7 +155,8 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT l.*
                 FROM dbo.[{Table.TableName}] l
-                WHERE l.GameProfileId LIKE '%' + @SearchTerm + '%'
+                WHERE l.Id LIKE '%' + @SearchTerm + '%'
+                    OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR l.Name LIKE '%' + @SearchTerm + '%'
                     OR l.PathWindows LIKE '%' + @SearchTerm + '%'
                     OR l.PathLinux LIKE '%' + @SearchTerm + '%'
@@ -169,7 +180,8 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT l.*
                 FROM dbo.[{Table.TableName}] l
-                WHERE l.GameProfileId LIKE '%' + @SearchTerm + '%'
+                WHERE l.Id LIKE '%' + @SearchTerm + '%'
+                    OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR l.Name LIKE '%' + @SearchTerm + '%'
                     OR l.PathWindows LIKE '%' + @SearchTerm + '%'
                     OR l.PathLinux LIKE '%' + @SearchTerm + '%'
@@ -192,17 +204,20 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @PathLinux NVARCHAR(128) = null,
                 @PathMac NVARCHAR(128) = null,
                 @Startup BIT = null,
-                @StartupPriority int = null,
-                @Type int = null,
-                @ContentType int = null,
-                @Args NVARCHAR(128) = null
+                @StartupPriority INT = null,
+                @Type INT = null,
+                @ContentType INT = null,
+                @Args NVARCHAR(128) = null,
+                @LastModifiedBy UNIQUEIDENTIFIER = null,
+                @LastModifiedOn DATETIME2 = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Name = COALESCE(@Name, Name),
                     PathWindows = COALESCE(@PathWindows, PathWindows), PathLinux = COALESCE(@PathLinux, PathLinux), PathMac = COALESCE(@PathMac, PathMac),
                     Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority), Type = COALESCE(@Type, Type),
-                    ContentType = COALESCE(@ContentType, ContentType), Args = COALESCE(@Args, Args)
+                    ContentType = COALESCE(@ContentType, ContentType), Args = COALESCE(@Args, Args), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
+                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
                 WHERE Id = @Id;
             end"
     };
