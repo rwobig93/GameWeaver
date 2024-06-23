@@ -55,11 +55,11 @@ public static class WebServerConfiguration
             try
             {
                 app.Urls.Add(altUrl);
-                logger.Information("Successfully bound application to Url: {Url}", altUrl);
+                logger.Information("Successfully bound alternate application to Url: {Url}", altUrl);
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex, "Failed to map to url provided: {Error}", ex.Message);
+                logger.Fatal(ex, "Failed to map to alternate url provided: [{Url}] {Error}", altUrl, ex.Message);
             }
         }
     }
@@ -74,12 +74,10 @@ public static class WebServerConfiguration
             return;
         }
         
-        // TODO: Register headers and trusted proxies from general configuration
-        // app.UseForwardedHeaders(new ForwardedHeadersOptions
-        // {
-        //     ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
-        //                        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
-        // });
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All
+        });
         
         app.UseExceptionHandler("/Error");
         app.UseHsts();

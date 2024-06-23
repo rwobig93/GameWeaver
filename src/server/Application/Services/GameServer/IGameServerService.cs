@@ -5,6 +5,7 @@ using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
 using Application.Requests.GameServer.GameProfile;
 using Application.Requests.GameServer.GameServer;
+using Application.Requests.GameServer.LocalResource;
 using Domain.Contracts;
 
 namespace Application.Services.GameServer;
@@ -41,8 +42,8 @@ public interface IGameServerService
     Task<IResult<LocalResourceSlim>> GetLocalResourceByIdAsync(Guid id);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameProfileIdAsync(Guid id);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesForGameServerIdAsync(Guid id);
-    Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate request, Guid requestUserId);
-    Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdate request, Guid requestUserId);
+    Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreateRequest request, Guid requestUserId);
+    Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteLocalResourceAsync(Guid id, Guid requestUserId, bool sendUpdateToHost = false);
     Task<IResult> UpdateLocalResourceOnGameServerAsync(Guid serverId, Guid resourceId, Guid requestUserId);
     Task<IResult> UpdateAllLocalResourcesOnGameServerAsync(Guid serverId, Guid requestUserId);

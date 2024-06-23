@@ -3,6 +3,7 @@ using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
+using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Settings.AppSettings;
@@ -144,18 +145,18 @@ public static class LocalResourceEndpoints
     /// <summary>
     /// Create a local resource
     /// </summary>
-    /// <param name="createObject"></param>
+    /// <param name="request"></param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Id of the created local resource</returns>
     [Authorize(PermissionConstants.GameServer.LocalResource.Create)]
-    private static async Task<IResult<Guid>> Create([FromBody]LocalResourceCreate createObject, IGameServerService gameServerService,
+    private static async Task<IResult<Guid>> Create([FromBody]LocalResourceCreateRequest request, IGameServerService gameServerService,
         ICurrentUserService currentUserService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.CreateLocalResourceAsync(createObject, currentUserId);
+            return await gameServerService.CreateLocalResourceAsync(request, currentUserId);
         }
         catch (Exception ex)
         {
@@ -166,17 +167,17 @@ public static class LocalResourceEndpoints
     /// <summary>
     /// Update a local resources properties
     /// </summary>
-    /// <param name="updateObject">Required properties to update a local resource</param>
+    /// <param name="request">Required properties to update a local resource</param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.LocalResource.Update)]
-    private static async Task<IResult> Update([FromBody]LocalResourceUpdate updateObject, IGameServerService gameServerService, ICurrentUserService currentUserService)
+    private static async Task<IResult> Update([FromBody]LocalResourceUpdateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.UpdateLocalResourceAsync(updateObject, currentUserId);
+            return await gameServerService.UpdateLocalResourceAsync(request, currentUserId);
         }
         catch (Exception ex)
         {

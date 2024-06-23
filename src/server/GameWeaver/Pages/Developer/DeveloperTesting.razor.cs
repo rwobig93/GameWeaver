@@ -80,6 +80,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         PasswordRcon = "dietrcon1",
         PasswordAdmin = "dietadmin1",
         PortGame = 30010,
+        PortPeer = 30011,
         PortQuery = 40010,
         PortRcon = 50010,
         Modded = false,
@@ -487,7 +488,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 continue;
             }
             
-            var resourceCreate = resource.ToCreate();
+            var resourceCreate = resource.ToCreateRequest();
             resourceCreate.GameProfileId = matchingProfile.Data.Id;
             
             var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);

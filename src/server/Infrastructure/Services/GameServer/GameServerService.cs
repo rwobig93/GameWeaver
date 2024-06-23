@@ -12,6 +12,7 @@ using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.GameProfile;
 using Application.Requests.GameServer.GameServer;
+using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Application.Services.System;
@@ -713,7 +714,7 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(finalResourceList);
     }
 
-    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate request, Guid requestUserId)
+    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreateRequest request, Guid requestUserId)
     {
         var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(request.GameProfileId);
         if (foundProfile.Result is null)
@@ -735,8 +736,12 @@ public class GameServerService : IGameServerService
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
         }
+
+        var convertedRequest = request.ToCreate();
+        convertedRequest.CreatedBy = requestUserId;
+        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
         
-        var resourceCreate = await _gameServerRepository.CreateLocalResourceAsync(request);
+        var resourceCreate = await _gameServerRepository.CreateLocalResourceAsync(convertedRequest);
         if (!resourceCreate.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, Guid.Empty, requestUserId, new Dictionary<string, string>
@@ -755,7 +760,7 @@ public class GameServerService : IGameServerService
         return await Result<Guid>.SuccessAsync(resourceCreate.Result);
     }
 
-    public async Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdate request, Guid requestUserId)
+    public async Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdateRequest request, Guid requestUserId)
     {
         var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.Id);
         if (foundResource.Result is null)
@@ -785,7 +790,11 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
         }
 
-        var resourceUpdate = await _gameServerRepository.UpdateLocalResourceAsync(request);
+        var convertedRequest = request.ToUpdate();
+        convertedRequest.LastModifiedBy = requestUserId;
+        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+        var resourceUpdate = await _gameServerRepository.UpdateLocalResourceAsync(convertedRequest);
         if (!resourceUpdate.Succeeded)
         {
             var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, foundResource.Result.Id, requestUserId, new Dictionary<string, 

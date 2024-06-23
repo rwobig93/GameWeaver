@@ -876,20 +876,20 @@
             <param name="gameServerService"></param>
             <returns>List of local resources</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.Create(Application.Models.GameServer.LocalResource.LocalResourceCreate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.Create(Application.Requests.GameServer.LocalResource.LocalResourceCreateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Create a local resource
             </summary>
-            <param name="createObject"></param>
+            <param name="request"></param>
             <param name="gameServerService"></param>
             <param name="currentUserService"></param>
             <returns>Id of the created local resource</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.Update(Application.Models.GameServer.LocalResource.LocalResourceUpdate,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
+        <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.Update(Application.Requests.GameServer.LocalResource.LocalResourceUpdateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Update a local resources properties
             </summary>
-            <param name="updateObject">Required properties to update a local resource</param>
+            <param name="request">Required properties to update a local resource</param>
             <param name="gameServerService"></param>
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
