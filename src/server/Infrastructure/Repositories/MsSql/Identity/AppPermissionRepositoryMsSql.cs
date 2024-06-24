@@ -7,7 +7,6 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Database;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
@@ -366,7 +365,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             var createdPermission = await GetByIdAsync(createdId);
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Permissions, createdId,
-                createObject.CreatedBy, DatabaseActionType.Create, null, createdPermission.Result);
+                createObject.CreatedBy, AuditAction.Create, null, createdPermission.Result);
             
             actionReturn.Succeed(createdId);
         }
@@ -393,7 +392,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             var foundPermissionAfterUpdate = await GetByIdAsync(updateObject.Id);
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Permissions, updateObject.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update,
+                updateObject.LastModifiedBy.GetFromNullable(), AuditAction.Update,
                 foundPermission.Result!.ToSlim(), foundPermissionAfterUpdate.Result!.ToSlim());
             
             actionReturn.Succeed();
@@ -417,7 +416,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             await _database.SaveData(AppPermissionsTableMsSql.Delete, new {Id = id});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Permissions,
-                foundPermission.Result!.Id, modifyingUserId, DatabaseActionType.Delete, 
+                foundPermission.Result!.Id, modifyingUserId, AuditAction.Delete, 
                 foundPermission.Result!.ToSlim());
             
             actionReturn.Succeed();

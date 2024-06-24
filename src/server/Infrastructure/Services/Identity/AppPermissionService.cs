@@ -8,6 +8,7 @@ using Application.Models.Identity.Permission;
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Application.Repositories.Identity;
+using Application.Repositories.Lifecycle;
 using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
@@ -24,20 +25,22 @@ public class AppPermissionService : IAppPermissionService
     private readonly IAppUserRepository _userRepository;
     private readonly IAppRoleRepository _roleRepository;
     private readonly IRunningServerState _serverState;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly IDateTimeService _dateTime;
     private readonly IAuditTrailService _auditService;
     private readonly ILogger _logger;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public AppPermissionService(IAppPermissionRepository permissionRepository, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
-        IRunningServerState serverState, IDateTimeService dateTimeService, IAuditTrailService auditService, ILogger logger)
+        IRunningServerState serverState, IDateTimeService dateTime, IAuditTrailService auditService, ILogger logger, ITroubleshootingRecordsRepository tshootRepository)
     {
         _permissionRepository = permissionRepository;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _serverState = serverState;
-        _dateTimeService = dateTimeService;
+        _dateTime = dateTime;
         _auditService = auditService;
         _logger = logger;
+        _tshootRepository = tshootRepository;
     }
 
     private async Task<bool> IsUserAdmin(Guid userId)
@@ -506,7 +509,7 @@ public class AppPermissionService : IAppPermissionService
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
 
             createObject.CreatedBy = modifyingUserId;
-            createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
+            createObject.CreatedOn = _dateTime.NowDatabaseTime;
 
             var createRequest = await _permissionRepository.CreateAsync(createObject);
             if (!createRequest.Succeeded)
@@ -521,11 +524,10 @@ public class AppPermissionService : IAppPermissionService
                 BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(createObject.UserId));
             
             if (response is null)
-                await _auditService.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.TshootPermissions, createRequest.Result,
-                    new Dictionary<string, string>()
+                await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, createRequest.Result,
+                    "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>()
                 {
                     {"Action", "Permission Change - Update Users - Create Permission"},
-                    {"Detail", "Failed to queue permission job to update users w/ new permissions to validate against clientId"},
                     {"PermissionId", createRequest.Result.ToString()}
                 });
             
@@ -550,7 +552,7 @@ public class AppPermissionService : IAppPermissionService
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
 
             updateObject.LastModifiedBy = modifyingUserId;
-            updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
+            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
             var updateRequest = await _permissionRepository.UpdateAsync(updateObject);
             if (!updateRequest.Succeeded)
@@ -589,11 +591,10 @@ public class AppPermissionService : IAppPermissionService
                 BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(foundPermission.Result.UserId));
             
             if (response is null)
-                await _auditService.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.TshootPermissions, permissionId,
-                    new Dictionary<string, string>()
+                await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, permissionId,
+                    "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>()
                     {
                         {"Action", "Permission Change - Update Users - Delete Permission"},
-                        {"Detail", "Failed to queue permission job to update users w/ new permissions to validate against clientId"},
                         {"PermissionId", permissionId.ToString()}
                     });
 

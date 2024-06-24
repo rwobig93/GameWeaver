@@ -5,11 +5,11 @@ using Infrastructure.Database.MsSql.Identity;
 
 namespace Infrastructure.Database.MsSql.Lifecycle;
 
-public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
+public class TroubleshootingRecordsTableMsSql : IMsSqlEnforcedEntity
 {
-    private const string TableName = "AuditTrails";
+    private const string TableName = "TroubleshootingRecords";
 
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AuditTrailsTableMsSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(TroubleshootingRecordsTableMsSql).GetDbScriptsFromClass();
 
     public static readonly SqlTable Table = new()
     {
@@ -20,13 +20,12 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
             begin
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
-                    [TableName] NVARCHAR(100) NOT NULL,
+                    [EntityType] INT NOT NULL,
                     [RecordId] UNIQUEIDENTIFIER NOT NULL,
                     [ChangedBy] UNIQUEIDENTIFIER NOT NULL,
                     [Timestamp] DATETIME2 NOT NULL,
-                    [Action] INT NOT NULL,
-                    [Before] NVARCHAR(MAX) NOT NULL,
-                    [After] NVARCHAR(MAX) NOT NULL
+                    [Message] NVARCHAR(1024) NOT NULL,
+                    [Detail] NVARCHAR(MAX) NULL
                 )
             end"
     };
@@ -44,21 +43,6 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY Timestamp DESC;
             end"
     };
-    
-    public static readonly SqlStoredProcedure GetAllWithUsers = new()
-    {
-        Table = Table,
-        Action = "GetAllWithUsers",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllWithUsers]
-            AS
-            begin
-                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
-                FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                ORDER BY Timestamp DESC;
-            end"
-    };
 
     public static readonly SqlStoredProcedure GetAllPaginated = new()
     {
@@ -72,23 +56,6 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT *
                 FROM dbo.[{Table.TableName}]
-                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
-            end"
-    };
-    
-    public static readonly SqlStoredProcedure GetAllPaginatedWithUsers = new()
-    {
-        Table = Table,
-        Action = "GetAllPaginatedWithUsers",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginatedWithUsers]
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
-                FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -109,23 +76,6 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
 
-    public static readonly SqlStoredProcedure GetByIdWithUser = new()
-    {
-        Table = Table,
-        Action = "GetByIdWithUser",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByIdWithUser]
-                @Id UNIQUEIDENTIFIER
-            AS
-            begin
-                SELECT TOP 1 a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
-                FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                WHERE a.Id = @Id
-                ORDER BY Id;
-            end"
-    };
-
     public static readonly SqlStoredProcedure GetByChangedBy = new()
     {
         Table = Table,
@@ -139,6 +89,22 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE a.ChangedBy = @UserId
+                ORDER BY Timestamp DESC;
+            end"
+    };
+
+    public static readonly SqlStoredProcedure GetByEntityType = new()
+    {
+        Table = Table,
+        Action = "GetByEntityType",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByEntityType]
+                @EntityType INT
+            AS
+            begin
+                SELECT a.*
+                FROM dbo.[{Table.TableName}] a
+                WHERE a.EntityType = @EntityType
                 ORDER BY Timestamp DESC;
             end"
     };
@@ -166,18 +132,17 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
-                @TableName NVARCHAR(100),
+                @EntityType INT,
                 @RecordId UNIQUEIDENTIFIER,
                 @ChangedBy UNIQUEIDENTIFIER,
                 @Timestamp DATETIME2,
-                @Action INT,
-                @Before NVARCHAR(MAX),
-                @After NVARCHAR(MAX)
+                @Message NVARCHAR(1024),
+                @Detail NVARCHAR(MAX)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (TableName, RecordId, ChangedBy, Timestamp, Action, Before, After)
+                INSERT into dbo.[{Table.TableName}] (EntityType, RecordId, ChangedBy, Timestamp, Message, Detail)
                 OUTPUT INSERTED.Id
-                VALUES (@TableName, @RecordId, @ChangedBy, @Timestamp, @Action, @Before, @After);
+                VALUES (@EntityType, @RecordId, @ChangedBy, @Timestamp, @Message, @Detail);
             end"
     };
 
@@ -195,11 +160,9 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 SELECT *
                 FROM dbo.[{Table.TableName}]
                 WHERE Id LIKE '%' + @SearchTerm + '%'
-                    OR TableName LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'
-                    OR Action LIKE '%' + @SearchTerm + '%'
-                    OR Before LIKE '%' + @SearchTerm + '%'
-                    OR After LIKE '%' + @SearchTerm + '%'
+                    OR Message LIKE '%' + @SearchTerm + '%'
+                    OR Detail LIKE '%' + @SearchTerm + '%'
                 ORDER BY Timestamp DESC;
             end"
     };
@@ -220,61 +183,9 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 SELECT *
                 FROM dbo.[{Table.TableName}]
                 WHERE Id LIKE '%' + @SearchTerm + '%'
-                    OR TableName LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'
-                    OR Action LIKE '%' + @SearchTerm + '%'
-                    OR Before LIKE '%' + @SearchTerm + '%'
-                    OR After LIKE '%' + @SearchTerm + '%'
-                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
-            end"
-    };
-
-    public static readonly SqlStoredProcedure SearchWithUser = new()
-    {
-        Table = Table,
-        Action = "SearchWithUser",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchWithUser]
-                @SearchTerm NVARCHAR(256)
-            AS
-            begin
-                set nocount on;
-                
-                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
-                FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                WHERE a.Id LIKE '%' + @SearchTerm + '%'
-                    OR a.TableName LIKE '%' + @SearchTerm + '%'
-                    OR a.RecordId LIKE '%' + @SearchTerm + '%'
-                    OR a.Action LIKE '%' + @SearchTerm + '%'
-                    OR a.Before LIKE '%' + @SearchTerm + '%'
-                    OR a.After LIKE '%' + @SearchTerm + '%'
-                ORDER BY Timestamp DESC;
-            end"
-    };
-
-    public static readonly SqlStoredProcedure SearchPaginatedWithUser = new()
-    {
-        Table = Table,
-        Action = "SearchPaginatedWithUser",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginatedWithUser]
-                @SearchTerm NVARCHAR(256),
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                set nocount on;
-                
-                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
-                FROM dbo.[{Table.TableName}] a
-                JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                WHERE a.Id LIKE '%' + @SearchTerm + '%'
-                    OR a.TableName LIKE '%' + @SearchTerm + '%'
-                    OR a.RecordId LIKE '%' + @SearchTerm + '%'
-                    OR a.Action LIKE '%' + @SearchTerm + '%'
-                    OR a.Before LIKE '%' + @SearchTerm + '%'
-                    OR a.After LIKE '%' + @SearchTerm + '%'
+                    OR Message LIKE '%' + @SearchTerm + '%'
+                    OR Detail LIKE '%' + @SearchTerm + '%'
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

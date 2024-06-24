@@ -23,16 +23,18 @@ public class AppUserService : IAppUserService
     private readonly IAppPermissionRepository _permissionRepository;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly IDateTimeService _dateTime;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository,
-        IAuditTrailsRepository auditRepository, IRunningServerState serverState, IDateTimeService dateTimeService)
+        IAuditTrailsRepository auditRepository, IRunningServerState serverState, IDateTimeService dateTime, ITroubleshootingRecordsRepository tshootRepository)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
         _auditRepository = auditRepository;
         _serverState = serverState;
-        _dateTimeService = dateTimeService;
+        _dateTime = dateTime;
+        _tshootRepository = tshootRepository;
     }
 
     private static async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb? userFullDb)
@@ -261,12 +263,11 @@ public class AppUserService : IAppUserService
             var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
             if (!serviceAccountPermissions.Succeeded || serviceAccountPermissions.Result is null)
             {
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
-                    foundUser.Data.Id, new Dictionary<string, string>
+                await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Users,
+                    foundUser.Data.Id, "Successfully updated service account but failed to update all dynamic permissions with the new name", new Dictionary<string, string>
                     {
                         {"Username Before", foundUser.Data.Username},
-                        {"Username After", updateObject.Username!},
-                        {"Detail", "Successfully updated service account but failed to update all dynamic permissions with the new name"},
+                        {"Username After", updateObject.Username ?? ""},
                         {"Error", serviceAccountPermissions.ErrorMessage}
                     });
                 return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
@@ -279,7 +280,7 @@ public class AppUserService : IAppUserService
                 var permissionUpdate = permission.ToUpdate();
                 permissionUpdate.Name = updateObject.Username;
                 permissionUpdate.LastModifiedBy = _serverState.SystemUserId;
-                permissionUpdate.LastModifiedOn = _dateTimeService.NowDatabaseTime;
+                permissionUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
                 
                 var updatePermissionRequest = await _permissionRepository.UpdateAsync(permissionUpdate);
                 if (!updatePermissionRequest.Succeeded)
@@ -291,12 +292,11 @@ public class AppUserService : IAppUserService
 
             // For any update requests that failed we'll create a troubleshooting audit trail to troubleshoot easier
             foreach (var message in errorMessages)
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
-                    foundUser.Data.Id, new Dictionary<string, string>
+                await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Users,
+                    foundUser.Data.Id, "Successfully updated service account but failed to update all dynamic permissions with the new name", new Dictionary<string, string>
                     {
                         {"Username Before", foundUser.Data.Username},
-                        {"Username After", updateObject.Username!},
-                        {"Detail", "Successfully updated service account but failed to update all dynamic permissions with the new name"},
+                        {"Username After", updateObject.Username ?? ""},
                         {"Error", message}
                     });
             

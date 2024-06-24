@@ -4,7 +4,6 @@ using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
-using Application.Models.Identity.UserExtensions;
 using Domain.Enums.Identity;
 using GameWeaver.Components.Identity;
 

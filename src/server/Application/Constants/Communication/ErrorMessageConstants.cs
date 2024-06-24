@@ -10,9 +10,9 @@ public static class ErrorMessageConstants
         public const string JsonInvalid = "The provided data is not a valid JSON serializable format, please verify your request body";
     }
 
-    public static class Audit
+    public static class Troubleshooting
     {
-        public static string AuditRecordId(Guid recordId) => $"Please mention this record Id: {recordId}";
+        public static string RecordId(Guid recordId) => $"Please mention this record Id: {recordId}";
     }
 
     public static class Users

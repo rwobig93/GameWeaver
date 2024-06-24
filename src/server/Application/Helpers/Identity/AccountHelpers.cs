@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Net.Mail;
 using System.Security.Claims;
-using Application.Constants.GameServer;
 using Application.Constants.Identity;
 using Application.Helpers.Web;
 using Application.Responses.v1.Identity;

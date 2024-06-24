@@ -7,7 +7,6 @@ using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
-using Application.Models.Identity.Permission;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
@@ -227,8 +226,11 @@ public static class DependencyInjection
 
     private static void AddApplicationServices(this IServiceCollection services)
     {
-        // Integration Services
+        // Lifecycle Services
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
+        services.AddSingleton<ITroubleshootingRecordService, TroubleshootingRecordService>();
+
+        // Integration Services
         services.AddSingleton<IExcelService, ExcelService>();
         services.AddTransient<IEmailService, EmailService>();
         
@@ -334,6 +336,7 @@ public static class DependencyInjection
                 services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
                 services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
                 services.AddSingleton<INotifyRecordRepository, NotifyRecordRepositoryMsSql>();
+                services.AddSingleton<ITroubleshootingRecordsRepository, TroubleshootingRecordsRepositoryMsSql>();
                 // GameServer Database Repositories
                 services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
                 services.AddSingleton<IGameRepository, GameRepositoryMsSql>();

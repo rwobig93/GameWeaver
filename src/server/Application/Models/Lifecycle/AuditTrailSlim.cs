@@ -1,4 +1,4 @@
-﻿using Domain.Enums.Database;
+﻿using Domain.Enums.Lifecycle;
 
 namespace Application.Models.Lifecycle;
 
@@ -10,7 +10,7 @@ public class AuditTrailSlim
     public Guid ChangedBy { get; set; }
     public string ChangedByUsername { get; set; } = "";
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-    public DatabaseActionType Action { get; set; }
+    public AuditAction Action { get; set; }
     public Dictionary<string, string>? Before { get; set; }
     public Dictionary<string, string> After { get; set; } = null!;
 }

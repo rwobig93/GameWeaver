@@ -8,7 +8,6 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
@@ -371,7 +370,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             var foundUser = await GetByIdAsync(createdId);
 
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, foundUser.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundUser.Result!.ToSlim());
+                createObject.CreatedBy, AuditAction.Create, null, foundUser.Result!.ToSlim());
             
             actionReturn.Succeed(createdId);
         }
@@ -418,7 +417,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 new { userId, DeletedOn = _dateTime.NowDatabaseTime });
 
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userId,
-                userUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, userUpdate);
+                userUpdate.LastModifiedBy.GetFromNullable(), AuditAction.Delete, userUpdate);
             
             actionReturn.Succeed();
         }

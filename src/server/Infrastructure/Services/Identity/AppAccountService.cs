@@ -24,7 +24,6 @@ using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Enums.Integration;
 using Domain.Enums.Lifecycle;
@@ -57,6 +56,7 @@ public class AppAccountService : IAppAccountService
     private readonly LifecycleConfiguration _lifecycleConfig;
     private readonly IHostRepository _hostRepository;
     private readonly IAuditTrailsRepository _auditRepository;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
@@ -64,7 +64,7 @@ public class AppAccountService : IAppAccountService
         IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState,
         IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
         ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig, IHostRepository hostRepository,
-        IAuditTrailsRepository auditRepository)
+        IAuditTrailsRepository auditRepository, ITroubleshootingRecordsRepository tshootRepository)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -79,6 +79,7 @@ public class AppAccountService : IAppAccountService
         _currentUserService = currentUserService;
         _hostRepository = hostRepository;
         _auditRepository = auditRepository;
+        _tshootRepository = tshootRepository;
         _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
@@ -183,7 +184,7 @@ public class AppAccountService : IAppAccountService
         if (_lifecycleConfig.AuditLoginLogout)
         {
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
-                _serverState.SystemUserId, DatabaseActionType.Login,
+                _serverState.SystemUserId, AuditAction.Login,
                 new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
                 new Dictionary<string, string>() 
                     {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
@@ -277,7 +278,7 @@ public class AppAccountService : IAppAccountService
         if (_lifecycleConfig.AuditLoginLogout)
         {
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
-                _serverState.SystemUserId, DatabaseActionType.Login,
+                _serverState.SystemUserId, AuditAction.Login,
                 new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
                 new Dictionary<string, string>() 
                     {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
@@ -442,7 +443,7 @@ public class AppAccountService : IAppAccountService
                        new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
             
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userId,
-                _serverState.SystemUserId, DatabaseActionType.Logout,
+                _serverState.SystemUserId, AuditAction.Logout,
                 new Dictionary<string, string>()
                     {{"Username", user.Username}, {"AuthState", user.AuthState.ToString()}},
                 new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}});
@@ -654,13 +655,12 @@ public class AppAccountService : IAppAccountService
 
         if (previousConfirmation is null)
         {
-            await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-                userId, new Dictionary<string, string>
+            await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+                userId, "Email confirmation was attempted when an email confirmation isn't currently pending", new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
-                    {"Email", userSecurity.Email},
-                    {"Details", "Email confirmation was attempted when an email confirmation isn't currently pending"}
+                    {"Email", userSecurity.Email}
                 });
             
             return await Result<string>.FailAsync(
@@ -669,13 +669,12 @@ public class AppAccountService : IAppAccountService
         
         if (previousConfirmation.Value != confirmationCode)
         {
-            await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-                userSecurity.Id, new Dictionary<string, string>
+            await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+                userSecurity.Id, "Email confirmation was attempted with an invalid confirmation code", new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
                     {"Email", userSecurity.Email},
-                    {"Details", "Email confirmation was attempted with an invalid confirmation code"},
                     {"Correct Code ", previousConfirmation.Value},
                     {"Provided Code", confirmationCode}
                 });
@@ -721,13 +720,12 @@ public class AppAccountService : IAppAccountService
         var confirmationUrl = (await GetEmailConfirmationUrl(foundUserRequest.Result.Id, newEmail)).Data;
         if (string.IsNullOrWhiteSpace(confirmationUrl))
         {
-            await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-                foundUserRequest.Result.Id, new Dictionary<string, string>()
+            await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+                foundUserRequest.Result.Id, "Was unable to generate confirmation Url", new Dictionary<string, string>()
                 {
                     {"UserId", foundUserRequest.Result.Id.ToString()},
                     {"Username", foundUserRequest.Result.Username},
                     {"Email", foundUserRequest.Result.Email},
-                    {"Details", "Was unable to generate confirmation Url"},
                     {"Confirmation Url", confirmationUrl}
                 });
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
@@ -737,13 +735,12 @@ public class AppAccountService : IAppAccountService
             _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl));
         if (response is not null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
         
-        await _auditRepository.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-            foundUserRequest.Result.Id, new Dictionary<string, string>()
+        await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+            foundUserRequest.Result.Id, $"Failure occurred sending email confirmation to {newEmail}", new Dictionary<string, string>()
             {
                 {"UserId", foundUserRequest.Result.Id.ToString()},
                 {"Username", foundUserRequest.Result.Username},
-                {"Email", foundUserRequest.Result.Email},
-                {"Details", $"Failure occurred sending email confirmation to {newEmail}"}
+                {"Email", foundUserRequest.Result.Email}
             });
         return await Result.FailAsync($"Failed to send confirmation email to {newEmail}, please contact the administrator");
     }
@@ -926,13 +923,12 @@ public class AppAccountService : IAppAccountService
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToSecurityUpdate());
         if (!updateSecurity.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootUsers, userSecurity.Result.Id,
-                requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Users, userSecurity.Result.Id,
+                requestUserId, "Failed to update user security with auth state for force user login", new Dictionary<string, string>
             {
-                {"Detail", "Failed to update user security with auth state for force user login"},
                 {"Error", updateSecurity.ErrorMessage}
             });
-            return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
         // Grab all registered client id's for the user account
@@ -940,13 +936,12 @@ public class AppAccountService : IAppAccountService
             await _userRepository.GetUserExtendedAttributesByTypeAsync(userSecurity.Result.Id, ExtendedAttributeType.UserClientId);
         if (!userClientIdRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootUsers, userSecurity.Result.Id,
-                requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Users, userSecurity.Result.Id,
+                requestUserId, "Failed to get user client id's for force user login", new Dictionary<string, string>
                 {
-                    {"Detail", "Failed to get user client id's for force user login"},
                     {"Error", userClientIdRequest.ErrorMessage}
                 });
-            return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var messages = new List<string>();
@@ -966,7 +961,7 @@ public class AppAccountService : IAppAccountService
             }
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userSecurity.Result.Id, requestUserId, DatabaseActionType.Update, beforeState,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userSecurity.Result.Id, requestUserId, AuditAction.Update, beforeState,
             new Dictionary<string, string>
             {
                 { "UserId", userSecurity.Result.Id.ToString() },

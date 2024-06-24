@@ -2,9 +2,7 @@
 using Application.Constants.Web;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
-using Application.Models.Identity.Permission;
 using Application.Services.Identity;
-using Application.Settings;
 using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;

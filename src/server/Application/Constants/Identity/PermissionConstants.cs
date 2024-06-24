@@ -75,6 +75,14 @@ public static class PermissionConstants
             public const string DeleteOld = "Permissions.System.Audit.DeleteOld";
         }
 
+        public static class Troubleshooting
+        {
+            public const string View = "Permissions.System.Troubleshooting.View";
+            public const string Export = "Permissions.System.Troubleshooting.Export";
+            public const string Search = "Permissions.System.Troubleshooting.Search";
+            public const string DeleteOld = "Permissions.System.Troubleshooting.DeleteOld";
+        }
+
         public static class AppDevelopment
         {
             public const string Dev = "Permissions.System.Developer.Dev";

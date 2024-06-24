@@ -6,7 +6,6 @@ using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
-using Domain.Enums.Identity;
 using Domain.Models.Identity;
 using Microsoft.Extensions.Options;
 using GameWeaver.Settings;

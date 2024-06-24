@@ -4,7 +4,6 @@ using System.Text;
 using Application.Constants.Identity;
 using Application.Services.System;
 using Application.Settings.AppSettings;
-using FluentEmail.Core;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Application.Helpers.Auth;

@@ -18,7 +18,6 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.Database;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 
@@ -32,9 +31,10 @@ public class GameServerService : IGameServerService
     private readonly IGameRepository _gameRepository;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository, IGameRepository gameRepository,
-        IAuditTrailsRepository auditRepository, IRunningServerState serverState)
+        IAuditTrailsRepository auditRepository, IRunningServerState serverState, ITroubleshootingRecordsRepository tshootRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
@@ -42,6 +42,7 @@ public class GameServerService : IGameServerService
         _gameRepository = gameRepository;
         _auditRepository = auditRepository;
         _serverState = serverState;
+        _tshootRepository = tshootRepository;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -207,12 +208,9 @@ public class GameServerService : IGameServerService
         });
         if (!createdGameProfile.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, Guid.Empty, requestUserId, new Dictionary<string, string>
-            {
-                {"Detail", "Failed to create game profile for server before game server creation"},
-                {"Error", createdGameProfile.ErrorMessage}
-            });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, Guid.Empty, requestUserId,
+                "Failed to create game profile for server before game server creation", new Dictionary<string, string> {{"Error", createdGameProfile.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var convertedRequest = request.ToCreate();
@@ -224,16 +222,16 @@ public class GameServerService : IGameServerService
         var gameServerCreate = await _gameServerRepository.CreateAsync(convertedRequest);
         if (!gameServerCreate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, Guid.Empty, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, Guid.Empty, requestUserId,
+            "Created server profile but failed to create game server", new Dictionary<string, string>
             {
-                {"Detail", "Created server profile but failed to create game server"},
                 {"Error", gameServerCreate.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var createdGameServer = await _gameServerRepository.GetByIdAsync(gameServerCreate.Result);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, gameServerCreate.Result, requestUserId, DatabaseActionType.Create,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, gameServerCreate.Result, requestUserId, AuditAction.Create,
             null, createdGameServer.Result);
 
         var gameServerHost = createdGameServer.Result!.ToHost();
@@ -248,15 +246,15 @@ public class GameServerService : IGameServerService
             gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
         if (!hostInstallRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, gameServerCreate.Result, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, gameServerCreate.Result,
+                requestUserId, "Created game server and profile but failed to send install request to the host",new Dictionary<string, string>
             {
-                {"Detail", "Created game server and profile but failed to send install request to the host"},
                 {"Error", hostInstallRequest.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.WeaverWorks, gameServerHost.Id, DatabaseActionType.GameServerAction,
+        await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.WeaverWorks, gameServerHost.Id, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
             {
                 {"WorkId", hostInstallRequest.Result.ToString()},
@@ -295,16 +293,13 @@ public class GameServerService : IGameServerService
         var gameServerUpdate = await _gameServerRepository.UpdateAsync(convertedRequest);
         if (!gameServerUpdate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundGameServer.Result.Id, requestUserId, new Dictionary<string, string>
-            {
-                {"Detail", "Failed to update game server"},
-                {"Error", gameServerUpdate.ErrorMessage}
-            });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundGameServer.Result.Id,
+                requestUserId, "Failed to update game server", new Dictionary<string, string> {{"Error", gameServerUpdate.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundGameServer.Result.Id);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundGameServer.Result.Id, requestUserId, DatabaseActionType.Update,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundGameServer.Result.Id, requestUserId, AuditAction.Update,
             foundGameServer.Result, updatedGameServer.Result);
 
         return await Result.SuccessAsync();
@@ -328,12 +323,12 @@ public class GameServerService : IGameServerService
         var profileServers = await _gameServerRepository.GetByGameProfileIdAsync(foundServer.Result.GameProfileId);
         if (profileServers.Result is null)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                requestUserId, "Failed to get game server profile servers before deletion", new Dictionary<string, string>
             {
-                {"Detail", "Failed to get game server profile servers before deletion"},
                 {"Error", profileServers.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         // Delete the assigned game profile if the only assignment is this game server
         if (profileServers.Result.ToList().Count == 1)
@@ -341,12 +336,10 @@ public class GameServerService : IGameServerService
             var profileDeleteRequest = await DeleteGameProfileAsync(foundServer.Result.GameProfileId, requestUserId);
             if (!profileDeleteRequest.Succeeded)
             {
-                var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to delete server profile before game server deletion"},
-                    {"Error", profileDeleteRequest.Messages.ToString() ?? ""}
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                    "Failed to delete server profile before game server deletion", new Dictionary<string, string> {{"Error", profileDeleteRequest.Messages.ToString() ?? ""}
                 });
-                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
         }
 
@@ -359,12 +352,9 @@ public class GameServerService : IGameServerService
         });
         if (!updateStatusRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
-            {
-                {"Detail", "Failed to update server state to uninstalling before game server deletion"},
-                {"Error", updateStatusRequest.ErrorMessage}
-            });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                "Failed to update server state to uninstalling before game server deletion", new Dictionary<string, string> {{"Error", updateStatusRequest.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         if (!sendHostUninstall)
@@ -372,15 +362,12 @@ public class GameServerService : IGameServerService
             var deleteRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, requestUserId);
             if (!deleteRequest.Succeeded)
             {
-                var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to delete game server"},
-                    {"Error", deleteRequest.ErrorMessage}
-                });
-                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                    "Failed to delete game server", new Dictionary<string, string> {{"Error", deleteRequest.ErrorMessage}});
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
             
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, requestUserId, DatabaseActionType.Delete,
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, requestUserId, AuditAction.Delete,
                 foundServer.Result);
 
             return await Result.SuccessAsync();
@@ -390,11 +377,8 @@ public class GameServerService : IGameServerService
             foundServer.Result.Id, requestUserId, _dateTime.NowDatabaseTime);
         if (hostDeleteRequest.Succeeded) return await Result.SuccessAsync();
         
-        var trailId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId, new Dictionary<string, string>
-        {
-            {"Detail", "Failed to send host uninstall request for game server deletion"},
-            {"Error", hostDeleteRequest.ErrorMessage}
-        });
+        var trailId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+            "Failed to send host uninstall request for game server deletion", new Dictionary<string, string> {{"Error", hostDeleteRequest.ErrorMessage}});
         return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, $"Please mention this record Id: {trailId.Data}"]);
     }
 
@@ -498,17 +482,17 @@ public class GameServerService : IGameServerService
         var configItemCreate = await _gameServerRepository.CreateConfigurationItemAsync(request);
         if (!configItemCreate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootConfigItems, Guid.Empty, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.ConfigItems, Guid.Empty, requestUserId,
+                "Failed to create a configuration item", new Dictionary<string, string>
             {
                 {"LocalResourceId", foundResource.Result.Id.ToString()},
-                {"Detail", "Failed to create a configuration item"},
                 {"Error", configItemCreate.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var createdConfigItem = await _gameServerRepository.GetConfigurationItemByIdAsync(configItemCreate.Result);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, DatabaseActionType.Update,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, AuditAction.Update,
             null, createdConfigItem.Result);
 
         return await Result<Guid>.SuccessAsync(configItemCreate.Result);
@@ -525,18 +509,18 @@ public class GameServerService : IGameServerService
         var configUpdate = await _gameServerRepository.UpdateConfigurationItemAsync(updateObject);
         if (!configUpdate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootConfigItems, foundConfig.Result.Id, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.ConfigItems, foundConfig.Result.Id, requestUserId,
+                "Failed to update a configuration item", new Dictionary<string, string>
             {
                 {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
-                {"Detail", "Failed to update a configuration item"},
                 {"Error", configUpdate.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var updatedConfigItem = await _gameServerRepository.GetConfigurationItemByIdAsync(foundConfig.Result.Id);
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundConfig.Result.LocalResourceId, requestUserId,
-            DatabaseActionType.Update, foundConfig.Result, updatedConfigItem.Result);
+            AuditAction.Update, foundConfig.Result, updatedConfigItem.Result);
         
         return await Result.SuccessAsync();
     }
@@ -552,17 +536,17 @@ public class GameServerService : IGameServerService
         var configDelete = await _gameServerRepository.DeleteConfigurationItemAsync(id);
         if (!configDelete.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootConfigItems, foundConfig.Result.Id, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.ConfigItems, foundConfig.Result.Id, requestUserId,
+                "Failed to delete a configuration item", new Dictionary<string, string>
             {
                 {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
-                {"Detail", "Failed to delete a configuration item"},
                 {"Error", configDelete.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundConfig.Result.LocalResourceId, requestUserId,
-            DatabaseActionType.Update, foundConfig.Result);
+            AuditAction.Update, foundConfig.Result);
 
         return await Result.SuccessAsync();
     }
@@ -744,17 +728,17 @@ public class GameServerService : IGameServerService
         var resourceCreate = await _gameServerRepository.CreateLocalResourceAsync(convertedRequest);
         if (!resourceCreate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, Guid.Empty, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.LocalResources, Guid.Empty, requestUserId,
+                "Failed to create a local resource", new Dictionary<string, string>
             {
                 {"GameProfileId", foundProfile.Result.Id.ToString()},
-                {"Detail", "Failed to create a local resource"},
                 {"Error", resourceCreate.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
         var createdResource = await _gameServerRepository.GetLocalResourceByIdAsync(resourceCreate.Result);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, resourceCreate.Result, requestUserId, DatabaseActionType.Create,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, resourceCreate.Result, requestUserId, AuditAction.Create,
             null, createdResource.Result);
 
         return await Result<Guid>.SuccessAsync(resourceCreate.Result);
@@ -797,18 +781,17 @@ public class GameServerService : IGameServerService
         var resourceUpdate = await _gameServerRepository.UpdateLocalResourceAsync(convertedRequest);
         if (!resourceUpdate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, foundResource.Result.Id, requestUserId, new Dictionary<string, 
-                string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.LocalResources, foundResource.Result.Id, requestUserId,
+                "Failed to update a local resource", new Dictionary<string, string>
             {
                 {"GameProfileId", foundProfile.Result.Id.ToString()},
-                {"Detail", "Failed to update a local resource"},
                 {"Error", resourceUpdate.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
         var updatedResource = await _gameServerRepository.GetLocalResourceByIdAsync(foundResource.Result.Id);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, DatabaseActionType.Update,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, AuditAction.Update,
             foundResource.Result, updatedResource.Result);
 
         return await Result.SuccessAsync();
@@ -825,16 +808,12 @@ public class GameServerService : IGameServerService
         var resourceDelete = await _gameServerRepository.DeleteLocalResourceAsync(id);
         if (!resourceDelete.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootLocalResources, foundResource.Result.Id, requestUserId, new Dictionary<string, 
-                string>
-            {
-                {"Detail", "Failed to delete a local resource"},
-                {"Error", resourceDelete.ErrorMessage}
-            });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.LocalResources, foundResource.Result.Id, requestUserId,
+                "Failed to delete a local resource", new Dictionary<string, string> {{"Error", resourceDelete.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, DatabaseActionType.Delete,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.LocalResources, foundResource.Result.Id, requestUserId, AuditAction.Delete,
             foundResource.Result);
 
         return await Result.SuccessAsync();
@@ -857,13 +836,12 @@ public class GameServerService : IGameServerService
         var foundResource = await GetLocalResourceByIdAsync(resourceId);
         if (!foundResource.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
-                requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                requestUserId, "Failed to get local resource for game server", new Dictionary<string, string>
                 {
-                    {"Detail", "Failed to get local resource for game server"},
                     {"Error", foundResource.Messages.ToString() ?? ""}
                 });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var gameServerHost = new GameServerToHost
@@ -876,17 +854,16 @@ public class GameServerService : IGameServerService
             foundServer.Result.HostId, gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
-                requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                requestUserId, "Failed to send local resource update request to host for game server", new Dictionary<string, string>
                 {
                     {"HostId", foundHost.Result.Id.ToString()},
-                    {"Detail", "Failed to send local resource update request to host for game server"},
                     {"Error", configUpdateRequest.ErrorMessage}
                 });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
             {
                 {"WorkId", configUpdateRequest.Result.ToString()},
@@ -913,13 +890,12 @@ public class GameServerService : IGameServerService
         var foundResources = await GetLocalResourcesForGameServerIdAsync(foundServer.Result.Id);
         if (!foundResources.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
-                requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                requestUserId, "Failed to get local resources for game server", new Dictionary<string, string>
                 {
-                    {"Detail", "Failed to get local resources for game server"},
                     {"Error", foundResources.Messages.ToString() ?? ""}
                 });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var gameServerHost = new GameServerToHost
@@ -932,17 +908,16 @@ public class GameServerService : IGameServerService
             foundHost.Result.Id, gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
         if (!configUpdateRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id,
-                requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                requestUserId, "Failed to send local resource update request to host for game server", new Dictionary<string, string>
                 {
                     {"HostId", foundHost.Result.Id.ToString()},
-                    {"Detail", "Failed to send local resource update request to host for game server"},
                     {"Error", configUpdateRequest.ErrorMessage}
                 });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
             {
                 {"WorkId", configUpdateRequest.Result.ToString()},
@@ -1076,17 +1051,17 @@ public class GameServerService : IGameServerService
         var profileCreate = await _gameServerRepository.CreateGameProfileAsync(convertedRequest);
         if (!profileCreate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, Guid.Empty, requestUserId, new Dictionary<string, string>
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameProfiles, Guid.Empty, requestUserId,
+                "Failed to create a game profile", new Dictionary<string, string>
             {
                 {"ProfileName", convertedRequest.FriendlyName},
-                {"Detail", "Failed to create a game profile"},
                 {"Error", profileCreate.ErrorMessage}
             });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var createdProfile = await _gameServerRepository.GetGameProfileByIdAsync(profileCreate.Result);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, profileCreate.Result, requestUserId, DatabaseActionType.Create,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, profileCreate.Result, requestUserId, AuditAction.Create,
             null, createdProfile.Result);
 
         return await Result<Guid>.SuccessAsync(profileCreate.Result);
@@ -1122,17 +1097,13 @@ public class GameServerService : IGameServerService
         var profileUpdate = await _gameServerRepository.UpdateGameProfileAsync(convertedRequest);
         if (!profileUpdate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to update game profile"},
-                    {"Error", profileUpdate.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameProfiles, foundProfile.Result.Id, requestUserId,
+                "Failed to update game profile", new Dictionary<string, string> {{"Error", profileUpdate.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var updatedProfile = await _gameServerRepository.GetGameProfileByIdAsync(foundProfile.Result.Id);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result.Id, requestUserId, DatabaseActionType.Update,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result.Id, requestUserId, AuditAction.Update,
             foundProfile.Result, updatedProfile.Result);
 
         return await Result.SuccessAsync();
@@ -1150,13 +1121,9 @@ public class GameServerService : IGameServerService
         var foundGame = await _gameRepository.GetByIdAsync(foundProfile.Result.GameId);
         if (!foundGame.Succeeded || foundGame.Result is null)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to find game before game profile deletion"},
-                    {"Error", foundGame.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameProfiles, foundProfile.Result.Id, requestUserId,
+                "Failed to find game before game profile deletion", new Dictionary<string, string> {{"Error", foundGame.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
         if (foundGame.Result.DefaultGameProfileId == foundProfile.Result.Id)
@@ -1196,16 +1163,12 @@ public class GameServerService : IGameServerService
         var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(id, requestUserId);
         if (!profileDelete.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameProfiles, foundProfile.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to delete game profile after deleting assigned resources"},
-                    {"Error", profileDelete.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameProfiles, foundProfile.Result.Id, requestUserId,
+                "Failed to delete game profile after deleting assigned resources", new Dictionary<string, string> {{"Error", profileDelete.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result.Id, requestUserId, DatabaseActionType.Delete,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result.Id, requestUserId, AuditAction.Delete,
             foundProfile.Result);
 
         return await Result.SuccessAsync();
@@ -1338,17 +1301,13 @@ public class GameServerService : IGameServerService
         var createMod = await _gameServerRepository.CreateModAsync(request);
         if (!createMod.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, Guid.Empty, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to create a mod"},
-                    {"Error", createMod.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Mods, Guid.Empty, requestUserId,
+                "Failed to create a mod", new Dictionary<string, string> {{"Error", createMod.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var createdMod = await _gameServerRepository.GetModByIdAsync(createMod.Result);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, createMod.Result, requestUserId, DatabaseActionType.Create,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, createMod.Result, requestUserId, AuditAction.Create,
             null, createdMod.Result);
 
         return await Result<Guid>.SuccessAsync(createMod.Result);
@@ -1368,17 +1327,13 @@ public class GameServerService : IGameServerService
         var modUpdate = await _gameServerRepository.UpdateModAsync(request);
         if (!modUpdate.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, foundMod.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to update mod"},
-                    {"Error", modUpdate.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Mods, foundMod.Result.Id, requestUserId,
+                "Failed to update mod", new Dictionary<string, string> {{"Error", modUpdate.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var updatedMod = await _gameServerRepository.GetModByIdAsync(foundMod.Result.Id);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result.Id, requestUserId, DatabaseActionType.Update,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result.Id, requestUserId, AuditAction.Update,
             foundMod.Result, updatedMod.Result);
 
         return await Result.SuccessAsync();
@@ -1395,16 +1350,12 @@ public class GameServerService : IGameServerService
         var modDelete = await _gameServerRepository.DeleteModAsync(id, requestUserId);
         if (!modDelete.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootMods, foundMod.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to delete mod"},
-                    {"Error", modDelete.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Mods, foundMod.Result.Id, requestUserId,
+                "Failed to delete mod", new Dictionary<string, string> {{"Error", modDelete.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result.Id, requestUserId, DatabaseActionType.Delete, foundMod.Result);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result.Id, requestUserId, AuditAction.Delete, foundMod.Result);
 
         return await Result.SuccessAsync();
     }
@@ -1439,16 +1390,12 @@ public class GameServerService : IGameServerService
             requestUserId, _dateTime.NowDatabaseTime);
         if (!startRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to send game server start work"},
-                    {"Error", startRequest.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                "Failed to send game server start work", new Dictionary<string, string> {{"Error", startRequest.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
             {
                 {"WorkId", startRequest.Result.ToString()},
@@ -1471,16 +1418,12 @@ public class GameServerService : IGameServerService
                 requestUserId, _dateTime.NowDatabaseTime);
         if (!stopRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to send game server stop work"},
-                    {"Error", stopRequest.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                "Failed to send game server stop work", new Dictionary<string, string> {{"Error", stopRequest.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
             {
                 {"WorkId", stopRequest.Result.ToString()},
@@ -1502,16 +1445,12 @@ public class GameServerService : IGameServerService
             foundServer.Result.Id, requestUserId, _dateTime.NowDatabaseTime);
         if (!restartRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to send game server restart work"},
-                    {"Error", restartRequest.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                "Failed to send game server restart work", new Dictionary<string, string> {{"Error", restartRequest.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
             {
                 {"WorkId", restartRequest.Result.ToString()},
@@ -1533,16 +1472,12 @@ public class GameServerService : IGameServerService
             foundServer.Result.Id, requestUserId, _dateTime.NowDatabaseTime);
         if (!updateRequest.Succeeded)
         {
-            var tshootId = await _auditRepository.CreateTroubleshootLog(_dateTime, AuditTableName.TshootGameServers, foundServer.Result.Id, requestUserId,
-                new Dictionary<string, string>
-                {
-                    {"Detail", "Failed to send game server version update work"},
-                    {"Error", updateRequest.ErrorMessage}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Audit.AuditRecordId(tshootId.Data)]);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                "Failed to send game server version update work", new Dictionary<string, string> {{"Error", updateRequest.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
         
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, DatabaseActionType.GameServerAction,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
             {
                 {"WorkId", updateRequest.Result.ToString()},
