@@ -72,7 +72,6 @@ public partial class AuditTrailAdmin
 
     private void OnSearch(string text)
     {
-        // TODO: Add a different page for viewing troubleshooting logs, here we should be looking at all trails < 500 since t-shooting is >= 500
         _searchString = text;
         _table.ReloadServerData();
     }
