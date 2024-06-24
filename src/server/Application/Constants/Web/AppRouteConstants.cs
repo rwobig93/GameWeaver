@@ -35,6 +35,8 @@ public static class AppRouteConstants
         public const string AuditTrails = "/admin/audittrail";
         public const string AuditTrailView = "/admin/audittrail/view";
         public const string ServiceAccountAdmin = "/admin/service/users";
+        public const string TroubleshootRecords = "/admin/troubleshoot";
+        public const string TroubleshootRecordsView = "/admin/troubleshoot/view";
     }
 
     public static class Developer

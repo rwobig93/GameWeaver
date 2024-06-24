@@ -23,6 +23,12 @@
                 Audit Trails
             </MudNavLink>
         }
+        @if (_canViewTshootRecords)
+        {
+            <MudNavLink Href="@AppRouteConstants.Admin.TroubleshootRecords" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Troubleshoot">
+                Troubleshooting
+            </MudNavLink>
+        }
     }
     @if (_canViewApi || _canViewJobs)
     {

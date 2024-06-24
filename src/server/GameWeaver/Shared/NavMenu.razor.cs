@@ -10,6 +10,7 @@ public partial class NavMenu
     private bool _canViewUsers;
     private bool _canViewRoles;
     private bool _canViewAuditTrails;
+    private bool _canViewTshootRecords;
     private bool _isDeveloper;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -34,6 +35,7 @@ public partial class NavMenu
         _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.View);
         _canViewRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.View);
         _canViewAuditTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Audit.View);
+        _canViewTshootRecords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Troubleshooting.View);
         _isDeveloper = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.AppDevelopment.Dev);
     }
 }

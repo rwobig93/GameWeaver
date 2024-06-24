@@ -1,0 +1,77 @@
+@using Application.Constants.Communication
+@using Application.Constants.Identity
+@using Application.Helpers.Runtime
+@using Application.Models.Lifecycle
+
+@attribute [Route(AppRouteConstants.Admin.TroubleshootRecords)]
+@attribute [Authorize(PermissionConstants.System.Troubleshooting.View)]
+
+
+<MudItem xs="16" sm="20" md="28" lg="36">
+    <MudTable ServerData="@(new Func<TableState, Task<TableData<TroubleshootingRecordSlim>>>(ServerReload))"
+              Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table">
+        <ToolBarContent>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudText Typo="Typo.h6" Class="pr-2 my-2">Troubleshooting Records</MudText>
+                @if (_canExportRecords)
+                {
+                <MudMenu Label="Export" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                         IconColor="Color.Tertiary" Color="Color.Tertiary" AnchorOrigin="Origin.BottomLeft">
+                    <MudMenuItem IconColor="Color.Tertiary" OnClick="@ExportToExcel" Icon="@Icons.Material.Filled.FileDownload">Current Filtered To xlsx</MudMenuItem>
+                </MudMenu>
+                }
+            </MudContainer>
+            <MudSpacer/>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudTextField T="string" ValueChanged="@(OnSearch)" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
+            </MudContainer>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Timestamp" T="TroubleshootingRecordSlim">Timestamp</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="RecordId" T="TroubleshootingRecordSlim">Record Id</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="EntityType" T="TroubleshootingRecordSlim">Type</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Message" T="TroubleshootingRecordSlim">Message</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="View">
+                    <MudButton Color="Color.Warning" OnClick="@(() => ViewRecord(context.Id))" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"/>
+                    </MudButton>
+                </MudTooltip>
+            </MudTd>
+            <MudTd DataLabel="Timestamp">@context.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)</MudTd>
+            <MudTd DataLabel="RecordId">@context.RecordId.ToString()</MudTd>
+            <MudTd DataLabel="EntityType">@context.EntityType.ToString()</MudTd>
+            <MudTd DataLabel="Message">@context.Message</MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>No matching records found</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudContainer Class="d-flex flex-column gap-3">
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+            </MudContainer>
+        </LoadingContent>
+        <PagerContent>
+            <MudContainer Class="d-flex flex-wrap gap-4">
+                <MudSwitch @bind-Value="@_hover" Color="Color.Primary">Hover</MudSwitch>
+                <MudSwitch @bind-Value="@_dense" Color="Color.Secondary">Dense</MudSwitch>
+                <MudSwitch @bind-Value="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
+                <MudSwitch @bind-Value="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
+                <MudTablePager/>
+            </MudContainer>
+        </PagerContent>
+    </MudTable>
+</MudItem>
