@@ -164,27 +164,52 @@ public class GameServerService : IGameServerService
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
-
-        // Most games that don't expose peer port configuration use the next port after the game port, so we'll default to that if 0 is provided
-        request.PortPeer = request.PortPeer == 0 ? request.PortGame + 1 : request.PortPeer;
         
-        var allowedHostPorts = NetworkHelpers.GetPortsFromRangeList(foundHost.Result?.ToSlim().AllowedPorts);
-        var desiredPorts = request.GetUsedPorts();
-        foreach (var port in desiredPorts.Where(port => !allowedHostPorts.Contains(port)))
+        if (request.PortGame != 0 && request.PortPeer != 0 && request.PortQuery != 0 && request.PortRcon != 0)
         {
-            return await Result<Guid>.FailAsync($"Port provided isn't allowed on the chosen host: {port}");
-        }
-
-        var hostGameServers = await _gameServerRepository.GetByHostIdAsync(foundHost.Result!.Id);
-        if (hostGameServers.Result is not null)
-        {
-            var usedHostPorts = hostGameServers.Result.GetUsedPorts();
-            foreach (var port in desiredPorts.Where(port => usedHostPorts.Contains(port)))
+            // Ports were provided, so we'll validate the provided ports are usable
+            var allowedHostPorts = NetworkHelpers.GetPortsFromRangeList(foundHost.Result?.ToSlim().AllowedPorts);
+            var desiredPorts = request.GetUsedPorts();
+            foreach (var port in desiredPorts.Where(port => !allowedHostPorts.Contains(port)))
             {
-                return await Result<Guid>.FailAsync($"Port provided overlaps with another server on the chosen host: {port}");
+                return await Result<Guid>.FailAsync($"Port provided isn't allowed on the chosen host: {port}");
+            }
+
+            var hostGameServers = await _gameServerRepository.GetByHostIdAsync(foundHost.Result!.Id);
+            if (hostGameServers.Result is not null)
+            {
+                var usedHostPorts = hostGameServers.Result.GetUsedPorts();
+                foreach (var port in desiredPorts.Where(port => usedHostPorts.Contains(port)))
+                {
+                    return await Result<Guid>.FailAsync($"Port provided overlaps with another server on the chosen host: {port}");
+                }
             }
         }
-        
+        else
+        {
+            // Ports weren't provided, so we'll attempt to grab the next available ports for the host
+            var allowedHostPorts = NetworkHelpers.GetPortsFromRangeList(foundHost.Result?.ToSlim().AllowedPorts);
+            List<int> usedPorts = [];
+
+            var hostGameServers = await _gameServerRepository.GetByHostIdAsync(foundHost.Result!.Id);
+            if (hostGameServers.Result is not null)
+            {
+                var usedHostPorts = hostGameServers.Result.GetUsedPorts();
+                usedPorts.AddRange(usedHostPorts);
+            }
+            
+            var availablePorts = allowedHostPorts.Except(usedPorts).Union(usedPorts.Except(allowedHostPorts)).ToList();
+            if (availablePorts.Count < 4)
+            {
+                return await Result<Guid>.FailAsync("The selected host has run out of available / configured ports, please have the owner or a moderator configure more");
+            }
+
+            request.PortGame = availablePorts.ElementAt(0);
+            request.PortPeer = availablePorts.ElementAt(1);
+            request.PortQuery = availablePorts.ElementAt(2);
+            request.PortRcon = availablePorts.ElementAt(3);
+        }
+
         if (request.ParentGameProfileId == Guid.Empty)
         {
             request.ParentGameProfileId = null;
