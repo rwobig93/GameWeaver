@@ -1,4 +1,6 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.Events;
@@ -18,7 +20,9 @@ using Application.Requests.GameServer.GameServer;
 using Application.Requests.GameServer.Host;
 using Application.Services.External;
 using Application.Services.GameServer;
+using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
+using Domain.Enums.Lifecycle;
 using GameWeaver.Helpers;
 
 namespace GameWeaver.Pages.Developer;
@@ -32,6 +36,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     [Inject] private IHostService HostService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
     [Inject] private ISteamApiService SteamService { get; init; } = null!;
+    [Inject] private ITroubleshootingRecordService TshootService { get; set; } = null!;
     
     private AppUserFull _loggedInUser = new();
     private bool _isContributor;
@@ -768,6 +773,25 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         _steamAppInfo = currentAppBuild.Data;
         Snackbar.Add("Gathered App Id Build Info!");
+    }
+
+    private async Task CreateTshootRecord()
+    {
+        var tshootEntityType = (TroubleshootEntityType)(Enum.GetValues(typeof(TroubleshootEntityType))
+            .GetValue(Random.Shared.Next(Enum.GetValues(typeof(TroubleshootEntityType)).Length)) ?? TroubleshootEntityType.Network);
+        
+        var tshootId = await TshootService.CreateTroubleshootRecord(DateTimeService, tshootEntityType, Guid.Empty,
+            _loggedInUser.Id, $"Example failure troubleshooting record: {Guid.NewGuid()}", new Dictionary<string, string>
+            {
+                {"Desired Profile", _defaultProfile.FriendlyName},
+                {"Desired Profile Id", _defaultProfile.Id.ToString()},
+                {"Desired Game", _desiredGame.FriendlyName},
+                {"Desired Game Id", _desiredGame.Id.ToString()},
+                {"User Id", _loggedInUser.Id.ToString()},
+                {"User", _loggedInUser.Username},
+                {"Error", "Example error message for troubleshooting purposes"}
+            });
+        Snackbar.Add(ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data));
     }
     
     public async ValueTask DisposeAsync()

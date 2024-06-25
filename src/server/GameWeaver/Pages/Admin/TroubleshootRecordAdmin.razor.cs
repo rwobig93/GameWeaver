@@ -78,7 +78,6 @@ public partial class TroubleshootRecordAdmin
 
     private void ViewRecord(Guid recordId)
     {
-        // TODO: Add troubleshooting record view page
         var viewUserUri = QueryHelpers.AddQueryString(AppRouteConstants.Admin.TroubleshootRecordsView, "recordId", recordId.ToString());
         NavManager.NavigateTo(viewUserUri);
     }

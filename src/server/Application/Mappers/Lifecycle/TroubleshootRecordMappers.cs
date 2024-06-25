@@ -1,5 +1,6 @@
 using Application.Models.Lifecycle;
 using Domain.DatabaseEntities.Lifecycle;
+using Newtonsoft.Json;
 
 namespace Application.Mappers.Lifecycle;
 
@@ -15,7 +16,7 @@ public static class TroubleshootRecordMappers
             ChangedBy = record.ChangedBy,
             Timestamp = record.Timestamp,
             Message = record.Message,
-            Detail = record.Detail
+            Detail = record.Detail is null ? new Dictionary<string, string>() : JsonConvert.DeserializeObject<Dictionary<string, string>>(record.Detail)
         };
     }
 

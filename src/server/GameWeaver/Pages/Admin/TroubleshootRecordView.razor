@@ -1,0 +1,46 @@
+@using Application.Constants.Communication
+@using Application.Constants.Identity
+@using Application.Helpers.Runtime
+
+@attribute [Route(AppRouteConstants.Admin.TroubleshootRecordsView)]
+@attribute [Authorize(PermissionConstants.System.Troubleshooting.View)]
+
+@if (_invalidDataProvided)
+{
+    <IconWithMessageDisplay Icon="@Icons.Material.Filled.ErrorOutline" Text="Invalid Record Id provided"/>
+}
+else
+{
+    <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="GoBack">Go Back
+        </MudButton>
+    </MudPaper>
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Troubleshooting Record</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_viewingRecord.Id" Label="ID" Variant="Variant.Outlined" ReadOnly="true"/>
+            <MudTextField Value="@_viewingRecord.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)"
+                          Label="Timestamp" Variant="Variant.Outlined" ReadOnly="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_viewingRecord.EntityType" Label="Entity Type" Variant="Variant.Outlined" ReadOnly="true"/>
+            <MudTextField @bind-Value="_viewingRecord.RecordId" Label="Record Id" Variant="Variant.Outlined" ReadOnly="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_viewingRecord.ChangedBy" Label="Changed By Id" Variant="Variant.Outlined" ReadOnly="true"/>
+            <MudTextField @bind-Value="_viewingRecord.Message" Label="Message" Variant="Variant.Outlined" ReadOnly="true"/>
+        </MudItem>
+    </MudPaper>
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Record Details</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField Value="@Serializer.SerializeJson(_viewingRecord.Detail)" Lines="20" Label="Detail" Variant="Variant.Outlined" 
+            ReadOnly="true"/>
+        </MudItem>
+    </MudPaper>
+}

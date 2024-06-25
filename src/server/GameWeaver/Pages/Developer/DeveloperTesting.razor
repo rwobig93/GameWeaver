@@ -92,6 +92,13 @@
                     <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Host Registration: @(_registrationToken)</MudText>
                 </MudItem>
             </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="System Clicky Buttons">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(CreateTshootRecord)">
+                        Generate Troubleshooting Record
+                    </MudButton>
+                </MudItem>
+            </MudExpansionPanel>
             <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Entity Detail">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                     <MudPaper Elevation="5" Class="d-flex flex-wrap gap-4 pa-2">
