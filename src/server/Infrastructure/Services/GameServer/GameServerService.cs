@@ -198,7 +198,7 @@ public class GameServerService : IGameServerService
                 usedPorts.AddRange(usedHostPorts);
             }
             
-            var availablePorts = allowedHostPorts.Except(usedPorts).Union(usedPorts.Except(allowedHostPorts)).ToList();
+            var availablePorts = allowedHostPorts.Except(usedPorts).ToList();
             if (availablePorts.Count < 4)
             {
                 return await Result<Guid>.FailAsync("The selected host has run out of available / configured ports, please have the owner or a moderator configure more");
