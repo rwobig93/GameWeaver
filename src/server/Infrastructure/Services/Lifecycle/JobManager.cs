@@ -311,7 +311,6 @@ public class JobManager : IJobManager
                 continue;
             }
 
-            // TODO: We are still getting base games for packs, skins, dlc, ect | Need to find a better way to filter or get the next match and get details until we get desired
             var serverAppNameSanitized = serverApp.Name.SanitizeFromSteam();
             var baseGame = allSteamApps.Data.FirstOrDefault(x =>
                 x.AppId != serverApp.AppId &&

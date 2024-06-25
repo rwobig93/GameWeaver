@@ -201,7 +201,5 @@ public static class WebServerConfiguration
         hangfireJobs.AddOrUpdate("DailySystemCleanup", () => jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
         hangfireJobs.AddOrUpdate("GameVersionCheck", () => jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));
         hangfireJobs.AddOrUpdate("DailySteamSync", () => jobManager.DailySteamSync(), JobHelpers.CronString.Daily);
-        
-        // TODO: Add job for monitoring / checking on game server status and host status
     }
 }
