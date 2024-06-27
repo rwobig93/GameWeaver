@@ -11,4 +11,6 @@ public static class LoginRedirectConstants
     public const string ReAuthenticationForceUser = "Your session was forcefully logged out by your account and you are required to re-login";
     public const string Unknown = "An error occurred with your session, please re-login";
     public const string FullLoginTimeout = "Your last full login has passed the configured timeout, please re-login";
+    public const string LockedOut = "Your account is currently locked out, you can wait to be unlocked, contact and administrator or reset your password";
+    public const string Disabled = "Your account is currently disabled, please reach out to an administrator for details";
 }

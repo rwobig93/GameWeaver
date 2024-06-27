@@ -107,6 +107,8 @@ public static class ErrorMessageConstants
     {
         public const string NotFound = "Was unable to find a game server using the information provided";
         public const string DefaultProfileAssignment = "The default profile for a game cannot be assigned to a game server";
+        
+        public static string InsufficientCurrency(string currencyName) => $"You don't have enough {currencyName} to create a game server";
     }
 
     public static class LocalResources

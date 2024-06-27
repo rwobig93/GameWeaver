@@ -8,18 +8,23 @@ using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
+using Application.Models.Identity.User;
 using Application.Repositories.GameServer;
+using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.GameProfile;
 using Application.Requests.GameServer.GameServer;
 using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
+using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.GameServer;
 
@@ -32,9 +37,12 @@ public class GameServerService : IGameServerService
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
+    private readonly IOptions<AppConfiguration> _generalConfig;
+    private readonly IAppUserRepository _userRepository;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository, IGameRepository gameRepository,
-        IAuditTrailsRepository auditRepository, IRunningServerState serverState, ITroubleshootingRecordsRepository tshootRepository)
+        IAuditTrailsRepository auditRepository, IRunningServerState serverState, ITroubleshootingRecordsRepository tshootRepository, IOptions<AppConfiguration> generalConfig,
+        IAppUserRepository userRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
@@ -43,6 +51,8 @@ public class GameServerService : IGameServerService
         _auditRepository = auditRepository;
         _serverState = serverState;
         _tshootRepository = tshootRepository;
+        _generalConfig = generalConfig;
+        _userRepository = userRepository;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -165,6 +175,17 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
         
+        var requestingUser = await _userRepository.GetByIdAsync(requestUserId);
+        if (requestingUser.Result is null)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
+        }
+
+        if (_generalConfig.Value.UseCurrency && foundHost.Result.OwnerId != requestUserId && requestingUser.Result.Currency <= 0)
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameServers.InsufficientCurrency(_generalConfig.Value.CurrencyName));
+        }
+        
         if (request.PortGame != 0 && request.PortPeer != 0 && request.PortQuery != 0 && request.PortRcon != 0)
         {
             // Ports were provided, so we'll validate the provided ports are usable
@@ -258,6 +279,29 @@ public class GameServerService : IGameServerService
         var createdGameServer = await _gameServerRepository.GetByIdAsync(gameServerCreate.Result);
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, gameServerCreate.Result, requestUserId, AuditAction.Create,
             null, createdGameServer.Result);
+
+        if (_generalConfig.Value.UseCurrency && foundHost.Result.OwnerId != requestUserId)
+        {
+            var userUpdate = await _userRepository.UpdateAsync(new AppUserUpdate
+            {
+                Currency = requestingUser.Result.Currency - 1,
+                LastModifiedBy = _serverState.SystemUserId,
+                LastModifiedOn = _dateTime.NowDatabaseTime
+            });
+            if (!userUpdate.Succeeded)
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, gameServerCreate.Result,
+                    requestUserId, "Created game server and profile but failed to update user currency",new Dictionary<string, string>
+                    {
+                        {"UserId", requestingUser.Result.Id.ToString()},
+                        {"Username", requestingUser.Result.Username},
+                        {"BeforeCurrency", requestingUser.Result.Currency.ToString()},
+                        {"IntendedCurrency", (requestingUser.Result.Currency - 1).ToString()},
+                        {"Error", userUpdate.ErrorMessage}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
+        }
 
         var gameServerHost = createdGameServer.Result!.ToHost();
         gameServerHost.SteamName = foundGame.Result.SteamName;
@@ -395,7 +439,39 @@ public class GameServerService : IGameServerService
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, requestUserId, AuditAction.Delete,
                 foundServer.Result);
 
-            return await Result.SuccessAsync();
+            var serverOwner = await _userRepository.GetByIdAsync(foundServer.Result.OwnerId);
+            if (serverOwner.Result is null)
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                    "Failed to find owner account during game server delete", new Dictionary<string, string> {{"UserID", foundServer.Result.OwnerId.ToString()}});
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
+
+            if (!_generalConfig.Value.UseCurrency) return await Result.SuccessAsync();
+            {
+                var serverHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
+                if (serverHost.Result?.OwnerId != foundServer.Result.OwnerId)
+                {
+                    var userUpdate = await _userRepository.UpdateAsync(new AppUserUpdate
+                    {
+                        Currency = serverOwner.Result.Currency + 1,
+                        LastModifiedBy = _serverState.SystemUserId,
+                        LastModifiedOn = _dateTime.NowDatabaseTime
+                    });
+                    if (userUpdate.Succeeded) return await Result.SuccessAsync();
+                
+                    var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                        requestUserId, "Deleted game server and profile but failed to update user currency",new Dictionary<string, string>
+                        {
+                            {"UserId", serverOwner.Result.Id.ToString()},
+                            {"Username", serverOwner.Result.Username},
+                            {"BeforeCurrency", serverOwner.Result.Currency.ToString()},
+                            {"IntendedCurrency", (serverOwner.Result.Currency + 1).ToString()},
+                            {"Error", userUpdate.ErrorMessage}
+                        });
+                    return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+                }
+            }
         }
 
         var hostDeleteRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerUninstall, foundServer.Result.HostId,

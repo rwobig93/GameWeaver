@@ -26,19 +26,17 @@ public class AppPermissionService : IAppPermissionService
     private readonly IAppRoleRepository _roleRepository;
     private readonly IRunningServerState _serverState;
     private readonly IDateTimeService _dateTime;
-    private readonly IAuditTrailService _auditService;
     private readonly ILogger _logger;
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public AppPermissionService(IAppPermissionRepository permissionRepository, IAppUserRepository userRepository, IAppRoleRepository roleRepository,
-        IRunningServerState serverState, IDateTimeService dateTime, IAuditTrailService auditService, ILogger logger, ITroubleshootingRecordsRepository tshootRepository)
+        IRunningServerState serverState, IDateTimeService dateTime, ILogger logger, ITroubleshootingRecordsRepository tshootRepository)
     {
         _permissionRepository = permissionRepository;
         _userRepository = userRepository;
         _roleRepository = roleRepository;
         _serverState = serverState;
         _dateTime = dateTime;
-        _auditService = auditService;
         _logger = logger;
         _tshootRepository = tshootRepository;
     }
@@ -545,18 +543,24 @@ public class AppPermissionService : IAppPermissionService
         {
             var foundPermission = await _permissionRepository.GetByIdAsync(updateObject.Id);
             if (!foundPermission.Succeeded || foundPermission.Result?.ClaimValue is null)
+            {
                 return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            }
 
             var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
             if (!userCanDoAction)
+            {
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
+            }
 
             updateObject.LastModifiedBy = modifyingUserId;
             updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
 
             var updateRequest = await _permissionRepository.UpdateAsync(updateObject);
             if (!updateRequest.Succeeded)
+            {
                 return await Result.FailAsync(updateRequest.ErrorMessage);
+            }
 
             return await Result.SuccessAsync();
         }

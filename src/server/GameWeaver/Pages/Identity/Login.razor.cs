@@ -89,6 +89,12 @@ public partial class Login
             case nameof(LoginRedirectReason.FullLoginTimeout):
                 Snackbar.Add(LoginRedirectConstants.FullLoginTimeout, Severity.Error);
                 break;
+            case nameof(LoginRedirectReason.LockedOut):
+                Snackbar.Add(LoginRedirectConstants.LockedOut, Severity.Error);
+                break;
+            case nameof(LoginRedirectReason.Disabled):
+                Snackbar.Add(LoginRedirectConstants.Disabled, Severity.Error);
+                break;
             default:
                 Snackbar.Add(LoginRedirectConstants.Unknown, Severity.Error);
                 break;

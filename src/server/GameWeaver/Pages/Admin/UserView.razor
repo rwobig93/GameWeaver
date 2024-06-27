@@ -90,6 +90,10 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
             <MudTextField @bind-Value="_viewingUser.Notes" Label="Notes" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            @if (GeneralConfig.Value.UseCurrency)
+            {
+                <MudTextField @bind-Value="_viewingUser.Currency" Label="@GeneralConfig.Value.CurrencyName" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            }
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_createdByUsername" Label="Created By" Variant="Variant.Outlined" Disabled="true"/>

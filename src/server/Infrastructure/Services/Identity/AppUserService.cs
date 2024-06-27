@@ -21,17 +21,15 @@ public class AppUserService : IAppUserService
 {
     private readonly IAppUserRepository _userRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
     private readonly IDateTimeService _dateTime;
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
-    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository,
-        IAuditTrailsRepository auditRepository, IRunningServerState serverState, IDateTimeService dateTime, ITroubleshootingRecordsRepository tshootRepository)
+    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository, IRunningServerState serverState, IDateTimeService dateTime,
+        ITroubleshootingRecordsRepository tshootRepository)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
-        _auditRepository = auditRepository;
         _serverState = serverState;
         _dateTime = dateTime;
         _tshootRepository = tshootRepository;
@@ -248,16 +246,23 @@ public class AppUserService : IAppUserService
         {
             var foundUser = await GetByIdAsync(updateObject.Id);
             if (!foundUser.Succeeded || foundUser.Data is null)
+            {
                 return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
+            }
 
-            var updateUser = await _userRepository.UpdateAsync(updateObject);
-            if (!updateUser.Succeeded)
-                return await Result.FailAsync(updateUser.ErrorMessage);
+            updateObject.LastModifiedBy = modifyingUserId;
+            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+            var userUpdate = await _userRepository.UpdateAsync(updateObject);
+            if (!userUpdate.Succeeded)
+            {
+                return await Result.FailAsync(userUpdate.ErrorMessage);
+            }
 
             if (foundUser.Data.AccountType != AccountType.Service) return await Result.SuccessAsync();
             if (updateObject.Username is not null && foundUser.Data.Username == updateObject.Username) return await Result.SuccessAsync();
             
-            // Service Accounts have dynamic permissions so we need to update assigned permissions if the account name changed
+            // Service Accounts have dynamic permissions, so we need to update assigned permissions if the account name changed
             var claimValue = PermissionHelpers.GetClaimValueFromServiceAccount(
                 foundUser.Data.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin);
             var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);

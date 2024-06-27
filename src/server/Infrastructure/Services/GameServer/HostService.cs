@@ -14,8 +14,10 @@ using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
+using Application.Models.Identity.User;
 using Application.Models.Lifecycle;
 using Application.Repositories.GameServer;
+using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.Host;
 using Application.Requests.GameServer.WeaverWork;
@@ -47,11 +49,13 @@ public class HostService : IHostService
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly INotifyRecordRepository _recordRepository;
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
+    private readonly IAppUserRepository _userRepository;
+    private readonly IOptions<AppConfiguration> _generalConfig;
 
     public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
         IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService,
         IEventService eventService, IGameRepository gameRepository, IAuditTrailsRepository auditRepository, INotifyRecordRepository recordRepository,
-        ITroubleshootingRecordsRepository tshootRepository)
+        ITroubleshootingRecordsRepository tshootRepository, IAppUserRepository userRepository, IOptions<AppConfiguration> generalConfig)
     {
         _hostRepository = hostRepository;
         _dateTime = dateTime;
@@ -64,6 +68,8 @@ public class HostService : IHostService
         _auditRepository = auditRepository;
         _recordRepository = recordRepository;
         _tshootRepository = tshootRepository;
+        _userRepository = userRepository;
+        _generalConfig = generalConfig;
         _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
     }
@@ -1218,7 +1224,38 @@ public class HostService : IHostService
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, (Guid)foundServer.Result.LastModifiedBy!,
                 AuditAction.Delete, foundServer.Result);
 
-            return await Result.SuccessAsync();
+            var serverOwner = await _userRepository.GetByIdAsync(foundServer.Result.OwnerId);
+            if (serverOwner.Result is null)
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                    "Failed to find owner account during game server delete", new Dictionary<string, string> {{"UserID", foundServer.Result.OwnerId.ToString()}});
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
+
+            if (!_generalConfig.Value.UseCurrency) return await Result.SuccessAsync();
+            {
+                var serverHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
+                if (serverHost.Result?.OwnerId == foundServer.Result.OwnerId) return await Result<Guid>.SuccessAsync();
+                
+                var userUpdate = await _userRepository.UpdateAsync(new AppUserUpdate
+                {
+                    Currency = serverOwner.Result.Currency + 1,
+                    LastModifiedBy = _serverState.SystemUserId,
+                    LastModifiedOn = _dateTime.NowDatabaseTime
+                });
+                if (userUpdate.Succeeded) return await Result.SuccessAsync();
+                
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                    "Deleted game server and profile but failed to update user currency",new Dictionary<string, string>
+                    {
+                        {"UserId", serverOwner.Result.Id.ToString()},
+                        {"Username", serverOwner.Result.Username},
+                        {"BeforeCurrency", serverOwner.Result.Currency.ToString()},
+                        {"IntendedCurrency", (serverOwner.Result.Currency + 1).ToString()},
+                        {"Error", userUpdate.ErrorMessage}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
         }
         catch (Exception ex)
         {

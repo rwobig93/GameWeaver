@@ -21,6 +21,7 @@ public class AppUserSecurityDb
     public DateTime? DeletedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
     public string? Notes { get; set; }
+    public int Currency { get; set; }
     // Security Attributes
     public string PasswordHash { get; set; } = null!;
     public string PasswordSalt { get; set; } = null!;

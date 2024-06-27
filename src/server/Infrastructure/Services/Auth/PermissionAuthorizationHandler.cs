@@ -53,6 +53,8 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             var redirectReason = currentAuthState.Data switch
             {
                 AuthState.LoginRequired => LoginRedirectReason.ReAuthenticationForce,
+                AuthState.LockedOut => LoginRedirectReason.LockedOut,
+                AuthState.Disabled => LoginRedirectReason.Disabled,
                 _ => LoginRedirectReason.SessionExpired
             };
             _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(redirectReason), true);

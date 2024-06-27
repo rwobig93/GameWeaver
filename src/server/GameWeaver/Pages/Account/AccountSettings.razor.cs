@@ -2,6 +2,8 @@
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
+using Application.Settings.AppSettings;
+using Microsoft.Extensions.Options;
 
 namespace GameWeaver.Pages.Account;
 
@@ -11,6 +13,7 @@ public partial class AccountSettings
     
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
+    [Inject] private IOptions<AppConfiguration> GeneralConfig { get; init; } = null!;
     
     private AppUserFull CurrentUser { get; set; } = new();
     private bool _processingEmailChange;

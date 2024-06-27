@@ -29,6 +29,7 @@ public static class UserMappers
             DeletedOn = appUserFull.DeletedOn,
             AccountType = appUserFull.AccountType,
             Notes = appUserFull.Notes,
+            Currency = appUserFull.Currency,
             AuthState = appUserFull.AuthState
         };
     }
@@ -51,6 +52,7 @@ public static class UserMappers
             DeletedOn = appUserDb.DeletedOn,
             AccountType = appUserDb.AccountType,
             Notes = appUserDb.Notes,
+            Currency = appUserDb.Currency,
             AuthState = AuthState.Enabled
         };
     }
@@ -86,6 +88,7 @@ public static class UserMappers
             CreatedOn = appUser.CreatedOn,
             AuthState = appUser.AuthState.ToString(),
             AccountType = appUser.AccountType.ToString(),
+            Currency = appUser.Currency,
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
         };
@@ -112,7 +115,8 @@ public static class UserMappers
             ExtendedAttributes = [],
             Permissions = [],
             AuthState = appUser.AuthState,
-            Notes = appUser.Notes
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
 
@@ -137,7 +141,8 @@ public static class UserMappers
             ExtendedAttributes = [],
             Permissions = [],
             AuthState = appUser.AuthState,
-            Notes = appUser.Notes
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
     
@@ -150,6 +155,7 @@ public static class UserMappers
             CreatedOn = appUser.CreatedOn,
             AuthState = appUser.AuthState.ToString(),
             AccountType = appUser.AccountType.ToString(),
+            Currency = appUser.Currency,
             ExtendedAttributes = appUser.ExtendedAttributes.ToResponses(),
             Permissions = appUser.Permissions.ToResponses()
         };
@@ -172,13 +178,15 @@ public static class UserMappers
             FirstName = appUser.FirstName,
             LastName = appUser.LastName,
             ProfilePictureDataUrl = appUser.ProfilePictureDataUrl,
+            CreatedBy = appUser.CreatedBy,
             CreatedOn = appUser.CreatedOn,
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
             AccountType = appUser.AccountType,
-            Notes = appUser.Notes
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
     
@@ -199,7 +207,10 @@ public static class UserMappers
             LastModifiedBy = Guid.Empty,
             LastModifiedOn = DateTime.Now,
             IsDeleted = false,
-            DeletedOn = null
+            DeletedOn = null,
+            AccountType = AccountType.User,
+            Notes = null,
+            Currency = 0
         };
     }
     
@@ -254,7 +265,8 @@ public static class UserMappers
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
             AccountType = appUser.AccountType,
-            Notes = appUser.Notes
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
     
@@ -293,132 +305,8 @@ public static class UserMappers
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
             AccountType = appUser.AccountType,
-            Notes = appUser.Notes
-        };
-    }
-    
-    public static ExtendedAttributeResponse ToResponse(this AppUserExtendedAttributeDb attribute)
-    {
-        return new ExtendedAttributeResponse
-        {
-            Id = attribute.Id,
-            OwnerId = attribute.OwnerId,
-            Name = attribute.Name,
-            Value = attribute.Value,
-            Type = attribute.Type.ToString()
-        };
-    }
-
-    public static List<ExtendedAttributeResponse> ToResponses(this IEnumerable<AppUserExtendedAttributeDb> attributes)
-    {
-        return attributes.Select(x => x.ToResponse()).ToList();
-    }
-    
-    public static AppUserPreferenceFull ToFull(this AppUserPreferenceDb preferenceDb)
-    {
-        return new AppUserPreferenceFull
-        {
-            Id = preferenceDb.Id,
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = AppThemeCustom.GetExampleCustomOne(),
-            CustomThemeTwo = AppThemeCustom.GetExampleCustomTwo(),
-            CustomThemeThree = AppThemeCustom.GetExampleCustomThree()
-        };
-    }
-
-    public static AppUserPreferenceDb ToDb(this AppUserPreferenceFull preferenceFull)
-    {
-        return new AppUserPreferenceDb
-        {
-            Id = preferenceFull.Id,
-            OwnerId = preferenceFull.OwnerId,
-            ThemePreference = preferenceFull.ThemePreference,
-            DrawerDefaultOpen = preferenceFull.DrawerDefaultOpen,
-            CustomThemeOne = "",
-            CustomThemeTwo = "",
-            CustomThemeThree = ""
-        };
-    }
-    
-    public static AppUserPreferenceCreate ToCreate(this AppUserPreferenceDb preferenceDb)
-    {
-        return new AppUserPreferenceCreate
-        {
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = preferenceDb.CustomThemeOne,
-            CustomThemeTwo = preferenceDb.CustomThemeTwo,
-            CustomThemeThree = preferenceDb.CustomThemeThree
-        };
-    }
-
-    public static AppUserPreferenceCreate ToCreate(this AppUserPreferenceUpdate preferenceUpdate)
-    {
-        return new AppUserPreferenceCreate
-        {
-            ThemePreference = preferenceUpdate.ThemePreference,
-            DrawerDefaultOpen = preferenceUpdate.DrawerDefaultOpen,
-            CustomThemeOne = preferenceUpdate.CustomThemeOne,
-            CustomThemeTwo = preferenceUpdate.CustomThemeTwo,
-            CustomThemeThree = preferenceUpdate.CustomThemeThree
-        };
-    }
-
-    public static AppUserPreferenceDb ToDb(this AppUserPreferenceCreate preferenceCreate)
-    {
-        return new AppUserPreferenceDb
-        {
-            OwnerId = preferenceCreate.OwnerId,
-            ThemePreference = preferenceCreate.ThemePreference,
-            DrawerDefaultOpen = preferenceCreate.DrawerDefaultOpen,
-            CustomThemeOne = preferenceCreate.CustomThemeOne,
-            CustomThemeTwo = preferenceCreate.CustomThemeTwo,
-            CustomThemeThree = preferenceCreate.CustomThemeThree
-        };
-    }
-    
-    public static AppUserPreferenceDb ToDb(this AppUserPreferenceUpdate preferenceUpdate)
-    {
-        return new AppUserPreferenceDb
-        {
-            Id = Guid.Empty,
-            OwnerId = preferenceUpdate.OwnerId,
-            ThemePreference = preferenceUpdate.ThemePreference,
-            DrawerDefaultOpen = preferenceUpdate.DrawerDefaultOpen,
-            CustomThemeOne = preferenceUpdate.CustomThemeOne,
-            CustomThemeTwo = preferenceUpdate.CustomThemeTwo,
-            CustomThemeThree = preferenceUpdate.CustomThemeThree
-        };
-    }
-    
-    public static AppUserPreferenceUpdate ToUpdate(this AppUserPreferenceDb preferenceDb)
-    {
-        return new AppUserPreferenceUpdate
-        {
-            Id = preferenceDb.Id,
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = preferenceDb.CustomThemeOne,
-            CustomThemeTwo = preferenceDb.CustomThemeTwo,
-            CustomThemeThree = preferenceDb.CustomThemeThree
-        };
-    }
-    
-    public static AppUserPreferenceUpdate ToUpdate(this AppUserPreferenceFull preferenceDb)
-    {
-        return new AppUserPreferenceUpdate
-        {
-            Id = preferenceDb.Id,
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = JsonConvert.SerializeObject(preferenceDb.CustomThemeOne),
-            CustomThemeTwo = JsonConvert.SerializeObject(preferenceDb.CustomThemeTwo),
-            CustomThemeThree = JsonConvert.SerializeObject(preferenceDb.CustomThemeThree)
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
 
@@ -475,6 +363,7 @@ public static class UserMappers
             DeletedOn = securityDb.DeletedOn,
             AccountType = securityDb.AccountType,
             Notes = securityDb.Notes,
+            Currency = securityDb.Currency,
             PasswordHash = securityDb.PasswordHash,
             PasswordSalt = securityDb.PasswordSalt,
             AuthState = securityDb.AuthState,
@@ -503,7 +392,8 @@ public static class UserMappers
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
             AccountType = appUser.AccountType,
-            Notes = appUser.Notes
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
     
@@ -540,7 +430,8 @@ public static class UserMappers
             LastModifiedBy = appUser.LastModifiedBy,
             LastModifiedOn = appUser.LastModifiedOn,
             AccountType = appUser.AccountType,
-            Notes = appUser.Notes
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
     
@@ -581,7 +472,8 @@ public static class UserMappers
             IsDeleted = securityDb.IsDeleted,
             DeletedOn = securityDb.DeletedOn,
             AccountType = securityDb.AccountType,
-            Notes = securityDb.Notes
+            Notes = securityDb.Notes,
+            Currency = securityDb.Currency
         };
     }
 
@@ -601,7 +493,8 @@ public static class UserMappers
             LastModifiedBy = userDb.LastModifiedBy,
             LastModifiedOn = userDb.LastModifiedOn,
             AccountType = userDb.AccountType,
-            Notes = userDb.Notes
+            Notes = userDb.Notes,
+            Currency = userDb.Currency
         };
     }
 
@@ -623,7 +516,8 @@ public static class UserMappers
             DeletedOn = userDb.DeletedOn,
             AccountType = userDb.AccountType,
             AuthState = userDb.AuthState,
-            Notes = userDb.Notes
+            Notes = userDb.Notes,
+            Currency = userDb.Currency
         };
     }
 
@@ -665,7 +559,8 @@ public static class UserMappers
             ExtendedAttributes = [],
             Permissions = [],
             AuthState = userDb.AuthState,
-            Notes = userDb.Notes
+            Notes = userDb.Notes,
+            Currency = userDb.Currency
         };
     }
 
@@ -693,7 +588,8 @@ public static class UserMappers
             ExtendedAttributes = [],
             Permissions = [],
             AuthState = AuthState.Unknown,
-            Notes = userDb.Notes
+            Notes = userDb.Notes,
+            Currency = userDb.Currency
         };
     }
 
@@ -716,7 +612,8 @@ public static class UserMappers
             IsDeleted = appUser.IsDeleted,
             DeletedOn = appUser.DeletedOn,
             AccountType = appUser.AccountType,
-            Notes = appUser.Notes
+            Notes = appUser.Notes,
+            Currency = appUser.Currency
         };
     }
 

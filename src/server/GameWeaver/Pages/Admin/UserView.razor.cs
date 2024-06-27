@@ -4,8 +4,10 @@ using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
+using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using GameWeaver.Components.Identity;
+using Microsoft.Extensions.Options;
 
 namespace GameWeaver.Pages.Admin;
 
@@ -17,6 +19,7 @@ public partial class UserView
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] private IOptions<AppConfiguration> GeneralConfig { get; init; } = null!;
 
     [Parameter] public Guid UserId { get; set; }
 

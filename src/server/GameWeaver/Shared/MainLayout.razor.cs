@@ -130,10 +130,10 @@ public partial class MainLayout
     {
         foreach (var customThemeId in AppThemes.GetCustomThemeIds())
         {
-            var matchingTheme = _availableThemes.FirstOrDefault(x => x.Id == customThemeId);
+            var matchingTheme = _availableThemes.First(x => x.Id == customThemeId);
             var preferenceTheme = AppThemes.GetPreferenceCustomThemeFromId(_userPreferences, customThemeId);
             
-            matchingTheme!.FriendlyName = preferenceTheme.ThemeName;
+            matchingTheme.FriendlyName = preferenceTheme.ThemeName;
             matchingTheme.Description = preferenceTheme.ThemeDescription;
             matchingTheme.Theme.Palette = new PaletteDark()
             {
