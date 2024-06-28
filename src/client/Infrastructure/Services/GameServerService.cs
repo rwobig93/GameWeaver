@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
+using System.Xml.Linq;
 using Application.Constants;
 using Application.Handlers;
 using Application.Helpers;
@@ -637,20 +638,106 @@ public class GameServerService : IGameServerService
         }
     }
 
-    private async Task<IResult> UpdateRawFile(LocalResource configFile)
+    private async Task<IResult> UpdateXmlFile(LocalResource configFile, bool loadExisting = true)
     {
         var filePath = configFile.GetFullPath();
-        var fileContent = new StringBuilder();
+
+        var xmlDocument = new XDocument();
+        if (loadExisting && File.Exists(filePath))
+        {
+            _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
+            try
+            {
+                xmlDocument = XDocument.Load(filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to load existing {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            }
+        }
 
         foreach (var configItem in configFile.ConfigSets)
         {
-            fileContent.Append(configItem.Value);
+            // Find the parent element
+            var parentElement = (string.IsNullOrEmpty(configItem.Category)
+                ? xmlDocument.Root
+                : xmlDocument.Descendants(configItem.Category).FirstOrDefault()) ?? xmlDocument.Root;
+
+            // Find the existing element
+            var existingElement = parentElement?.Elements(configItem.Key).FirstOrDefault(e => e.Value == configItem.Value);
+
+            if (existingElement is not null)
+            {
+                // Update the existing element
+                existingElement.Value = configItem.Value;
+                continue;
+            }
+
+            // Create a new element
+            var newElement = new XElement(configItem.Category, new XElement(configItem.Key, configItem.Value));
+
+            // Add the new element to the parent
+            parentElement?.Add(newElement);
         }
 
         try
         {
-            var serializedContent = fileContent.ToString();
-            File.WriteAllText(filePath, serializedContent, Encoding.UTF8);
+            xmlDocument.Save(filePath);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
+        }
+    }
+
+    private async Task<IResult> UpdateRawFile(LocalResource configFile, bool loadExisting = true)
+    {
+        var filePath = configFile.GetFullPath();
+        List<string> fileContent = [];
+
+        if (loadExisting && File.Exists(filePath))
+        {
+            _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
+            try
+            {
+                fileContent = [..File.ReadAllLines(filePath)];
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to load existing {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            }
+        }
+
+        var maxConfigItemLines = configFile.ConfigSets.Select(item => int.Parse(item.Key)).Max();
+        
+        // Fill any config item gaps between lines, if nothing exists in the file at that line we will add an empty line
+        foreach (var line in Enumerable.Range(0, maxConfigItemLines))
+        {
+            if (configFile.ConfigSets.Any(x => x.Key == line.ToString()))
+            {
+                continue;
+            }
+            
+            configFile.ConfigSets.Add(new ConfigurationItemLocal { Key = line.ToString(), Value = string.Empty });
+        }
+
+        foreach (var configItem in configFile.ConfigSets)
+        {
+            var lineIndex = int.Parse(configItem.Key);
+            if (fileContent.ElementAtOrDefault(lineIndex) is not null && string.IsNullOrWhiteSpace(configItem.Value))
+            {
+                // Existing line number isn't empty and our config item line is, so we'll leave the line value as it is
+                continue;
+            }
+            
+            fileContent[lineIndex] = configItem.Value;
+        }
+
+        try
+        {
+            File.WriteAllLines(filePath, fileContent, Encoding.UTF8);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -664,7 +751,9 @@ public class GameServerService : IGameServerService
     {
         var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
         if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+        {
             return await Result.FailAsync(gameServerRequest.Messages);
+        }
 
         List<string> errorMessages = [];
         var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == ResourceType.ConfigFile).ToList();
@@ -709,9 +798,18 @@ public class GameServerService : IGameServerService
 
                     continue;
                 }
+                case {ContentType: ContentType.Xml}:
+                {
+                    var xmlUpdateRequest = await UpdateXmlFile(configFile, loadExisting);
+                    if (!xmlUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(xmlUpdateRequest.Messages);
+                    }
+                    continue;
+                }
                 case {ContentType: ContentType.Raw}:
                 {
-                    var rawUpdateRequest = await UpdateRawFile(configFile);
+                    var rawUpdateRequest = await UpdateRawFile(configFile, loadExisting);
                     if (!rawUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(rawUpdateRequest.Messages);
