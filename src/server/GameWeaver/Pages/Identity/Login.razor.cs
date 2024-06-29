@@ -8,7 +8,7 @@ using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.Enums.Identity;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Microsoft.Extensions.Options;
 using GameWeaver.Components.Identity;
 

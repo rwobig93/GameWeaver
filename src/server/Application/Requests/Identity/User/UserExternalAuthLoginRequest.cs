@@ -1,4 +1,4 @@
-﻿using Domain.Enums.Integration;
+﻿using Domain.Enums.Integrations;
 
 namespace Application.Requests.Identity.User;
 

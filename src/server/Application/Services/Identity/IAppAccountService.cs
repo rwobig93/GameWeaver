@@ -5,7 +5,7 @@ using Application.Responses.v1.Api;
 using Application.Responses.v1.Identity;
 using Domain.Contracts;
 using Domain.Enums.Identity;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Domain.Models.Identity;
 
 namespace Application.Services.Identity;

@@ -25,7 +25,7 @@ using Blazored.LocalStorage;
 using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;

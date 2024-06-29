@@ -1,4 +1,4 @@
-namespace Domain.Enums.Integration;
+namespace Domain.Enums.Integrations;
 
 public enum TotpAlgorithm
 {

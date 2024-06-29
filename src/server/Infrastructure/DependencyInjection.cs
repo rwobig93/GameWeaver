@@ -9,6 +9,7 @@ using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
+using Application.Repositories.Integrations;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.External;
@@ -27,6 +28,7 @@ using Hangfire.PostgreSql;
 using Infrastructure.HealthChecks;
 using Infrastructure.Repositories.MsSql.GameServer;
 using Infrastructure.Repositories.MsSql.Identity;
+using Infrastructure.Repositories.MsSql.Integrations;
 using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
@@ -234,6 +236,9 @@ public static class DependencyInjection
         services.AddSingleton<IExcelService, ExcelService>();
         services.AddTransient<IEmailService, EmailService>();
         
+        // System Services
+        services.AddSingleton<IFileStorageRecordService, FileStorageRecordService>();
+        
         // Web Service Services
         services.AddTransient<IMfaService, MfaService>();
         services.AddTransient<IQrCodeService, QrCodeService>();
@@ -337,6 +342,7 @@ public static class DependencyInjection
                 services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
                 services.AddSingleton<INotifyRecordRepository, NotifyRecordRepositoryMsSql>();
                 services.AddSingleton<ITroubleshootingRecordsRepository, TroubleshootingRecordsRepositoryMsSql>();
+                services.AddSingleton<IFileStorageRecordRepository, FileStorageRecordRepositoryMsSql>();
                 // GameServer Database Repositories
                 services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
                 services.AddSingleton<IGameRepository, GameRepositoryMsSql>();

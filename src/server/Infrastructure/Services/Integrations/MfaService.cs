@@ -1,5 +1,5 @@
 using Application.Services.Integrations;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using OtpNet;
 
 namespace Infrastructure.Services.Integrations;
