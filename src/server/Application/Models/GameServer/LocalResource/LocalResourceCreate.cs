@@ -14,6 +14,7 @@ public class LocalResourceCreate
     public ResourceType Type { get; set; }
     public ContentType ContentType { get; set; }
     public string Args { get; set; } = "";
+    public bool LoadExisting { get; set; } = true;
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }

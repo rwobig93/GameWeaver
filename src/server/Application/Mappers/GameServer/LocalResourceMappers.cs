@@ -24,6 +24,7 @@ public static class LocalResourceMappers
             Type = localResourceDb.Type,
             ContentType = localResourceDb.ContentType,
             Args = localResourceDb.Args,
+            LoadExisting = localResourceDb.LoadExisting,
             CreatedBy = localResourceDb.CreatedBy,
             CreatedOn = localResourceDb.CreatedOn,
             LastModifiedBy = localResourceDb.LastModifiedBy,
@@ -52,6 +53,7 @@ public static class LocalResourceMappers
             Type = localResource.Type,
             ContentType = localResource.ContentType,
             Args = localResource.Args,
+            LoadExisting = localResource.LoadExisting,
             LastModifiedBy = localResource.LastModifiedBy,
             LastModifiedOn = localResource.LastModifiedOn
         };
@@ -72,10 +74,13 @@ public static class LocalResourceMappers
                 _ => localResource.PathWindows
             },
             Startup = localResource.Startup,
+            StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
             Args = localResource.Args,
-            ConfigSets = []
+            ConfigSets = [],
+            Id = localResource.Id,
+            LoadExisting = localResource.LoadExisting
         };
     }
 
@@ -104,7 +109,8 @@ public static class LocalResourceMappers
             ContentType = localResource.ContentType,
             Args = localResource.Args,
             ConfigSets = new SerializableList<ConfigurationItemHost>(localResource.ConfigSets.ToHosts()),
-            Id = localResource.Id
+            Id = localResource.Id,
+            LoadExisting = localResource.LoadExisting
         };
     }
 
@@ -127,6 +133,7 @@ public static class LocalResourceMappers
             Type = resource.Type,
             ContentType = resource.ContentType,
             Args = resource.Args,
+            LoadExisting = resource.LoadExisting,
             CreatedBy = resource.CreatedBy,
             CreatedOn = resource.CreatedOn,
             LastModifiedBy = resource.LastModifiedBy,
@@ -147,7 +154,12 @@ public static class LocalResourceMappers
             StartupPriority = request.StartupPriority,
             Type = request.Type,
             ContentType = request.ContentType,
-            Args = request.Args
+            Args = request.Args,
+            LoadExisting = request.LoadExisting,
+            CreatedBy = default,
+            CreatedOn = default,
+            LastModifiedBy = null,
+            LastModifiedOn = null
         };
     }
 
@@ -164,13 +176,14 @@ public static class LocalResourceMappers
             StartupPriority = request.StartupPriority,
             Type = request.Type,
             ContentType = request.ContentType,
-            Args = request.Args
+            Args = request.Args,
+            LoadExisting = request.LoadExisting
         };
     }
 
     public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceSlim resource)
     {
-        return new LocalResourceCreateRequest()
+        return new LocalResourceCreateRequest
         {
             GameProfileId = resource.GameProfileId,
             Name = resource.Name,
@@ -181,7 +194,8 @@ public static class LocalResourceMappers
             StartupPriority = resource.StartupPriority,
             Type = resource.Type,
             ContentType = resource.ContentType,
-            Args = resource.Args
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting
         };
     }
 }

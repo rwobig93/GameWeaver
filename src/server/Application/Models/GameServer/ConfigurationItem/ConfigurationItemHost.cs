@@ -15,4 +15,6 @@ public partial class ConfigurationItemHost
     public string Key { get; set; } = null!;
     [MemoryPackOrder(4)]
     public string Value { get; set; } = null!;
+    [MemoryPackOrder(5)]
+    public string Path { get; set; } = null!;
 }

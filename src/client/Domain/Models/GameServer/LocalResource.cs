@@ -27,4 +27,6 @@ public partial class LocalResource
     public SerializableList<ConfigurationItemLocal> ConfigSets { get; set; } = [];
     [MemoryPackOrder(9)]
     public Guid Id { get; set; }
+    [MemoryPackOrder(10)]
+    public bool LoadExisting { get; set; }
 }

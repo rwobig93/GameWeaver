@@ -563,7 +563,25 @@ public class GameServerService : IGameServerService
                 _logger.Debug("Existing ini file exists, loaded config contents: {FilePath}", filePath);
             }
 
-            foreach (var config in configFile.ConfigSets)
+            var pathIniItems = configFile.ConfigSets
+                .Where(item => !string.IsNullOrWhiteSpace(item.Path))
+                .GroupBy(item => new { item.Path, item.Category })
+                .Select(g => new ConfigurationItemLocal()
+                {
+                    Path = g.Key.Path,
+                    Key = g.Key.Path,
+                    Value = string.Join(",", g.Select(item => $"{item.Key}={item.Value}")),
+                    Category = g.Key.Category
+                })
+                .ToList();
+            var noPathIniItems = configFile.ConfigSets.Where(x => string.IsNullOrWhiteSpace(x.Path));
+            
+            foreach (var config in pathIniItems)
+            {
+                configFileContent.AddOrUpdateKey(config.Category, config.Key, $"({config.Value})");
+            }
+
+            foreach (var config in noPathIniItems)
             {
                 configFileContent.AddOrUpdateKey(config.Category, config.Key, config.Value);
             }
@@ -642,7 +660,13 @@ public class GameServerService : IGameServerService
     {
         var filePath = configFile.GetFullPath();
 
-        var xmlDocument = new XDocument();
+        var rootElement = configFile.ConfigSets.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Path));
+        if (rootElement is null)
+        {
+            return await Result.FailAsync("XML config file is missing at least one root element, unable to create config file");
+        }
+        
+        var xmlDocument = new XDocument(new XElement(rootElement.Key));
         if (loadExisting && File.Exists(filePath))
         {
             _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
@@ -653,31 +677,62 @@ public class GameServerService : IGameServerService
             catch (Exception ex)
             {
                 _logger.Error(ex, "Failed to load existing {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+                return await Result.FailAsync($"Failed to load existing {configFile.ContentType} config file: {ex.Message}");
             }
+        }
+
+        if (xmlDocument.Root is null)
+        {
+            return await Result.FailAsync("XML Document is missing a root element, unable to modify or save XML file");
         }
 
         foreach (var configItem in configFile.ConfigSets)
         {
-            // Find the parent element
-            var parentElement = (string.IsNullOrEmpty(configItem.Category)
-                ? xmlDocument.Root
-                : xmlDocument.Descendants(configItem.Category).FirstOrDefault()) ?? xmlDocument.Root;
-
-            // Find the existing element
-            var existingElement = parentElement?.Elements(configItem.Key).FirstOrDefault(e => e.Value == configItem.Value);
-
-            if (existingElement is not null)
+            var parentElements = configItem.Path.Split('/');
+            var configItemAttributes = configItem.Category.Split(',')
+                .Select(x => x.Split(':'))
+                .Where(x => x.Length == 2)
+                .Select(x => new XAttribute(x[0], x[1]));
+            var currentElement = xmlDocument.Root;
+            
+            // Create parent elements if there are any and move to the direct 
+            if (!string.IsNullOrWhiteSpace(configItem.Path))
             {
-                // Update the existing element
-                existingElement.Value = configItem.Value;
-                continue;
+                foreach (var element in parentElements)
+                {
+                    var nextElement = currentElement.Element(element);
+                    if (nextElement == null)
+                    {
+                        nextElement = new XElement(element);
+                        currentElement.Add(nextElement);
+                    }
+                    currentElement = nextElement;
+                }
             }
 
-            // Create a new element
-            var newElement = new XElement(configItem.Category, new XElement(configItem.Key, configItem.Value));
+            var existingElement = currentElement.Elements(configItem.Key).FirstOrDefault();
+            if (existingElement is null)
+            {
+                // Element doesn't exist, so we'll create a new one
+                var newElement = new XElement(configItem.Key, configItem.Value);
 
-            // Add the new element to the parent
-            parentElement?.Add(newElement);
+                if (configItemAttributes.Any())
+                {
+                    newElement.Add(configItemAttributes);
+                }
+                
+                currentElement.Add(newElement);
+                continue;
+            }
+            
+            // Update the existing element's value and attributes
+            existingElement.Value = configItem.Value;
+            existingElement.RemoveAttributes();
+
+            if (configItemAttributes.Any())
+            {
+                existingElement.Add(configItemAttributes);
+            }
         }
 
         try
@@ -780,7 +835,7 @@ public class GameServerService : IGameServerService
             {
                 case {ContentType: ContentType.Json}:
                 {
-                    var jsonUpdateRequest = await UpdateJsonFile(configFile, loadExisting);
+                    var jsonUpdateRequest = await UpdateJsonFile(configFile, configFile.LoadExisting);
                     if (!jsonUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(jsonUpdateRequest.Messages);
@@ -790,7 +845,7 @@ public class GameServerService : IGameServerService
                 }
                 case {ContentType: ContentType.Ini}:
                 {
-                    var iniUpdateRequest = await UpdateIniFile(configFile, loadExisting);
+                    var iniUpdateRequest = await UpdateIniFile(configFile, configFile.LoadExisting);
                     if (!iniUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(iniUpdateRequest.Messages);
@@ -800,7 +855,7 @@ public class GameServerService : IGameServerService
                 }
                 case {ContentType: ContentType.Xml}:
                 {
-                    var xmlUpdateRequest = await UpdateXmlFile(configFile, loadExisting);
+                    var xmlUpdateRequest = await UpdateXmlFile(configFile, configFile.LoadExisting);
                     if (!xmlUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(xmlUpdateRequest.Messages);
@@ -809,7 +864,7 @@ public class GameServerService : IGameServerService
                 }
                 case {ContentType: ContentType.Raw}:
                 {
-                    var rawUpdateRequest = await UpdateRawFile(configFile, loadExisting);
+                    var rawUpdateRequest = await UpdateRawFile(configFile, configFile.LoadExisting);
                     if (!rawUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(rawUpdateRequest.Messages);

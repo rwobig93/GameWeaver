@@ -1685,6 +1685,7 @@
             <b>string</b> Category<br/>
             <b>string</b> Key<br/>
             <b>string</b> Value<br/>
+            <b>string</b> Path<br/>
             </code>
             </remarks>
         </member>
@@ -1731,6 +1732,7 @@
             <b>string</b> Args<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.ConfigurationItem.ConfigurationItemHost&gt;</b> ConfigSets<br/>
             <b>System.Guid</b> Id<br/>
+            <b>bool</b> LoadExisting<br/>
             </code>
             </remarks>
         </member>

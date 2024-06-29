@@ -64,7 +64,8 @@ public static class ConfigurationItemMappers
             DuplicateKey = configDb.DuplicateKey,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            Path = configDb.Path
         };
     }
 
@@ -93,7 +94,8 @@ public static class ConfigurationItemMappers
             DuplicateKey = configItem.DuplicateKey,
             Category = configItem.Category,
             Key = configItem.Key,
-            Value = configItem.Value
+            Value = configItem.Value,
+            Path = configItem.Path
         };
     }
 

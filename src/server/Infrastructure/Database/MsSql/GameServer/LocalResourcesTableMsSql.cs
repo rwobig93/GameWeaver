@@ -29,6 +29,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                     [Type] INT NOT NULL,
                     [ContentType] INT NOT NULL,
                     [Args] NVARCHAR(128) NOT NULL,
+                    [LoadExisting] BIT NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] DATETIME2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -128,16 +129,17 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @Type INT,
                 @ContentType INT,
                 @Args NVARCHAR(128),
+                @LoadExisting INT,
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn DATETIME2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
                 @LastModifiedOn DATETIME2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, CreatedBy, CreatedOn,
-                                                     LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, LoadExisting,
+                                                     CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @CreatedBy, @CreatedOn,
+                VALUES (@GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @LoadExisting, @CreatedBy, @CreatedOn,
                         @LastModifiedBy, @LastModifiedOn);
             end"
     };
@@ -208,6 +210,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @Type INT = null,
                 @ContentType INT = null,
                 @Args NVARCHAR(128) = null,
+                @LoadExisting INT = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
                 @LastModifiedOn DATETIME2 = null
             AS
@@ -216,8 +219,8 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Name = COALESCE(@Name, Name),
                     PathWindows = COALESCE(@PathWindows, PathWindows), PathLinux = COALESCE(@PathLinux, PathLinux), PathMac = COALESCE(@PathMac, PathMac),
                     Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority), Type = COALESCE(@Type, Type),
-                    ContentType = COALESCE(@ContentType, ContentType), Args = COALESCE(@Args, Args), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
-                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
+                    ContentType = COALESCE(@ContentType, ContentType), Args = COALESCE(@Args, Args), LoadExisting = COALESCE(@LoadExisting, LoadExisting),
+                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
                 WHERE Id = @Id;
             end"
     };

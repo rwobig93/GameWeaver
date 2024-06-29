@@ -14,4 +14,5 @@ public class LocalResourceUpdateRequest
     public ResourceType? Type { get; set; }
     public ContentType? ContentType { get; set; }
     public string? Args { get; set; }
+    public bool? LoadExisting { get; set; }
 }
