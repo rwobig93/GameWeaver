@@ -5,6 +5,7 @@ public static class DataConstants
     public static class MimeTypes
     {
         public const string OpenXml = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        public const string Binary = "application/octet-stream";
     }
 
     public static class DateTime

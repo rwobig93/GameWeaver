@@ -14,7 +14,7 @@ public interface IFileStorageRecordService
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetByLinkedIdAsync(Guid id);
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetByLinkedTypeAsync(FileStorageType type);
     Task<IResult<int>> GetCountAsync();
-    Task<IResult<Guid>> CreateAsync(FileStorageRecordCreateRequest request, Guid requestUserId);
+    Task<IResult<Guid>> CreateAsync(FileStorageRecordCreateRequest request, Stream content, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> SearchAsync(string searchTerm);
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);

@@ -1,5 +1,6 @@
 ﻿@using Application.Constants.Communication
 @using Application.Constants.Identity
+@using Application.Models.System
 @using Domain.Enums.GameServer
 @attribute [Route(AppRouteConstants.Developer.Testing)]
 @attribute [Authorize(PermissionConstants.System.AppDevelopment.Dev)]
@@ -97,6 +98,80 @@
                     <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(CreateTshootRecord)">
                         Generate Troubleshooting Record
                     </MudButton>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="@(_fileUploading)" Class="my-7"/>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudTable ServerData="@(new Func<TableState, Task<TableData<FileStorageRecordSlim>>>(FileRecordReload))"
+                              Dense="@_tableDense" Hover="@_tableHover" Bordered="@_tableBordered" Striped="@_tableStriped" @ref="_fileRecordsTable">
+                        <ToolBarContent>
+                            <MudContainer Class="d-flex flex-row gap-3">
+                                <MudText Typo="Typo.h6" Class="pr-2 my-2">File Storage</MudText>
+                            </MudContainer>
+                            <MudSpacer/>
+                            <MudContainer Class="d-flex flex-row gap-3">
+                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadGameFile">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                        Upload File
+                                    </MudButton>
+                                </MudFileUpload>
+                                <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(RefreshFileRecords)">
+                                    Refresh Files
+                                </MudButton>
+                            </MudContainer>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh><MudTableSortLabel SortLabel="FriendlyName" T="FileStorageRecordSlim">Name</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortLabel="Description" T="FileStorageRecordSlim">Description</MudTableSortLabel></MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudTooltip Text="Download">
+                                    <MudButton Color="Color.Secondary" OnClick="@(() => DownloadGameFile(context.Id))" Variant="Variant.Outlined">
+                                        <MudIcon Icon="@Icons.Material.Filled.Download"/>
+                                    </MudButton>
+                                </MudTooltip>
+                            </MudTd>
+                            <MudTd DataLabel="FriendlyName">@context.FriendlyName</MudTd>
+                            <MudTd DataLabel="Description">@context.Description</MudTd>
+                            <MudTd>
+                                <MudTooltip Text="Delete">
+                                    <MudButton Color="Color.Error" OnClick="@(() => DeleteFile(context.Id))" Variant="Variant.Outlined">
+                                        <MudIcon Icon="@Icons.Material.Filled.Delete"/>
+                                    </MudButton>
+                                </MudTooltip>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText>No files found</MudText>
+                        </NoRecordsContent>
+                        <LoadingContent>
+                            <MudContainer Class="d-flex flex-column gap-3">
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                            </MudContainer>
+                        </LoadingContent>
+                        <PagerContent>
+                            <MudContainer Class="d-flex flex-wrap gap-4">
+                                <MudSwitch @bind-Value="@_tableHover" Color="Color.Primary">Hover</MudSwitch>
+                                <MudSwitch @bind-Value="@_tableDense" Color="Color.Secondary">Dense</MudSwitch>
+                                <MudSwitch @bind-Value="@_tableStriped" Color="Color.Tertiary">Striped</MudSwitch>
+                                <MudSwitch @bind-Value="@_tableBordered" Color="Color.Warning">Bordered</MudSwitch>
+                                <MudTablePager/>
+                            </MudContainer>
+                        </PagerContent>
+                    </MudTable>
                 </MudItem>
             </MudExpansionPanel>
             <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Entity Detail">

@@ -14,16 +14,21 @@ using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
+using Application.Models.System;
 using Application.Requests.GameServer.Game;
 using Application.Requests.GameServer.GameProfile;
 using Application.Requests.GameServer.GameServer;
 using Application.Requests.GameServer.Host;
+using Application.Requests.Integrations;
 using Application.Services.External;
 using Application.Services.GameServer;
+using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
+using Domain.Enums.Integrations;
 using Domain.Enums.Lifecycle;
 using GameWeaver.Helpers;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace GameWeaver.Pages.Developer;
 
@@ -36,7 +41,8 @@ public partial class DeveloperTesting : IAsyncDisposable
     [Inject] private IHostService HostService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
     [Inject] private ISteamApiService SteamService { get; init; } = null!;
-    [Inject] private ITroubleshootingRecordService TshootService { get; set; } = null!;
+    [Inject] private ITroubleshootingRecordService TshootService { get; init; } = null!;
+    [Inject] private IFileStorageRecordService FileService { get; init; } = null!;
     
     private AppUserFull _loggedInUser = new();
     private bool _isContributor;
@@ -66,6 +72,14 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly List<ChartSeries> _cpuUsage = [];
     private readonly List<ChartSeries> _ramUsage = [];
     private readonly List<ChartSeries> _netUsage = [];
+    private MudTable<FileStorageRecordSlim> _fileRecordsTable = new();
+    private IEnumerable<FileStorageRecordSlim> _fileRecords = [];
+    private int _totalFileRecords;
+    private bool _fileUploading;
+    private bool _tableDense = true;
+    private bool _tableHover = true;
+    private bool _tableStriped = true;
+    private bool _tableBordered;
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -792,6 +806,101 @@ public partial class DeveloperTesting : IAsyncDisposable
                 {"Error", "Example error message for troubleshooting purposes"}
             });
         Snackbar.Add(ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data));
+    }
+
+    
+    private async Task<TableData<FileStorageRecordSlim>> FileRecordReload(TableState state)
+    {
+        var foundFiles = await FileService.GetAllAsync();
+        if (!foundFiles.Succeeded)
+        {
+            foundFiles.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return new TableData<FileStorageRecordSlim>();
+        }
+
+        _fileRecords = foundFiles.Data.ToArray();
+        _totalFileRecords = _fileRecords.Count();
+
+        _fileRecords = state.SortLabel switch
+        {
+            "FriendlyName" => _fileRecords.OrderByDirection(state.SortDirection, o => o.FriendlyName),
+            "Description" => _fileRecords.OrderByDirection(state.SortDirection, o => o.Description),
+            _ => _fileRecords
+        };
+
+        return new TableData<FileStorageRecordSlim>() {TotalItems = _totalFileRecords, Items = _fileRecords};
+    }
+
+    private void RefreshFileRecords()
+    {
+        _fileRecordsTable.ReloadServerData();
+        StateHasChanged();
+    }
+    
+    private async Task UploadGameFile(IBrowserFile? file)
+    {
+        if (file is null)
+        {
+            return;
+        }
+        
+        Snackbar.Add("Starting file upload!", Severity.Info);
+        _fileUploading = true;
+        var friendlyName = $"New_File_{DateTimeService.NowDatabaseTime.ToString(DataConstants.DateTime.FileNameFormat)}";
+        var fileName = Guid.NewGuid().ToString();
+        var uploadRequest = await FileService.CreateAsync(new FileStorageRecordCreateRequest
+        {
+            LinkedType = FileStorageType.Game,
+            LinkedId = Guid.NewGuid(),
+            FriendlyName = friendlyName,
+            Filename = Guid.NewGuid().ToString(),
+            Description = $"{friendlyName} @ {fileName}",
+            Version = "v1.0.0"
+        }, file.OpenReadStream(50_000_000_000), _loggedInUser.Id);
+        if (!uploadRequest.Succeeded)
+        {
+            _fileUploading = false;
+            uploadRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        Snackbar.Add("Finished file upload!", Severity.Success);
+        _fileUploading = false;
+        RefreshFileRecords();
+        await Task.CompletedTask;
+    }
+
+    private async Task DownloadGameFile(Guid fileId)
+    {
+        var foundFile = await FileService.GetByIdAsync(fileId);
+        if (foundFile.Data is null)
+        {
+            Snackbar.Add(ErrorMessageConstants.FileStorage.NotFound);
+            return;
+        }
+
+        var fileContent = await File.ReadAllBytesAsync(foundFile.Data.GetLocalFilePath());
+        var convertedContent = Convert.ToBase64String(fileContent);
+        var downloadRequest = await WebClientService.InvokeFileDownload(convertedContent, foundFile.Data.FriendlyName, DataConstants.MimeTypes.Binary);
+        if (downloadRequest.Succeeded)
+        {
+            downloadRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Finished downloading file!", Severity.Success);
+    }
+
+    private async Task DeleteFile(Guid fileId)
+    {
+        var deleteRequest = await FileService.DeleteAsync(fileId, _loggedInUser.Id);
+        if (!deleteRequest.Succeeded)
+        {
+            deleteRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully deleted file!", Severity.Success);
     }
     
     public async ValueTask DisposeAsync()

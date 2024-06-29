@@ -134,4 +134,9 @@ public static class ErrorMessageConstants
         public const string InvalidWorkData = "Work data is null, please verify your input";
         public const string InvalidDeserializedWorkData = "Deserialized work data is null, please verify your input";
     }
+
+    public static class FileStorage
+    {
+        public const string NotFound = "Was unable to find a file matching the information provided, please verify your input";
+    }
 }

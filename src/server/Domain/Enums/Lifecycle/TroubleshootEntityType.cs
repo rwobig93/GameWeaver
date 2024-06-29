@@ -22,5 +22,6 @@ public enum TroubleshootEntityType
     Mods = 17,
     Network = 18,
     WeaverWork = 19,
-    HostAuth = 20
+    HostAuth = 20,
+    FileStorage = 21
 }

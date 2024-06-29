@@ -1,11 +1,17 @@
+using Application.Constants.Communication;
+using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.Integrations;
 using Application.Models.System;
 using Application.Repositories.Integrations;
+using Application.Repositories.Lifecycle;
 using Application.Requests.Integrations;
 using Application.Services.Integrations;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Domain.Contracts;
 using Domain.Enums.Integrations;
+using Domain.Enums.Lifecycle;
 
 namespace Infrastructure.Services.Integrations;
 
@@ -13,11 +19,16 @@ public class FileStorageRecordService : IFileStorageRecordService
 {
     private readonly IFileStorageRecordRepository _recordRepository;
     private readonly IDateTimeService _dateTime;
+    private readonly IRunningServerState _serverState;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
-    public FileStorageRecordService(IFileStorageRecordRepository recordRepository, IDateTimeService dateTime)
+    public FileStorageRecordService(IFileStorageRecordRepository recordRepository, IDateTimeService dateTime, IRunningServerState serverState,
+        ITroubleshootingRecordsRepository tshootRepository)
     {
         _recordRepository = recordRepository;
         _dateTime = dateTime;
+        _serverState = serverState;
+        _tshootRepository = tshootRepository;
     }
 
     public async Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetAllAsync()
@@ -138,7 +149,7 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
     }
 
-    public async Task<IResult<Guid>> CreateAsync(FileStorageRecordCreateRequest request, Guid requestUserId)
+    public async Task<IResult<Guid>> CreateAsync(FileStorageRecordCreateRequest request, Stream content, Guid requestUserId)
     {
         try
         {
@@ -149,7 +160,44 @@ public class FileStorageRecordService : IFileStorageRecordService
             var recordCreate = await _recordRepository.CreateAsync(convertedRecord);
             if (!recordCreate.Succeeded)
             {
-                return await Result<Guid>.FailAsync(recordCreate.ErrorMessage);
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.FileStorage, Guid.Empty, requestUserId,
+                    "Failed to create file record for new file upload", new Dictionary<string, string>
+                    {
+                        {"FriendlyName", request.FriendlyName},
+                        {"Description", request.Description},
+                        {"Filename", request.Filename},
+                        {"Version", request.Version},
+                        {"LinkedId", request.LinkedId.ToString()},
+                        {"LinkedType", request.LinkedType.ToString()},
+                        {"Error", recordCreate.ErrorMessage}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
+
+            var createdRecord = await _recordRepository.GetByIdAsync(recordCreate.Result);
+            try
+            {
+                await using (var stream = new FileStream(createdRecord.Result!.GetLocalFilePath(), FileMode.Create))
+                {
+                    await content.CopyToAsync(stream);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _recordRepository.DeleteAsync(recordCreate.Result, _serverState.SystemUserId);
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.FileStorage, recordCreate.Result, requestUserId,
+                    "Failed to upload and save new file", new Dictionary<string, string>
+                    {
+                        {"CreatedAndDeletedRecordId", recordCreate.Result.ToString()},
+                        {"FriendlyName", request.FriendlyName},
+                        {"Description", request.Description},
+                        {"Filename", request.Filename},
+                        {"Version", request.Version},
+                        {"LinkedId", request.LinkedId.ToString()},
+                        {"LinkedType", request.LinkedType.ToString()},
+                        {"Error", ex.Message}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
 
             return await Result<Guid>.SuccessAsync(recordCreate.Result);
@@ -164,13 +212,40 @@ public class FileStorageRecordService : IFileStorageRecordService
     {
         try
         {
-            var recordDelete = await _recordRepository.DeleteAsync(id, requestUserId);
-            if (!recordDelete.Succeeded)
+            var foundRecord = await _recordRepository.GetByIdAsync(id);
+            if (foundRecord.Result is null)
             {
-                return await Result<Guid>.FailAsync(recordDelete.ErrorMessage);
+                return await Result.FailAsync(ErrorMessageConstants.FileStorage.NotFound);
             }
 
-            return await Result<Guid>.SuccessAsync();
+            try
+            {
+                var localFilePath = foundRecord.Result.GetLocalFilePath();
+                if (File.Exists(localFilePath))
+                {
+                    File.Delete(localFilePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.FileStorage, foundRecord.Result.Id, requestUserId,
+                    "Failed to delete local file for file record", new Dictionary<string, string>
+                    {
+                        {"Error", ex.Message}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
+            
+            var recordDelete = await _recordRepository.DeleteAsync(id, requestUserId);
+            if (recordDelete.Succeeded) return await Result<Guid>.SuccessAsync();
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.FileStorage, foundRecord.Result.Id, requestUserId,
+                    "Failed to delete file record after deleting local file", new Dictionary<string, string>
+                    {
+                        {"Error", recordDelete.ErrorMessage}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
         }
         catch (Exception ex)
         {
