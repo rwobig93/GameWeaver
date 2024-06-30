@@ -11,6 +11,7 @@ public interface IFileStorageRecordService
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetAllAsync();
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<FileStorageRecordSlim?>> GetByIdAsync(Guid id);
+    Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetByFormatAsync(FileStorageFormat format);
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetByLinkedIdAsync(Guid id);
     Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetByLinkedTypeAsync(FileStorageType type);
     Task<IResult<int>> GetCountAsync();

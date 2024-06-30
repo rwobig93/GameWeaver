@@ -10,6 +10,7 @@ public interface IFileStorageRecordRepository
     Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetAllAsync();
     Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<FileStorageRecordDb?>> GetByIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetByFormatAsync(FileStorageFormat format);
     Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetByLinkedIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetByLinkedTypeAsync(FileStorageType type);
     Task<DatabaseActionResult<int>> GetCountAsync();

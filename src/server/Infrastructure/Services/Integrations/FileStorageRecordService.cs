@@ -109,6 +109,26 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
     }
 
+    public async Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetByFormatAsync(FileStorageFormat format)
+    {
+        try
+        {
+            var foundRecords = await _recordRepository.GetByFormatAsync(format);
+            if (!foundRecords.Succeeded)
+            {
+                return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(foundRecords.ErrorMessage);
+            }
+
+            var convertedFileStorageRecord = foundRecords.Result?.ToSlims().ToList() ?? [];
+
+            return await Result<IEnumerable<FileStorageRecordSlim>>.SuccessAsync(convertedFileStorageRecord);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
+        }
+    }
+
     public async Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetByLinkedIdAsync(Guid id)
     {
         try
@@ -153,6 +173,7 @@ public class FileStorageRecordService : IFileStorageRecordService
     {
         try
         {
+            // TODO: Update game version for new file uploads if 'IsLatest' boolean is true
             var convertedRecord = request.ToCreate();
             convertedRecord.CreatedBy = requestUserId;
             convertedRecord.CreatedOn = _dateTime.NowDatabaseTime;

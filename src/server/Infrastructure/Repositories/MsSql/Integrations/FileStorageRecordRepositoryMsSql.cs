@@ -78,6 +78,24 @@ public class FileStorageRecordRepositoryMsSql : IFileStorageRecordRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetByFormatAsync(FileStorageFormat format)
+    {
+        DatabaseActionResult<IEnumerable<FileStorageRecordDb>> actionReturn = new();
+
+        try
+        {
+            var foundRecords = await _database.LoadData<FileStorageRecordDb, dynamic>(
+                FileStorageRecordsTableMsSql.GetByFormat, new {Format = format});
+            actionReturn.Succeed(foundRecords);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, FileStorageRecordsTableMsSql.GetByFormat.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetByLinkedIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<FileStorageRecordDb>> actionReturn = new();
