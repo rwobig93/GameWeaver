@@ -12,7 +12,7 @@ public partial class HostCheckInRequest
     [MemoryPackOrder(3)]
     public long Uptime { get; set; }
     [MemoryPackOrder(4)]
-    public double NetworkOutMb { get; set; }
+    public double NetworkOutBytes { get; set; }
     [MemoryPackOrder(5)]
-    public double NetworkInMb { get; set; }
+    public double NetworkInBytes { get; set; }
 }

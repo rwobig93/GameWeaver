@@ -13,6 +13,7 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
 
     public static readonly SqlTable Table = new()
     {
+        EnforcementOrder = 4,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -193,7 +194,8 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT *
                 FROM dbo.[{Table.TableName}]
-                WHERE TableName LIKE '%' + @SearchTerm + '%'
+                WHERE Id LIKE '%' + @SearchTerm + '%'
+                    OR TableName LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'
                     OR Action LIKE '%' + @SearchTerm + '%'
                     OR Before LIKE '%' + @SearchTerm + '%'
@@ -217,7 +219,8 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT *
                 FROM dbo.[{Table.TableName}]
-                WHERE TableName LIKE '%' + @SearchTerm + '%'
+                WHERE Id LIKE '%' + @SearchTerm + '%'
+                    OR TableName LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'
                     OR Action LIKE '%' + @SearchTerm + '%'
                     OR Before LIKE '%' + @SearchTerm + '%'
@@ -240,11 +243,12 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                WHERE TableName LIKE '%' + @SearchTerm + '%'
-                    OR RecordId LIKE '%' + @SearchTerm + '%'
-                    OR Action LIKE '%' + @SearchTerm + '%'
-                    OR Before LIKE '%' + @SearchTerm + '%'
-                    OR After LIKE '%' + @SearchTerm + '%'
+                WHERE a.Id LIKE '%' + @SearchTerm + '%'
+                    OR a.TableName LIKE '%' + @SearchTerm + '%'
+                    OR a.RecordId LIKE '%' + @SearchTerm + '%'
+                    OR a.Action LIKE '%' + @SearchTerm + '%'
+                    OR a.Before LIKE '%' + @SearchTerm + '%'
+                    OR a.After LIKE '%' + @SearchTerm + '%'
                 ORDER BY Timestamp DESC;
             end"
     };
@@ -265,11 +269,12 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
-                WHERE TableName LIKE '%' + @SearchTerm + '%'
-                    OR RecordId LIKE '%' + @SearchTerm + '%'
-                    OR Action LIKE '%' + @SearchTerm + '%'
-                    OR Before LIKE '%' + @SearchTerm + '%'
-                    OR After LIKE '%' + @SearchTerm + '%'
+                WHERE a.Id LIKE '%' + @SearchTerm + '%'
+                    OR a.TableName LIKE '%' + @SearchTerm + '%'
+                    OR a.RecordId LIKE '%' + @SearchTerm + '%'
+                    OR a.Action LIKE '%' + @SearchTerm + '%'
+                    OR a.Before LIKE '%' + @SearchTerm + '%'
+                    OR a.After LIKE '%' + @SearchTerm + '%'
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

@@ -5,5 +5,8 @@ public enum LoginRedirectReason
     SessionExpired = 0,
     ReAuthenticationForce = 1,
     Unknown = 2,
-    FullLoginTimeout = 3
+    FullLoginTimeout = 3,
+    ReAuthenticationForceUser = 4,
+    Disabled = 5,
+    LockedOut = 6
 }

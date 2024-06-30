@@ -12,7 +12,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -25,8 +25,8 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                     [CpuUsage] float(24) NOT NULL,
                     [RamUsage] float(24) NOT NULL,
                     [Uptime] float(24) NOT NULL,
-                    [NetworkOutMb] int NOT NULL,
-                    [NetworkInMb] int NOT NULL
+                    [NetworkOutBytes] int NOT NULL,
+                    [NetworkInBytes] int NOT NULL
                 )
             end"
     };
@@ -108,6 +108,23 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    public static readonly SqlStoredProcedure GetByHostIdLatest = new()
+    {
+        Table = Table,
+        Action = "GetByHostIdLatest",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByHostIdLatest]
+                @HostId NVARCHAR(256),
+                @Count INT
+            AS
+            begin
+                SELECT TOP (@Count) *
+                FROM dbo.[{Table.TableName}] h
+                WHERE h.HostId = @HostId
+                ORDER BY h.SendTimestamp DESC;
+            end"
+    };
+    
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -120,13 +137,13 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 @CpuUsage float(24),
                 @RamUsage float(24),
                 @Uptime float(24),
-                @NetworkOutMb int,
-                @NetworkInMb int
+                @NetworkOutBytes int,
+                @NetworkInBytes int
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (HostId, SendTimestamp, ReceiveTimestamp, CpuUsage, RamUsage, Uptime, NetworkOutMb, NetworkInMb)
+                INSERT into dbo.[{Table.TableName}] (HostId, SendTimestamp, ReceiveTimestamp, CpuUsage, RamUsage, Uptime, NetworkOutBytes, NetworkInBytes)
                 OUTPUT INSERTED.Id
-                VALUES (@HostId, @SendTimestamp, @ReceiveTimestamp, @CpuUsage, @RamUsage, @Uptime, @NetworkOutMb, @NetworkInMb);
+                VALUES (@HostId, @SendTimestamp, @ReceiveTimestamp, @CpuUsage, @RamUsage, @Uptime, @NetworkOutBytes, @NetworkInBytes);
             end"
     };
     
@@ -143,7 +160,8 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%';
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -162,7 +180,8 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%'
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

@@ -1,6 +1,6 @@
-﻿using System.Reflection;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Application.Constants.Identity;
+using Application.Helpers.Runtime;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 
@@ -48,52 +48,57 @@ public static class PermissionHelpers
     /// <returns></returns>
     public static List<string> GetAllBuiltInPermissions()
     {
-        return (from prop in typeof(PermissionConstants).GetNestedTypes().SelectMany(
-                c => c.GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)) 
-            select prop.GetValue(null) into propertyValue where propertyValue is not null select propertyValue.ToString()!).ToList();
+        return ReflectionHelpers.GetConstantsRecursively(typeof(PermissionConstants));
     }
 
     public static List<string> GetModeratorRolePermissions()
     {
         return
         [
-            PermissionConstants.Preferences.ChangeTheme,
-            PermissionConstants.Jobs.View,
-            PermissionConstants.Permissions.View,
-            PermissionConstants.Permissions.Add,
-            PermissionConstants.Permissions.Remove,
-            PermissionConstants.Roles.View,
-            PermissionConstants.Roles.Edit,
-            PermissionConstants.Roles.Create,
-            PermissionConstants.Roles.Delete,
-            PermissionConstants.Roles.Add,
-            PermissionConstants.Roles.Remove,
-            PermissionConstants.Users.View,
-            PermissionConstants.Users.Edit,
-            PermissionConstants.Users.Create,
-            PermissionConstants.Users.Delete,
-            PermissionConstants.Users.Disable,
-            PermissionConstants.Users.Enable,
-            PermissionConstants.Users.ResetPassword,
-            PermissionConstants.Users.ChangeEmail,
-            PermissionConstants.Audit.View,
-            PermissionConstants.Audit.Search,
-            PermissionConstants.Audit.Export,
-            PermissionConstants.ServiceAccounts.View
+            // Preferences
+            PermissionConstants.Identity.Preferences.ChangeTheme,
+            
+            // System
+            PermissionConstants.System.Jobs.View,
+            PermissionConstants.System.Audit.View,
+            PermissionConstants.System.Audit.Search,
+            PermissionConstants.System.Audit.Export,
+            
+            // Permissions & Roles
+            PermissionConstants.Identity.Permissions.View,
+            PermissionConstants.Identity.Permissions.Add,
+            PermissionConstants.Identity.Permissions.Remove,
+            PermissionConstants.Identity.Roles.View,
+            PermissionConstants.Identity.Roles.Edit,
+            PermissionConstants.Identity.Roles.Create,
+            PermissionConstants.Identity.Roles.Delete,
+            PermissionConstants.Identity.Roles.Add,
+            PermissionConstants.Identity.Roles.Remove,
+            
+            // Users & Accounts
+            PermissionConstants.Identity.Users.View,
+            PermissionConstants.Identity.Users.Edit,
+            PermissionConstants.Identity.Users.Create,
+            PermissionConstants.Identity.Users.Delete,
+            PermissionConstants.Identity.Users.Disable,
+            PermissionConstants.Identity.Users.Enable,
+            PermissionConstants.Identity.Users.ResetPassword,
+            PermissionConstants.Identity.Users.ChangeEmail,
+            PermissionConstants.Identity.ServiceAccounts.View
         ];
     }
 
     public static List<string> GetServiceAccountRolePermissions()
     {
-        return [PermissionConstants.Api.View];
+        return [PermissionConstants.System.Api.View];
     }
 
     public static List<string> GetDefaultRolePermissions()
     {
         return
         [
-            PermissionConstants.Preferences.ChangeTheme,
-            PermissionConstants.Users.ChangeEmail
+            PermissionConstants.Identity.Preferences.ChangeTheme,
+            PermissionConstants.Identity.Users.ChangeEmail
         ];
     }
 }

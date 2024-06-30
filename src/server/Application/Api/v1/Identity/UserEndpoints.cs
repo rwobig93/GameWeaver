@@ -4,7 +4,7 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Requests.v1.Identity.User;
+using Application.Requests.Identity.User;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
 using Domain.Contracts;
@@ -33,7 +33,7 @@ public static class UserEndpoints
         app.MapGet(ApiRouteConstants.Identity.User.GetByUsername, GetUserByUsername).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetFullByUsername, GetFullUserByUsername).ApiVersionOne();
         
-        app.MapPut(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
+        app.MapPatch(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
 
         app.MapPost(ApiRouteConstants.Identity.User.Create, CreateUser).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.User.Register, Register).ApiVersionOne();
@@ -70,7 +70,7 @@ public static class UserEndpoints
     /// </summary>
     /// <param name="userService"></param>
     /// <returns>List of all users</returns>
-    [Authorize(Policy = PermissionConstants.Users.View)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.View)]
     private static async Task<IResult<List<UserBasicResponse>>> GetAllUsers(IAppUserService userService)
     {
         try
@@ -93,7 +93,7 @@ public static class UserEndpoints
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="userService"></param>
     /// <returns>Detail regarding the specified user</returns>
-    [Authorize(Policy = PermissionConstants.Users.View)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserById([FromQuery]Guid userId, IAppUserService userService)
     {
         try
@@ -119,7 +119,7 @@ public static class UserEndpoints
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="userService"></param>
     /// <returns>Detail for the specified user including permissions and extended attributes</returns>
-    [Authorize(Policy = PermissionConstants.Users.View)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserById([FromQuery]Guid userId, IAppUserService userService)
     {
         try
@@ -145,7 +145,7 @@ public static class UserEndpoints
     /// <param name="email">Email address of the user</param>
     /// <param name="userService"></param>
     /// <returns>Detail for the specified user</returns>
-    [Authorize(Policy = PermissionConstants.Users.View)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserByEmail([FromQuery]string email, IAppUserService userService)
     {
         try
@@ -171,7 +171,7 @@ public static class UserEndpoints
     /// <param name="email">Email address for the user</param>
     /// <param name="userService"></param>
     /// <returns>Detail for the specified user including permissions and extended attributes</returns>
-    [Authorize(Policy = PermissionConstants.Users.View)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserByEmail([FromQuery]string email, IAppUserService userService)
     {
         try
@@ -197,7 +197,7 @@ public static class UserEndpoints
     /// <param name="username">Username of the user</param>
     /// <param name="userService"></param>
     /// <returns>Details of the specified user</returns>
-    [Authorize(Policy = PermissionConstants.Users.View)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.View)]
     private static async Task<IResult<UserBasicResponse>> GetUserByUsername([FromQuery]string username, IAppUserService userService)
     {
         try
@@ -223,7 +223,7 @@ public static class UserEndpoints
     /// <param name="username">Username of the user</param>
     /// <param name="userService"></param>
     /// <returns>Detail for the specified user including permissions and extended attributes</returns>
-    [Authorize(Policy = PermissionConstants.Users.View)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.View)]
     private static async Task<IResult<UserFullResponse>> GetFullUserByUsername([FromQuery]string username, IAppUserService userService)
     {
         try
@@ -251,7 +251,7 @@ public static class UserEndpoints
     /// <param name="accountService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>GUID ID of the newly created user account</returns>
-    [Authorize(Policy = PermissionConstants.Users.Create)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.Create)]
     private static async Task<IResult<Guid>> CreateUser([FromBody]UserCreateRequest userRequest, IAppUserService userService, IAppAccountService 
     accountService, ICurrentUserService currentUserService)
     {
@@ -276,7 +276,7 @@ public static class UserEndpoints
     /// <param name="userService"></param>
     /// <param name="currentUserService"></param>
     /// <returns></returns>
-    [Authorize(Policy = PermissionConstants.Users.Edit)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.Edit)]
     private static async Task<IResult> UpdateUser(UserUpdateRequest userRequest, IAppUserService userService, ICurrentUserService currentUserService)
     {
         try
@@ -300,7 +300,7 @@ public static class UserEndpoints
     /// <param name="userService"></param>
     /// <param name="currentUserService"></param>
     /// <returns></returns>
-    [Authorize(Policy = PermissionConstants.Users.Delete)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.Delete)]
     private static async Task<IResult> DeleteUser(Guid userId, IAppUserService userService, ICurrentUserService currentUserService)
     {
         try
@@ -322,17 +322,19 @@ public static class UserEndpoints
     /// </summary>
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="accountService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns></returns>
     /// <remarks>
     /// - User will be forced to re-authenticate after initiating a reset
     /// - Password reset email will be sent to the user's email address
     /// </remarks>
-    [Authorize(Policy = PermissionConstants.Users.ResetPassword)]
-    private static async Task<IResult> ResetPassword(Guid userId, IAppAccountService accountService)
+    [Authorize(Policy = PermissionConstants.Identity.Users.ResetPassword)]
+    private static async Task<IResult> ResetPassword(Guid userId, IAppAccountService accountService, ICurrentUserService currentUserService)
     {
         try
         {
-            var resetRequest = await accountService.ForceUserPasswordReset(userId);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            var resetRequest = await accountService.ForceUserPasswordReset(userId, currentUserId);
             if (!resetRequest.Succeeded) return resetRequest;
             return await Result.SuccessAsync("Successfully reset password, email has been sent to the user to finish the reset");
         }
@@ -351,7 +353,7 @@ public static class UserEndpoints
     /// <remarks>
     /// - Can also be used to bypass a locked out account timeout
     /// </remarks>
-    [Authorize(Policy = PermissionConstants.Users.Enable)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.Enable)]
     private static async Task<IResult> EnableUser([FromQuery]Guid userId, IAppAccountService accountService)
     {
         try
@@ -372,7 +374,7 @@ public static class UserEndpoints
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="accountService"></param>
     /// <returns></returns>
-    [Authorize(Policy = PermissionConstants.Users.Disable)]
+    [Authorize(Policy = PermissionConstants.Identity.Users.Disable)]
     private static async Task<IResult> DisableUser([FromQuery]Guid userId, IAppAccountService accountService)
     {
         try

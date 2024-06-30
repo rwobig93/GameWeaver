@@ -1,7 +1,7 @@
 @using Application.Constants.Identity
 
 @attribute [Route(AppRouteConstants.Admin.RoleView)]
-@attribute [Authorize(PermissionConstants.Roles.View)]
+@attribute [Authorize(PermissionConstants.Identity.Roles.View)]
 
 @if (_invalidDataProvided)
 {

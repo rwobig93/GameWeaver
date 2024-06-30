@@ -1,5 +1,4 @@
-﻿using Application.Models;
-using Application.Models.GameServer;
+﻿using Application.Models.GameServer;
 using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.GameServer;
@@ -11,8 +10,6 @@ public interface IGameServerService
     public static bool SteamCmdUpdateInProgress { get; private set; }
     Task<IResult> ValidateSteamCmdInstall();
     void ClearSteamCmdData();
-    Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(Guid id);
-    Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(Guid id, Mod mod);
     Task<IResult<Guid>> Create(GameServerLocal gameServer);
     Task<IResult<GameServerLocal?>> GetById(Guid id);
     Task<IResult<List<GameServerLocal>>> GetAll();

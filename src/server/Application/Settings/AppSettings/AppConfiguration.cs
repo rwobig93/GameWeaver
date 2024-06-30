@@ -15,6 +15,14 @@ public class AppConfiguration : IAppSettingsSection
     // ReSharper disable once CollectionNeverUpdated.Global
     [UrlList]
     public List<string> AlternativeUrls { get; set; } = [];
-
+    
+    [Range(100, 100_000)]
     public int ApiPaginatedMaxPageSize { get; set; } = 1000;
+
+    public bool UseCurrency { get; set; } = true;
+
+    public string CurrencyName { get; set; } = "Server Tokens";
+
+    [Range(0, 999_999)]
+    public int StartingCurrency { get; set; } = 3;
 }

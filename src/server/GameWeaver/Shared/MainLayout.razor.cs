@@ -6,7 +6,6 @@ using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
-using Domain.Enums.Identity;
 using Domain.Models.Identity;
 using Microsoft.Extensions.Options;
 using GameWeaver.Settings;
@@ -36,7 +35,6 @@ public partial class MainLayout
     {
         if (firstRender)
         {
-            await ValidateAuthSession();
             await GetCurrentUser();
             await GetPermissions();
             await GetPreferences();
@@ -60,88 +58,7 @@ public partial class MainLayout
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canEditTheme = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Preferences.ChangeTheme);
-    }
-
-    private async Task ValidateAuthSession()
-    {
-        try
-        {
-            var loggedInUser = await CurrentUserService.GetCurrentUserPrincipal();
-            
-            // User is unauthenticated or authenticated so we'll just continue on loading the page
-            if (loggedInUser == UserConstants.UnauthenticatedPrincipal ||
-                loggedInUser != UserConstants.ExpiredPrincipal)
-                return;
-            
-            // User is is expired so we'll attempt to re-authenticate the user
-            var tokenRequest = await AccountService.GetLocalStorage();
-            if (!tokenRequest.Succeeded) return;
-
-            if (string.IsNullOrWhiteSpace(tokenRequest.Data.ClientId) ||
-                string.IsNullOrWhiteSpace(tokenRequest.Data.Token) ||
-                string.IsNullOrWhiteSpace(tokenRequest.Data.RefreshToken))
-            {
-                // A token is missing so something happened, we'll just start over
-                await LogoutAndClearCache();
-                return;
-            }
-
-            // Session is expired so we'll attempt a re-authentication using the refresh token
-            var refreshResponse = await AccountService.ReAuthUsingRefreshTokenAsync();
-            if (!refreshResponse.Succeeded)
-            {
-                // Using refresh token failed, user must do a fresh login
-                await LogoutAndClearCache();
-                return;
-            }
-                
-            // Re-authentication was successful so we'll continue with an authenticated identity
-            await AccountService.CacheTokensAndAuthAsync(refreshResponse.Data);
-            NavManager.NavigateTo(NavManager.Uri, true);
-        }
-        catch (Exception)
-        {
-            await LogoutAndClearCache();
-        }
-    }
-
-    private async Task LogoutAndClearCache()
-    {
-        // If we are already on the login page we'll just let the user get back to it
-        var currentUri = new Uri(NavManager.Uri);
-        if (currentUri.AbsolutePath == AppRouteConstants.Identity.Login)
-            return;
-        
-        var loginRedirectReason = LoginRedirectReason.SessionExpired;
-
-        try
-        {
-            // Validate if re-login is forced to give feedback to the user, items are ordered for overwrite precedence
-            if (UserFull.Id != Guid.Empty)
-            {
-                var userSecurity = (await UserService.GetSecurityInfoAsync(UserFull.Id)).Data;
-                
-                // Force re-login was set on the account
-                if (userSecurity!.AuthState == AuthState.LoginRequired)
-                    loginRedirectReason = LoginRedirectReason.ReAuthenticationForce;
-                // Last full login is older than the configured timeout
-                if (userSecurity.LastFullLogin!.Value.AddMinutes(SecuritySettings.Value.ForceLoginIntervalMinutes) <
-                    DateTimeService.NowDatabaseTime)
-                    loginRedirectReason = LoginRedirectReason.FullLoginTimeout;
-            }
-        }
-        catch
-        {
-            // Ignore any exceptions since we'll just be logging out anyway
-        }
-
-        await AccountService.LogoutGuiAsync(Guid.Empty);
-        var loginUriBase = new Uri(string.Concat(AppSettings.Value.BaseUrl, AppRouteConstants.Identity.Login));
-        var loginUriFull = QueryHelpers.AddQueryString(
-            loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
-        
-        NavManager.NavigateTo(loginUriFull, true);
+        _canEditTheme = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Preferences.ChangeTheme);
     }
 
     private static bool IsUserAuthenticated(IPrincipal? principal)
@@ -213,10 +130,10 @@ public partial class MainLayout
     {
         foreach (var customThemeId in AppThemes.GetCustomThemeIds())
         {
-            var matchingTheme = _availableThemes.FirstOrDefault(x => x.Id == customThemeId);
+            var matchingTheme = _availableThemes.First(x => x.Id == customThemeId);
             var preferenceTheme = AppThemes.GetPreferenceCustomThemeFromId(_userPreferences, customThemeId);
             
-            matchingTheme!.FriendlyName = preferenceTheme.ThemeName;
+            matchingTheme.FriendlyName = preferenceTheme.ThemeName;
             matchingTheme.Description = preferenceTheme.ThemeDescription;
             matchingTheme.Theme.Palette = new PaletteDark()
             {

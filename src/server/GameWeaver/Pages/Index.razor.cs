@@ -21,20 +21,10 @@ public partial class Index
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try
+        if (firstRender)
         {
-            if (firstRender)
-            {
-                await UpdateLoggedInUser();
-                await GetPermissions();
-                StateHasChanged();
-            }
-        }
-        catch
-        {
-            // TODO: Not getting redirect error after fixing auth handling (need to re-login or idle too long, ect)
-            // User has old saved token, so we'll force a local storage clear and de-authenticate then redirect due to being unauthorized
-            await AccountService.LogoutGuiAsync(Guid.Empty);
+            await UpdateLoggedInUser();
+            await GetPermissions();
             StateHasChanged();
         }
     }
@@ -42,8 +32,8 @@ public partial class Index
     private async Task GetPermissions()
     {
         var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
-        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.View);
-        _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Jobs.View);
+        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.View);
+        _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Jobs.View);
     }
 
     private async Task UpdateLoggedInUser()

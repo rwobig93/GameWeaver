@@ -6,8 +6,6 @@ public static class HttpHelpers
 {
     public static string GetConnectionIp(this HttpContext context)
     {
-        // TODO: Enumerate headers configured in WebServerConfiguration
-        // Check for the X-Forwarded-For header first
         var forwardedHeader = context.Request.Headers["X-Forwarded-For"].FirstOrDefault();
         var ip = string.IsNullOrEmpty(forwardedHeader)
             ? context.Connection.RemoteIpAddress?.ToString()

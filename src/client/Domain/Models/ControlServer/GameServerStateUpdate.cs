@@ -9,7 +9,7 @@ namespace Domain.Models.ControlServer;
 public partial class GameServerStateUpdate
 {
     [MemoryPackOrder(0)] public Guid Id { get; set; }
-    [MemoryPackOrder(1)] public string? ServerProcessName { get; set; }
+    [MemoryPackOrder(1)] public bool BuildVersionUpdated { get; set; }
     [MemoryPackOrder(2)] public ServerState ServerState { get; set; } = ServerState.Unknown;
     [MemoryPackOrder(3)] public SerializableList<LocalResource>? Resources { get; set; }
 

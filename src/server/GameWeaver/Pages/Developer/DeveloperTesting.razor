@@ -1,7 +1,9 @@
-﻿@using Application.Constants.Identity
+﻿@using Application.Constants.Communication
+@using Application.Constants.Identity
+@using Application.Models.Integrations
 @using Domain.Enums.GameServer
 @attribute [Route(AppRouteConstants.Developer.Testing)]
-@attribute [Authorize(PermissionConstants.Developer.Dev)]
+@attribute [Authorize(PermissionConstants.System.AppDevelopment.Dev)]
 
 <MudContainer>
     <MudGrid Class="pa-4 justify-center mud-text-align-center">
@@ -51,73 +53,352 @@
                     </MudButton>
                 </MudItem>
             </MudExpansionPanel>
-            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="GameServer Management">
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Steam API">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Work Status: @(_latestWorkState)</MudText>
-                    <MudSpacer />
-                    <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Server Status: @(_selectedGameServer?.ServerState)</MudText>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
-                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Host" Value="@(_selectedHost?.Id)" />
-                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Default Profile" Value="@(_defaultProfile.Id)" />
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
-                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" @bind-Value="_desiredGame.Id" />
-                    <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" Value="@(_selectedGameServer?.GameProfileId)" />
+                    <MudPaper Elevation="5" Outlined="true" Class="d-flex flex-wrap gap-4 pa-2 justify-center object-fill">
+                        <MudChipSet Class="d-flex flex-wrap gap-4 pa-2 justify-center object-fill">
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">ID: @_steamAppInfo.AppId</MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">Name: @_steamAppInfo.Name</MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">Build: @_steamAppInfo.VersionBuild</MudChip>
+                        </MudChipSet>
+                        <MudChipSet Class="d-flex flex-wrap gap-4 pa-2 justify-center object-fill">
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">
+                                Updated: @(TimeZoneInfo.ConvertTimeFromUtc(_steamAppInfo.LastUpdatedUtc, _localTimeZone).ToString(DataConstants.DateTime.DisplayFormat))
+                            </MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">
+                                OS Support: @(string.Join(", ", _steamAppInfo.OsSupport))
+                            </MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">Build: @_steamAppInfo.VersionBuild</MudChip>
+                        </MudChipSet>
+                    </MudPaper>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudSelect Class="d-flex" @bind-Value="_selectedHost" Label="Host" OpenIcon="@Icons.Material.Filled.Computer"
-                               AdornmentColor="Color.Secondary" Disabled="@(_hosts.Count < 1)">
-                        @foreach (var host in _hosts)
+                    <MudSelect Class="d-flex" @bind-Value="_selectedGame" Label="Game" OpenIcon="@Icons.Material.Filled.Games"
+                               AdornmentColor="Color.Primary" Disabled="@(_games.Count < 1)">
+                        @foreach (var game in _games)
                         {
-                        <MudSelectItem Value="@host">@host.Description</MudSelectItem>
+                        <MudSelectItem Value="@game">@($"[{game.SteamToolId}] {game.SteamName}")</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSelect Class="d-flex" @bind-Value="_selectedGameServer" Label="GameServer" OpenIcon="@Icons.Material.Filled.Gamepad"
-                               AdornmentColor="Color.Tertiary" Disabled="@(_hosts.Count < 1)">
-                        @foreach (var gameServer in _gameServers)
-                        {
-                        <MudSelectItem Value="@gameServer">@gameServer.ServerName</MudSelectItem>
-                        }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(() => EnforceGame())">
-                        Enforce Game
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(() => EnforceDefaultGameProfile())">
-                        Enforce Default Profile
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(EnforceGameProfileResources)">
-                        Enforce Profile Resources
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(GetSteamAppBuild)">
+                        Get App Build Info
                     </MudButton>
                 </MudItem>
+            </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="GameServer Registration">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Success" OnClick="@(StartGameServer)">
-                        Start Game Server
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(GenerateHostRegistration)">
+                        Generate Host Registration
                     </MudButton>
-                    <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Error" OnClick="@(StopGameServer)">
-                        Stop Game Server
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Warning" OnClick="@(RestartGameServer)">
-                        Restart Game Server
+                    <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Host Registration: @(_registrationToken)</MudText>
+                </MudItem>
+            </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="System Clicky Buttons">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(CreateTshootRecord)">
+                        Generate Troubleshooting Record
                     </MudButton>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
-                    <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Success" OnClick="@(CreateGameServer)">
-                        Create Game Server
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Secondary" OnClick="@(UpdateGameServer)">
-                        Update Game Server
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
-                               Color="Color.Error" OnClick="@(UninstallGameServer)">
-                        Uninstall Game Server
-                    </MudButton>
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="@(_fileUploading)" Class="my-7"/>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudTable ServerData="@(new Func<TableState, Task<TableData<FileStorageRecordSlim>>>(FileRecordReload))"
+                              Dense="@_tableDense" Hover="@_tableHover" Bordered="@_tableBordered" Striped="@_tableStriped" @ref="_fileRecordsTable">
+                        <ToolBarContent>
+                            <MudContainer Class="d-flex flex-row gap-3">
+                                <MudText Typo="Typo.h6" Class="pr-2 my-2">File Storage</MudText>
+                            </MudContainer>
+                            <MudSpacer/>
+                            <MudContainer Class="d-flex flex-row gap-3">
+                                <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="UploadGameFile">
+                                    <ButtonTemplate>
+                                        <MudButton HtmlTag="label"
+                                                   Variant="Variant.Outlined"
+                                                   Color="Color.Primary"
+                                                   StartIcon="@Icons.Material.Filled.UploadFile"
+                                                   for="@fileInput">
+                                            Upload File
+                                        </MudButton>
+                                    </ButtonTemplate>
+                                </MudFileUpload>
+                                <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(RefreshFileRecords)">
+                                    Refresh Files
+                                </MudButton>
+                            </MudContainer>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh><MudTableSortLabel SortLabel="FriendlyName" T="FileStorageRecordSlim">Name</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortLabel="Description" T="FileStorageRecordSlim">Description</MudTableSortLabel></MudTh>
+                            <MudTh></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <MudTooltip Text="Download">
+                                    <MudButton Color="Color.Secondary" OnClick="@(() => DownloadGameFile(context.Id))" Variant="Variant.Outlined">
+                                        <MudIcon Icon="@Icons.Material.Filled.Download"/>
+                                    </MudButton>
+                                </MudTooltip>
+                            </MudTd>
+                            <MudTd DataLabel="FriendlyName">@context.FriendlyName</MudTd>
+                            <MudTd DataLabel="Description">@context.Description</MudTd>
+                            <MudTd>
+                                <MudTooltip Text="Delete">
+                                    <MudButton Color="Color.Error" OnClick="@(() => DeleteFile(context.Id))" Variant="Variant.Outlined">
+                                        <MudIcon Icon="@Icons.Material.Filled.Delete"/>
+                                    </MudButton>
+                                </MudTooltip>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <MudText>No files found</MudText>
+                        </NoRecordsContent>
+                        <LoadingContent>
+                            <MudContainer Class="d-flex flex-column gap-3">
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                            </MudContainer>
+                        </LoadingContent>
+                        <PagerContent>
+                            <MudContainer Class="d-flex flex-wrap gap-4">
+                                <MudSwitch @bind-Value="@_tableHover" Color="Color.Primary">Hover</MudSwitch>
+                                <MudSwitch @bind-Value="@_tableDense" Color="Color.Secondary">Dense</MudSwitch>
+                                <MudSwitch @bind-Value="@_tableStriped" Color="Color.Tertiary">Striped</MudSwitch>
+                                <MudSwitch @bind-Value="@_tableBordered" Color="Color.Warning">Bordered</MudSwitch>
+                                <MudTablePager/>
+                            </MudContainer>
+                        </PagerContent>
+                    </MudTable>
+                </MudItem>
+            </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Entity Detail">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudPaper Elevation="5" Class="d-flex flex-wrap gap-4 pa-2">
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Host" Value="@($"{_selectedHost?.Id} ({_selectedHost?.Hostname})")" />
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Default Profile" Value="@($"{_defaultProfile.Id} ({_defaultProfile.FriendlyName})")" />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2">
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Game" Value="@($"{_desiredGame.Id} ({_desiredGame.FriendlyName})")" />
+                            <MudTextField Variant="Variant.Outlined" ReadOnly="true" Label="Profile" Value="@(_selectedGameServer?.GameProfileId)" />
+                        </MudItem>
+                    </MudPaper>
+                </MudItem>
+            </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" IsExpanded="true" Text="GameServer Management">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36">
+                    <MudPaper Elevation="5" Outlined="true" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.button">Work Status: @(_latestWorkState)</MudText>
+                        <MudSpacer/>
+                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.button">Server Status: @(_selectedGameServer?.ServerState)</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="@(_workInProgress)" Class="my-7"/>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudPaper Elevation="5" Class="d-flex flex-wrap gap-4 pa-2">
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudChipSet Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Primary">Games: @(_games.Count)</MudChip>
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Secondary">Hosts: @(_hosts.Count)</MudChip>
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="Color.Tertiary">GameServers: @(_gameServers.Count)</MudChip>
+                                <MudChip Text="grey" Variant="Variant.Outlined" Color="@(_gameServerUpToDate ? Color.Success : Color.Warning)">
+                                    GameServer Version: @(_gameServerUpToDate ? "Up to date" : "Ready to update")
+                                </MudChip>
+                            </MudChipSet>
+                        </MudItem>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudPaper Elevation="5" Class="d-flex flex-wrap gap-4 pa-2 py-3">
+                        <MudSelect Class="d-flex" @bind-Value="_selectedHost" Label="Host" OpenIcon="@Icons.Material.Filled.Computer"
+                                   AdornmentColor="Color.Secondary" Disabled="@(_hosts.Count < 1)">
+                            @foreach (var host in _hosts)
+                            {
+                            <MudSelectItem Value="@host">
+                                @if (host.FriendlyName.Length < 3)
+                                {
+                                @host.Description
+                                }
+                                else
+                                {
+                                @host.FriendlyName
+                                }
+                            </MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect Class="d-flex" @bind-Value="_selectedGameServer" Label="GameServer" OpenIcon="@Icons.Material.Filled.Gamepad"
+                                   AdornmentColor="Color.Tertiary" Disabled="@(_hosts.Count < 1)" TextChanged="@CheckGameServerVersion">
+                            @foreach (var gameServer in _gameServers)
+                            {
+                            <MudSelectItem Value="@gameServer">@gameServer.ServerName</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                    <MudPaper Elevation="5" Class="d-flex flex-wrap pa-1 justify-center">
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudPaper Outlined="true" Class="d-flex flex-wrap gap-2 pa-1 justify-center">
+                                <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(() => EnforceGame())">
+                                    Enforce Game
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Secondary" OnClick="@(() => EnforceDefaultGameProfile())">
+                                    Enforce Default Profile
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(EnforceGameProfileResources)">
+                                    Enforce Profile Resources
+                                </MudButton>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudPaper Outlined="true" Square="true" Class="d-flex flex-wrap gap-2 pa-1 justify-center">
+                                <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
+                                           Color="Color.Success" OnClick="@(StartGameServer)">
+                                    Start Game Server
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
+                                           Color="Color.Error" OnClick="@(StopGameServer)">
+                                    Stop Game Server
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
+                                           Color="Color.Warning" OnClick="@(RestartGameServer)">
+                                    Restart Game Server
+                                </MudButton>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudPaper Outlined="true" Elevation="8" Class="d-flex flex-wrap gap-2 pa-1 justify-center">
+                                <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Success" OnClick="@(CreateGameServer)">
+                                    Create Game Server
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
+                                           Color="Color.Secondary" OnClick="@(UpdateGameServer)">
+                                    Update Game Server
+                                </MudButton>
+                                <MudButton Variant="Variant.Outlined" Disabled="@(_selectedGameServer is null)" DisableElevation="true"
+                                           Color="Color.Error" OnClick="@(UninstallGameServer)">
+                                    Uninstall Game Server
+                                </MudButton>
+                            </MudPaper>
+                        </MudItem>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
+                    <MudPaper Elevation="5" Outlined="true" Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                        <MudChipSet Class="d-flex flex-wrap gap-4 pa-2 justify-center">
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">CPU: @(Math.Round(_latestHostCheckin?.CpuUsage ?? 0))%</MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">RAM: @(Math.Round(_latestHostCheckin?.RamUsage ?? 0))%</MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">
+                                Uptime:
+                                @(TimeSpan.FromMilliseconds(_latestHostCheckin?.Uptime ?? 0).Days)d
+                                @(TimeSpan.FromMilliseconds(_latestHostCheckin?.Uptime ?? 0).Hours)h
+                                @(TimeSpan.FromMilliseconds(_latestHostCheckin?.Uptime ?? 0).Minutes)m
+                            </MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">Net In: @(_latestHostCheckin?.NetworkInBytes / 1_000)kB</MudChip>
+                            <MudChip Text="grey" Variant="Variant.Text" Color="Color.Default">Net Out: @(_latestHostCheckin?.NetworkOutBytes / 1_000)kB</MudChip>
+                        </MudChipSet>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
+                    <MudPaper Elevation="5" Outlined="true" Class="d-flex flex-wrap gap-1 pa-1 justify-center">
+                        <MudChart ChartType="ChartType.Line" ChartSeries="@_cpuUsage" ChartOptions="@_chartOptionsUsage" Width="100%" Height="200px" Class="mud-theme-dark"/>
+                        <MudChart ChartType="ChartType.Line" ChartSeries="@_ramUsage" ChartOptions="@_chartOptionsUsage" Width="100%" Height="200px" Class="mud-theme-dark"/>
+                        <MudChart ChartType="ChartType.Line" ChartSeries="@_netUsage" ChartOptions="@_chartOptionsNet" Width="100%" Height="200px" Class="mud-theme-dark"/>
+                    </MudPaper>
+                </MudItem>
+            </MudExpansionPanel>
+            <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Host Detail">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
+                    <MudPaper Elevation="5" Outlined="true" Class="pa-1 justify-center">
+                        <MudTreeView T="string" Hover="true" ExpandOnClick="true" Class="justify-center">
+                            <MudTreeViewItem Value="@($"ID: {_selectedHost?.Id.ToString()}")"/>
+                            <MudTreeViewItem Value="@($"Hostname: {_selectedHost?.Hostname}")"/>
+                            <MudTreeViewItem Value="@($"FriendlyName: {_selectedHost?.FriendlyName}")"/>
+                            <MudTreeViewItem Value="@($"Description: {_selectedHost?.Description}")"/>
+                            <MudTreeViewItem Value="@("Os Details")">
+                                <MudTreeViewItem Value="@($"OS: {_selectedHost?.Os}")"/>
+                                <MudTreeViewItem Value="@($"OsName: {_selectedHost?.OsName}")"/>
+                                <MudTreeViewItem Value="@($"OsVersion: {_selectedHost?.OsVersion}")"/>
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Compute")">
+                                @if (_selectedHost?.Motherboards != null)
+                                {
+                                foreach (var motherboard in _selectedHost.Motherboards)
+                                {
+                                <MudTreeViewItem Value="@($"MOBO: {motherboard.Manufacturer} | {motherboard.Product}")"/>
+                                }
+                                }
+                                @if (_selectedHost?.Cpus != null)
+                                {
+                                foreach (var cpu in _selectedHost.Cpus)
+                                {
+                                <MudTreeViewItem Value="@($"CPU: {cpu.Name} {cpu.CoreCount}/{cpu.LogicalProcessorCount} using {cpu.SocketDesignation}")"/>
+                                }
+                                }
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("RAM")">
+                                @if (_selectedHost?.RamModules != null)
+                                {
+                                foreach (var ram in _selectedHost.RamModules)
+                                {
+                                <MudTreeViewItem Value="@($"{ram.Manufacturer} {ram.Capacity} @ {ram.Speed}")"/>
+                                }
+                                }
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Storage")">
+                                @if (_selectedHost?.Storage != null)
+                                {
+                                foreach (var device in _selectedHost.Storage)
+                                {
+                                <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model} | {device.MountPoint} {device.FreeSpace}/{device.TotalSpace}")"/>
+                                }
+                                }
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Graphics")">
+                                @if (_selectedHost?.Gpus != null)
+                                {
+                                foreach (var gpu in _selectedHost.Gpus)
+                                {
+                                <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {gpu.AdapterRam} | MODE: {gpu.VideoMode}")"/>
+                                }
+                                }
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Network")">
+                                @if (_selectedHost?.NetworkInterfaces != null)
+                                {
+                                foreach (var netIf in _selectedHost.NetworkInterfaces)
+                                {
+                                <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {netIf.Speed} | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
+                                    <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")"/>
+                                    @foreach (var address in netIf.DefaultGateways)
+                                    {
+                                    <MudTreeViewItem Value="@($"GATEWAY: {address}")"/>
+                                    }
+                                    @foreach (var address in netIf.IpAddresses)
+                                    {
+                                    <MudTreeViewItem Value="@($"ADDRESS: {address}")"/>
+                                    }
+                                    @foreach (var server in netIf.DnsServers)
+                                    {
+                                    <MudTreeViewItem Value="@($"DNS: {server}")"/>
+                                    }
+                                </MudTreeViewItem>
+                                }
+                                }
+                            </MudTreeViewItem>
+                        </MudTreeView>
+                    </MudPaper>
                 </MudItem>
             </MudExpansionPanel>
         }

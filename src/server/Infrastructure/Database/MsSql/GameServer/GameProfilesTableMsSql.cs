@@ -12,7 +12,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 6,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -22,7 +22,6 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                     [FriendlyName] NVARCHAR(128) NOT NULL,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
-                    [ServerProcessName] NVARCHAR(128) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -40,11 +39,12 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER,
+                @DeletedBy UNIQUEIDENTIFIER,
                 @DeletedOn datetime2
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, LastModifiedBy = @DeletedBy
                 WHERE Id = @Id;
             end"
     };
@@ -145,22 +145,6 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
-    public static readonly SqlStoredProcedure GetByServerProcessName = new()
-    {
-        Table = Table,
-        Action = "GetByServerProcessName",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByServerProcessName]
-                @ServerProcessName NVARCHAR(128)
-            AS
-            begin
-                SELECT g.*
-                FROM dbo.[{Table.TableName}] g
-                WHERE g.ServerProcessName = @ServerProcessName AND g.IsDeleted = 0
-                ORDER BY g.Id;
-            end"
-    };
-    
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -170,7 +154,6 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @FriendlyName NVARCHAR(128),
                 @OwnerId UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
-                @ServerProcessName NVARCHAR(128),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
@@ -179,9 +162,9 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (FriendlyName, OwnerId, GameId, ServerProcessName, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
+                INSERT into dbo.[{Table.TableName}] (FriendlyName, OwnerId, GameId, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@FriendlyName, @OwnerId, @GameId, @ServerProcessName, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                VALUES (@FriendlyName, @OwnerId, @GameId, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"
     };
     
@@ -198,10 +181,11 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.IsDeleted = 0 AND g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0
+                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
-                    OR g.ServerProcessName LIKE '%' + @SearchTerm + '%'
                 ORDER BY g.Id;
             end"
     };
@@ -221,10 +205,11 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.IsDeleted = 0 AND  g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0
+                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.OwnerId LIKE '%' + @SearchTerm + '%'
                     OR g.GameId LIKE '%' + @SearchTerm + '%'
-                    OR g.ServerProcessName LIKE '%' + @SearchTerm + '%'
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -239,7 +224,6 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @FriendlyName NVARCHAR(128) = null,
                 @OwnerId UNIQUEIDENTIFIER = null,
                 @GameId UNIQUEIDENTIFIER = null,
-                @ServerProcessName NVARCHAR(128) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn datetime2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
@@ -250,7 +234,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET FriendlyName = COALESCE(@FriendlyName, FriendlyName), OwnerId = COALESCE(@OwnerId, OwnerId), GameId = COALESCE(@GameId, GameId),
-                    ServerProcessName = COALESCE(@ServerProcessName, ServerProcessName), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;

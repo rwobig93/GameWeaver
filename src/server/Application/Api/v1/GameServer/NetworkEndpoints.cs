@@ -31,8 +31,8 @@ public static class NetworkEndpoints
     /// <param name="check">Required parameters to check for game server connectivity</param>
     /// <param name="networkService"></param>
     /// <returns>Boolean indicating a game server is connectable</returns>
-    [Authorize(PermissionConstants.Network.GameserverConnectable)]
-    private static async Task<IResult<bool>> GameserverConnectable(GameServerConnectivityCheck check, INetworkService networkService)
+    [Authorize(PermissionConstants.GameServer.Network.GameserverConnectable)]
+    private static async Task<IResult<bool>> GameserverConnectable([FromBody]GameServerConnectivityCheck check, INetworkService networkService)
     {
         try
         {
@@ -53,7 +53,7 @@ public static class NetworkEndpoints
     /// <param name="timeoutMilliseconds">Timeout in milliseconds</param>
     /// <param name="networkService"></param>
     /// <returns>Boolean indicating the port is open / responds</returns>
-    [Authorize(PermissionConstants.Network.IsPortOpen)]
+    [Authorize(PermissionConstants.GameServer.Network.IsPortOpen)]
     private static async Task<IResult<bool>> IsPortOpen([FromQuery]string ipAddress, [FromQuery]int port, [FromQuery]NetworkProtocol protocol, [FromQuery]int timeoutMilliseconds,
         INetworkService networkService)
     {

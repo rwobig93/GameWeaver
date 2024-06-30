@@ -1,15 +1,18 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
 using Application.Constants.Communication;
+using Application.Constants.Identity;
+using Application.Constants.Web;
 using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
-using Application.Models.Identity.Permission;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
+using Application.Repositories.Integrations;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
+using Application.Services.External;
 using Application.Services.GameServer;
 using Application.Services.Identity;
 using Application.Services.Integrations;
@@ -25,9 +28,11 @@ using Hangfire.PostgreSql;
 using Infrastructure.HealthChecks;
 using Infrastructure.Repositories.MsSql.GameServer;
 using Infrastructure.Repositories.MsSql.Identity;
+using Infrastructure.Repositories.MsSql.Integrations;
 using Infrastructure.Repositories.MsSql.Lifecycle;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
+using Infrastructure.Services.External;
 using Infrastructure.Services.GameServer;
 using Infrastructure.Services.Identity;
 using Infrastructure.Services.Integrations;
@@ -142,9 +147,21 @@ public static class DependencyInjection
         });
         
         services.AddBlazoredLocalStorage();
-        services.AddHttpClient("Default", options =>
+        services.AddHttpClient(ApiConstants.Clients.GameWeaverDefault, options =>
         {
             options.BaseAddress = new Uri(configuration.GetApplicationSettings().BaseUrl);
+        }).ConfigureCertificateHandling(configuration);
+        services.AddHttpClient(ApiConstants.Clients.SteamApiNetUnauthenticated, options =>
+        {
+            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlApiNet);
+        }).ConfigureCertificateHandling(configuration);
+        services.AddHttpClient(ApiConstants.Clients.SteamApiPoweredComUnauthenticated, options =>
+        {
+            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlApiPoweredCom);
+        }).ConfigureCertificateHandling(configuration);
+        services.AddHttpClient(ApiConstants.Clients.SteamStoreUnauthenticated, options =>
+        {
+            options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlStore);
         }).ConfigureCertificateHandling(configuration);
 
         var mailConfig = configuration.GetMailSettings();
@@ -158,13 +175,14 @@ public static class DependencyInjection
         services.AddScoped<IWebClientService, WebClientService>();
     }
 
-    // ReSharper disable once UnusedMethodReturnValue.Local
-    private static IHttpClientBuilder ConfigureCertificateHandling(this IHttpClientBuilder httpClientBuilder, IConfiguration configuration)
+    private static void ConfigureCertificateHandling(this IHttpClientBuilder httpClientBuilder, IConfiguration configuration)
     {
         if (!configuration.GetSecuritySettings().TrustAllCertificates)
-            return httpClientBuilder;
+        {
+            return;
+        }
         
-        return httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
+        httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
         {
             return new HttpClientHandler()
             {
@@ -199,21 +217,27 @@ public static class DependencyInjection
             foreach (var permission in PermissionHelpers.GetAllBuiltInPermissions())
             {
                 options.AddPolicy(permission, policy => policy.RequireClaim(
-                    ApplicationClaimTypes.Permission, permission));
+                    ClaimConstants.Permission, permission));
             }
         });
         services.Configure<SecurityStampValidatorOptions>(options =>
         {
-            options.ValidationInterval = TimeSpan.FromSeconds(securitySettings.PermissionValidationIntervalSeconds);
+            options.ValidationInterval = TimeSpan.FromSeconds(securitySettings.SecurityStampValidationIntervalMinutes);
         });
     }
 
     private static void AddApplicationServices(this IServiceCollection services)
     {
-        // Integration Services
+        // Lifecycle Services
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
+        services.AddSingleton<ITroubleshootingRecordService, TroubleshootingRecordService>();
+
+        // Integration Services
         services.AddSingleton<IExcelService, ExcelService>();
         services.AddTransient<IEmailService, EmailService>();
+        
+        // System Services
+        services.AddSingleton<IFileStorageRecordService, FileStorageRecordService>();
         
         // Web Service Services
         services.AddTransient<IMfaService, MfaService>();
@@ -225,6 +249,9 @@ public static class DependencyInjection
         services.AddSingleton<IGameService, GameService>();
         services.AddSingleton<IGameServerService, GameServerService>();
         services.AddSingleton<INetworkService, NetworkService>();
+        
+        // External Services
+        services.AddSingleton<ISteamApiService, SteamApiService>();
     }
 
     private static void AddApiServices(this IServiceCollection services)
@@ -313,6 +340,9 @@ public static class DependencyInjection
                 services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
                 services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
                 services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
+                services.AddSingleton<INotifyRecordRepository, NotifyRecordRepositoryMsSql>();
+                services.AddSingleton<ITroubleshootingRecordsRepository, TroubleshootingRecordsRepositoryMsSql>();
+                services.AddSingleton<IFileStorageRecordRepository, FileStorageRecordRepositoryMsSql>();
                 // GameServer Database Repositories
                 services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
                 services.AddSingleton<IGameRepository, GameRepositoryMsSql>();
@@ -347,9 +377,8 @@ public static class DependencyInjection
                 bearer.RequireHttpsMetadata = true;
                 bearer.SaveToken = true;
                 bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
-                bearer.AutomaticRefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
-                bearer.RefreshInterval = TimeSpan.FromSeconds(securityConfig.PermissionValidationIntervalSeconds);
-                bearer.SaveToken = true;
+                bearer.AutomaticRefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
+                bearer.RefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
 
                 bearer.Events = new JwtBearerEvents
                 {

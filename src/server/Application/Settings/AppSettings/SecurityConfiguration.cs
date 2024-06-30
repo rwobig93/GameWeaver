@@ -16,13 +16,13 @@ public class SecurityConfiguration : IAppSettingsSection
     [MaxLength(128)]
     public string PasswordPepper { get; init; } = null!;
     
-    [Range(0, 2_592_000)]
-    public int PermissionValidationIntervalSeconds { get; init; } = 5;
+    [Range(3, 2_592_000)]
+    public int SecurityStampValidationIntervalMinutes { get; init; } = 5;
     
-    [Range(1, 44_000)]
+    [Range(3, 44_000)]
     public int UserTokenExpirationMinutes { get; init; } = 15;
     
-    [Range(1, 5_184_000)]
+    [Range(2, 5_184_000)]
     public int ApiTokenExpirationMinutes { get; init; } = 60;
     
     [Range(16, 256)]

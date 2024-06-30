@@ -4,7 +4,7 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Requests.v1.Identity.Permission;
+using Application.Requests.Identity.Permission;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
 using Domain.Contracts;
@@ -47,7 +47,7 @@ public static class PermissionEndpoints
     /// </summary>
     /// <param name="permissionService"></param>
     /// <returns>List of application permissions for both roles and users</returns>
-    [Authorize(PermissionConstants.Permissions.View)]
+    [Authorize(PermissionConstants.Identity.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetAllPermissions(IAppPermissionService permissionService)
     {
         try
@@ -70,7 +70,7 @@ public static class PermissionEndpoints
     /// <param name="permissionId">GUID ID of the desired permission to retrieve</param>
     /// <param name="permissionService"></param>
     /// <returns>Permission object for a user or role</returns>
-    [Authorize(PermissionConstants.Permissions.View)]
+    [Authorize(PermissionConstants.Identity.Permissions.View)]
     private static async Task<IResult<PermissionResponse>> GetPermission([FromQuery]Guid permissionId, IAppPermissionService permissionService)
     {
         try
@@ -97,7 +97,7 @@ public static class PermissionEndpoints
     /// <param name="permissionService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Guid ID of the permission added</returns>
-    [Authorize(PermissionConstants.Permissions.Add)]
+    [Authorize(PermissionConstants.Identity.Permissions.Add)]
     private static async Task<IResult<Guid>> AddPermissionToRole(PermissionCreateForRoleRequest permissionRequest, IAppPermissionService 
     permissionService, ICurrentUserService currentUserService)
     {
@@ -121,7 +121,7 @@ public static class PermissionEndpoints
     /// <param name="permissionService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>GUID ID of the permission added</returns>
-    [Authorize(PermissionConstants.Permissions.Add)]
+    [Authorize(PermissionConstants.Identity.Permissions.Add)]
     private static async Task<IResult<Guid>> AddPermissionToUser(PermissionCreateForUserRequest permissionRequest, IAppPermissionService 
     permissionService, ICurrentUserService currentUserService)
     {
@@ -145,7 +145,7 @@ public static class PermissionEndpoints
     /// <param name="permissionId">GUID ID of the permission</param>
     /// <param name="permissionService"></param>
     /// <returns>Boolean indicating whether the specified user has the specified permission</returns>
-    [Authorize(PermissionConstants.Permissions.View)]
+    [Authorize(PermissionConstants.Identity.Permissions.View)]
     private static async Task<IResult<bool>> DoesUserHavePermission([FromQuery]Guid userId, [FromQuery]Guid permissionId, 
     IAppPermissionService permissionService)
     {
@@ -170,7 +170,7 @@ public static class PermissionEndpoints
     /// <param name="permissionId">GUID ID of the permission</param>
     /// <param name="permissionService"></param>
     /// <returns>Boolean indicating whether the specified role has the specified permission</returns>
-    [Authorize(PermissionConstants.Permissions.View)]
+    [Authorize(PermissionConstants.Identity.Permissions.View)]
     private static async Task<IResult<bool>> DoesRoleHavePermission([FromQuery]Guid roleId, [FromQuery]Guid permissionId, 
         IAppPermissionService permissionService)
     {
@@ -194,7 +194,7 @@ public static class PermissionEndpoints
     /// <param name="permissionRequest">Detail used to remove a permission from a user</param>
     /// <param name="permissionService"></param>
     /// <returns></returns>
-    [Authorize(PermissionConstants.Permissions.Remove)]
+    [Authorize(PermissionConstants.Identity.Permissions.Remove)]
     private static async Task<IResult> RemovePermissionFromUser(PermissionRemoveFromUserRequest permissionRequest,
         IAppPermissionService permissionService)
     {
@@ -222,7 +222,7 @@ public static class PermissionEndpoints
     /// <param name="permissionRequest">Detail used to remove a permission from a role</param>
     /// <param name="permissionService"></param>
     /// <returns></returns>
-    [Authorize(PermissionConstants.Permissions.Remove)]
+    [Authorize(PermissionConstants.Identity.Permissions.Remove)]
     private static async Task<IResult> RemovePermissionFromRole(PermissionRemoveFromRoleRequest permissionRequest,
         IAppPermissionService permissionService)
     {
@@ -250,7 +250,7 @@ public static class PermissionEndpoints
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="permissionService"></param>
     /// <returns>List of directly assigned permissions to the specified user</returns>
-    [Authorize(PermissionConstants.Permissions.View)]
+    [Authorize(PermissionConstants.Identity.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetDirectPermissionsForUser([FromQuery]Guid userId,
         IAppPermissionService permissionService)
     {
@@ -274,7 +274,7 @@ public static class PermissionEndpoints
     /// <param name="userId">GUID ID of the user</param>
     /// <param name="permissionService"></param>
     /// <returns>List of all permissions for a user, including those inherited from roles</returns>
-    [Authorize(PermissionConstants.Permissions.View)]
+    [Authorize(PermissionConstants.Identity.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForUser([FromQuery]Guid userId,
         IAppPermissionService permissionService)
     {
@@ -298,7 +298,7 @@ public static class PermissionEndpoints
     /// <param name="roleId">GUID ID of the role</param>
     /// <param name="permissionService"></param>
     /// <returns>List of permissions assigned to the specified role</returns>
-    [Authorize(PermissionConstants.Permissions.View)]
+    [Authorize(PermissionConstants.Identity.Permissions.View)]
     private static async Task<IResult<List<PermissionResponse>>> GetAllPermissionsForRole([FromQuery]Guid roleId,
         IAppPermissionService permissionService)
     {

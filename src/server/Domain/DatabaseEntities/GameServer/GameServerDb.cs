@@ -10,6 +10,8 @@ public class GameServerDb : IAuditableEntity<Guid>
     public Guid HostId { get; set; }
     public Guid GameId { get; set; }
     public Guid GameProfileId { get; set; }
+    public Guid? ParentGameProfileId { get; set; }
+    public string ServerBuildVersion { get; set; } = "";
     public string ServerName { get; set; } = "";
     public string Password { get; set; } = "";
     public string PasswordRcon { get; set; } = "";
@@ -18,6 +20,7 @@ public class GameServerDb : IAuditableEntity<Guid>
     public string PrivateIp { get; set; } = "";
     public string ExternalHostname { get; set; } = "";
     public int PortGame { get; set; } = 0;
+    public int PortPeer { get; set; } = 0;
     public int PortQuery { get; set; } = 0;
     public int PortRcon { get; set; } = 0;
     public bool Modded { get; set; } = false;

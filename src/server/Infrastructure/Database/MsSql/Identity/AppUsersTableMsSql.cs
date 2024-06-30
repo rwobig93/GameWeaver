@@ -28,13 +28,14 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                     [LastName] NVARCHAR(256) NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [ProfilePictureDataUrl] NVARCHAR(400) NULL,
-                    [CreatedOn] datetime2 NOT NULL,
+                    [CreatedOn] DATETIME2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
-                    [LastModifiedOn] datetime2 NULL,
+                    [LastModifiedOn] DATETIME2 NULL,
                     [IsDeleted] BIT NOT NULL,
-                    [DeletedOn] datetime2 NULL,
-                    [AccountType] int NOT NULL,
-                    [Notes] NVARCHAR(1024) NULL
+                    [DeletedOn] DATETIME2 NULL,
+                    [AccountType] INT NOT NULL,
+                    [Notes] NVARCHAR(1024) NULL,
+                    [Currency] INT NOT NULL
                 )
                 CREATE INDEX [IX_User_Id] ON [dbo].[{TableName}] ([Id])
                 CREATE INDEX [IX_User_UserName] ON [dbo].[{TableName}] ([Username])
@@ -49,7 +50,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER,
-                @DeletedOn datetime2
+                @DeletedOn DATETIME2
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
@@ -353,21 +354,22 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @LastName NVARCHAR(256),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @ProfilePictureDataUrl NVARCHAR(400),
-                @CreatedOn datetime2,
+                @CreatedOn DATETIME2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn datetime2,
+                @LastModifiedOn DATETIME2,
                 @IsDeleted BIT,
-                @DeletedOn datetime2,
-                @AccountType int,
-                @Notes NVARCHAR(1024)
+                @DeletedOn DATETIME2,
+                @AccountType INT,
+                @Notes NVARCHAR(1024),
+                @Currency INT
             AS
             begin
                 INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PhoneNumber, PhoneNumberConfirmed, FirstName, LastName,
                                          CreatedBy, ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
-                                         AccountType, Notes)
+                                         AccountType, Notes, Currency)
                 OUTPUT INSERTED.Id
                 VALUES (@Username, @Email, @EmailConfirmed, @PhoneNumber, @PhoneNumberConfirmed, @FirstName, @LastName, @CreatedBy,
-                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AccountType, @Notes);
+                        @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AccountType, @Notes, @Currency);
             end"
     };
 
@@ -431,11 +433,12 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @LastName NVARCHAR(256) = null,
                 @ProfilePictureDataUrl NVARCHAR(400) = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
-                @LastModifiedOn datetime2 = null,
+                @LastModifiedOn DATETIME2 = null,
                 @IsDeleted BIT = null,
-                @DeletedOn datetime2 = null,
-                @AccountType int = null,
-                @Notes NVARCHAR(1024) = null
+                @DeletedOn DATETIME2 = null,
+                @AccountType INT = null,
+                @Notes NVARCHAR(1024) = null,
+                @Currency INT = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
@@ -445,7 +448,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                     LastName = COALESCE(@LastName, LastName), ProfilePictureDataUrl = COALESCE(@ProfilePictureDataUrl, ProfilePictureDataUrl),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
-                    AccountType = COALESCE(@AccountType, AccountType), Notes = COALESCE(@Notes, Notes)
+                    AccountType = COALESCE(@AccountType, AccountType), Notes = COALESCE(@Notes, Notes), Currency = COALESCE(@Currency, Currency)
                 WHERE Id = @Id;
             end"
     };

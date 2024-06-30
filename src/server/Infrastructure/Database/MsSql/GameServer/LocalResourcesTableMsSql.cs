@@ -12,7 +12,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 9,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -20,15 +20,20 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [GameProfileId] UNIQUEIDENTIFIER NOT NULL,
-                    [GameServerId] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(128) NOT NULL,
-                    [Path] NVARCHAR(128) NOT NULL,
+                    [PathWindows] NVARCHAR(128) NOT NULL,
+                    [PathLinux] NVARCHAR(128) NOT NULL,
+                    [PathMac] NVARCHAR(128) NOT NULL,
                     [Startup] BIT NOT NULL,
                     [StartupPriority] int NOT NULL,
-                    [Type] int NOT NULL,
-                    [ContentType] int NOT NULL,
-                    [Extension] NVARCHAR(128) NOT NULL,
-                    [Args] NVARCHAR(128) NOT NULL
+                    [Type] INT NOT NULL,
+                    [ContentType] INT NOT NULL,
+                    [Args] NVARCHAR(128) NOT NULL,
+                    [LoadExisting] BIT NOT NULL,
+                    [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
+                    [CreatedOn] DATETIME2 NOT NULL,
+                    [LastModifiedBy] UNIQUEIDENTIFIER NULL,
+                    [LastModifiedOn] DATETIME2 NULL
                 )
             end"
     };
@@ -108,22 +113,6 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
-    public static readonly SqlStoredProcedure GetByGameServerId = new()
-    {
-        Table = Table,
-        Action = "GetByGameServerId",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByGameServerId]
-                @GameServerId UNIQUEIDENTIFIER
-            AS
-            begin
-                SELECT l.*
-                FROM dbo.[{Table.TableName}] l
-                WHERE l.GameServerId = @GameServerId
-                ORDER BY l.Id;
-            end"
-    };
-    
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -131,20 +120,27 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @GameProfileId UNIQUEIDENTIFIER,
-                @GameServerId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(128),
-                @Path NVARCHAR(128),
+                @PathWindows NVARCHAR(128),
+                @PathLinux NVARCHAR(128),
+                @PathMac NVARCHAR(128),
                 @Startup BIT,
-                @StartupPriority int,
-                @Type int,
-                @ContentType int,
-                @Extension NVARCHAR(128),
-                @Args NVARCHAR(128)
+                @StartupPriority INT,
+                @Type INT,
+                @ContentType INT,
+                @Args NVARCHAR(128),
+                @LoadExisting INT,
+                @CreatedBy UNIQUEIDENTIFIER,
+                @CreatedOn DATETIME2,
+                @LastModifiedBy UNIQUEIDENTIFIER,
+                @LastModifiedOn DATETIME2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, GameServerId, Name, Path, Startup, StartupPriority, Type, ContentType, Extension, Args)
+                INSERT into dbo.[{Table.TableName}] (GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, LoadExisting,
+                                                     CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @GameServerId, @Name, @Path, @Startup, @StartupPriority, @Type, @ContentType, @Extension, @Args);
+                VALUES (@GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @LoadExisting, @CreatedBy, @CreatedOn,
+                        @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -161,11 +157,12 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT l.*
                 FROM dbo.[{Table.TableName}] l
-                WHERE l.GameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR l.GameServerId LIKE '%' + @SearchTerm + '%'
+                WHERE l.Id LIKE '%' + @SearchTerm + '%'
+                    OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR l.Name LIKE '%' + @SearchTerm + '%'
-                    OR l.Path LIKE '%' + @SearchTerm + '%'
-                    OR l.Extension LIKE '%' + @SearchTerm + '%'
+                    OR l.PathWindows LIKE '%' + @SearchTerm + '%'
+                    OR l.PathLinux LIKE '%' + @SearchTerm + '%'
+                    OR l.PathMac LIKE '%' + @SearchTerm + '%'
                     OR l.Args LIKE '%' + @SearchTerm + '%';
             end"
     };
@@ -185,11 +182,12 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT l.*
                 FROM dbo.[{Table.TableName}] l
-                WHERE l.GameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR l.GameServerId LIKE '%' + @SearchTerm + '%'
+                WHERE l.Id LIKE '%' + @SearchTerm + '%'
+                    OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
                     OR l.Name LIKE '%' + @SearchTerm + '%'
-                    OR l.Path LIKE '%' + @SearchTerm + '%'
-                    OR l.Extension LIKE '%' + @SearchTerm + '%'
+                    OR l.PathWindows LIKE '%' + @SearchTerm + '%'
+                    OR l.PathLinux LIKE '%' + @SearchTerm + '%'
+                    OR l.PathMac LIKE '%' + @SearchTerm + '%'
                     OR l.Args LIKE '%' + @SearchTerm + '%'
                 ORDER BY l.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -203,21 +201,26 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
                 @GameProfileId UNIQUEIDENTIFIER = null,
-                @GameServerId UNIQUEIDENTIFIER = null,
                 @Name NVARCHAR(128) = null,
-                @Path NVARCHAR(128) = null,
+                @PathWindows NVARCHAR(128) = null,
+                @PathLinux NVARCHAR(128) = null,
+                @PathMac NVARCHAR(128) = null,
                 @Startup BIT = null,
-                @StartupPriority int = null,
-                @Type int = null,
-                @ContentType int = null,
-                @Extension NVARCHAR(128) = null,
-                @Args NVARCHAR(128) = null
+                @StartupPriority INT = null,
+                @Type INT = null,
+                @ContentType INT = null,
+                @Args NVARCHAR(128) = null,
+                @LoadExisting INT = null,
+                @LastModifiedBy UNIQUEIDENTIFIER = null,
+                @LastModifiedOn DATETIME2 = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), GameServerId = COALESCE(@GameServerId, GameServerId), Name = COALESCE(@Name, Name),
-                    Path = COALESCE(@Path, Path), Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority),
-                    Type = COALESCE(@Type, Type), ContentType = COALESCE(@ContentType, ContentType), Extension = COALESCE(@Extension, Extension), Args = COALESCE(@Args, Args)
+                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Name = COALESCE(@Name, Name),
+                    PathWindows = COALESCE(@PathWindows, PathWindows), PathLinux = COALESCE(@PathLinux, PathLinux), PathMac = COALESCE(@PathMac, PathMac),
+                    Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority), Type = COALESCE(@Type, Type),
+                    ContentType = COALESCE(@ContentType, ContentType), Args = COALESCE(@Args, Args), LoadExisting = COALESCE(@LoadExisting, LoadExisting),
+                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
                 WHERE Id = @Id;
             end"
     };

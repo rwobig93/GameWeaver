@@ -134,4 +134,51 @@ public static class AccountHelpers
             return Guid.Empty;
         }
     }
+
+    public static bool IsHostAuthenticated(this IEnumerable<Claim> principalClaims)
+    {
+        try
+        {
+            var convertedClaims = principalClaims as Claim[] ?? principalClaims.ToArray();
+            var hostAuth = convertedClaims.FirstOrDefault(x => x is {Type: ClaimConstants.AuthenticationType, Value: ClaimConstants.AuthType.Host});
+
+            return hostAuth is not null;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    
+    public static bool IsApiAuthenticated(this IEnumerable<Claim> principalClaims)
+    {
+        try
+        {
+            var convertedClaims = principalClaims as Claim[] ?? principalClaims.ToArray();
+            var apiAuth = convertedClaims.FirstOrDefault(x => x is {Type: ClaimConstants.AuthenticationType, Value: ClaimConstants.AuthType.Api});
+
+            return apiAuth is not null;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+    
+    public static bool IsHostOrApiAuthenticated(this IEnumerable<Claim> principalClaims)
+    {
+        try
+        {
+            var convertedClaims = principalClaims as Claim[] ?? principalClaims.ToArray();
+            var hostOrApiAuth = convertedClaims.FirstOrDefault(x =>
+                x is {Type: ClaimConstants.AuthenticationType, Value: ClaimConstants.AuthType.Api or ClaimConstants.AuthType.Host
+            });
+
+            return hostOrApiAuth is not null;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
 }

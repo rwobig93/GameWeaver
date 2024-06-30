@@ -11,8 +11,9 @@ using Application.Mappers.Identity;
 using Application.Models.Identity.UserExtensions;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
-using Application.Requests.v1.Api;
-using Application.Requests.v1.Identity.User;
+using Application.Repositories.Lifecycle;
+using Application.Requests.Api;
+using Application.Requests.Identity.User;
 using Application.Responses.v1.Api;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
@@ -23,9 +24,8 @@ using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Database;
 using Domain.Enums.Identity;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
@@ -50,19 +50,21 @@ public class AppAccountService : IAppAccountService
     private readonly AuthStateProvider _authProvider;
     private readonly IDateTimeService _dateTime;
     private readonly IRunningServerState _serverState;
-    private readonly IAuditTrailService _auditService;
     private readonly IHttpContextAccessor _contextAccessor;
     private readonly SecurityConfiguration _securityConfig;
     private readonly ICurrentUserService _currentUserService;
     private readonly LifecycleConfiguration _lifecycleConfig;
     private readonly IHostRepository _hostRepository;
+    private readonly IAuditTrailsRepository _auditRepository;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository 
     roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider,
         IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState,
-        IAuditTrailService auditService, IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
-        ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig, IHostRepository hostRepository)
+        IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
+        ICurrentUserService currentUserService, IOptions<LifecycleConfiguration> lifecycleConfig, IHostRepository hostRepository,
+        IAuditTrailsRepository auditRepository, ITroubleshootingRecordsRepository tshootRepository)
     {
         _appConfig = appConfig.Value;
         _appPermissionRepository = appPermissionRepository;
@@ -73,15 +75,16 @@ public class AppAccountService : IAppAccountService
         _mailService = mailService;
         _dateTime = dateTime;
         _serverState = serverState;
-        _auditService = auditService;
         _contextAccessor = contextAccessor;
         _currentUserService = currentUserService;
         _hostRepository = hostRepository;
+        _auditRepository = auditRepository;
+        _tshootRepository = tshootRepository;
         _lifecycleConfig = lifecycleConfig.Value;
         _securityConfig = securityConfig.Value;
     }
 
-    private static async Task<IResult<UserLoginResponse>> VerifyAccountIsLoginReady(AppUserSecurityDb userSecurity)
+    private static async Task<IResult<UserLoginResponse>> VerifyAccountCanLogin(AppUserSecurityDb userSecurity)
     {
         // Email isn't confirmed so we don't allow login
         if (!userSecurity.EmailConfirmed)
@@ -127,7 +130,7 @@ public class AppAccountService : IAppAccountService
         if (userSecurity.AccountType != AccountType.User)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.Users.UserAccountOnly);
 
-        var accountIsLoginReady = await VerifyAccountIsLoginReady(userSecurity);
+        var accountIsLoginReady = await VerifyAccountCanLogin(userSecurity);
         if (!accountIsLoginReady.Succeeded)
             return accountIsLoginReady;
 
@@ -138,6 +141,7 @@ public class AppAccountService : IAppAccountService
         // Entered password is correct, so we reset previous bad password attempts and indicate full login timestamp
         userSecurity.BadPasswordAttempts = 0;
         userSecurity.LastFullLogin = _dateTime.NowDatabaseTime;
+        userSecurity.AuthState = AuthState.Enabled;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Succeeded)
             return await Result<UserLoginResponse>.FailAsync(updateSecurity.ErrorMessage);
@@ -179,8 +183,8 @@ public class AppAccountService : IAppAccountService
         // Create audit log for login if configured
         if (_lifecycleConfig.AuditLoginLogout)
         {
-            await _auditService.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
-                _serverState.SystemUserId, DatabaseActionType.Login,
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
+                _serverState.SystemUserId, AuditAction.Login,
                 new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
                 new Dictionary<string, string>() 
                     {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
@@ -234,7 +238,7 @@ public class AppAccountService : IAppAccountService
         if (userSecurity is null)
             return await Result<UserLoginResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
 
-        var accountIsLoginReady = await VerifyAccountIsLoginReady(userSecurity);
+        var accountIsLoginReady = await VerifyAccountCanLogin(userSecurity);
         if (!accountIsLoginReady.Succeeded)
             return accountIsLoginReady;
         
@@ -273,8 +277,8 @@ public class AppAccountService : IAppAccountService
         // Create audit log for login if configured
         if (_lifecycleConfig.AuditLoginLogout)
         {
-            await _auditService.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
-                _serverState.SystemUserId, DatabaseActionType.Login,
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
+                _serverState.SystemUserId, AuditAction.Login,
                 new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
                 new Dictionary<string, string>() 
                     {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
@@ -289,11 +293,15 @@ public class AppAccountService : IAppAccountService
         {
             var loginResponse = await LoginInteractiveAsync(loginRequest);
             if (!loginResponse.Succeeded)
+            {
                 return loginResponse;
+            }
             
             var result = await CacheTokensAndAuthAsync(loginResponse.Data);
             if (!result.Succeeded)
+            {
                 return await Result<UserLoginResponse>.FailAsync(result.Messages.FirstOrDefault()!);
+            }
 
             return await Result<UserLoginResponse>.SuccessAsync(loginResponse.Data);
         }
@@ -307,7 +315,9 @@ public class AppAccountService : IAppAccountService
     {
         var userSecurity = (await _userRepository.GetByUsernameSecurityAsync(tokenRequest.Username)).Result;
         if (userSecurity is null)
+        {
             return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+        }
         
         return userSecurity.AuthState switch
         {
@@ -334,7 +344,9 @@ public class AppAccountService : IAppAccountService
 
             // Account isn't locked out yet but a bad api token was provided
             if (userSecurity.BadPasswordAttempts < _securityConfig.MaxBadPasswordAttempts)
+            {
                 return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
+            }
 
             // Account is now locked out due to bad api tokens being provided
             userSecurity.AuthState = AuthState.LockedOut;
@@ -343,12 +355,14 @@ public class AppAccountService : IAppAccountService
             return await Result<ApiTokenResponse>.FailAsync(ErrorMessageConstants.Users.AccountLockedOutError);
         }
 
-        // Provided api token is correct so we reset previous bad password attempts
+        // Provided api token is correct, so we reset previous bad password attempts
         userSecurity.BadPasswordAttempts = 0;
 
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.ToSecurityUpdate());
         if (!updateSecurity.Succeeded)
+        {
             return await Result<ApiTokenResponse>.FailAsync(updateSecurity.ErrorMessage);
+        }
 
         var token = await GenerateJwtAsync(userSecurity.ToUserDb(), true);
         var response = new ApiTokenResponse() {Token = token, TokenExpiration = JwtHelpers.GetJwtExpirationTime(token)};
@@ -428,8 +442,8 @@ public class AppAccountService : IAppAccountService
             var user = (await _userRepository.GetByIdAsync(userId)).Result ??
                        new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
             
-            await _auditService.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userId,
-                _serverState.SystemUserId, DatabaseActionType.Logout,
+            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userId,
+                _serverState.SystemUserId, AuditAction.Logout,
                 new Dictionary<string, string>()
                     {{"Username", user.Username}, {"AuthState", user.AuthState.ToString()}},
                 new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}});
@@ -606,10 +620,11 @@ public class AppAccountService : IAppAccountService
         
         // Previous pending account registration exists, return current value
         if (previousConfirmation is not null)
-            return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(
-                confirmationUri, "confirmationCode", previousConfirmation.Value));
+        {
+            return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousConfirmation.Value));
+        }
 
-        // No currently pending account registration exists so we'll generate a new one, add it to the provided user
+        // No currently pending account registration exists, so we'll generate a new one, add it to the provided user
         //   and return the generated confirmation uri
         var confirmationCode = UrlHelpers.GenerateToken();
         var newExtendedAttribute = new AppUserExtendedAttributeCreate
@@ -622,7 +637,9 @@ public class AppAccountService : IAppAccountService
         };
         var addAttributeRequest = await _userRepository.AddExtendedAttributeAsync(newExtendedAttribute);
         if (!addAttributeRequest.Succeeded)
+        {
             return await Result<string>.FailAsync(addAttributeRequest.ErrorMessage);
+        }
 
         return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", confirmationCode));
     }
@@ -639,13 +656,12 @@ public class AppAccountService : IAppAccountService
 
         if (previousConfirmation is null)
         {
-            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-                userId, new Dictionary<string, string>
+            await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+                userId, "Email confirmation was attempted when an email confirmation isn't currently pending", new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
-                    {"Email", userSecurity.Email},
-                    {"Details", "Email confirmation was attempted when an email confirmation isn't currently pending"}
+                    {"Email", userSecurity.Email}
                 });
             
             return await Result<string>.FailAsync(
@@ -654,13 +670,12 @@ public class AppAccountService : IAppAccountService
         
         if (previousConfirmation.Value != confirmationCode)
         {
-            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-                userSecurity.Id, new Dictionary<string, string>
+            await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+                userSecurity.Id, "Email confirmation was attempted with an invalid confirmation code", new Dictionary<string, string>
                 {
                     {"UserId", userSecurity.Id.ToString()},
                     {"Username", userSecurity.Username},
                     {"Email", userSecurity.Email},
-                    {"Details", "Email confirmation was attempted with an invalid confirmation code"},
                     {"Correct Code ", previousConfirmation.Value},
                     {"Provided Code", confirmationCode}
                 });
@@ -706,13 +721,12 @@ public class AppAccountService : IAppAccountService
         var confirmationUrl = (await GetEmailConfirmationUrl(foundUserRequest.Result.Id, newEmail)).Data;
         if (string.IsNullOrWhiteSpace(confirmationUrl))
         {
-            await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-                foundUserRequest.Result.Id, new Dictionary<string, string>()
+            await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+                foundUserRequest.Result.Id, "Was unable to generate confirmation Url", new Dictionary<string, string>()
                 {
                     {"UserId", foundUserRequest.Result.Id.ToString()},
                     {"Username", foundUserRequest.Result.Username},
                     {"Email", foundUserRequest.Result.Email},
-                    {"Details", "Was unable to generate confirmation Url"},
                     {"Confirmation Url", confirmationUrl}
                 });
             return await Result.FailAsync("Failure occurred generating confirmation URL, please contact the administrator");
@@ -722,13 +736,12 @@ public class AppAccountService : IAppAccountService
             _mailService.SendEmailChangeConfirmation(newEmail, foundUserRequest.Result.Username, confirmationUrl));
         if (response is not null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
         
-        await _auditService.CreateTroubleshootLog(_serverState, _dateTime, AuditTableName.TshootConfirmation,
-            foundUserRequest.Result.Id, new Dictionary<string, string>()
+        await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
+            foundUserRequest.Result.Id, $"Failure occurred sending email confirmation to {newEmail}", new Dictionary<string, string>()
             {
                 {"UserId", foundUserRequest.Result.Id.ToString()},
                 {"Username", foundUserRequest.Result.Username},
-                {"Email", foundUserRequest.Result.Email},
-                {"Details", $"Failure occurred sending email confirmation to {newEmail}"}
+                {"Email", foundUserRequest.Result.Email}
             });
         return await Result.FailAsync($"Failed to send confirmation email to {newEmail}, please contact the administrator");
     }
@@ -812,7 +825,7 @@ public class AppAccountService : IAppAccountService
         }
         else
         {
-            // No currently pending forgot password request exists so we'll generate a new one, add it to the provided user
+            // No currently pending forgot password request exists, so we'll generate a new one, add it to the provided user
             //   and return the generated reset uri
             var confirmationCode = UrlHelpers.GenerateToken();
             var newExtendedAttribute = new AppUserExtendedAttributeCreate()
@@ -892,54 +905,91 @@ public class AppAccountService : IAppAccountService
         return await Result<AppUserPreferenceFull>.SuccessAsync(preferencesFull);
     }
 
-    public async Task<IResult> ForceUserLogin(Guid userId)
+    public async Task<IResult> ForceUserLogin(Guid userId, Guid requestUserId)
     {
         var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
         if (!userSecurity.Succeeded || userSecurity.Result is null)
+        {
             return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
+        }
+
+        var beforeState = new Dictionary<string, string>
+        {
+            { "UserId", userSecurity.Result.Id.ToString() },
+            { "AuthState", userSecurity.Result.AuthState.ToString() }
+        };
 
         // Update account auth state to indicate login is required
         userSecurity.Result.AuthState = AuthState.LoginRequired;
         var updateSecurity = await _userRepository.UpdateSecurityAsync(userSecurity.Result.ToSecurityUpdate());
         if (!updateSecurity.Succeeded)
-            return await Result.FailAsync(updateSecurity.ErrorMessage);
+        {
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Users, userSecurity.Result.Id,
+                requestUserId, "Failed to update user security with auth state for force user login", new Dictionary<string, string>
+            {
+                {"Error", updateSecurity.ErrorMessage}
+            });
+            return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+        }
         
         // Grab all registered client id's for the user account
         var userClientIdRequest =
             await _userRepository.GetUserExtendedAttributesByTypeAsync(userSecurity.Result.Id, ExtendedAttributeType.UserClientId);
         if (!userClientIdRequest.Succeeded)
-            return await Result.FailAsync(userClientIdRequest.ErrorMessage);
+        {
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Users, userSecurity.Result.Id,
+                requestUserId, "Failed to get user client id's for force user login", new Dictionary<string, string>
+                {
+                    {"Error", userClientIdRequest.ErrorMessage}
+                });
+            return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+        }
 
         var messages = new List<string>();
         
         // Remove all client id's for the specified user account which will require a user to login when the primary JWT expires
         //   This also means a refresh token cannot be used for any client without doing a full user+pass authentication
         var userClientIds = (userClientIdRequest.Result ?? new List<AppUserExtendedAttributeDb>()).ToArray();
-        if (userClientIds.Any())
+        if (userClientIds.Length != 0)
         {
             foreach (var clientId in userClientIds)
             {
                 var removeRequest = await _userRepository.RemoveExtendedAttributeAsync(clientId.Id);
                 if (!removeRequest.Succeeded)
+                {
                     messages.Add(removeRequest.ErrorMessage);
+                }
             }
         }
+        
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userSecurity.Result.Id, requestUserId, AuditAction.Update, beforeState,
+            new Dictionary<string, string>
+            {
+                { "UserId", userSecurity.Result.Id.ToString() },
+                { "AuthState", AuthState.LoginRequired.ToString() }
+            });
 
-        if (messages.Any())
+        if (messages.Count != 0)
+        {
             return await Result.FailAsync(messages);
+        }
 
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult> ForceUserPasswordReset(Guid userId)
+    public async Task<IResult> ForceUserPasswordReset(Guid userId, Guid requestUserId)
     {
         var userSecurity = await _userRepository.GetByIdSecurityAsync(userId);
         if (!userSecurity.Succeeded)
-            return await Result.FailAsync(userSecurity.ErrorMessage);
+        {
+            return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
+        }
 
-        var forceLoginRequest = await ForceUserLogin(userId);
+        var forceLoginRequest = await ForceUserLogin(userId, requestUserId);
         if (!forceLoginRequest.Succeeded)
+        {
             return await Result.FailAsync(forceLoginRequest.Messages);
+        }
         
         await SetUserPassword(userId, UrlHelpers.GenerateToken());
         return await ForgotPasswordAsync(new ForgotPasswordRequest() { Email = userSecurity.Result!.Email });
@@ -1037,7 +1087,7 @@ public class AppAccountService : IAppAccountService
         }
         catch
         {
-            // Since Blazor Server pre-rendering has the state received twice and we can't have JSInterop run while rendering is occurring
+            // Since Blazor Server pre-rendering has the state received twice, and we can't have JSInterop run while rendering is occurring
             //   we have to do this to keep our sanity, would love to find a working solution to this at some point
             return "";
         }
@@ -1050,21 +1100,29 @@ public class AppAccountService : IAppAccountService
             var authToken = await GetAuthTokenFromSession();
             var sessionIsValid = JwtHelpers.IsJwtValid(authToken, _securityConfig, _appConfig);
             if (!sessionIsValid)
+            {
                 return await Result<bool>.SuccessAsync(true);
+            }
 
-            var currentUserId = JwtHelpers.GetJwtUserId(authToken);
             var localStorageRequest = await GetLocalStorage();
             if (!localStorageRequest.Succeeded)
-                return await Result<bool>.FailAsync(localStorageRequest.Messages);
+            {
+                return await Result<bool>.FailAsync(true, localStorageRequest.Messages);
+            }
         
             // Validate if the current clientId needs to re-authenticate due to permission changes
+            var currentUserId = JwtHelpers.GetJwtUserId(authToken);
             var clientIdRequest = await _userRepository.GetUserExtendedAttributesByTypeAndValueAsync(
                 currentUserId, ExtendedAttributeType.UserClientId, localStorageRequest.Data.ClientId ?? "");
             if (!clientIdRequest.Succeeded || clientIdRequest.Result is null || !clientIdRequest.Result.Any())
-                return await Result<bool>.FailAsync(ErrorMessageConstants.Authentication.TokenInvalidError);
+            {
+                return await Result<bool>.FailAsync(true, ErrorMessageConstants.Authentication.TokenInvalidError);
+            }
 
             if (clientIdRequest.Result.FirstOrDefault()!.Description == UserClientIdState.ReAuthNeeded.ToString())
+            {
                 return await Result<bool>.SuccessAsync(true);
+            }
 
             // Session doesn't need re-auth
             return await Result<bool>.SuccessAsync(false);
@@ -1072,11 +1130,11 @@ public class AppAccountService : IAppAccountService
         catch (Exception ex)
         {
             // Token isn't valid and has likely expired
-            return await Result<bool>.FailAsync(ex.Message);
+            return await Result<bool>.FailAsync(true, ex.Message);
         }
     }
 
-    public async Task<IResult<bool>> IsUserRequiredToReAuthenticate(Guid userId)
+    public async Task<IResult<bool>> IsRequiredToDoFullReAuthentication(Guid userId)
     {
         try
         {
@@ -1106,6 +1164,18 @@ public class AppAccountService : IAppAccountService
         {
             return await Result<bool>.FailAsync(true, ex.Message);
         }
+    }
+
+    public async Task<IResult<AuthState>> GetCurrentAuthState(Guid userId)
+    {
+            
+        var userSecurity = await _userRepository.GetSecurityAsync(userId);
+        if (userSecurity.Result is null)
+        {
+            return await Result<AuthState>.SuccessAsync(AuthState.Unknown);
+        }
+        
+        return await Result<AuthState>.SuccessAsync(userSecurity.Result.AuthState);
     }
 
     public async Task<IResult> SetAuthState(Guid userId, AuthState authState)

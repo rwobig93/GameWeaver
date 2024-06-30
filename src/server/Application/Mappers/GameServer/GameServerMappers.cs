@@ -1,6 +1,7 @@
 using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.WeaverWork;
+using Application.Requests.GameServer.GameServer;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 
@@ -17,6 +18,8 @@ public static class GameServerMappers
             HostId = gameServerDb.HostId,
             GameId = gameServerDb.GameId,
             GameProfileId = gameServerDb.GameProfileId,
+            ParentGameProfileId = gameServerDb.ParentGameProfileId,
+            ServerBuildVersion = gameServerDb.ServerBuildVersion,
             ServerName = gameServerDb.ServerName,
             Password = gameServerDb.Password,
             PasswordRcon = gameServerDb.PasswordRcon,
@@ -25,6 +28,7 @@ public static class GameServerMappers
             PrivateIp = gameServerDb.PrivateIp,
             ExternalHostname = gameServerDb.ExternalHostname,
             PortGame = gameServerDb.PortGame,
+            PortPeer = gameServerDb.PortPeer,
             PortQuery = gameServerDb.PortQuery,
             PortRcon = gameServerDb.PortRcon,
             Modded = gameServerDb.Modded,
@@ -53,6 +57,8 @@ public static class GameServerMappers
             HostId = gameServerDb.HostId,
             GameId = gameServerDb.GameId,
             GameProfileId = gameServerDb.GameProfileId,
+            ParentGameProfileId = gameServerDb.ParentGameProfileId,
+            ServerBuildVersion = gameServerDb.ServerBuildVersion,
             ServerName = gameServerDb.ServerName,
             Password = gameServerDb.Password,
             PasswordRcon = gameServerDb.PasswordRcon,
@@ -61,6 +67,7 @@ public static class GameServerMappers
             PrivateIp = gameServerDb.PrivateIp,
             ExternalHostname = gameServerDb.ExternalHostname,
             PortGame = gameServerDb.PortGame,
+            PortPeer = gameServerDb.PortPeer,
             PortQuery = gameServerDb.PortQuery,
             PortRcon = gameServerDb.PortRcon,
             Modded = gameServerDb.Modded,
@@ -84,6 +91,8 @@ public static class GameServerMappers
             HostId = gameServerDb.HostId,
             GameId = gameServerDb.GameId,
             GameProfileId = gameServerDb.GameProfileId,
+            ParentGameProfileId = gameServerDb.ParentGameProfileId,
+            ServerBuildVersion = gameServerDb.ServerBuildVersion,
             ServerName = gameServerDb.ServerName,
             Password = gameServerDb.Password,
             PasswordRcon = gameServerDb.PasswordRcon,
@@ -92,6 +101,7 @@ public static class GameServerMappers
             PrivateIp = gameServerDb.PrivateIp,
             ExternalHostname = gameServerDb.ExternalHostname,
             PortGame = gameServerDb.PortGame,
+            PortPeer = gameServerDb.PortPeer,
             PortQuery = gameServerDb.PortQuery,
             PortRcon = gameServerDb.PortRcon,
             Modded = gameServerDb.Modded,
@@ -111,6 +121,7 @@ public static class GameServerMappers
         return new GameServerToHost
         {
             Id = gameServerDb.Id,
+            GameId = gameServerDb.GameId,
             SteamName = gameServerDb.ServerName,
             SteamGameId = 0,
             SteamToolId = 0,
@@ -118,10 +129,11 @@ public static class GameServerMappers
             Password = gameServerDb.Password,
             PasswordRcon = gameServerDb.PasswordRcon,
             PasswordAdmin = gameServerDb.PasswordAdmin,
-            ServerVersion = "Unknown",
+            ServerVersion = gameServerDb.ServerBuildVersion,
             IpAddress = gameServerDb.PrivateIp,
             ExtHostname = gameServerDb.PublicIp,
             PortGame = gameServerDb.PortGame,
+            PortPeer = gameServerDb.PortPeer,
             PortQuery = gameServerDb.PortQuery,
             PortRcon = gameServerDb.PortRcon,
             Modded = gameServerDb.Modded,
@@ -140,6 +152,7 @@ public static class GameServerMappers
         {
             Id = gameServer.Id,
             ServerName = gameServer.ServerName,
+            BuildVersionUpdated = false,
             ServerState = gameServer.ServerState
         };
     }
@@ -150,7 +163,52 @@ public static class GameServerMappers
         {
             Id = update.Id,
             ServerName = "",
+            BuildVersionUpdated = update.BuildVersionUpdated,
             ServerState = update.ServerState
+        };
+    }
+
+    public static GameServerCreate ToCreate(this GameServerCreateRequest request)
+    {
+        return new GameServerCreate
+        {
+            OwnerId = request.OwnerId,
+            HostId = request.HostId,
+            GameId = request.GameId,
+            GameProfileId = Guid.Empty,
+            ParentGameProfileId = request.ParentGameProfileId,
+            ServerName = request.Name,
+            Password = request.Password,
+            PasswordRcon = request.PasswordRcon,
+            PasswordAdmin = request.PasswordAdmin,
+            ExternalHostname = request.ExternalUrl,
+            PortGame = request.PortGame,
+            PortPeer = request.PortPeer,
+            PortQuery = request.PortQuery,
+            PortRcon = request.PortRcon,
+            Modded = request.Modded,
+            Private = request.Private
+        };
+    }
+
+    public static GameServerUpdate ToUpdate(this GameServerUpdateRequest request)
+    {
+        return new GameServerUpdate
+        {
+            Id = request.Id,
+            OwnerId = request.OwnerId,
+            ParentGameProfileId = request.ParentGameProfileId,
+            ServerBuildVersion = request.ServerBuildVersion,
+            ServerName = request.ServerName,
+            Password = request.Password,
+            PasswordRcon = request.PasswordRcon,
+            PasswordAdmin = request.PasswordAdmin,
+            PortGame = request.PortGame,
+            PortPeer = request.PortPeer,
+            PortQuery = request.PortQuery,
+            PortRcon = request.PortRcon,
+            Modded = request.Modded,
+            Private = request.Private
         };
     }
 }

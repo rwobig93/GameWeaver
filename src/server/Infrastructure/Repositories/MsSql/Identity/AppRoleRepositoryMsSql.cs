@@ -8,7 +8,6 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Database;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.Identity;
@@ -171,7 +170,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             var createdRole = await GetByIdAsync(createdId);
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, createdId,
-                createObject.CreatedBy, DatabaseActionType.Create, null, createdRole.Result);
+                createObject.CreatedBy, AuditAction.Create, null, createdRole.Result);
             
             actionReturn.Succeed(createdId);
         }
@@ -200,7 +199,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             var foundRoleAfterUpdate = await GetByIdAsync(updateObject.Id);
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, updateObject.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update,
+                updateObject.LastModifiedBy.GetFromNullable(), AuditAction.Update,
                 foundRole.Result!.ToSlim(), foundRoleAfterUpdate.Result!.ToSlim());
             
             actionReturn.Succeed();
@@ -225,7 +224,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             await _database.SaveData(AppRolesTableMsSql.Delete, new {Id = id});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, id,
-                modifyingUserId, DatabaseActionType.Delete, foundRole.Result!.ToSlim());
+                modifyingUserId, AuditAction.Delete, foundRole.Result!.ToSlim());
             
             actionReturn.Succeed();
         }
@@ -310,7 +309,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 new {UserId = userId, RoleId = roleId});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
-                modifyingUserId, DatabaseActionType.Update, null, new Dictionary<string, string>()
+                modifyingUserId, AuditAction.Update, null, new Dictionary<string, string>()
                 {
                     {"User Addition", userId.ToString()}
                 });
@@ -335,7 +334,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 new {UserId = userId, RoleId = roleId});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
-                modifyingUserId, DatabaseActionType.Update, null, new Dictionary<string, string>()
+                modifyingUserId, AuditAction.Update, null, new Dictionary<string, string>()
                 {
                     {"User Removal", userId.ToString()}
                 });

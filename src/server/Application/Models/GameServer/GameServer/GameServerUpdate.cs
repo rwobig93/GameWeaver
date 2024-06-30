@@ -9,6 +9,8 @@ public class GameServerUpdate
     public Guid? HostId { get; set; }
     public Guid? GameId { get; set; }
     public Guid? GameProfileId { get; set; }
+    public Guid? ParentGameProfileId { get; set; }
+    public string? ServerBuildVersion { get; set; }
     public string? ServerName { get; set; }
     public string? Password { get; set; }
     public string? PasswordRcon { get; set; }
@@ -17,6 +19,7 @@ public class GameServerUpdate
     public string? PrivateIp { get; set; }
     public string? ExternalHostname { get; set; }
     public int? PortGame { get; set; }
+    public int? PortPeer { get; set; }
     public int? PortQuery { get; set; }
     public int? PortRcon { get; set; }
     public bool? Modded { get; set; }

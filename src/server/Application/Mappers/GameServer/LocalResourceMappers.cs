@@ -1,5 +1,6 @@
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.LocalResource;
+using Application.Requests.GameServer.LocalResource;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
@@ -14,15 +15,20 @@ public static class LocalResourceMappers
         {
             Id = localResourceDb.Id,
             GameProfileId = localResourceDb.GameProfileId,
-            GameServerId = localResourceDb.GameServerId,
             Name = localResourceDb.Name,
-            Path = localResourceDb.Path,
+            PathWindows = localResourceDb.PathWindows,
+            PathLinux = localResourceDb.PathLinux,
+            PathMac = localResourceDb.PathMac,
             Startup = localResourceDb.Startup,
             StartupPriority = localResourceDb.StartupPriority,
             Type = localResourceDb.Type,
             ContentType = localResourceDb.ContentType,
-            Extension = localResourceDb.Extension,
             Args = localResourceDb.Args,
+            LoadExisting = localResourceDb.LoadExisting,
+            CreatedBy = localResourceDb.CreatedBy,
+            CreatedOn = localResourceDb.CreatedOn,
+            LastModifiedBy = localResourceDb.LastModifiedBy,
+            LastModifiedOn = localResourceDb.LastModifiedOn,
             ConfigSets = []
         };
     }
@@ -38,76 +44,158 @@ public static class LocalResourceMappers
         {
             Id = localResource.Id,
             GameProfileId = localResource.GameProfileId,
-            GameServerId = localResource.GameServerId,
             Name = localResource.Name,
-            Path = localResource.Path,
+            PathWindows = localResource.PathWindows,
+            PathLinux = localResource.PathLinux,
+            PathMac = localResource.PathMac,
             Startup = localResource.Startup,
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
-            Args = localResource.Args
-        };
-    }
-
-    public static LocalResourceHost ToHost(this LocalResourceDb localResource)
-    {
-        return new LocalResourceHost
-        {
-            GameserverId = localResource.GameServerId,
-            Name = localResource.Name,
-            Path = localResource.Path,
-            Startup = localResource.Startup,
-            Type = localResource.Type,
-            ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
             Args = localResource.Args,
-            ConfigSets = []
+            LoadExisting = localResource.LoadExisting,
+            LastModifiedBy = localResource.LastModifiedBy,
+            LastModifiedOn = localResource.LastModifiedOn
         };
     }
 
-    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceDb> localResourceDbs)
-    {
-        return localResourceDbs.Select(ToHost);
-    }
-
-    public static LocalResourceHost ToHost(this LocalResourceSlim localResource)
+    public static LocalResourceHost ToHost(this LocalResourceDb localResource, Guid gameServerId, OsType osType)
     {
         return new LocalResourceHost
         {
-            GameserverId = localResource.GameServerId,
+            GameserverId = gameServerId,
             Name = localResource.Name,
-            Path = localResource.Path,
+            Path = osType switch
+            {
+                OsType.Unknown => localResource.PathWindows,
+                OsType.Windows => localResource.PathWindows,
+                OsType.Linux => localResource.PathLinux,
+                OsType.Mac => localResource.PathMac,
+                _ => localResource.PathWindows
+            },
             Startup = localResource.Startup,
             StartupPriority = localResource.StartupPriority,
             Type = localResource.Type,
             ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
+            Args = localResource.Args,
+            ConfigSets = [],
+            Id = localResource.Id,
+            LoadExisting = localResource.LoadExisting
+        };
+    }
+
+    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceDb> localResourceDbs, Guid gameServerId, OsType osType)
+    {
+        return localResourceDbs.Select(x => x.ToHost(gameServerId, osType));
+    }
+
+    public static LocalResourceHost ToHost(this LocalResourceSlim localResource, Guid gameServerId, OsType osType)
+    {
+        return new LocalResourceHost
+        {
+            GameserverId = gameServerId,
+            Name = localResource.Name,
+            Path = osType switch
+            {
+                OsType.Unknown => localResource.PathWindows,
+                OsType.Windows => localResource.PathWindows,
+                OsType.Linux => localResource.PathLinux,
+                OsType.Mac => localResource.PathMac,
+                _ => localResource.PathWindows
+            },
+            Startup = localResource.Startup,
+            StartupPriority = localResource.StartupPriority,
+            Type = localResource.Type,
+            ContentType = localResource.ContentType,
             Args = localResource.Args,
             ConfigSets = new SerializableList<ConfigurationItemHost>(localResource.ConfigSets.ToHosts()),
-            Id = localResource.Id
+            Id = localResource.Id,
+            LoadExisting = localResource.LoadExisting
         };
     }
 
-    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceSlim> localResources)
+    public static IEnumerable<LocalResourceHost> ToHosts(this IEnumerable<LocalResourceSlim> localResources, Guid gameServerId, OsType osType)
     {
-        return localResources.Select(ToHost);
+        return localResources.Select(x => x.ToHost(gameServerId, osType));
     }
 
-    public static LocalResourceCreate ToCreate(this LocalResourceSlim localResource)
+    public static LocalResourceCreate ToCreate(this LocalResourceSlim resource)
     {
         return new LocalResourceCreate
         {
-            GameProfileId = localResource.GameProfileId,
-            GameServerId = localResource.GameServerId,
-            Name = localResource.Name,
-            Path = localResource.Path,
-            Startup = localResource.Startup,
-            StartupPriority = localResource.StartupPriority,
-            Type = localResource.Type,
-            ContentType = localResource.ContentType,
-            Extension = localResource.Extension,
-            Args = localResource.Args
+            GameProfileId = resource.GameProfileId,
+            Name = resource.Name,
+            PathWindows = resource.PathWindows,
+            PathLinux = resource.PathLinux,
+            PathMac = resource.PathMac,
+            Startup = resource.Startup,
+            StartupPriority = resource.StartupPriority,
+            Type = resource.Type,
+            ContentType = resource.ContentType,
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting,
+            CreatedBy = resource.CreatedBy,
+            CreatedOn = resource.CreatedOn,
+            LastModifiedBy = resource.LastModifiedBy,
+            LastModifiedOn = resource.LastModifiedOn
+        };
+    }
+
+    public static LocalResourceCreate ToCreate(this LocalResourceCreateRequest request)
+    {
+        return new LocalResourceCreate
+        {
+            GameProfileId = request.GameProfileId,
+            Name = request.Name,
+            PathWindows = request.PathWindows,
+            PathLinux = request.PathLinux,
+            PathMac = request.PathMac,
+            Startup = request.Startup,
+            StartupPriority = request.StartupPriority,
+            Type = request.Type,
+            ContentType = request.ContentType,
+            Args = request.Args,
+            LoadExisting = request.LoadExisting,
+            CreatedBy = default,
+            CreatedOn = default,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        };
+    }
+
+    public static LocalResourceUpdate ToUpdate(this LocalResourceUpdateRequest request)
+    {
+        return new LocalResourceUpdate
+        {
+            Id = request.Id,
+            Name = request.Name,
+            PathWindows = request.PathWindows,
+            PathLinux = request.PathLinux,
+            PathMac = request.PathMac,
+            Startup = request.Startup,
+            StartupPriority = request.StartupPriority,
+            Type = request.Type,
+            ContentType = request.ContentType,
+            Args = request.Args,
+            LoadExisting = request.LoadExisting
+        };
+    }
+
+    public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceSlim resource)
+    {
+        return new LocalResourceCreateRequest
+        {
+            GameProfileId = resource.GameProfileId,
+            Name = resource.Name,
+            PathWindows = resource.PathWindows,
+            PathLinux = resource.PathLinux,
+            PathMac = resource.PathMac,
+            Startup = resource.Startup,
+            StartupPriority = resource.StartupPriority,
+            Type = resource.Type,
+            ContentType = resource.ContentType,
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting
         };
     }
 }

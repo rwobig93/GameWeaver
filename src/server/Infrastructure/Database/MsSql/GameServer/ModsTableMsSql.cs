@@ -12,7 +12,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -42,11 +42,12 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER,
+                @DeletedBy UNIQUEIDENTIFIER,
                 @DeletedOn datetime2
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, LastModifiedBy = @DeletedBy
                 WHERE Id = @Id;
             end"
     };
@@ -60,8 +61,8 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT m.*
-                WHERE m.IsDeleted = 0
-                FROM dbo.[{Table.TableName}] m;
+                FROM dbo.[{Table.TableName}] m
+                WHERE m.IsDeleted = 0;
             end"
     };
 
@@ -235,7 +236,9 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.IsDeleted = 0 AND m.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE m.IsDeleted = 0
+                    AND m.Id LIKE '%' + @SearchTerm + '%'
+                    OR m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'
@@ -258,7 +261,9 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.IsDeleted = 0 AND m.GameId LIKE '%' + @SearchTerm + '%'
+                WHERE m.IsDeleted = 0
+                    AND m.Id LIKE '%' + @SearchTerm + '%'
+                    OR m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'

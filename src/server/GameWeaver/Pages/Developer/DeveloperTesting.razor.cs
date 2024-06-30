@@ -1,32 +1,48 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.Events;
+using Application.Models.External.Steam;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
+using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
+using Application.Models.Integrations;
+using Application.Requests.GameServer.Game;
+using Application.Requests.GameServer.GameProfile;
+using Application.Requests.GameServer.GameServer;
+using Application.Requests.GameServer.Host;
+using Application.Requests.Integrations;
+using Application.Services.External;
 using Application.Services.GameServer;
+using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
+using Domain.Enums.Integrations;
+using Domain.Enums.Lifecycle;
 using GameWeaver.Helpers;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace GameWeaver.Pages.Developer;
 
 public partial class DeveloperTesting : IAsyncDisposable
 {
-    [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private INetworkService NetworkService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IGameService GameService { get; init; } = null!;
     [Inject] private IGameServerService GameServerService { get; init; } = null!;
     [Inject] private IHostService HostService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
+    [Inject] private ISteamApiService SteamService { get; init; } = null!;
+    [Inject] private ITroubleshootingRecordService TshootService { get; init; } = null!;
+    [Inject] private IFileStorageRecordService FileService { get; init; } = null!;
     
     private AppUserFull _loggedInUser = new();
     private bool _isContributor;
@@ -34,7 +50,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private string _serverIp = "";
-    private int _serverPort = 0;
+    private int _serverPort;
     private string _serverStatus = "";
     private NetworkProtocol _serverProtocol = NetworkProtocol.Tcp;
     private GameSource _serverSource = GameSource.Steam;
@@ -42,7 +58,28 @@ public partial class DeveloperTesting : IAsyncDisposable
     private GameServerSlim? _selectedGameServer;
     private List<HostSlim> _hosts = [];
     private HostSlim? _selectedHost;
-    private string _latestWorkState = "";
+    private List<GameSlim> _games = [];
+    private GameSlim? _selectedGame;
+    private bool _gameServerUpToDate;
+    private string _latestWorkState = "Idle";
+    private string _registrationToken = "";
+    private Timer? _timer;
+    private HostCheckInFull? _latestHostCheckin;
+    private bool _workInProgress;
+    private SteamAppInfo _steamAppInfo = new();
+    private readonly ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
+    private readonly ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
+    private readonly List<ChartSeries> _cpuUsage = [];
+    private readonly List<ChartSeries> _ramUsage = [];
+    private readonly List<ChartSeries> _netUsage = [];
+    private MudTable<FileStorageRecordSlim> _fileRecordsTable = new();
+    private IEnumerable<FileStorageRecordSlim> _fileRecords = [];
+    private int _totalFileRecords;
+    private bool _fileUploading;
+    private bool _tableDense = true;
+    private bool _tableHover = true;
+    private bool _tableStriped = true;
+    private bool _tableBordered;
 
     private readonly GameSlim _desiredGame = new()
     {
@@ -54,7 +91,6 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly GameProfileSlim _defaultProfile = new()
     {
         FriendlyName = "Conan Exiles - Profile",
-        ServerProcessName = "ConanSandboxServer.exe"
     };
     private readonly GameServerSlim _desiredGameServer = new()
     {
@@ -62,21 +98,31 @@ public partial class DeveloperTesting : IAsyncDisposable
         Password = "dietpassword1",
         PasswordRcon = "dietrcon1",
         PasswordAdmin = "dietadmin1",
-        PortGame = 32000,
-        PortQuery = 42000,
-        PortRcon = 52000,
+        PortGame = 30010,
+        PortPeer = 30011,
+        PortQuery = 40010,
+        PortRcon = 50010,
         Modded = false,
         Private = false
+    };
+    private readonly LocalResourceSlim _desiredResourceExecutable = new()
+    {
+        Name = "Dedicated Server Executable",
+        PathWindows = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping.exe",
+        Startup = true,
+        StartupPriority = 0,
+        Type = ResourceType.Executable,
+        ContentType = ContentType.Raw,
+        Args = "-log"
     };
     private readonly LocalResourceSlim _desiredResourceEngine = new()
     {
         Name = "Config - Engine",
-        Path = "ConanSandbox/Saved/Config/WindowsServer/Engine",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Engine.ini",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
         ContentType = ContentType.Ini,
-        Extension = "ini",
         ConfigSets =
         [
             new ConfigurationItemSlim { Category = "Core.System", Key = "Paths", Value = "../../../Engine/Content", DuplicateKey = true },
@@ -97,12 +143,11 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceGame = new()
     {
         Name = "Config - Game",
-        Path = "ConanSandbox/Saved/Config/WindowsServer/Game",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/Game.ini",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
         ContentType = ContentType.Ini,
-        Extension = "ini",
         ConfigSets =
         [
             new ConfigurationItemSlim { Category = "/script/engine.gamesession", Key = "MaxPlayers", Value = "70"},
@@ -111,12 +156,11 @@ public partial class DeveloperTesting : IAsyncDisposable
     private readonly LocalResourceSlim _desiredResourceServerSettings = new()
     {
         Name = "Config - ServerSettings",
-        Path = "ConanSandbox/Saved/Config/WindowsServer/ServerSettings",
+        PathWindows = "ConanSandbox/Saved/Config/WindowsServer/ServerSettings.ini",
         Startup = false,
         StartupPriority = 0,
         Type = ResourceType.ConfigFile,
         ContentType = ContentType.Ini,
-        Extension = "ini",
         ConfigSets =
         [
             new ConfigurationItemSlim { Category = "ServerSettings", Key = "AdminPassword", Value = "%%%PASSWORD_ADMIN%%%"},
@@ -137,11 +181,14 @@ public partial class DeveloperTesting : IAsyncDisposable
             await UpdateLoggedInUser();
             await GetPermissions();
             await GetClientTimezone();
+            await GatherGames();
             await GatherGameServers();
             await GatherHosts();
 
+            EventService.GameVersionUpdated += GameVersionUpdated;
             EventService.GameServerStatusChanged += GameServerStatusChanged;
             EventService.WeaverWorkStatusChanged += WorkStatusChanged;
+            _timer = new Timer(async _ => { await UpdateHostUsage(); }, null, 0, 1000);
             
             await AttemptDebugSetup();
             
@@ -149,8 +196,46 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
     }
 
+    private async Task UpdateHostUsage()
+    {
+        if (_selectedHost is null)
+        {
+            return;
+        }
+
+        var usageRequest = await HostService.GetCheckInsLatestByHostIdAsync(_selectedHost.Id, 100);
+        if (!usageRequest.Succeeded)
+        {
+            Snackbar.Add($"Host usage gather failed: {usageRequest.Messages}", Severity.Error);
+            return;
+        }
+
+        var latestCheckin = usageRequest.Data.FirstOrDefault();
+        if (latestCheckin is null)
+        {
+            return;
+        }
+
+        _cpuUsage.Clear();
+        _ramUsage.Clear();
+        _netUsage.Clear();
+        
+        _cpuUsage.Add(new ChartSeries {Name = "CPU Usage", Data = usageRequest.Data.Select(x => (double) x.CpuUsage).Reverse().ToArray()});
+        _ramUsage.Add(new ChartSeries {Name = "RAM Usage", Data = usageRequest.Data.Select(x => (double) x.RamUsage).Reverse().ToArray()});
+        _netUsage.Add(new ChartSeries {Name = "Net In kb", Data = usageRequest.Data.Select(x => (double) x.NetworkInBytes / 8_000).Reverse().ToArray()});
+        _netUsage.Add(new ChartSeries {Name = "Net Out kb", Data = usageRequest.Data.Select(x => (double) x.NetworkOutBytes / 8_000).Reverse().ToArray()});
+
+        _latestHostCheckin = latestCheckin;
+        await InvokeAsync(StateHasChanged);
+    }
+
     private async Task AttemptDebugSetup()
     {
+        if (_games.Count > 0)
+        {
+            _selectedGame = _games.First();
+        }
+        
         if (_hosts.Count > 0)
         {
             _selectedHost = _hosts.First();
@@ -162,12 +247,12 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
         
         var matchingGameRequest = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
-        if (matchingGameRequest.Succeeded)
+        if (matchingGameRequest.Data is not null)
         {
             _desiredGame.Id = matchingGameRequest.Data.Id;
         }
         
-        if (matchingGameRequest.Succeeded)
+        if (matchingGameRequest.Data is not null)
         {
             var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGameRequest.Data.DefaultGameProfileId);
             if (matchingProfile.Succeeded)
@@ -179,26 +264,70 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
     {
+        _workInProgress = e.Status switch
+        {
+            WeaverWorkState.WaitingToBePickedUp => true,
+            WeaverWorkState.PickedUp => true,
+            WeaverWorkState.InProgress => true,
+            WeaverWorkState.Completed => false,
+            WeaverWorkState.Cancelled => false,
+            WeaverWorkState.Failed => false,
+            _ => false
+        };
         _latestWorkState = e.Status.ToString();
         InvokeAsync(StateHasChanged);
     }
 
     private void GameServerStatusChanged(object? sender, GameServerStatusEvent args)
     {
-        Snackbar.Add($"Game server {args.ServerName} state: {args.ServerState}", Severity.Info);
+        Snackbar.Add($"Game server state change: {args.ServerState}", Severity.Info);
         var matchingServer = _gameServers.FirstOrDefault(x => x.Id == args.Id);
         if (matchingServer is not null)
         {
             matchingServer.ServerState = args.ServerState;
+
+            if (args.BuildVersionUpdated)
+            {
+                var matchingGame = _games.FirstOrDefault(x => x.Id == matchingServer.GameId);
+                matchingServer.ServerBuildVersion = matchingGame?.LatestBuildVersion ?? matchingServer.ServerBuildVersion;
+                
+                if (_selectedGameServer != null && matchingServer.Id == _selectedGameServer.Id)
+                {
+                    _gameServerUpToDate = matchingGame?.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
+                }
+            }
+
         }
         InvokeAsync(StateHasChanged);
+    }
+    
+    private void CheckGameServerVersion()
+    {
+        if (_selectedGameServer is null)
+        {
+            return;
+        }
+        
+        var matchingGame = _games.FirstOrDefault(x => x.Id == _selectedGameServer.GameId);
+        if (matchingGame is null)
+        {
+            return;
+        }
+        
+        _gameServerUpToDate = matchingGame.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void GameVersionUpdated(object? sender, GameVersionUpdatedEvent args)
+    {
+        Snackbar.Add($"Game updated! [{args.AppId}]{args.AppName}", Severity.Info);
     }
 
     private async Task GetPermissions()
     {
         var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
-        _isContributor = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Developer.Contributor);
-        _isTester = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Developer.Tester);
+        _isContributor = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.AppDevelopment.Contributor);
+        _isTester = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.AppDevelopment.Tester);
     }
 
     private async Task UpdateLoggedInUser()
@@ -253,37 +382,39 @@ public partial class DeveloperTesting : IAsyncDisposable
         _serverStatus = $"{status} at {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
     }
 
+    private async Task GatherGames()
+    {
+        _games = (await GameService.GetAllAsync()).Data.ToList();
+    }
+    
     private async Task GatherGameServers()
     {
         _gameServers = (await GameServerService.GetAllAsync()).Data.ToList();
-        Snackbar.Add($"Gathered {_gameServers.Count} game servers", Severity.Success);
     }
 
     private async Task GatherHosts()
     {
         _hosts = (await HostService.GetAllAsync()).Data.ToList();
-        Snackbar.Add($"Gathered {_hosts.Count} hosts", Severity.Success);
     }
 
     private async Task EnforceGame()
     {
-        var gameCreate = new GameCreate
+        var gameCreate = new GameCreateRequest
         {
-            FriendlyName = _desiredGame.FriendlyName,
-            SteamName = _desiredGame.SteamName,
+            Name = _desiredGame.FriendlyName,
             SteamGameId = _desiredGame.SteamGameId,
             SteamToolId = _desiredGame.SteamToolId
         };
         
         var matchingGameRequest = await GameService.GetBySteamToolIdAsync(gameCreate.SteamToolId);
-        if (matchingGameRequest.Succeeded)
+        if (matchingGameRequest.Data is not null)
         {
             Snackbar.Add($"Found Game: [{matchingGameRequest.Data.Id}]{matchingGameRequest.Data.FriendlyName}");
             _desiredGame.Id = matchingGameRequest.Data.Id;
             return;
         }
 
-        var createGameRequest = await GameService.CreateAsync(gameCreate);
+        var createGameRequest = await GameService.CreateAsync(gameCreate, _loggedInUser.Id);
         if (!createGameRequest.Succeeded)
         {
             foreach (var message in createGameRequest.Messages)
@@ -293,8 +424,8 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Created game: [{createGameRequest.Data}]{gameCreate.FriendlyName}", Severity.Success);
-        _desiredGame.Id = matchingGameRequest.Data.Id;
+        Snackbar.Add($"Created game: [{createGameRequest.Data}]{gameCreate.Name}", Severity.Success);
+        _desiredGame.Id = createGameRequest.Data;
     }
 
     private async Task EnforceGameProfileResources()
@@ -305,9 +436,63 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        var profileResources = await GameServerService.GetLocalResourcesForGameServerIdAsync(_selectedGameServer.Id);
+        var hostUpdateRequest = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_selectedGameServer.Id, _loggedInUser.Id);
+        if (!hostUpdateRequest.Succeeded)
+        {
+            hostUpdateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        Snackbar.Add("Successfully enforced profile resources on the server and host", Severity.Success);
+    }
+
+    private async Task EnforceDefaultGameProfile()
+    {
+        var matchingGame = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
+        if (matchingGame.Data is null)
+        {
+            Snackbar.Add($"Game '{_desiredGame.FriendlyName}' wasn't found, please create it first", Severity.Error);
+            return;
+        }
+
+        var profileCreate = new GameProfileCreateRequest
+        {
+            Name = _defaultProfile.FriendlyName,
+            OwnerId = _loggedInUser.Id,
+            GameId = matchingGame.Data.Id
+            
+        };
+        var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGame.Data.DefaultGameProfileId);
+        if (!matchingProfile.Succeeded)
+        {
+            var createProfileRequest = await GameServerService.CreateGameProfileAsync(profileCreate, _loggedInUser.Id);
+            if (!createProfileRequest.Succeeded)
+            {
+                foreach (var message in createProfileRequest.Messages)
+                {
+                    Snackbar.Add(message, Severity.Error);
+                }
+                return;
+            }
+
+            var gameUpdate = new GameUpdateRequest {Id = matchingGame.Data.Id, DefaultGameProfileId = createProfileRequest.Data};
+            var updateGameRequest = await GameService.UpdateAsync(gameUpdate, _loggedInUser.Id);
+            if (!updateGameRequest.Succeeded)
+            {
+                foreach (var message in updateGameRequest.Messages)
+                {
+                    Snackbar.Add(message, Severity.Error);
+                }
+                return;
+            }
+            Snackbar.Add($"Created default game profile: [{createProfileRequest.Data}]{profileCreate.Name}", Severity.Success);
+            matchingProfile = await GameServerService.GetGameProfileByIdAsync(createProfileRequest.Data);
+            _defaultProfile.Id = matchingProfile.Data.Id;
+        }
+
+        var profileResources = await GameServerService.GetLocalResourcesByGameProfileIdAsync(matchingProfile.Data.Id);
         var desiredResources = new List<LocalResourceSlim>
         {
+            _desiredResourceExecutable,
             _desiredResourceEngine,
             _desiredResourceGame,
             _desiredResourceServerSettings
@@ -315,16 +500,16 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         foreach (var resource in desiredResources)
         {
-            var matchingResource = profileResources.Data.FirstOrDefault(x => x.Path == resource.Path && x.Type == resource.Type);
+            var matchingResource = profileResources.Data.FirstOrDefault(x => x.PathWindows == resource.PathWindows && x.Type == resource.Type);
             if (matchingResource is not null)
             {
                 resource.Id = matchingResource.Id;
                 continue;
             }
             
-            var resourceCreate = resource.ToCreate();
-            resourceCreate.GameProfileId = _selectedGameServer.GameProfileId;
-            resourceCreate.GameServerId = _selectedGameServer.Id;
+            var resourceCreate = resource.ToCreateRequest();
+            resourceCreate.GameProfileId = matchingProfile.Data.Id;
+            
             var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
             if (!createRequest.Succeeded)
             {
@@ -358,7 +543,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 if (matchingItem is not null)
                 {
                     var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value, ModifyingUserId = _loggedInUser.Id};
-                    var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate);
+                    var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate, _loggedInUser.Id);
                     if (!updateRequest.Succeeded)
                     {
                         updateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -370,96 +555,11 @@ public partial class DeveloperTesting : IAsyncDisposable
             
                 var itemCreate = configItem.ToCreate();
                 itemCreate.LocalResourceId = resource.Id;
-                var createRequest = await GameServerService.CreateConfigurationItemAsync(itemCreate);
+                var createRequest = await GameServerService.CreateConfigurationItemAsync(itemCreate, _loggedInUser.Id);
                 if (createRequest.Succeeded) continue;
                 
                 createRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             }
-        }
-
-        var hostUpdateRequest = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_selectedGameServer.Id, _loggedInUser.Id);
-        if (!hostUpdateRequest.Succeeded)
-        {
-            hostUpdateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-        Snackbar.Add("Successfully enforced profile resources on the server and host", Severity.Success);
-    }
-
-    private async Task EnforceDefaultGameProfile()
-    {
-        var matchingGame = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
-        if (!matchingGame.Succeeded)
-        {
-            Snackbar.Add($"Game '{_desiredGame.FriendlyName}' wasn't found, please create it first", Severity.Error);
-            return;
-        }
-
-        var profileCreate = new GameProfileCreate
-        {
-            FriendlyName = _defaultProfile.FriendlyName,
-            OwnerId = _loggedInUser.Id,
-            GameId = matchingGame.Data.Id,
-            ServerProcessName = _defaultProfile.ServerProcessName,
-            
-        };
-        var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGame.Data.DefaultGameProfileId);
-        if (!matchingProfile.Succeeded)
-        {
-            var createProfileRequest = await GameServerService.CreateGameProfileAsync(profileCreate);
-            if (!createProfileRequest.Succeeded)
-            {
-                foreach (var message in createProfileRequest.Messages)
-                {
-                    Snackbar.Add(message, Severity.Error);
-                }
-                return;
-            }
-
-            var updateGameRequest = await GameService.UpdateAsync(new GameUpdate {Id = matchingGame.Data.Id, DefaultGameProfileId = createProfileRequest.Data});
-            if (!updateGameRequest.Succeeded)
-            {
-                foreach (var message in updateGameRequest.Messages)
-                {
-                    Snackbar.Add(message, Severity.Error);
-                }
-                return;
-            }
-            Snackbar.Add($"Created default game profile: [{createProfileRequest.Data}]{profileCreate.FriendlyName}", Severity.Success);
-            matchingProfile = await GameServerService.GetGameProfileByIdAsync(createProfileRequest.Data);
-            _defaultProfile.Id = matchingProfile.Data.Id;
-        }
-
-        var resourceCreate = new LocalResourceCreate
-        {
-            GameProfileId = matchingProfile.Data.Id,
-            GameServerId = _selectedGameServer?.Id ?? Guid.Empty,
-            Name = "Dedicated Server Executable",
-            Path = "ConanSandbox/Binaries/Win64/ConanSandboxServer-Win64-Shipping",
-            Startup = true,
-            StartupPriority = 0,
-            Type = ResourceType.Executable,
-            ContentType = ContentType.Raw,
-            Extension = "exe",
-            Args = "-log"
-        };
-        var profileResources = await GameServerService.GetLocalResourcesByGameProfileIdAsync(matchingProfile.Data.Id);
-        var matchingResource = profileResources.Data.FirstOrDefault(x => x.Name == resourceCreate.Name && x.Type == resourceCreate.Type);
-        if (matchingResource is not null)
-        {
-            Snackbar.Add($"Default game profile is correct: [{matchingProfile.Data.Id}]{matchingProfile.Data.FriendlyName}");
-            _defaultProfile.Id = matchingProfile.Data.Id;
-            return;
-        }
-
-        var resourceCreateRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);
-        if (!resourceCreateRequest.Succeeded)
-        {
-            foreach (var message in resourceCreateRequest.Messages)
-            {
-                Snackbar.Add(message, Severity.Error);
-            }
-            return;
         }
         
         Snackbar.Add("Updated and enforced default game profile", Severity.Success);
@@ -482,19 +582,19 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
         
         var matchingGame = await GameService.GetBySteamToolIdAsync(_desiredGame.SteamToolId);
-        if (!matchingGame.Succeeded)
+        if (matchingGame.Data is null)
         {
             Snackbar.Add($"Game '{_desiredGame.FriendlyName}' wasn't found, please create it first", Severity.Error);
             return;
         }
         
-        var gameServerCreate = new GameServerCreate
+        var gameServerCreate = new GameServerCreateRequest
         {
             OwnerId = _loggedInUser.Id,
             HostId = _selectedHost.Id,
             GameId = matchingGame.Data.Id,
-            GameProfileId = Guid.Empty,
-            ServerName = $"{_desiredGameServer.ServerName} - {DateTimeService.NowDatabaseTime.ToLongDateString()}",
+            ParentGameProfileId = Guid.Empty,
+            Name = $"{_desiredGameServer.ServerName} - {DateTimeService.NowDatabaseTime.ToLongDateString()}",
             Password = _desiredGameServer.Password,
             PasswordRcon = _desiredGameServer.PasswordRcon,
             PasswordAdmin = _desiredGameServer.PasswordAdmin,
@@ -502,10 +602,9 @@ public partial class DeveloperTesting : IAsyncDisposable
             PortQuery = _desiredGameServer.PortQuery,
             PortRcon = _desiredGameServer.PortRcon,
             Modded = _desiredGameServer.Modded,
-            Private = _desiredGameServer.Private,
-            CreatedBy = _loggedInUser.Id
+            Private = _desiredGameServer.Private
         };
-        var createServerRequest = await GameServerService.CreateAsync(gameServerCreate);
+        var createServerRequest = await GameServerService.CreateAsync(gameServerCreate, _loggedInUser.Id);
         if (!createServerRequest.Succeeded)
         {
             foreach (var message in createServerRequest.Messages)
@@ -515,7 +614,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Created game server, now installing! [{createServerRequest.Data}]{gameServerCreate.ServerName}");
+        Snackbar.Add($"Created game server, now installing! [{createServerRequest.Data}]{gameServerCreate.Name}");
         await GatherGameServers();
         
         matchingGameServer = _gameServers.FirstOrDefault(x => x.PortGame == _desiredGameServer.PortGame);
@@ -636,10 +735,182 @@ public partial class DeveloperTesting : IAsyncDisposable
         Snackbar.Add($"Sent game server update request!", Severity.Success);
     }
 
+    private async Task GenerateHostRegistration()
+    {
+        var description = $"Test Host - {DateTimeService.NowFromTimeZone(_localTimeZone.Id).ToLongTimeString()}";
+        var registerRequest = await HostService.RegistrationGenerateNew(new HostRegistrationCreateRequest
+        {
+            OwnerId = _loggedInUser.Id,
+            Name = "Test Host",
+            Description = description,
+            AllowedPorts = ["30000-31000", "40000-41000", "50000-51000"]
+        }, _loggedInUser.Id);
+        if (!registerRequest.Succeeded)
+        {
+            foreach (var message in registerRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+        
+        _registrationToken = registerRequest.Data.RegisterUrl;
+        var copyResult = await WebClientService.InvokeClipboardCopy(registerRequest.Data.RegisterUrl);
+        if (!copyResult.Succeeded)
+        {
+            Snackbar.Add($"Generated host registration token but failed to copy it to your clipboard", Severity.Warning);
+            return;
+        }
+        Snackbar.Add($"Generated host registration token and copied it to your clipboard!", Severity.Success);
+    }
+
+    private async Task GetSteamAppBuild()
+    {
+        if (_selectedGame is null)
+        {
+            Snackbar.Add("Please select a valid game", Severity.Warning);
+            return;
+        }
+
+        if (_selectedGame.SteamToolId < 1000)
+        {
+            Snackbar.Add("Selected game has an invalid App Tool Id", Severity.Error);
+            return;
+        }
+        
+        var currentAppBuild = await SteamService.GetCurrentAppBuild(_selectedGame.SteamToolId);
+        if (!currentAppBuild.Succeeded || currentAppBuild.Data is null)
+        {
+            currentAppBuild.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _steamAppInfo = currentAppBuild.Data;
+        Snackbar.Add("Gathered App Id Build Info!");
+    }
+
+    private async Task CreateTshootRecord()
+    {
+        var tshootEntityType = (TroubleshootEntityType)(Enum.GetValues(typeof(TroubleshootEntityType))
+            .GetValue(Random.Shared.Next(Enum.GetValues(typeof(TroubleshootEntityType)).Length)) ?? TroubleshootEntityType.Network);
+        
+        var tshootId = await TshootService.CreateTroubleshootRecord(DateTimeService, tshootEntityType, Guid.Empty,
+            _loggedInUser.Id, $"Example failure troubleshooting record: {Guid.NewGuid()}", new Dictionary<string, string>
+            {
+                {"Desired Profile", _defaultProfile.FriendlyName},
+                {"Desired Profile Id", _defaultProfile.Id.ToString()},
+                {"Desired Game", _desiredGame.FriendlyName},
+                {"Desired Game Id", _desiredGame.Id.ToString()},
+                {"User Id", _loggedInUser.Id.ToString()},
+                {"User", _loggedInUser.Username},
+                {"Error", "Example error message for troubleshooting purposes"}
+            });
+        Snackbar.Add(ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data));
+    }
+
+    
+    private async Task<TableData<FileStorageRecordSlim>> FileRecordReload(TableState state)
+    {
+        var foundFiles = await FileService.GetAllAsync();
+        if (!foundFiles.Succeeded)
+        {
+            foundFiles.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return new TableData<FileStorageRecordSlim>();
+        }
+
+        _fileRecords = foundFiles.Data.ToArray();
+        _totalFileRecords = _fileRecords.Count();
+
+        _fileRecords = state.SortLabel switch
+        {
+            "FriendlyName" => _fileRecords.OrderByDirection(state.SortDirection, o => o.FriendlyName),
+            "Description" => _fileRecords.OrderByDirection(state.SortDirection, o => o.Description),
+            _ => _fileRecords
+        };
+
+        return new TableData<FileStorageRecordSlim>() {TotalItems = _totalFileRecords, Items = _fileRecords};
+    }
+
+    private void RefreshFileRecords()
+    {
+        _fileRecordsTable.ReloadServerData();
+        StateHasChanged();
+    }
+    
+    private async Task UploadGameFile(IBrowserFile? file)
+    {
+        if (file is null)
+        {
+            return;
+        }
+        
+        Snackbar.Add("Starting file upload!", Severity.Info);
+        _fileUploading = true;
+        var friendlyName = $"New_File_{DateTimeService.NowDatabaseTime.ToString(DataConstants.DateTime.FileNameFormat)}";
+        var fileName = Guid.NewGuid().ToString();
+        var uploadRequest = await FileService.CreateAsync(new FileStorageRecordCreateRequest
+        {
+            Format = FileStorageFormat.Binary,
+            LinkedType = FileStorageType.Game,
+            LinkedId = Guid.NewGuid(),
+            FriendlyName = friendlyName,
+            Filename = Guid.NewGuid().ToString(),
+            Description = $"{friendlyName} @ {fileName}",
+            Version = "v1.0.0"
+        }, file.OpenReadStream(50_000_000_000), _loggedInUser.Id);
+        if (!uploadRequest.Succeeded)
+        {
+            _fileUploading = false;
+            uploadRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        Snackbar.Add("Finished file upload!", Severity.Success);
+        _fileUploading = false;
+        RefreshFileRecords();
+        await Task.CompletedTask;
+    }
+
+    private async Task DownloadGameFile(Guid fileId)
+    {
+        var foundFile = await FileService.GetByIdAsync(fileId);
+        if (foundFile.Data is null)
+        {
+            Snackbar.Add(ErrorMessageConstants.FileStorage.NotFound);
+            return;
+        }
+
+        var fileContent = await File.ReadAllBytesAsync(foundFile.Data.GetLocalFilePath());
+        var convertedContent = Convert.ToBase64String(fileContent);
+        var downloadRequest = await WebClientService.InvokeFileDownload(convertedContent, foundFile.Data.FriendlyName, DataConstants.MimeTypes.Binary);
+        if (downloadRequest.Succeeded)
+        {
+            downloadRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Finished downloading file!", Severity.Success);
+    }
+
+    private async Task DeleteFile(Guid fileId)
+    {
+        var deleteRequest = await FileService.DeleteAsync(fileId, _loggedInUser.Id);
+        if (!deleteRequest.Succeeded)
+        {
+            deleteRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully deleted file!", Severity.Success);
+        RefreshFileRecords();
+    }
+    
     public async ValueTask DisposeAsync()
     {
+        EventService.GameVersionUpdated -= GameVersionUpdated;
         EventService.GameServerStatusChanged -= GameServerStatusChanged;
         EventService.WeaverWorkStatusChanged -= WorkStatusChanged;
+        _timer?.Dispose();
         await Task.CompletedTask;
     }
 }

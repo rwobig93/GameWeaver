@@ -7,14 +7,15 @@ using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
+using Application.Settings.AppSettings;
 using Domain.DatabaseEntities.Identity;
-using Domain.Enums.Database;
 using Domain.Enums.Identity;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using Infrastructure.Database.MsSql.Identity;
 using Infrastructure.Database.MsSql.Shared;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Repositories.MsSql.Identity;
 
@@ -24,14 +25,16 @@ public class AppUserRepositoryMsSql : IAppUserRepository
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
     private readonly IAuditTrailsRepository _auditRepository;
+    private readonly IOptions<AppConfiguration> _generalConfig;
 
     public AppUserRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime,
-        IAuditTrailsRepository auditRepository)
+        IAuditTrailsRepository auditRepository, IOptions<AppConfiguration> generalConfig)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
         _auditRepository = auditRepository;
+        _generalConfig = generalConfig;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllAsync()
@@ -351,6 +354,10 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         try
         {
             createObject.CreatedOn = _dateTime.NowDatabaseTime;
+            if (_generalConfig.Value.UseCurrency)
+            {
+                createObject.Currency = _generalConfig.Value.StartingCurrency;
+            }
             
             var createdId = await _database.SaveDataReturnId(AppUsersTableMsSql.Insert, createObject);
             
@@ -371,7 +378,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             var foundUser = await GetByIdAsync(createdId);
 
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, foundUser.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundUser.Result!.ToSlim());
+                createObject.CreatedBy, AuditAction.Create, null, foundUser.Result!.ToSlim());
             
             actionReturn.Succeed(createdId);
         }
@@ -418,7 +425,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 new { userId, DeletedOn = _dateTime.NowDatabaseTime });
 
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userId,
-                userUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, userUpdate);
+                userUpdate.LastModifiedBy.GetFromNullable(), AuditAction.Delete, userUpdate);
             
             actionReturn.Succeed();
         }

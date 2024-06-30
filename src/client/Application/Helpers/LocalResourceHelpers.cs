@@ -7,8 +7,7 @@ public static class LocalResourceHelpers
     public static string GetFullPath(this LocalResource localResource)
     {
         var gameServerPath = Path.Join(OsHelpers.GetDefaultGameServerPath(), localResource.GameserverId.ToString());
-        var localResourcePath = string.IsNullOrWhiteSpace(localResource.Extension) ? localResource.Path : $"{localResource.Path}.{localResource.Extension}";
-        return Path.Join(gameServerPath, localResourcePath);
+        return Path.Join(gameServerPath, localResource.Path);
     }
 
     public static string UpdateWithServerValues(this GameServerLocal gameServer, string value)
@@ -18,7 +17,7 @@ public static class LocalResourceHelpers
             .Replace("%%%PASSWORD%%%", gameServer.Password)
             .Replace("%%%QUERY_PORT%%%", gameServer.PortQuery.ToString())
             .Replace("%%%GAME_PORT%%%", gameServer.PortGame.ToString())
-            .Replace("%%%GAME_PORT_PEER%%%", (gameServer.PortGame + 1).ToString())
+            .Replace("%%%GAME_PORT_PEER%%%", (gameServer.PortPeer).ToString())
             .Replace("%%%PASSWORD_ADMIN%%%", gameServer.PasswordAdmin)
             .Replace("%%%PASSWORD_RCON%%%", gameServer.PasswordRcon);
     }

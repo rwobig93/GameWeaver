@@ -18,4 +18,5 @@ public interface IControlServerService
     Task<IResult> EnsureAuthTokenIsUpdated();
     Task<IResult<IEnumerable<WeaverWork>?>> Checkin(HostCheckInRequest request);
     Task<IResult> WorkStatusUpdate(WeaverWorkUpdateRequest request);
+    Task<IResult<GameDownload>> DownloadManualClient(Guid gameId);
 }

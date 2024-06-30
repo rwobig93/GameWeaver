@@ -12,7 +12,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 5,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -21,9 +21,10 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
                     [FriendlyName] NVARCHAR(128) NOT NULL,
                     [SteamName] NVARCHAR(128) NOT NULL,
-                    [SteamGameId] int NULL,
-                    [SteamToolId] int NULL,
+                    [SteamGameId] INT NULL,
+                    [SteamToolId] INT NULL,
                     [DefaultGameProfileId] UNIQUEIDENTIFIER NOT NULL,
+                    [LatestBuildVersion] NVARCHAR(128) NOT NULL,
                     [UrlBackground] NVARCHAR(256) NOT NULL,
                     [UrlLogo] NVARCHAR(256) NOT NULL,
                     [UrlLogoSmall] NVARCHAR(256) NOT NULL,
@@ -34,8 +35,8 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     [DescriptionAbout] NVARCHAR(2048) NOT NULL,
                     [PriceInitial] NVARCHAR(128) NOT NULL,
                     [PriceCurrent] NVARCHAR(128) NOT NULL,
-                    [PriceDiscount] int NOT NULL,
-                    [MetaCriticScore] int NOT NULL,
+                    [PriceDiscount] INT NOT NULL,
+                    [MetaCriticScore] INT NOT NULL,
                     [UrlMetaCriticPage] NVARCHAR(128) NOT NULL,
                     [RequirementsPcMinimum] NVARCHAR(128) NOT NULL,
                     [RequirementsPcRecommended] NVARCHAR(128) NOT NULL,
@@ -44,11 +45,18 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     [RequirementsLinuxMinimum] NVARCHAR(128) NOT NULL,
                     [RequirementsLinuxRecommended] NVARCHAR(128) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
-                    [CreatedOn] datetime2 NOT NULL,
+                    [CreatedOn] DATETIME2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
-                    [LastModifiedOn] datetime2 NULL,
+                    [LastModifiedOn] DATETIME2 NULL,
                     [IsDeleted] BIT NOT NULL,
-                    [DeletedOn] datetime2 NULL
+                    [DeletedOn] DATETIME2 NULL,
+                    [SupportsWindows] INT NOT NULL,
+                    [SupportsLinux] INT NOT NULL,
+                    [SupportsMac] INT NOT NULL,
+                    [SourceType] INT NOT NULL,
+                    [ManualFileRecordId] UNIQUEIDENTIFIER NULL,
+                    [ManualVersionUrlCheck] NVARCHAR(1024) NULL,
+                    [ManualVersionUrlDownload] NVARCHAR(1024) NULL
                 )
             end"
     };
@@ -60,11 +68,12 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER,
-                @DeletedOn datetime2
+                @DeletedBy UNIQUEIDENTIFIER,
+                @DeletedOn DATETIME2
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, LastModifiedBy = @DeletedBy
                 WHERE Id = @Id;
             end"
     };
@@ -80,7 +89,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.Id;
+                ORDER BY g.CreatedOn DESC;
             end"
     };
 
@@ -97,7 +106,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -113,7 +122,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT TOP 1 g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.Id = @Id
-                ORDER BY g.Id;
+                ORDER BY g.CreatedOn DESC;
             end"
     };
     
@@ -129,7 +138,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.SteamName = @SteamName AND g.IsDeleted = 0
-                ORDER BY g.Id;
+                ORDER BY g.CreatedOn DESC;
             end"
     };
     
@@ -145,7 +154,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.FriendlyName = @FriendlyName AND g.IsDeleted = 0
-                ORDER BY g.Id;
+                ORDER BY g.CreatedOn DESC;
             end"
     };
     
@@ -155,13 +164,13 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
         Action = "GetBySteamGameId",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetBySteamGameId]
-                @SteamGameId int
+                @SteamGameId INT
             AS
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.SteamGameId = @SteamGameId AND g.IsDeleted = 0
-                ORDER BY g.Id;
+                ORDER BY g.CreatedOn DESC;
             end"
     };
     
@@ -171,13 +180,29 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
         Action = "GetBySteamToolId",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetBySteamToolId]
-                @SteamToolId int
+                @SteamToolId INT
             AS
             begin
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.SteamToolId = @SteamToolId AND g.IsDeleted = 0
-                ORDER BY g.Id;
+                ORDER BY g.CreatedOn DESC;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure GetBySourceType = new()
+    {
+        Table = Table,
+        Action = "GetBySourceType",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetBySourceType]
+                @SourceType INT
+            AS
+            begin
+                SELECT g.*
+                FROM dbo.[{Table.TableName}] g
+                WHERE g.SourceType = @SourceType AND g.IsDeleted = 0
+                ORDER BY g.CreatedOn DESC;
             end"
     };
     
@@ -189,9 +214,10 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
                 @FriendlyName NVARCHAR(128),
                 @SteamName NVARCHAR(128),
-                @SteamGameId int,
-                @SteamToolId int,
+                @SteamGameId INT,
+                @SteamToolId INT,
                 @DefaultGameProfileId UNIQUEIDENTIFIER,
+                @LatestBuildVersion NVARCHAR(128),
                 @UrlBackground NVARCHAR(258),
                 @UrlLogo NVARCHAR(256),
                 @UrlLogoSmall NVARCHAR(256),
@@ -202,8 +228,8 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @DescriptionAbout NVARCHAR(2048),
                 @PriceInitial NVARCHAR(128),
                 @PriceCurrent NVARCHAR(128),
-                @PriceDiscount int,
-                @MetaCriticScore int,
+                @PriceDiscount INT,
+                @MetaCriticScore INT,
                 @UrlMetaCriticPage NVARCHAR(128),
                 @RequirementsPcMinimum NVARCHAR(128),
                 @RequirementsPcRecommended NVARCHAR(128),
@@ -212,22 +238,31 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @RequirementsLinuxMinimum NVARCHAR(128),
                 @RequirementsLinuxRecommended NVARCHAR(128),
                 @CreatedBy UNIQUEIDENTIFIER,
-                @CreatedOn datetime2,
+                @CreatedOn DATETIME2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn datetime2,
-                @IsDeleted BIT
+                @LastModifiedOn DATETIME2,
+                @IsDeleted BIT,
+                @SupportsWindows INT,
+                @SupportsLinux INT,
+                @SupportsMac INT,
+                @SourceType INT,
+                @ManualFileRecordId UNIQUEIDENTIFIER,
+                @ManualVersionUrlCheck NVARCHAR(1024),
+                @ManualVersionUrlDownload NVARCHAR(1024)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, UrlBackground, UrlLogo, UrlLogoSmall,
-                                                      UrlWebsite, ControllerSupport, DescriptionShort, DescriptionLong, DescriptionAbout, PriceInitial, PriceCurrent,
+                INSERT into dbo.[{Table.TableName}]  (FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, LatestBuildVersion, UrlBackground, UrlLogo,
+                                                      UrlLogoSmall, UrlWebsite, ControllerSupport, DescriptionShort, DescriptionLong, DescriptionAbout, PriceInitial, PriceCurrent,
                                                       PriceDiscount, MetaCriticScore, UrlMetaCriticPage, RequirementsPcMinimum, RequirementsPcRecommended, RequirementsMacMinimum,
                                                       RequirementsMacRecommended, RequirementsLinuxMinimum, RequirementsLinuxRecommended, CreatedBy, CreatedOn, LastModifiedBy,
-                                                      LastModifiedOn, IsDeleted)
+                                                      LastModifiedOn, IsDeleted, SupportsWindows, SupportsLinux, SupportsMac, SourceType, ManualFileRecordId, ManualVersionUrlCheck,
+                                                      ManualVersionUrlDownload)
                 OUTPUT INSERTED.Id
-                VALUES (@FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
+                VALUES (@FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @LatestBuildVersion, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
                         @ControllerSupport, @DescriptionShort, @DescriptionLong, @DescriptionAbout, @PriceInitial, @PriceCurrent, @PriceDiscount, @MetaCriticScore,
                         @UrlMetaCriticPage, @RequirementsPcMinimum, @RequirementsPcRecommended, @RequirementsMacMinimum, @RequirementsMacRecommended, @RequirementsLinuxMinimum,
-                        @RequirementsLinuxRecommended, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted);
+                        @RequirementsLinuxRecommended, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @SupportsWindows, @SupportsLinux, @SupportsMac,
+                        @SourceType, @ManualFileRecordId, @ManualVersionUrlCheck, @ManualVersionUrlDownload);
             end"
     };
     
@@ -244,11 +279,16 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.IsDeleted = 0 AND g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0
+                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
-                    OR g.DescriptionShort LIKE '%' + @SearchTerm + '%';
+                    OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
+                    OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
+                    OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%'
+                ORDER BY g.CreatedOn DESC;
             end"
     };
     
@@ -267,12 +307,16 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.IsDeleted = 0 AND g.FriendlyName LIKE '%' + @SearchTerm + '%'
+                WHERE g.IsDeleted = 0
+                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
+                    OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                    OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%'
+                ORDER BY g.CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -285,9 +329,10 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @Id UNIQUEIDENTIFIER,
                 @FriendlyName NVARCHAR(128) = null,
                 @SteamName NVARCHAR(128) = null,
-                @SteamGameId int = null,
-                @SteamToolId int = null,
+                @SteamGameId INT = null,
+                @SteamToolId INT = null,
                 @DefaultGameProfileId UNIQUEIDENTIFIER = null,
+                @LatestBuildVersion NVARCHAR(128) = null,
                 @UrlBackground NVARCHAR(258) = null,
                 @UrlLogo NVARCHAR(256) = null,
                 @UrlLogoSmall NVARCHAR(256) = null,
@@ -298,8 +343,8 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @DescriptionAbout NVARCHAR(2048) = null,
                 @PriceInitial NVARCHAR(128) = null,
                 @PriceCurrent NVARCHAR(128) = null,
-                @PriceDiscount int = null,
-                @MetaCriticScore int = null,
+                @PriceDiscount INT = null,
+                @MetaCriticScore INT = null,
                 @UrlMetaCriticPage NVARCHAR(128) = null,
                 @RequirementsPcMinimum NVARCHAR(128) = null,
                 @RequirementsPcRecommended NVARCHAR(128) = null,
@@ -308,18 +353,26 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @RequirementsLinuxMinimum NVARCHAR(128) = null,
                 @RequirementsLinuxRecommended NVARCHAR(128) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
-                @CreatedOn datetime2 = null,
+                @CreatedOn DATETIME2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
-                @LastModifiedOn datetime2 = null,
+                @LastModifiedOn DATETIME2 = null,
                 @IsDeleted BIT = null,
-                @DeletedOn datetime2 = null
+                @DeletedOn DATETIME2 = null,
+                @SupportsWindows BIT = null,
+                @SupportsLinux BIT = null,
+                @SupportsMac BIT = null,
+                @SourceType INT = null,
+                @ManualFileRecordId UNIQUEIDENTIFIER = null,
+                @ManualVersionUrlCheck NVARCHAR(1024) = null,
+                @ManualVersionUrlDownload NVARCHAR(1024) = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET FriendlyName = COALESCE(@FriendlyName, FriendlyName), SteamName = COALESCE(@SteamName, SteamName),
                     SteamGameId = COALESCE(@SteamGameId, SteamGameId), SteamToolId = COALESCE(@SteamToolId, SteamToolId),
                     DefaultGameProfileId = COALESCE(@DefaultGameProfileId, DefaultGameProfileId), UrlBackground = COALESCE(@UrlBackground, UrlBackground),
-                    UrlLogo = COALESCE(@UrlLogo, UrlLogo), UrlLogoSmall = COALESCE(@UrlLogoSmall, UrlLogoSmall), UrlWebsite = COALESCE(@UrlWebsite, UrlWebsite),
+                    LatestBuildVersion = COALESCE(@LatestBuildVersion, LatestBuildVersion), UrlLogo = COALESCE(@UrlLogo, UrlLogo),
+                    UrlLogoSmall = COALESCE(@UrlLogoSmall, UrlLogoSmall), UrlWebsite = COALESCE(@UrlWebsite, UrlWebsite),
                     ControllerSupport = COALESCE(@ControllerSupport, ControllerSupport), DescriptionShort = COALESCE(@DescriptionShort, DescriptionShort),
                     DescriptionLong = COALESCE(@DescriptionLong, DescriptionLong), DescriptionAbout = COALESCE(@DescriptionAbout, DescriptionAbout),
                     PriceInitial = COALESCE(@PriceInitial, PriceInitial), PriceCurrent = COALESCE(@PriceCurrent, PriceCurrent),
@@ -331,7 +384,11 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     RequirementsLinuxMinimum = COALESCE(@RequirementsLinuxMinimum, RequirementsLinuxMinimum),
                     RequirementsLinuxRecommended = COALESCE(@RequirementsLinuxRecommended, RequirementsLinuxRecommended), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
                     CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
-                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
+                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn),
+                    SupportsWindows = COALESCE(@SupportsWindows, SupportsWindows), SupportsLinux = COALESCE(@SupportsLinux, SupportsLinux),
+                    SupportsMac = COALESCE(@SupportsMac, SupportsMac), SourceType = COALESCE(@SourceType, SourceType),
+                    ManualFileRecordId = COALESCE(@ManualFileRecordId, ManualFileRecordId), ManualVersionUrlCheck = COALESCE(@ManualVersionUrlCheck, ManualVersionUrlCheck),
+                    ManualVersionUrlDownload = COALESCE(@ManualVersionUrlDownload, ManualVersionUrlDownload)
                 WHERE Id = @Id;
             end"
     };

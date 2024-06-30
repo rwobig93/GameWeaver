@@ -1,5 +1,4 @@
-﻿using Application.Models;
-using Application.Models.GameServer;
+﻿using Application.Models.GameServer;
 using Domain.Models.ControlServer;
 using Domain.Models.GameServer;
 
@@ -12,6 +11,7 @@ public static class GameServerMappers
         return new GameServerLocal
         {
             Id = gameServerToHost.Id,
+            GameId = gameServerToHost.GameId,
             SteamName = gameServerToHost.SteamName,
             SteamGameId = gameServerToHost.SteamGameId,
             SteamToolId = gameServerToHost.SteamToolId,
@@ -23,6 +23,7 @@ public static class GameServerMappers
             IpAddress = gameServerToHost.IpAddress,
             ExtHostname = gameServerToHost.ExtHostname,
             PortGame = gameServerToHost.PortGame,
+            PortPeer = gameServerToHost.PortPeer,
             PortQuery = gameServerToHost.PortQuery,
             PortRcon = gameServerToHost.PortRcon,
             Modded = gameServerToHost.Modded,
@@ -53,6 +54,7 @@ public static class GameServerMappers
             IpAddress = gameServerToHost.IpAddress,
             ExtHostname = gameServerToHost.ExtHostname,
             PortGame = gameServerToHost.PortGame,
+            PortPeer = gameServerToHost.PortPeer,
             PortQuery = gameServerToHost.PortQuery,
             PortRcon = gameServerToHost.PortRcon,
             Modded = gameServerToHost.Modded,
@@ -83,6 +85,7 @@ public static class GameServerMappers
             IpAddress = gameServerLocal.IpAddress,
             ExtHostname = gameServerLocal.ExtHostname,
             PortGame = gameServerLocal.PortGame,
+            PortPeer = gameServerLocal.PortPeer,
             PortQuery = gameServerLocal.PortQuery,
             PortRcon = gameServerLocal.PortRcon,
             Modded = gameServerLocal.Modded,

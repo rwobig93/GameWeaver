@@ -1,4 +1,5 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Role;
 using Application.Services.Integrations;
@@ -40,8 +41,8 @@ public partial class RoleAdmin
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Create);
-        _canExportRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Roles.Export);
+        _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Create);
+        _canExportRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Export);
     }
     
     private async Task<TableData<AppRoleSlim>> ServerReload(TableState state)

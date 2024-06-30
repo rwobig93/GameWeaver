@@ -1,7 +1,4 @@
-﻿using Application.Constants.Communication;
-using Application.Helpers.Lifecycle;
-using Application.Helpers.Runtime;
-using Application.Mappers.GameServer;
+﻿using Application.Helpers.Runtime;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
@@ -12,8 +9,6 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.Database;
-using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
 using Infrastructure.Database.MsSql.Shared;
@@ -89,9 +84,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<GameServerDb?>> GetByIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<GameServerDb?> actionReturn = new();
 
         try
         {
@@ -107,9 +102,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByServerNameAsync(string serverName)
+    public async Task<DatabaseActionResult<GameServerDb?>> GetByServerNameAsync(string serverName)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<GameServerDb?> actionReturn = new();
 
         try
         {
@@ -125,15 +120,15 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByGameIdAsync(int id)
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
             var foundGameServer = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByGameId, new {GameId = id})).FirstOrDefault();
-            actionReturn.Succeed(foundGameServer!);
+                GameServersTableMsSql.GetByGameId, new {GameId = id}));
+            actionReturn.Succeed(foundGameServer);
         }
         catch (Exception ex)
         {
@@ -143,15 +138,15 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByGameProfileIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameProfileIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
-            var foundGameServer = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByGameProfileId, new {GameProfileId = id})).FirstOrDefault();
-            actionReturn.Succeed(foundGameServer!);
+            var foundGameServers = await _database.LoadData<GameServerDb, dynamic>(
+                GameServersTableMsSql.GetByGameProfileId, new {GameProfileId = id});
+            actionReturn.Succeed(foundGameServers);
         }
         catch (Exception ex)
         {
@@ -161,15 +156,15 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByHostIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByHostIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
-            var foundGameServer = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByHostId, new {HostId = id})).FirstOrDefault();
-            actionReturn.Succeed(foundGameServer!);
+            var foundGameServer = await _database.LoadData<GameServerDb, dynamic>(
+                GameServersTableMsSql.GetByHostId, new {HostId = id});
+            actionReturn.Succeed(foundGameServer);
         }
         catch (Exception ex)
         {
@@ -179,9 +174,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb>> GetByOwnerIdAsync(Guid id)
+    public async Task<DatabaseActionResult<GameServerDb?>> GetByOwnerIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb> actionReturn = new();
+        DatabaseActionResult<GameServerDb?> actionReturn = new();
 
         try
         {
@@ -203,15 +198,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createdId = await _database.SaveDataReturnId(GameServersTableMsSql.Insert, createObject);
-
-            var foundHost = await GetByIdAsync(createdId);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundHost.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundHost.Result!.ToSlim());
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -228,19 +215,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            var beforeObject = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-            
             await _database.SaveData(GameServersTableMsSql.Update, updateObject);
-            
-            var afterObject = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-
-            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, beforeObject!.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -251,26 +226,13 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            var foundGameServer = await GetByIdAsync(id);
-            if (!foundGameServer.Succeeded || foundGameServer.Result is null)
-                throw new Exception(ErrorMessageConstants.Generic.NotFound);
-            var gameServerUpdate = foundGameServer.Result.ToUpdate();
-            
-            // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
-            gameServerUpdate.LastModifiedBy = modifyingUserId;
-            await UpdateAsync(gameServerUpdate);
-            await _database.SaveData(GameServersTableMsSql.Delete, 
-                new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, id,
-                gameServerUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, gameServerUpdate);
-            
+            await _database.SaveData(GameServersTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -374,9 +336,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<ConfigurationItemDb>> GetConfigurationItemByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<ConfigurationItemDb?>> GetConfigurationItemByIdAsync(Guid id)
     {
-        DatabaseActionResult<ConfigurationItemDb> actionReturn = new();
+        DatabaseActionResult<ConfigurationItemDb?> actionReturn = new();
 
         try
         {
@@ -417,7 +379,6 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var createdId = await _database.SaveDataReturnId(ConfigurationItemsTableMsSql.Insert, createObject);
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -435,7 +396,6 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             await _database.SaveData(ConfigurationItemsTableMsSql.Update, updateObject);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -452,12 +412,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            var foundConfigItem = await GetConfigurationItemByIdAsync(id);
-            if (!foundConfigItem.Succeeded || foundConfigItem.Result is null)
-                throw new Exception(foundConfigItem.ErrorMessage);
-            
             await _database.SaveData(ConfigurationItemsTableMsSql.Delete, new { Id = id });
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -561,9 +516,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<LocalResourceDb>> GetLocalResourceByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<LocalResourceDb?>> GetLocalResourceByIdAsync(Guid id)
     {
-        DatabaseActionResult<LocalResourceDb> actionReturn = new();
+        DatabaseActionResult<LocalResourceDb?> actionReturn = new();
 
         try
         {
@@ -605,7 +560,6 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var createdId = await _database.SaveDataReturnId(LocalResourcesTableMsSql.Insert, createObject);
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -623,7 +577,6 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             await _database.SaveData(LocalResourcesTableMsSql.Update, updateObject);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -640,12 +593,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            var foundResource = await GetLocalResourceByIdAsync(id);
-            if (!foundResource.Succeeded || foundResource.Result is null)
-                throw new Exception(foundResource.ErrorMessage);
-            
             await _database.SaveData(LocalResourcesTableMsSql.Delete, new { Id = id });
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -749,9 +697,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameProfileDb>> GetGameProfileByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<GameProfileDb?>> GetGameProfileByIdAsync(Guid id)
     {
-        DatabaseActionResult<GameProfileDb> actionReturn = new();
+        DatabaseActionResult<GameProfileDb?> actionReturn = new();
 
         try
         {
@@ -767,9 +715,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameProfileDb>> GetGameProfileByFriendlyNameAsync(string friendlyName)
+    public async Task<DatabaseActionResult<GameProfileDb?>> GetGameProfileByFriendlyNameAsync(string friendlyName)
     {
-        DatabaseActionResult<GameProfileDb> actionReturn = new();
+        DatabaseActionResult<GameProfileDb?> actionReturn = new();
 
         try
         {
@@ -785,7 +733,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(int id)
+    public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByGameIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
 
@@ -820,40 +768,14 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         return actionReturn;
     }
-
-    public async Task<DatabaseActionResult<IEnumerable<GameProfileDb>>> GetGameProfilesByServerProcessNameAsync(string serverProcessName)
-    {
-        DatabaseActionResult<IEnumerable<GameProfileDb>> actionReturn = new();
-
-        try
-        {
-            var foundProfile = await _database.LoadData<GameProfileDb, dynamic>(
-                GameProfilesTableMsSql.GetByServerProcessName, new {ServerProcessName = serverProcessName});
-            actionReturn.Succeed(foundProfile);
-        }
-        catch (Exception ex)
-        {
-            actionReturn.FailLog(_logger, GameProfilesTableMsSql.GetByServerProcessName.Path, ex.Message);
-        }
-
-        return actionReturn;
-    }
-
+    
     public async Task<DatabaseActionResult<Guid>> CreateGameProfileAsync(GameProfileCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
 
         try
         {
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createdId = await _database.SaveDataReturnId(GameProfilesTableMsSql.Insert, createObject);
-
-            var foundProfile = await GetGameProfileByIdAsync(createdId);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, foundProfile.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundProfile.Result!.ToSlim());
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -870,19 +792,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            var beforeObject = (await _database.LoadData<GameProfileDb, dynamic>(
-                GameProfilesTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-            
             await _database.SaveData(GameProfilesTableMsSql.Update, updateObject);
-            
-            var afterObject = (await _database.LoadData<GameProfileDb, dynamic>(
-                GameProfilesTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-
-            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, beforeObject!.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -893,26 +803,13 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteGameProfileAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            var foundProfile = await GetGameProfileByIdAsync(id);
-            if (!foundProfile.Succeeded || foundProfile.Result is null)
-                throw new Exception(foundProfile.ErrorMessage);
-            var gameProfileUpdate = foundProfile.Result.ToUpdate();
-            
-            // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
-            gameProfileUpdate.LastModifiedBy = modifyingUserId;
-            await UpdateGameProfileAsync(gameProfileUpdate);
-            await _database.SaveData(GameProfilesTableMsSql.Delete, 
-                new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameProfiles, id,
-                gameProfileUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, gameProfileUpdate);
-            
+            await _database.SaveData(GameProfilesTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -1016,9 +913,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<ModDb>> GetModByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<ModDb?>> GetModByIdAsync(Guid id)
     {
-        DatabaseActionResult<ModDb> actionReturn = new();
+        DatabaseActionResult<ModDb?> actionReturn = new();
 
         try
         {
@@ -1034,9 +931,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<ModDb>> GetModByCurrentHashAsync(string hash)
+    public async Task<DatabaseActionResult<ModDb?>> GetModByCurrentHashAsync(string hash)
     {
-        DatabaseActionResult<ModDb> actionReturn = new();
+        DatabaseActionResult<ModDb?> actionReturn = new();
 
         try
         {
@@ -1106,9 +1003,9 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<ModDb>> GetModBySteamIdAsync(string id)
+    public async Task<DatabaseActionResult<ModDb?>> GetModBySteamIdAsync(string id)
     {
-        DatabaseActionResult<ModDb> actionReturn = new();
+        DatabaseActionResult<ModDb?> actionReturn = new();
 
         try
         {
@@ -1148,15 +1045,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createdId = await _database.SaveDataReturnId(ModsTableMsSql.Insert, createObject);
-
-            var foundMod = await GetModByIdAsync(createdId);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, foundMod.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundMod.Result!.ToSlim());
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -1173,19 +1062,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            var beforeObject = (await _database.LoadData<ModDb, dynamic>(
-                ModsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-            
             await _database.SaveData(ModsTableMsSql.Update, updateObject);
-            
-            var afterObject = (await _database.LoadData<ModDb, dynamic>(
-                ModsTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-
-            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Mods, beforeObject!.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -1196,18 +1073,13 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteModAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteModAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            var foundMod = await GetModByIdAsync(id);
-            if (!foundMod.Succeeded || foundMod.Result is null)
-                throw new Exception(foundMod.ErrorMessage);
-            
-            await _database.SaveData(ModsTableMsSql.Delete, new { Id = id });
-            
+            await _database.SaveData(ModsTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)

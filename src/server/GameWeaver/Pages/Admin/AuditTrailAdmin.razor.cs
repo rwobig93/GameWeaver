@@ -1,4 +1,5 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Lifecycle;
 using Application.Services.Integrations;
@@ -40,7 +41,7 @@ public partial class AuditTrailAdmin
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canExportTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Audit.Export);
+        _canExportTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Audit.Export);
     }
     
     private async Task<TableData<AuditTrailSlim>> ServerReload(TableState state)

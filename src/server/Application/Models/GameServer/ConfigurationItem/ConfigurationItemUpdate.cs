@@ -10,4 +10,5 @@ public class ConfigurationItemUpdate
     public string? Category { get; set; }
     public string? Key { get; set; }
     public string? Value { get; set; }
+    public string? FriendlyName { get; set; }
 }

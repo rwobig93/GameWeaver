@@ -6,7 +6,7 @@ using Application.Models.Identity.External;
 using Application.Services.Integrations;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Microsoft.Extensions.Options;
 using OAuth2.Client.Impl;
 using OAuth2.Infrastructure;

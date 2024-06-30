@@ -9,5 +9,5 @@ public class SqlTable : ISqlDatabaseScript
     public string FriendlyName => TableName;
     public DbResourceType Type => DbResourceType.Table;
     public string Path => TableName;
-    public int EnforcementOrder { get; init; } = 5;
+    public int EnforcementOrder { get; init; } = 50;
 }

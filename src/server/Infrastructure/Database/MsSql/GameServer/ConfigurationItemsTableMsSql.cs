@@ -12,7 +12,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -24,7 +24,9 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                     [Path] NVARCHAR(128) NOT NULL,
                     [Category] NVARCHAR(128) NOT NULL,
                     [Key] NVARCHAR(128) NOT NULL,
-                    [Value] NVARCHAR(128) NOT NULL
+                    [Value] NVARCHAR(128) NOT NULL,
+                    [FriendlyName] NVARCHAR(128) NULL,
+                    FOREIGN KEY (LocalResourceId) REFERENCES {LocalResourcesTableMsSql.Table.TableName}(Id) ON DELETE CASCADE
                 )
             end"
     };
@@ -115,12 +117,13 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 @Path NVARCHAR(128),
                 @Category NVARCHAR(128),
                 @Key NVARCHAR(128),
-                @Value NVARCHAR(128)
+                @Value NVARCHAR(128),
+                @FriendlyName NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (LocalResourceId, DuplicateKey, Path, Category, [Key], Value)
+                INSERT into dbo.[{Table.TableName}] (LocalResourceId, DuplicateKey, Path, Category, [Key], Value, FriendlyName)
                 OUTPUT INSERTED.Id
-                VALUES (@LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value);
+                VALUES (@LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value, @FriendlyName);
             end"
     };
     
@@ -137,11 +140,13 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT c.*
                 FROM dbo.[{Table.TableName}] c
-                WHERE c.LocalResourceId LIKE '%' + @SearchTerm + '%'
+                WHERE c.Id LIKE '%' + @SearchTerm + '%'
+                    OR c.LocalResourceId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'
-                    OR c.Value LIKE '%' + @SearchTerm + '%';
+                    OR c.Value LIKE '%' + @SearchTerm + '%'
+                    OR c.FriendlyName LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -160,11 +165,13 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT c.*
                 FROM dbo.[{Table.TableName}] c
-                WHERE c.LocalResourceId LIKE '%' + @SearchTerm + '%'
+                WHERE c.Id LIKE '%' + @SearchTerm + '%'
+                    OR c.LocalResourceId LIKE '%' + @SearchTerm + '%'
                     OR c.Path LIKE '%' + @SearchTerm + '%'
                     OR c.Category LIKE '%' + @SearchTerm + '%'
                     OR c.[Key] LIKE '%' + @SearchTerm + '%'
                     OR c.Value LIKE '%' + @SearchTerm + '%'
+                    OR c.FriendlyName LIKE '%' + @SearchTerm + '%'
                 ORDER BY c.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -181,12 +188,13 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 @Path NVARCHAR(128) = null,
                 @Category NVARCHAR(128) = null,
                 @Key NVARCHAR(128) = null,
-                @Value NVARCHAR(128) = null
+                @Value NVARCHAR(128) = null,
+                @FriendlyName NVARCHAR(128) = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET LocalResourceId = COALESCE(@LocalResourceId, LocalResourceId), DuplicateKey = COALESCE(@DuplicateKey, DuplicateKey), Path = COALESCE(@Path, Path),
-                    Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]), Value = COALESCE(@Value, Value)
+                    Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]), Value = COALESCE(@Value, Value), FriendlyName = COALESCE(@FriendlyName, FriendlyName)
                 WHERE Id = @Id;
             end"
     };

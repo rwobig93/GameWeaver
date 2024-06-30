@@ -1,11 +1,11 @@
 ﻿using Application.Models.Identity.UserExtensions;
-using Application.Requests.v1.Api;
-using Application.Requests.v1.Identity.User;
+using Application.Requests.Api;
+using Application.Requests.Identity.User;
 using Application.Responses.v1.Api;
 using Application.Responses.v1.Identity;
 using Domain.Contracts;
 using Domain.Enums.Identity;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Domain.Models.Identity;
 
 namespace Application.Services.Identity;
@@ -30,12 +30,13 @@ public interface IAppAccountService
     Task<IResult> ForgotPasswordConfirmationAsync(Guid userId, string confirmationCode, string password, string confirmPassword);
     Task<IResult> UpdatePreferences(Guid userId, AppUserPreferenceUpdate preferenceUpdate);
     Task<IResult<AppUserPreferenceFull>> GetPreferences(Guid userId);
-    Task<IResult> ForceUserLogin(Guid userId);
-    Task<IResult> ForceUserPasswordReset(Guid userId);
+    Task<IResult> ForceUserLogin(Guid userId, Guid requestUserId);
+    Task<IResult> ForceUserPasswordReset(Guid userId, Guid requestUserId);
     Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled);
     Task<IResult> SetTwoFactorKey(Guid userId, string key);
     Task<IResult<bool>> DoesCurrentSessionNeedReAuthenticated();
-    Task<IResult<bool>> IsUserRequiredToReAuthenticate(Guid userId);
+    Task<IResult<bool>> IsRequiredToDoFullReAuthentication(Guid userId);
+    Task<IResult<AuthState>> GetCurrentAuthState(Guid userId);
     Task<IResult> SetAuthState(Guid userId, AuthState authState);
     Task<IResult> GenerateUserApiToken(Guid userId, UserApiTokenTimeframe timeframe, string description);
     Task<IResult> DeleteUserApiToken(Guid userId, string value);

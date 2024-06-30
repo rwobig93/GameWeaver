@@ -17,4 +17,5 @@ public class AppUserUpdate
     public DateTime? LastModifiedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
     public string? Notes { get; set; }
+    public int? Currency { get; set; }
 }

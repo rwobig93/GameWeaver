@@ -1,3 +1,5 @@
+using Domain.Enums.GameServer;
+
 namespace Application.Models.GameServer.Game;
 
 public class GameSlim
@@ -8,6 +10,7 @@ public class GameSlim
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
     public Guid DefaultGameProfileId { get; set; }
+    public string LatestBuildVersion { get; set; } = "";
     public string UrlBackground { get; set; } = "";
     public string UrlLogo { get; set; } = "";
     public string UrlLogoSmall { get; set; } = "";
@@ -28,4 +31,11 @@ public class GameSlim
     public string RequirementsMacRecommended { get; set; } = "";
     public string RequirementsLinuxMinimum { get; set; } = "";
     public string RequirementsLinuxRecommended { get; set; } = "";
+    public bool SupportsWindows { get; set; }
+    public bool SupportsLinux { get; set; }
+    public bool SupportsMac { get; set; }
+    public GameSource SourceType { get; set; }
+    public Guid? ManualFileRecordId { get; set; }
+    public string ManualVersionUrlCheck { get; set; } = "";
+    public string ManualVersionUrlDownload { get; set; } = "";
 }

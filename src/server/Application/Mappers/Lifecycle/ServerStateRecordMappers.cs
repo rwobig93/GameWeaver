@@ -10,8 +10,8 @@ public static class ServerStateRecordMappers
         return new ServerStateRecordCreate
         {
             Timestamp = DateTime.Now,
-            AppVersion = new Version(1, 0, 0, 0).ToString(),
-            DatabaseVersion = new Version(1, 0, 0, 0).ToString()
+            AppVersion = stateRecord.AppVersion,
+            DatabaseVersion = stateRecord.DatabaseVersion
         };
     }
 }

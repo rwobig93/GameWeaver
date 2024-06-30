@@ -10,6 +10,7 @@
     <ItemGroup>
       <PackageReference Include="Hardware.Info" Version="100.1.0" />
       <PackageReference Include="MemoryPack" Version="1.21.1" />
+      <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="8.0.6" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
@@ -30,6 +31,12 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Application\Application.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="Microsoft.AspNetCore.WebUtilities">
+        <HintPath>..\..\..\..\..\..\..\Program Files\dotnet\shared\Microsoft.AspNetCore.App\8.0.0\Microsoft.AspNetCore.WebUtilities.dll</HintPath>
+      </Reference>
     </ItemGroup>
 
 </Project>

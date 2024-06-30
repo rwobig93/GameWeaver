@@ -1,6 +1,6 @@
 ﻿using Application.Models.Identity.External;
 using Domain.Contracts;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 
 namespace Application.Services.Integrations;
 

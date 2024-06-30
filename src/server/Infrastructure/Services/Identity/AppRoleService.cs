@@ -62,23 +62,32 @@ public class AppRoleService : IAppRoleService
 
     private async Task<bool> CanUserDoThisAction(Guid modifyingUserId, Guid roleId)
     {
-        // If the user is the system user they have full reign so we let them past the permission validation
-        if (modifyingUserId == _serverState.SystemUserId) return true;
+        // If the user is the system user they have full reign, so we let them past the permission validation
+        if (modifyingUserId == _serverState.SystemUserId)
+        {
+            return true;
+        }
         
         // If the user is an admin we let them do whatever they want
         var modifyingUserIsAdmin = await IsUserAdmin(modifyingUserId);
         if (modifyingUserIsAdmin)
+        {
             return true;
+        }
 
         var modifyingRole = await GetByIdAsync(roleId);
         if (!modifyingRole.Succeeded || modifyingRole.Data is null)
+        {
             return false;
+        }
 
         // If user isn't admin then they can't modify administrative roles
         if (modifyingRole.Data.Name is RoleConstants.DefaultRoles.AdminName or RoleConstants.DefaultRoles.ModeratorName)
+        {
             return false;
+        }
 
-        // We are assuming permission to edit roles is already verified so we let all other actions be allowed
+        // We are assuming permission to edit roles is already verified, so we let all other actions be allowed
         return true;
     }
 
@@ -278,38 +287,56 @@ public class AppRoleService : IAppRoleService
         try
         {
             var roleToChange = await GetByIdAsync(updateObject.Id);
+            if (roleToChange.Data is null)
+            {
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.Roles.NotFound);
+            }
+
+            var canUserDoThisAction = await CanUserDoThisAction(modifyingUserId, updateObject.Id);
+            if (!canUserDoThisAction)
+            {
+                return await Result<Guid>.FailAsync(ErrorMessageConstants.Roles.CannotAdministrateAdminRole);
+            }
             
             if (updateObject.Name is not null && updateObject.Name.Length < RoleConstants.RoleNameMinimumLength)
+            {
                 return await Result<Guid>.FailAsync($"Role name must be longer than {RoleConstants.RoleNameMinimumLength} characters");
+            }
             
             if (string.IsNullOrWhiteSpace(updateObject.Description))
+            {
                 return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
+            }
 
             // If we are changing the name we need to verify there isn't already a role with the same name as the update
             if (roleToChange.Data!.Name != updateObject.Name)
             {
                 // We don't allow default role names to change to keep our sanity and enforce Admin, Moderator & Default role intent
                 if (RoleConstants.GetRequiredRoleNames().Contains(roleToChange.Data.Name))
+                {
                     return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
+                }
                 
                 var existingRoleWithName = await _roleRepository.GetByNameAsync(updateObject.Name!);
                 if (!existingRoleWithName.Succeeded)
+                {
                     return await Result<Guid>.FailAsync(existingRoleWithName.ErrorMessage);
+                }
                 
                 if (existingRoleWithName.Result is not null)
+                {
                     return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
+                }
             }
-
-            var canUserDoThisAction = await CanUserDoThisAction(modifyingUserId, updateObject.Id);
-            if (!canUserDoThisAction)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.Roles.CannotAdministrateAdminRole);
 
             updateObject.LastModifiedBy = modifyingUserId;
             updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
 
             var updateRequest = await _roleRepository.UpdateAsync(updateObject);
             if (!updateRequest.Succeeded)
+            {
                 return await Result.FailAsync(updateRequest.ErrorMessage);
+            }
 
             return await Result.SuccessAsync();
         }

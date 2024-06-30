@@ -1,4 +1,4 @@
-﻿using Application.Models.Identity.Permission;
+﻿using Application.Constants.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
@@ -17,7 +17,7 @@ public class PermissionPolicyProvider : IAuthorizationPolicyProvider
 
     public Task<AuthorizationPolicy?> GetPolicyAsync(string policyName)
     {
-        if (!policyName.StartsWith(ApplicationClaimTypes.Permission, StringComparison.OrdinalIgnoreCase))
+        if (!policyName.StartsWith(ClaimConstants.Permission, StringComparison.OrdinalIgnoreCase))
             return FallbackPolicyProvider.GetPolicyAsync(policyName);
         var policy = new AuthorizationPolicyBuilder();
         policy.AddRequirements(new PermissionRequirement(policyName));

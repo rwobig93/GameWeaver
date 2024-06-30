@@ -1,20 +1,19 @@
-using Application.Models.Events;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
-using Application.Requests.v1.GameServer;
+using Application.Requests.GameServer.Host;
+using Application.Requests.GameServer.WeaverWork;
 using Application.Responses.v1.GameServer;
 using Domain.Contracts;
 using Domain.Enums.GameServer;
-using Domain.Enums.Lifecycle;
 
 namespace Application.Services.GameServer;
 
 public interface IHostService
 {
-    Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(string description, Guid requestingUserId, Guid hostOwnerId);
-    Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegisterRequest request, string registrationIp);
+    Task<IResult<HostNewRegisterResponse>> RegistrationGenerateNew(HostRegistrationCreateRequest request, Guid requestUserId);
+    Task<IResult<HostRegisterResponse>> RegistrationConfirm(HostRegistrationConfirmRequest request, string registrationIp);
     Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
     Task<IResult> IsProvidedKeyCorrect(Guid hostId, string key);
     Task<IResult<IEnumerable<HostSlim>>> GetAllAsync();
@@ -22,9 +21,9 @@ public interface IHostService
     Task<IResult<int>> GetCountAsync();
     Task<IResult<HostSlim>> GetByIdAsync(Guid id);
     Task<IResult<HostSlim>> GetByHostnameAsync(string hostName);
-    Task<IResult<Guid>> CreateAsync(HostCreate createObject);
-    Task<IResult> UpdateAsync(HostUpdate updateObject);
-    Task<IResult> DeleteAsync(Guid id, Guid modifyingUserId);
+    Task<IResult<Guid>> CreateAsync(HostCreateRequest request, Guid requestUserId);
+    Task<IResult> UpdateAsync(HostUpdateRequest request, Guid requestUserId);
+    Task<IResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<HostSlim>>> SearchAsync(string searchText);
     Task<IResult<IEnumerable<HostSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsAsync();
@@ -34,8 +33,8 @@ public interface IHostService
     Task<IResult<int>> GetRegistrationCountAsync();
     Task<IResult<HostRegistrationFull>> GetRegistrationByIdAsync(Guid id);
     Task<IResult<HostRegistrationFull>> GetRegistrationByHostIdAsync(Guid hostId);
-    Task<IResult<Guid>> CreateRegistrationAsync(HostRegistrationCreate createObject);
-    Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdate updateObject);
+    Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdateRequest request, Guid requestUserId);
+    Task<IResult<int>> DeleteRegistrationsOlderThanAsync(Guid requestUserId, int olderThanHours = 24);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsAsync(string searchText);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAsync();
@@ -43,10 +42,11 @@ public interface IHostService
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCheckInCountAsync();
     Task<IResult<HostCheckInFull>> GetCheckInByIdAsync(int id);
-    Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInByHostIdAsync(Guid id);
-    Task<IResult> CreateCheckInAsync(HostCheckInCreate createObject);
-    Task<IResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id);
-    Task<IResult<int>> DeleteAllOldCheckInsAsync(CleanupTimeframe olderThan);
+    Task<IResult<IEnumerable<HostCheckInFull>>> GetChecksInByHostIdAsync(Guid id);
+    Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInsLatestByHostIdAsync(Guid id, int count = 10);
+    Task<IResult> CreateCheckInAsync(HostCheckInCreate request);
+    Task<IResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id, Guid requestUserId);
+    Task<IResult<int>> DeleteAllOldCheckInsAsync(DateTime olderThan, Guid requestUserId);
     Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckInsAsync(string searchText);
     Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkAsync();
@@ -59,11 +59,11 @@ public interface IHostService
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByStatusAsync(WeaverWorkState status);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkCreatedWithinAsync(DateTime from, DateTime until);
-    Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreate createObject);
-    Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate updateObject);
-    Task<IResult> DeleteWeaverWorkAsync(int id);
-    Task<IResult> DeleteWeaverWorkForHostAsync(Guid hostId);
-    Task<IResult> DeleteWeaverWorkOlderThanAsync(DateTime olderThan);
+    Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreateRequest request, Guid requestUserId);
+    Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate request, string sourceIp = "");
+    Task<IResult> DeleteWeaverWorkAsync(int id, Guid requestUserId);
+    Task<IResult> DeleteWeaverWorkForHostAsync(Guid hostId, Guid requestUserId);
+    Task<IResult<int>> DeleteWeaverWorkOlderThanAsync(DateTime olderThan, Guid requestUserId);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkAsync(string searchText);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

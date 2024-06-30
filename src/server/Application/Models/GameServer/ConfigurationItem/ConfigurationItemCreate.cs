@@ -8,4 +8,5 @@ public class ConfigurationItemCreate
     public string Category { get; set; } = "";
     public string Key { get; set; } = null!;
     public string Value { get; set; } = null!;
+    public string FriendlyName { get; set; } = "";
 }

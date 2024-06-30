@@ -12,7 +12,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -145,7 +145,8 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.Name LIKE '%' + @SearchTerm + '%';
+                WHERE g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.Name LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -164,7 +165,8 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
-                WHERE g.Name LIKE '%' + @SearchTerm + '%'
+                WHERE g.Id LIKE '%' + @SearchTerm + '%'
+                    OR g.Name LIKE '%' + @SearchTerm + '%'
                 ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

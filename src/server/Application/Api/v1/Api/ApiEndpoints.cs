@@ -1,6 +1,6 @@
 ﻿using Application.Constants.Web;
 using Application.Helpers.Web;
-using Application.Requests.v1.Api;
+using Application.Requests.Api;
 using Application.Responses.v1.Api;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
@@ -33,7 +33,7 @@ public static class ApiEndpoints
     /// <param name="accountService"></param>
     /// <returns>JWT with an expiration datetime in GMT/UTC</returns>
     /// <remarks>
-    /// - Expiration time returned is in GMT/UTC
+    ///     - Expiration time returned is in GMT/UTC
     /// </remarks>
     [AllowAnonymous]
     private static async Task<IResult<ApiTokenResponse>> GetToken([FromBody]ApiGetTokenRequest tokenRequest, IAppAccountService accountService)

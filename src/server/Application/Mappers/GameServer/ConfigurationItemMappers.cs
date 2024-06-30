@@ -17,7 +17,8 @@ public static class ConfigurationItemMappers
             Path = configDb.Path,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            FriendlyName = configDb.FriendlyName
         };
     }
     
@@ -36,7 +37,8 @@ public static class ConfigurationItemMappers
             Path = configDb.Path,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            FriendlyName = configDb.FriendlyName
         };
     }
     
@@ -49,7 +51,8 @@ public static class ConfigurationItemMappers
             Path = configDb.Path,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            FriendlyName = configDb.FriendlyName
         };
     }
 
@@ -61,7 +64,8 @@ public static class ConfigurationItemMappers
             DuplicateKey = configDb.DuplicateKey,
             Category = configDb.Category,
             Key = configDb.Key,
-            Value = configDb.Value
+            Value = configDb.Value,
+            Path = configDb.Path
         };
     }
 
@@ -77,7 +81,6 @@ public static class ConfigurationItemMappers
             GameserverId = new Guid(),
             Path = configDb.Path,
             Startup = false,
-            Extension = Path.GetExtension(configDb.Path),
             Type = ResourceType.ConfigFile,
             ConfigSets = [configDb.ToHost()]
         };
@@ -91,7 +94,8 @@ public static class ConfigurationItemMappers
             DuplicateKey = configItem.DuplicateKey,
             Category = configItem.Category,
             Key = configItem.Key,
-            Value = configItem.Value
+            Value = configItem.Value,
+            Path = configItem.Path
         };
     }
 
@@ -109,7 +113,8 @@ public static class ConfigurationItemMappers
             Path = configItem.Path,
             Category = configItem.Category,
             Key = configItem.Key,
-            Value = configItem.Value
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
         };
     }
 }

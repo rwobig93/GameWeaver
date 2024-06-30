@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.IO.Compression;
 using System.Text;
+using System.Xml.Linq;
 using Application.Constants;
 using Application.Handlers;
 using Application.Helpers;
@@ -22,15 +23,17 @@ public class GameServerService : IGameServerService
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IGameServerRepository _gameServerRepository;
     private readonly ISerializerService _serializerService;
+    private readonly IControlServerService _serverService;
 
     public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig, IGameServerRepository gameServerRepository,
-        ISerializerService serializerService)
+        ISerializerService serializerService, IControlServerService serverService)
     {
         _logger = logger;
         _dateTimeService = dateTimeService;
         _generalConfig = generalConfig;
         _gameServerRepository = gameServerRepository;
         _serializerService = serializerService;
+        _serverService = serverService;
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
@@ -215,10 +218,10 @@ public class GameServerService : IGameServerService
                     return;
                 }
                 
-                _logger.Verbose("STEAMCMD_OUTPUT[{ProcessId}]: {SteamCmdReceived}", process.Id, received);
+                _logger.Debug("STEAMCMD_OUTPUT[{ProcessId}]: {SteamCmdReceived}", process.Id, received);
             }
 
-            _logger.Verbose("STEAMCMD_OUTPUT_ENDED[{ProcessId}]", process.Id);
+            _logger.Debug("STEAMCMD_OUTPUT_ENDED[{ProcessId}]", process.Id);
         }
         catch (Exception ex)
         {
@@ -236,41 +239,6 @@ public class GameServerService : IGameServerService
                 SteamCmdUpdateInProgress = false;
             }
         }
-    }
-    
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateGame(Guid id)
-    {
-        // From Powershell server-watcher.ps1 script
-        // +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +force_install_dir $GameServerPath +login anonymous +app_info_update 1 +app_update $steamAppId +app_status $steamAppId +quit
-        //
-        // .\steamcmd.exe +@ShutdownOnFailedCommand 1 +@NoPromptForPassword 1 +login anonymous +force_install_dir "ConanExiles" +app_info_update 1 +app_status "443030" +quit
-        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
-        
-        // Another option, check game id via API: https://api.steamcmd.net/v1/info/$steamAppId
-        //  $jsonContent = $response | ConvertFrom-Json
-        //  $version = $jsonContent.data."$steamAppId".depots.branches.public.buildid
-        //  $timeUpdated = $jsonContent.data."$steamAppId".depots.branches.public.timeupdated
-        //  $epoch = [DateTime]::new(1970, 1, 1, 0, 0, 0, [DateTimeKind]::Utc)
-        //  $releaseDate = $epoch.AddSeconds($timeUpdated)
-        await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
-    }
-
-    public async Task<IResult<SoftwareUpdateStatus>> CheckForUpdateMod(Guid id, Mod mod)
-    {
-        // https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/?itemcount=1&publishedfileids%5B0%5D=3120364390
-        // See: https://www.reddit.com/r/Steam/comments/30l5au/web_api_for_workshop_items/
-        // response.publishedfiledetails.publishedfileid
-        // response.publishedfiledetails.hcontent_file
-        // response.publishedfiledetails.title
-        // response.publishedfiledetails.time_created
-        // response.publishedfiledetails.time_updated
-        await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
     }
 
     public async Task<IResult<Guid>> Create(GameServerLocal gameServer)
@@ -294,12 +262,13 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> InstallOrUpdateGame(Guid id, bool validate = false)
     {
-        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
         try
         {
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            {
                 return await Result.FailAsync(gameServerRequest.Messages);
+            }
             
             var gameServer = gameServerRequest.Data;
             if (!Directory.Exists(gameServer.GetInstallDirectory()))
@@ -308,15 +277,12 @@ public class GameServerService : IGameServerService
                 _logger.Information("Created directory for gameserver install: {Directory}", gameServer.GetInstallDirectory());
             }
 
-            var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer, validate));
-            if (!installResult.Succeeded)
+            return gameServer.Source switch
             {
-                _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-                return installResult;
-            }
-        
-            _logger.Information("Successfully installed/updated gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            return installResult;
+                GameSource.Steam => await InstallOrUpdateGameSteam(validate, gameServer),
+                GameSource.Manual => await InstallOrUpdateGameManual(gameServer),
+                _ => await Result.FailAsync($"Gameserver has an invalid source, unable to install: {id}")
+            };
         }
         catch (Exception ex)
         {
@@ -325,15 +291,83 @@ public class GameServerService : IGameServerService
         }
     }
 
+    private async Task<IResult> InstallOrUpdateGameManual(GameServerLocal gameServer, bool secondRun = false)
+    {
+        var serverClientDownload = await _serverService.DownloadManualClient(gameServer.GameId);
+        if (!serverClientDownload.Succeeded)
+        {
+            _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            {
+                return serverClientDownload;
+            }
+        }
+        _logger.Debug("Downloaded manual game server client, now saving to the local file system: [{GameserverId}]{GameserverName} => {Filename}",
+            gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+
+        var clientDownloadPath = Path.Join(gameServer.GetInstallDirectory(), serverClientDownload.Data.FileName);
+        if (File.Exists(clientDownloadPath))
+        {
+            File.Delete(clientDownloadPath);
+            _logger.Debug("Deleted old manual server client: [{GameserverId}]{GameserverName} => {Filename}",
+                gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+        }
+                
+        File.WriteAllBytes(clientDownloadPath, serverClientDownload.Data.Content);
+        _logger.Debug("Successfully saved game server client to the local file system: [{GameserverId}]{GameserverName} => {Filename}",
+            gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+
+        var downloadedHash = FileHelpers.ComputeSha256Hash(clientDownloadPath);
+        if (downloadedHash != serverClientDownload.Data.HashSha256)
+        {
+            if (secondRun)
+            {
+                _logger.Error("Second install / update failed and hash doesn't match: [{GameserverId}]{GameserverName} => {Filename}",
+                    gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+                _logger.Error("  {Filename} expected hash: {IntegrityHash}", serverClientDownload.Data.FileName, serverClientDownload.Data.HashSha256);
+                _logger.Error("  {Filename} actual hash:   {IntegrityHash}", serverClientDownload.Data.FileName, downloadedHash);
+                return await Result.FailAsync(
+                    $"Second install / update failed and hash doesn't match [{gameServer.Id}]{gameServer.ServerName} => {serverClientDownload.Data.FileName}");
+            }
+            
+            _logger.Error("Integrity hash doesn't match for downloaded file: [{GameserverId}]{GameserverName} => {Filename}",
+                gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+            _logger.Error("  {Filename} expected hash: {IntegrityHash}", serverClientDownload.Data.FileName, serverClientDownload.Data.HashSha256);
+            _logger.Error("  {Filename} actual hash:   {IntegrityHash}", serverClientDownload.Data.FileName, downloadedHash);
+            return await InstallOrUpdateGameManual(gameServer, true);
+        }
+
+        if (serverClientDownload.Data.Format != FileStorageFormat.ArchiveZip) return serverClientDownload;
+        
+        ZipFile.ExtractToDirectory(clientDownloadPath, gameServer.GetInstallDirectory());
+        _logger.Debug("Extracted zip archive directly into game server install directory: [{GameserverId}]{GameserverName} => {Filename}",
+            gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+
+        return serverClientDownload;
+    }
+
+    private async Task<IResult> InstallOrUpdateGameSteam(bool validate, GameServerLocal gameServer)
+    {
+        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
+        var steamInstall = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer, validate));
+        if (!steamInstall.Succeeded)
+        {
+            _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            {
+                return steamInstall;
+            }
+        }
+        
+        _logger.Information("Successfully installed/updated gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+        return steamInstall;
+    }
+
     public async Task<IResult> InstallOrUpdateMod(Guid id, Mod mod)
     {
         // steamcmd.exe +login anonymous +workshop_download_item 346110 496735411 +quit
         // steamcmd.exe +login anonymous +workshop_download_item {steamGameId} {workshopItemId} +quit
         // See: https://steamcommunity.com/app/346110/discussions/10/530649887212662565/?l=hungarian#c521643320353037920
         await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
+        return await Result.FailAsync("This method isn't implemented yet");
     }
 
     public async Task<IResult> UninstallGame(Guid id)
@@ -360,9 +394,7 @@ public class GameServerService : IGameServerService
     {
         // Delete mod directory and cleanup GameServer object
         await Task.CompletedTask;
-        
-        // TODO: Update gameserver state to match post work state
-        throw new NotImplementedException();
+        return await Result.FailAsync("This method isn't implemented yet");
     }
 
     private void DeleteOldBackups(string backupPath)
@@ -457,8 +489,6 @@ public class GameServerService : IGameServerService
                 
                 var gameServerDirectory = gameServer.GetInstallDirectory();
                 var fullPath = Path.Combine(gameServerDirectory, binary.Path);
-                if (!fullPath.EndsWith(binary.Extension) && !string.IsNullOrWhiteSpace(binary.Extension))
-                    fullPath = $"{fullPath}.{binary.Extension}";
 
                 if (!File.Exists(fullPath))
                 {
@@ -552,14 +582,11 @@ public class GameServerService : IGameServerService
     {
         try
         {
-            // TODO: Getting error on realtime update: Failure updating local weaver work status occurred: [0]"Weaver work with Id [0] doesn't exist"
-            // Before error: Realtime server state has changed from expected: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024" [Expected]Unknown [Current]Shutdown
-            // Before error: Successfully updated gameserver: [3e79382c-4c73-43ec-98c6-1e0642ddbd42]"Test Conan Exiles Server - Friday, May 17, 2024"
-            // Before error: Adding weaver work update: [0]Completed
-            // Before error: Sending outgoing communication => 0
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            {
                 return await Result<ServerState>.FailAsync(gameServerRequest.Messages);
+            }
             
             var gameServer = gameServerRequest.Data;
 
@@ -606,7 +633,25 @@ public class GameServerService : IGameServerService
                 _logger.Debug("Existing ini file exists, loaded config contents: {FilePath}", filePath);
             }
 
-            foreach (var config in configFile.ConfigSets)
+            var pathIniItems = configFile.ConfigSets
+                .Where(item => !string.IsNullOrWhiteSpace(item.Path))
+                .GroupBy(item => new { item.Path, item.Category })
+                .Select(g => new ConfigurationItemLocal()
+                {
+                    Path = g.Key.Path,
+                    Key = g.Key.Path,
+                    Value = string.Join(",", g.Select(item => $"{item.Key}={item.Value}")),
+                    Category = g.Key.Category
+                })
+                .ToList();
+            var noPathIniItems = configFile.ConfigSets.Where(x => string.IsNullOrWhiteSpace(x.Path));
+            
+            foreach (var config in pathIniItems)
+            {
+                configFileContent.AddOrUpdateKey(config.Category, config.Key, $"({config.Value})");
+            }
+
+            foreach (var config in noPathIniItems)
             {
                 configFileContent.AddOrUpdateKey(config.Category, config.Key, config.Value);
             }
@@ -681,21 +726,143 @@ public class GameServerService : IGameServerService
         }
     }
 
-    private async Task<IResult> UpdateRawFile(LocalResource configFile)
+    private async Task<IResult> UpdateXmlFile(LocalResource configFile, bool loadExisting = true)
     {
         var filePath = configFile.GetFullPath();
-        var fileContent = new StringBuilder();
 
-        // TODO: Load raw file, check if each line exists, if not add it for a successful merge
+        var rootElement = configFile.ConfigSets.FirstOrDefault(x => string.IsNullOrWhiteSpace(x.Path));
+        if (rootElement is null)
+        {
+            return await Result.FailAsync("XML config file is missing at least one root element, unable to create config file");
+        }
+        
+        var xmlDocument = new XDocument(new XElement(rootElement.Key));
+        if (loadExisting && File.Exists(filePath))
+        {
+            _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
+            try
+            {
+                xmlDocument = XDocument.Load(filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to load existing {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+                return await Result.FailAsync($"Failed to load existing {configFile.ContentType} config file: {ex.Message}");
+            }
+        }
+
+        if (xmlDocument.Root is null)
+        {
+            return await Result.FailAsync("XML Document is missing a root element, unable to modify or save XML file");
+        }
+
         foreach (var configItem in configFile.ConfigSets)
         {
-            fileContent.Append(configItem.Value);
+            var parentElements = configItem.Path.Split('/');
+            var configItemAttributes = configItem.Category.Split(',')
+                .Select(x => x.Split(':'))
+                .Where(x => x.Length == 2)
+                .Select(x => new XAttribute(x[0], x[1]));
+            var currentElement = xmlDocument.Root;
+            
+            // Create parent elements if there are any and move to the direct 
+            if (!string.IsNullOrWhiteSpace(configItem.Path))
+            {
+                foreach (var element in parentElements)
+                {
+                    var nextElement = currentElement.Element(element);
+                    if (nextElement == null)
+                    {
+                        nextElement = new XElement(element);
+                        currentElement.Add(nextElement);
+                    }
+                    currentElement = nextElement;
+                }
+            }
+
+            var existingElement = currentElement.Elements(configItem.Key).FirstOrDefault();
+            if (existingElement is null)
+            {
+                // Element doesn't exist, so we'll create a new one
+                var newElement = new XElement(configItem.Key, configItem.Value);
+
+                if (configItemAttributes.Any())
+                {
+                    newElement.Add(configItemAttributes);
+                }
+                
+                currentElement.Add(newElement);
+                continue;
+            }
+            
+            // Update the existing element's value and attributes
+            existingElement.Value = configItem.Value;
+            existingElement.RemoveAttributes();
+
+            if (configItemAttributes.Any())
+            {
+                existingElement.Add(configItemAttributes);
+            }
         }
 
         try
         {
-            var serializedContent = fileContent.ToString();
-            File.WriteAllText(filePath, serializedContent, Encoding.UTF8);
+            xmlDocument.Save(filePath);
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failure occurred updating {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            return await Result.FailAsync($"Failure occurred updating {configFile.ContentType} config file: {ex.Message}");
+        }
+    }
+
+    private async Task<IResult> UpdateRawFile(LocalResource configFile, bool loadExisting = true)
+    {
+        var filePath = configFile.GetFullPath();
+        List<string> fileContent = [];
+
+        if (loadExisting && File.Exists(filePath))
+        {
+            _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
+            try
+            {
+                fileContent = [..File.ReadAllLines(filePath)];
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to load existing {ContentType} config file: {Error}", configFile.ContentType, ex.Message);
+            }
+        }
+
+        var maxConfigItemLines = configFile.ConfigSets.Select(item => int.Parse(item.Key)).Max();
+        
+        // Fill any config item gaps between lines, if nothing exists in the file at that line we will add an empty line
+        foreach (var line in Enumerable.Range(0, maxConfigItemLines))
+        {
+            if (configFile.ConfigSets.Any(x => x.Key == line.ToString()))
+            {
+                continue;
+            }
+            
+            configFile.ConfigSets.Add(new ConfigurationItemLocal { Key = line.ToString(), Value = string.Empty });
+        }
+
+        foreach (var configItem in configFile.ConfigSets)
+        {
+            var lineIndex = int.Parse(configItem.Key);
+            if (fileContent.ElementAtOrDefault(lineIndex) is not null && string.IsNullOrWhiteSpace(configItem.Value))
+            {
+                // Existing line number isn't empty and our config item line is, so we'll leave the line value as it is
+                continue;
+            }
+            
+            fileContent[lineIndex] = configItem.Value;
+        }
+
+        try
+        {
+            File.WriteAllLines(filePath, fileContent, Encoding.UTF8);
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -709,7 +876,9 @@ public class GameServerService : IGameServerService
     {
         var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
         if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+        {
             return await Result.FailAsync(gameServerRequest.Messages);
+        }
 
         List<string> errorMessages = [];
         var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == ResourceType.ConfigFile).ToList();
@@ -736,7 +905,7 @@ public class GameServerService : IGameServerService
             {
                 case {ContentType: ContentType.Json}:
                 {
-                    var jsonUpdateRequest = await UpdateJsonFile(configFile, loadExisting);
+                    var jsonUpdateRequest = await UpdateJsonFile(configFile, configFile.LoadExisting);
                     if (!jsonUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(jsonUpdateRequest.Messages);
@@ -746,7 +915,7 @@ public class GameServerService : IGameServerService
                 }
                 case {ContentType: ContentType.Ini}:
                 {
-                    var iniUpdateRequest = await UpdateIniFile(configFile, loadExisting);
+                    var iniUpdateRequest = await UpdateIniFile(configFile, configFile.LoadExisting);
                     if (!iniUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(iniUpdateRequest.Messages);
@@ -754,9 +923,18 @@ public class GameServerService : IGameServerService
 
                     continue;
                 }
+                case {ContentType: ContentType.Xml}:
+                {
+                    var xmlUpdateRequest = await UpdateXmlFile(configFile, configFile.LoadExisting);
+                    if (!xmlUpdateRequest.Succeeded)
+                    {
+                        errorMessages.AddRange(xmlUpdateRequest.Messages);
+                    }
+                    continue;
+                }
                 case {ContentType: ContentType.Raw}:
                 {
-                    var rawUpdateRequest = await UpdateRawFile(configFile);
+                    var rawUpdateRequest = await UpdateRawFile(configFile, configFile.LoadExisting);
                     if (!rawUpdateRequest.Succeeded)
                     {
                         errorMessages.AddRange(rawUpdateRequest.Messages);
@@ -765,7 +943,6 @@ public class GameServerService : IGameServerService
                 }
                 default:
                 {
-                    // TODO: Implement XML content
                     errorMessages.Add($"Config file content type '{configFile.ContentType}' isn't currently supported");
                     continue;
                 }

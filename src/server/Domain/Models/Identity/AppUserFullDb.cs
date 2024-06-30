@@ -22,6 +22,7 @@ public class AppUserFullDb
     public DateTime? DeletedOn { get; set; }
     public AccountType AccountType { get; set; } = AccountType.User;
     public string? Notes { get; set; }
+    public int Currency { get; set; }
     public List<AppRoleDb> Roles { get; set; } = [];
     public List<AppUserExtendedAttributeDb> ExtendedAttributes { get; set; } = [];
     public List<AppPermissionDb> Permissions { get; set; } = [];

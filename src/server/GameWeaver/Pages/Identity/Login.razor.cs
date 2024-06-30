@@ -2,13 +2,13 @@ using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Auth;
 using Application.Helpers.Integrations;
-using Application.Requests.v1.Identity.User;
+using Application.Requests.Identity.User;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Blazored.LocalStorage;
 using Domain.Enums.Identity;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Microsoft.Extensions.Options;
 using GameWeaver.Components.Identity;
 
@@ -51,8 +51,6 @@ public partial class Login
             await HandleExternalLoginRedirect();
             StateHasChanged();
         }
-
-        await Task.CompletedTask;
     }
 
     private void ParseParametersFromUri()
@@ -73,7 +71,9 @@ public partial class Login
     private void HandleRedirectReasons()
     {
         if (string.IsNullOrWhiteSpace(RedirectReason))
+        {
             return;
+        }
 
         switch (RedirectReason)
         {
@@ -83,8 +83,17 @@ public partial class Login
             case nameof(LoginRedirectReason.ReAuthenticationForce):
                 Snackbar.Add(LoginRedirectConstants.ReAuthenticationForce, Severity.Error);
                 break;
+            case nameof(LoginRedirectReason.ReAuthenticationForceUser):
+                Snackbar.Add(LoginRedirectConstants.ReAuthenticationForceUser, Severity.Error);
+                break;
             case nameof(LoginRedirectReason.FullLoginTimeout):
                 Snackbar.Add(LoginRedirectConstants.FullLoginTimeout, Severity.Error);
+                break;
+            case nameof(LoginRedirectReason.LockedOut):
+                Snackbar.Add(LoginRedirectConstants.LockedOut, Severity.Error);
+                break;
+            case nameof(LoginRedirectReason.Disabled):
+                Snackbar.Add(LoginRedirectConstants.Disabled, Severity.Error);
                 break;
             default:
                 Snackbar.Add(LoginRedirectConstants.Unknown, Severity.Error);
@@ -97,10 +106,15 @@ public partial class Login
         try
         {
             if (!IsRequiredInformationPresent())
+            {
                 return;
+            }
 
             var loginReady = await IsMfaHandled();
-            if (!loginReady) return;
+            if (!loginReady)
+            {
+                return;
+            }
             
             var authResponse = await AccountService.LoginGuiAsync(new UserLoginRequest
             {
@@ -293,39 +307,5 @@ public partial class Login
             Logger.Warning(ex, "Failure occurred when attempting to handle external login redirect, likely invalid data provided");
             Snackbar.Add("Invalid external login data provided, please try logging in again", Severity.Error);
         }
-    }
-
-    private async Task LogoutAndClearCache()
-    {
-        var loginRedirectReason = LoginRedirectReason.SessionExpired;
-
-        try
-        {
-            var currentUserFull = (await CurrentUserService.GetCurrentUserFull())!;
-            // Validate if re-login is forced to give feedback to the user, items are ordered for overwrite precedence
-            if (currentUserFull.Id != Guid.Empty)
-            {
-                var userSecurity = (await UserService.GetSecurityInfoAsync(currentUserFull.Id)).Data;
-                
-                // Force re-login was set on the account
-                if (userSecurity!.AuthState == AuthState.LoginRequired)
-                    loginRedirectReason = LoginRedirectReason.ReAuthenticationForce;
-                // Last full login is older than the configured timeout
-                if (userSecurity.LastFullLogin!.Value.AddMinutes(SecuritySettings.Value.ForceLoginIntervalMinutes) <
-                    DateTimeService.NowDatabaseTime)
-                    loginRedirectReason = LoginRedirectReason.FullLoginTimeout;
-            }
-        }
-        catch
-        {
-            // Ignore any exceptions since we'll just be logging out anyway
-        }
-
-        await AccountService.LogoutGuiAsync(Guid.Empty);
-        var loginUriBase = new Uri(string.Concat(AppSettings.Value.BaseUrl, AppRouteConstants.Identity.Login));
-        var loginUriFull = QueryHelpers.AddQueryString(
-            loginUriBase.ToString(), LoginRedirectConstants.RedirectParameter, loginRedirectReason.ToString());
-        
-        NavManager.NavigateTo(loginUriFull, true);
     }
 }

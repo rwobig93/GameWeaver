@@ -12,7 +12,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -252,7 +252,8 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.HostId LIKE '%' + @SearchTerm + '%';
+                WHERE w.Id LIKE '%' + @SearchTerm + '%'
+                    OR w.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -271,7 +272,8 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT w.*
                 FROM dbo.[{Table.TableName}] w
-                WHERE w.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE w.Id LIKE '%' + @SearchTerm + '%'
+                    OR w.HostId LIKE '%' + @SearchTerm + '%'
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

@@ -12,7 +12,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 9,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -29,7 +29,15 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                     [PublicIp] NVARCHAR(128) NULL,
                     [CurrentState] INT NOT NULL,
                     [Os] INT NOT NULL,
-                    [AllowedPorts] NVARCHAR(2048) NULL,
+                    [OsName] NVARCHAR(1024) NULL,
+                    [OsVersion] NVARCHAR(1024) NULL,
+                    [AllowedPorts] VARBINARY(4096) NULL,
+                    [Cpus] VARBINARY(4096) NULL,
+                    [Motherboards] VARBINARY(4096) NULL,
+                    [Storage] VARBINARY(4096) NULL,
+                    [NetworkInterfaces] VARBINARY(4096) NULL,
+                    [RamModules] VARBINARY(4096) NULL,
+                    [Gpus] VARBINARY(4096) NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -47,11 +55,12 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
                 @Id UNIQUEIDENTIFIER,
+                @DeletedBy UNIQUEIDENTIFIER,
                 @DeletedOn datetime2
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET IsDeleted = 1, DeletedOn = @DeletedOn
+                SET IsDeleted = 1, DeletedOn = @DeletedOn, LastModifiedBy = @DeletedBy
                 WHERE Id = @Id;
             end"
     };
@@ -136,7 +145,15 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PublicIp NVARCHAR(128),
                 @CurrentState INT,
                 @Os INT,
-                @AllowedPorts NVARCHAR(2048),
+                @OsName NVARCHAR(1024),
+                @OsVersion NVARCHAR(1024),
+                @AllowedPorts VARBINARY(4096),
+                @Cpus VARBINARY(4096),
+                @Motherboards VARBINARY(4096),
+                @Storage VARBINARY(4096),
+                @NetworkInterfaces VARBINARY(4096),
+                @RamModules VARBINARY(4096),
+                @Gpus VARBINARY(4096),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
@@ -145,11 +162,13 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, Hostname, FriendlyName, Description, PrivateIp, PublicIp, CurrentState, Os, AllowedPorts,
-                                                     CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
+                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, Hostname, FriendlyName, Description, PrivateIp, PublicIp, CurrentState, Os,
+                                                     OsName, OsVersion, AllowedPorts, Cpus, Motherboards, Storage, NetworkInterfaces, RamModules, Gpus, CreatedBy, CreatedOn,
+                                                     LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@OwnerId, @PasswordHash, @PasswordSalt, @Hostname, @FriendlyName, @Description, @PrivateIp, @PublicIp, @CurrentState, @Os, @AllowedPorts, @CreatedBy,
-                        @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                VALUES (@OwnerId, @PasswordHash, @PasswordSalt, @Hostname, @FriendlyName, @Description, @PrivateIp, @PublicIp, @CurrentState, @Os,
+                        @OsName, @OsVersion, @AllowedPorts, @Cpus, @Motherboards, @Storage, @NetworkInterfaces, @RamModules, @Gpus,
+                        @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"
     };
     
@@ -166,7 +185,9 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0 AND h.Hostname LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0
+                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
@@ -190,7 +211,9 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0 AND h.Hostname LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0
+                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
@@ -216,7 +239,15 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PublicIp NVARCHAR(128) = null,
                 @CurrentState INT = null,
                 @Os INT = null,
-                @AllowedPorts NVARCHAR(2048) = null,
+                @OsName NVARCHAR(1024) = null,
+                @OsVersion NVARCHAR(1024) = null,
+                @AllowedPorts VARBINARY(4096) = null,
+                @Cpus VARBINARY(4096) = null,
+                @Motherboards VARBINARY(4096) = null,
+                @Storage VARBINARY(4096) = null,
+                @NetworkInterfaces VARBINARY(4096) = null,
+                @RamModules VARBINARY(4096) = null,
+                @Gpus VARBINARY(4096) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn datetime2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
@@ -229,9 +260,12 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 SET OwnerId = COALESCE(@OwnerId, OwnerId), PasswordHash = COALESCE(@PasswordHash, PasswordHash), PasswordSalt = COALESCE(@PasswordSalt, PasswordSalt),
                     Hostname = COALESCE(@Hostname, Hostname), FriendlyName = COALESCE(@FriendlyName, FriendlyName), Description = COALESCE(@Description, Description),
                     PrivateIp = COALESCE(@PrivateIp, PrivateIp), PublicIp = COALESCE(@PublicIp, PublicIp), CurrentState = COALESCE(@CurrentState, CurrentState),
-                    Os = COALESCE(@Os, Os), AllowedPorts = COALESCE(@AllowedPorts, AllowedPorts), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
-                    CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
-                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
+                    Os = COALESCE(@Os, Os), OsName = COALESCE(@OsName, OsName), OsVersion = COALESCE(@OsVersion, OsVersion),
+                    AllowedPorts = COALESCE(@AllowedPorts, AllowedPorts), Cpus = COALESCE(@Cpus, Cpus), Motherboards = COALESCE(@Motherboards, Motherboards),
+                    Storage = COALESCE(@Storage, Storage), NetworkInterfaces = COALESCE(@NetworkInterfaces, NetworkInterfaces), RamModules = COALESCE(@RamModules, RamModules),
+                    Gpus = COALESCE(@Gpus, Gpus), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
+                    IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;
             end"
     };

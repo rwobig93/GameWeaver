@@ -2,6 +2,7 @@
 using Application.Constants;
 using Application.Helpers;
 using Application.Requests.Host;
+using Application.Responses.Game;
 using Application.Responses.Host;
 using Application.Responses.Monitoring;
 using Application.Services;
@@ -9,6 +10,7 @@ using Application.Settings;
 using Domain.Contracts;
 using Domain.Models.ControlServer;
 using Domain.Models.Host;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
@@ -59,7 +61,9 @@ public class ControlServerService : IControlServerService
             // Since the control server is up we'll parse the response and indicate if the server is reporting an unhealthy state for troubleshooting
             var convertedResponse = _serializerService.DeserializeJson<HealthCheckResponse>(await response.Content.ReadAsStringAsync());
             if (convertedResponse.status != "Healthy")
+            {
                 _logger.Warning("Control Server is up but is in an unhealthy state");
+            }
         }
         catch (Exception ex)
         {
@@ -86,13 +90,17 @@ public class ControlServerService : IControlServerService
         {
             var tokenResult = await GetToken();
             if (!tokenResult.Succeeded)
+            {
                 return await Result<HostRegisterResponse>.FailAsync(tokenResult.Messages);
+            }
             
             return await Result<HostRegisterResponse>.SuccessAsync();
         }
         
-        if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl))
+        if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl, StringComparison.InvariantCultureIgnoreCase))
+        {
             return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");
+        }
 
         // Prep confirmation request
         var confirmRequest = ApiHelpers.GetRequestFromUrl(_authConfig.CurrentValue.RegisterUrl);
@@ -100,11 +108,13 @@ public class ControlServerService : IControlServerService
         var payload = new StringContent(_serializerService.SerializeJson(confirmRequest), Encoding.UTF8, "application/json");
 
         // Handle registration confirmation to the control server
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.RegistrationConfirm, payload);
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.HostRegistration.Confirm, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         var convertedResponse = _serializerService.DeserializeJson<HostRegisterResponse>(responseContent);
         if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
+        {
             return await Result<HostRegisterResponse>.FailAsync(convertedResponse.Messages);
+        }
 
         // Parse the successful registration, clear URL in settings and save HostId and Key for authenticating to the control server going forward
         var updatedAuthConfig = new AuthConfiguration
@@ -116,7 +126,9 @@ public class ControlServerService : IControlServerService
         };
         var saveResponse = await _serializerService.SaveSettings(AuthConfiguration.SectionName, updatedAuthConfig);
         if (!saveResponse.Succeeded)
+        {
             return await Result<HostRegisterResponse>.FailAsync(saveResponse.Messages);
+        }
 
         return await Result<HostRegisterResponse>.SuccessAsync(convertedResponse);
     }
@@ -136,7 +148,9 @@ public class ControlServerService : IControlServerService
         
         var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out var parsedHostId);
         if (!hostIdIsValid || string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
+        {
             return await Result<HostAuthResponse>.FailAsync("HostId or key is invalid, please fix the host/key pair or do a new registration");
+        }
         
         // Prep authentication request
         var tokenRequest = new HostAuthRequest
@@ -153,7 +167,9 @@ public class ControlServerService : IControlServerService
         var responseContent = await response.Content.ReadAsStringAsync();
         var convertedResponse = _serializerService.DeserializeJson<HostAuthResponse>(responseContent);
         if (!response.IsSuccessStatusCode || !convertedResponse.Succeeded)
+        {
             return await Result<HostAuthResponse>.FailAsync(convertedResponse.Messages);
+        }
 
         // Now that we have a successful token response we'll set the active token to be re-used until expiration and indicate we are registered
         Authorization.Token = convertedResponse.Data.Token;
@@ -173,7 +189,7 @@ public class ControlServerService : IControlServerService
         // Token isn't within or over expiration threshold & we have the authorization token
         var expirationTime = Authorization.RefreshTokenExpiryTime - _dateTimeService.NowDatabaseTime;
         var expirationThreshold = TimeSpan.FromMinutes(_authConfig.CurrentValue.TokenRenewThresholdMinutes);
-        if (expirationTime.Minutes <= expirationThreshold.Minutes && !string.IsNullOrWhiteSpace(Authorization.Token))
+        if (expirationTime.TotalMinutes >= expirationThreshold.TotalMinutes && !string.IsNullOrWhiteSpace(Authorization.Token))
         {
             return await Result.SuccessAsync();
         }
@@ -181,7 +197,9 @@ public class ControlServerService : IControlServerService
         // Token is expired or within expiration threshold, so we'll get a new token
         var updateTokenRequest = await GetToken();
         if (!updateTokenRequest.Succeeded)
+        {
             return await Result.FailAsync(updateTokenRequest.Messages);
+        }
         
         return await Result.SuccessAsync();
     }
@@ -198,11 +216,12 @@ public class ControlServerService : IControlServerService
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
 
-        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.CheckIn, payload);
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.HostCheckins.CheckIn, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
+        {
             return await Result<IEnumerable<WeaverWork>>.FailAsync(new List<WeaverWork>(), responseContent);
+        }
 
         var deserializedResponse = _serializerService.DeserializeJson<HostCheckInResponse>(responseContent);
         return await Result<IEnumerable<WeaverWork>>.SuccessAsync(deserializedResponse.Data);
@@ -220,12 +239,41 @@ public class ControlServerService : IControlServerService
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
         
-        // TODO: Look into getting memory serialization working w/ the minimal api, was getting bad request at serialization time
-        var response = await httpClient.PostAsync(ApiConstants.GameServer.Host.UpdateWorkStatus, payload);
+        var response = await httpClient.PostAsync(ApiConstants.GameServer.WeaverWork.UpdateStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
+        {
             return await Result.FailAsync(responseContent);
+        }
 
         return await Result.SuccessAsync();
+    }
+
+    /// <summary>
+    /// Download a game server client for a manual sourced game
+    /// </summary>
+    /// <param name="gameId">ID of the game</param>
+    /// <returns>Game server client and download details</returns>
+    public async Task<IResult<GameDownload>> DownloadManualClient(Guid gameId)
+    {
+        if (!RegisteredWithServer) { return await Result<GameDownload>.FailAsync("Not currently registered with a control server"); }
+        
+        var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
+        var downloadUrl = QueryHelpers.AddQueryString(ApiConstants.GameServer.Game.DownloadLatest, "gameId", gameId.ToString());
+        
+        var response = await httpClient.GetAsync(downloadUrl);
+        var responseContent = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            return await Result<GameDownload>.FailAsync(responseContent);
+        }
+        
+        var deserializedResponse = _serializerService.DeserializeJson<GameDownloadResponse?>(responseContent);
+        if (deserializedResponse is null)
+        {
+            return await Result<GameDownload>.FailAsync("Unable to deserialize game download response, payload is corrupt or invalid");
+        }
+
+        return await Result<GameDownload>.SuccessAsync(deserializedResponse.Data);
     }
 }

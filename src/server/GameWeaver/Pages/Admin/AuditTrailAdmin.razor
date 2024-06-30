@@ -1,9 +1,10 @@
-﻿@using Application.Constants.Identity
+﻿@using Application.Constants.Communication
+@using Application.Constants.Identity
 @using Application.Helpers.Runtime
 @using Application.Models.Lifecycle
 
 @attribute [Route(AppRouteConstants.Admin.AuditTrails)]
-@attribute [Authorize(PermissionConstants.Audit.View)]
+@attribute [Authorize(PermissionConstants.System.Audit.View)]
 
 
 <MudItem xs="16" sm="20" md="28" lg="36">

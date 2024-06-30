@@ -2,7 +2,10 @@
 using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.HostRegistration;
 using Application.Models.GameServer.WeaverWork;
+using Application.Requests.GameServer.Host;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Models.Host;
+using MemoryPack;
 
 namespace Application.Mappers.GameServer;
 
@@ -21,7 +24,15 @@ public static class HostMappers
             PublicIp = hostDb.PublicIp,
             CurrentState = hostDb.CurrentState,
             Os = hostDb.Os,
-            AllowedPorts = hostDb.AllowedPorts,
+            OsName = hostDb.OsName,
+            OsVersion = hostDb.OsVersion,
+            AllowedPorts = MemoryPackSerializer.Deserialize<List<string>>(hostDb.AllowedPorts),
+            Cpus = MemoryPackSerializer.Deserialize<List<HostCpu>>(hostDb.Cpus),
+            Motherboards = MemoryPackSerializer.Deserialize<List<HostMotherboard>>(hostDb.Motherboards),
+            Storage = MemoryPackSerializer.Deserialize<List<HostStorage>>(hostDb.Storage),
+            NetworkInterfaces = MemoryPackSerializer.Deserialize<List<HostNetworkInterface>>(hostDb.NetworkInterfaces),
+            RamModules = MemoryPackSerializer.Deserialize<List<HostRam>>(hostDb.RamModules),
+            Gpus = MemoryPackSerializer.Deserialize<List<HostGpu>>(hostDb.Gpus),
             CreatedBy = hostDb.CreatedBy,
             CreatedOn = hostDb.CreatedOn,
             LastModifiedBy = hostDb.LastModifiedBy,
@@ -36,6 +47,38 @@ public static class HostMappers
         return hostDbs.Select(x => x.ToSlim()).ToList();
     }
 
+    public static HostCreateDb ToCreateDb(this HostCreate host)
+    {
+        return new HostCreateDb
+        {
+            OwnerId = host.OwnerId,
+            PasswordHash = host.PasswordHash,
+            PasswordSalt = host.PasswordSalt,
+            Hostname = host.Hostname,
+            FriendlyName = host.FriendlyName,
+            Description = host.Description,
+            PrivateIp = host.PrivateIp,
+            PublicIp = host.PublicIp,
+            CurrentState = host.CurrentState,
+            Os = host.Os,
+            OsName = "",
+            OsVersion = "",
+            AllowedPorts = MemoryPackSerializer.Serialize(host.AllowedPorts),
+            Cpus = MemoryPackSerializer.Serialize(new List<HostCpu>()),
+            Motherboards = MemoryPackSerializer.Serialize(new List<HostMotherboard>()),
+            Storage = MemoryPackSerializer.Serialize(new List<HostStorage>()),
+            NetworkInterfaces = MemoryPackSerializer.Serialize(new List<HostNetworkInterface>()),
+            RamModules = MemoryPackSerializer.Serialize(new List<HostRam>()),
+            Gpus = MemoryPackSerializer.Serialize(new List<HostGpu>()),
+            CreatedBy = host.CreatedBy,
+            CreatedOn = host.CreatedOn,
+            LastModifiedBy = host.LastModifiedBy,
+            LastModifiedOn = host.LastModifiedOn,
+            IsDeleted = host.IsDeleted,
+            DeletedOn = host.DeletedOn
+        };
+    }
+    
     public static HostUpdate ToUpdate(this HostDb hostDb)
     {
         return new HostUpdate
@@ -51,13 +94,70 @@ public static class HostMappers
             PublicIp = hostDb.PublicIp,
             CurrentState = hostDb.CurrentState,
             Os = hostDb.Os,
-            AllowedPorts = hostDb.AllowedPorts,
+            AllowedPorts = MemoryPackSerializer.Deserialize<List<string>>(hostDb.AllowedPorts),
+            Cpus = MemoryPackSerializer.Deserialize<List<HostCpu>>(hostDb.Cpus),
+            Motherboards = MemoryPackSerializer.Deserialize<List<HostMotherboard>>(hostDb.Motherboards),
+            Storage = MemoryPackSerializer.Deserialize<List<HostStorage>>(hostDb.Storage),
+            NetworkInterfaces = MemoryPackSerializer.Deserialize<List<HostNetworkInterface>>(hostDb.NetworkInterfaces),
+            RamModules = MemoryPackSerializer.Deserialize<List<HostRam>>(hostDb.RamModules),
+            Gpus = MemoryPackSerializer.Deserialize<List<HostGpu>>(hostDb.Gpus),
             CreatedBy = hostDb.CreatedBy,
             CreatedOn = hostDb.CreatedOn,
             LastModifiedBy = hostDb.LastModifiedBy,
             LastModifiedOn = hostDb.LastModifiedOn,
             IsDeleted = hostDb.IsDeleted,
             DeletedOn = hostDb.DeletedOn
+        };
+    }
+
+    public static HostUpdate ToUpdate(this HostDetailUpdate host)
+    {
+        return new HostUpdate
+        {
+            Id = host.HostId,
+            Hostname = host.Hostname,
+            Os = host.Os.Os,
+            OsName = host.Os.Name,
+            OsVersion = host.Os.Version,
+            Cpus = host.Cpus,
+            Motherboards = host.Motherboards,
+            Storage = host.Storage,
+            NetworkInterfaces = host.NetworkInterfaces,
+            RamModules = host.RamModules,
+            Gpus = host.Gpus
+        };
+    }
+
+    public static HostUpdateDb ToUpdateDb(this HostUpdate host)
+    {
+        return new HostUpdateDb
+        {
+            Id = host.Id,
+            OwnerId = host.OwnerId,
+            PasswordHash = host.PasswordHash,
+            PasswordSalt = host.PasswordSalt,
+            Hostname = host.Hostname,
+            FriendlyName = host.FriendlyName,
+            Description = host.Description,
+            PrivateIp = host.PrivateIp,
+            PublicIp = host.PublicIp,
+            CurrentState = host.CurrentState,
+            Os = host.Os,
+            OsName = host.OsName,
+            OsVersion = host.OsVersion,
+            AllowedPorts = host.AllowedPorts is null ? null : MemoryPackSerializer.Serialize(host.AllowedPorts),
+            Cpus = host.Cpus is null ? null : MemoryPackSerializer.Serialize(host.Cpus),
+            Motherboards = host.Motherboards is null ? null : MemoryPackSerializer.Serialize(host.Motherboards),
+            Storage = host.Storage is null ? null : MemoryPackSerializer.Serialize(host.Storage),
+            NetworkInterfaces = host.NetworkInterfaces is null ? null : MemoryPackSerializer.Serialize(host.NetworkInterfaces),
+            RamModules = host.RamModules is null ? null : MemoryPackSerializer.Serialize(host.RamModules),
+            Gpus = host.Gpus is null ? null : MemoryPackSerializer.Serialize(host.Gpus),
+            CreatedBy = host.CreatedBy,
+            CreatedOn = host.CreatedOn,
+            LastModifiedBy = host.LastModifiedBy,
+            LastModifiedOn = host.LastModifiedOn,
+            IsDeleted = host.IsDeleted,
+            DeletedOn = host.DeletedOn
         };
     }
 
@@ -113,8 +213,8 @@ public static class HostMappers
             CpuUsage = checkInDb.CpuUsage,
             RamUsage = checkInDb.RamUsage,
             Uptime = checkInDb.Uptime,
-            NetworkOutMb = checkInDb.NetworkOutMb,
-            NetworkInMb = checkInDb.NetworkInMb
+            NetworkOutBytes = checkInDb.NetworkOutBytes,
+            NetworkInBytes = checkInDb.NetworkInBytes
         };
     }
 
@@ -138,5 +238,38 @@ public static class HostMappers
     public static IEnumerable<WeaverWorkClient> ToClientWorks(this IEnumerable<WeaverWorkSlim> workSlims)
     {
         return workSlims.Select(x => x.ToClientWork()).ToList();
+    }
+
+    public static HostCreate ToCreate(this HostCreateRequest request)
+    {
+        return new HostCreate
+        {
+            OwnerId = request.OwnerId,
+            FriendlyName = request.Name,
+            Description = request.Description,
+            AllowedPorts = request.AllowedPorts
+        };
+    }
+
+    public static HostUpdate ToUpdate(this HostUpdateRequest request)
+    {
+        return new HostUpdate
+        {
+            Id = request.Id,
+            OwnerId = request.OwnerId,
+            FriendlyName = request.Name,
+            Description = request.Description,
+            AllowedPorts = request.AllowedPorts
+        };
+    }
+
+    public static HostRegistrationUpdate ToUpdate(this HostRegistrationUpdateRequest request)
+    {
+        return new HostRegistrationUpdate
+        {
+            Id = request.Id,
+            Description = request.Description,
+            Active = request.Active
+        };
     }
 }

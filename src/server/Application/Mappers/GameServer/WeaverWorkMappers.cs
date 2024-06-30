@@ -1,7 +1,9 @@
 using Application.Models.Events;
 using Application.Models.GameServer.WeaverWork;
+using Application.Requests.GameServer.WeaverWork;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
+using MemoryPack;
 
 namespace Application.Mappers.GameServer;
 
@@ -52,6 +54,27 @@ public static class WeaverWorkMappers
             HostId = update.HostId,
             TargetType = update.TargetType ?? WeaverWorkTarget.StatusUpdate,
             Status = update.Status ?? WeaverWorkState.InProgress
+        };
+    }
+
+    public static WeaverWorkCreate ToCreate(this WeaverWorkCreateRequest request)
+    {
+        return new WeaverWorkCreate
+        {
+            HostId = request.HostId,
+            TargetType = request.TargetType,
+            Status = request.Status,
+            WorkData = MemoryPackSerializer.Serialize(request.WorkData)
+        };
+    }
+
+    public static WeaverWorkUpdate ToUpdate(this WeaverWorkUpdateRequest request)
+    {
+        return new WeaverWorkUpdate
+        {
+            Id = request.Id,
+            Status = request.Status,
+            WorkData = MemoryPackSerializer.Serialize(request.WorkData)
         };
     }
 }

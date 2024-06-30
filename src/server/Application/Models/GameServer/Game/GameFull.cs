@@ -2,6 +2,7 @@ using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.Publishers;
+using Domain.Enums.GameServer;
 
 namespace Application.Models.GameServer.Game;
 
@@ -13,6 +14,7 @@ public class GameFull
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
     public GameProfileSlim DefaultGameProfile { get; set; } = null!;
+    public string LatestBuildVersion { get; set; } = "";
     public string UrlBackground { get; set; } = "";
     public string UrlLogo { get; set; } = "";
     public string UrlLogoSmall { get; set; } = "";
@@ -37,6 +39,13 @@ public class GameFull
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }
     public DateTime? LastModifiedOn { get; set; }
+    public bool SupportsWindows { get; set; }
+    public bool SupportsLinux { get; set; }
+    public bool SupportsMac { get; set; }
+    public GameSource SourceType { get; set; }
+    public Guid? ManualFileRecordId { get; set; }
+    public string ManualVersionUrlCheck { get; set; } = "";
+    public string ManualVersionUrlDownload { get; set; } = "";
     public List<GameGenreSlim> Genres { get; set; } = [];
     public List<PublisherSlim> Publishers { get; set; } = [];
     public List<DeveloperSlim> Developers { get; set; } = [];

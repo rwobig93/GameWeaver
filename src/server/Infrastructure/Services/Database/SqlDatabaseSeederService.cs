@@ -279,18 +279,21 @@ public class SqlDatabaseSeederService : IHostedService
         var existingStateRecord = await _serverStateRepository.GetLatestAsync();
         if (!existingStateRecord.Succeeded)
         {
-            _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
-            return;
+            _logger.Information("Failed to retrieve existing server state record, this is expected on the first app run: {Error}",
+                existingStateRecord.ErrorMessage);
         }
 
         var latestRecord = existingStateRecord.Result;
         if (latestRecord is not null)
         {
-            _logger.Debug("Existing record exists => [{Id}]{Version}/{DatabaseVersion} :: {Timestamp}",
+            _logger.Debug("Existing server state record exists => [{Id}]{Version}/{DatabaseVersion} :: {Timestamp}",
                 latestRecord.Id, latestRecord.AppVersion, latestRecord.DatabaseVersion, latestRecord.Timestamp);
         
             if (new Version(latestRecord.AppVersion) == _serverState.ApplicationVersion)
+            {
+                _logger.Debug($"App version hasn't changed and hasn't been upgraded");
                 return;
+            }
 
             // Update the application version while keeping the database version for database migrations
             latestRecord.AppVersion = _serverState.ApplicationVersion.ToString();
@@ -302,7 +305,7 @@ public class SqlDatabaseSeederService : IHostedService
             {
                 Timestamp = _dateTime.NowDatabaseTime,
                 AppVersion = _serverState.ApplicationVersion.ToString(),
-                DatabaseVersion = _serverState.ApplicationVersion.ToString()
+                DatabaseVersion = "0.0.0.0"
             };
         }
         
@@ -312,8 +315,9 @@ public class SqlDatabaseSeederService : IHostedService
             _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
             return;
         }
-            
-        _logger.Information("Created server state record: {Id} {AppVersion}", createRecordRequest.Result, _serverState.ApplicationVersion);
+        
+        _logger.Information("Application updated, created server state record: {Id} {AppVersion}/{DatabaseVersion}",
+            createRecordRequest.Result, latestRecord.AppVersion, latestRecord.DatabaseVersion);
     }
 
     private void ExecuteSqlMigration(ISqlMigration migration, bool databaseUpgrade)
@@ -347,6 +351,12 @@ public class SqlDatabaseSeederService : IHostedService
         };
         var databaseUpgrade = new Version(existingStateRecord.Result.AppVersion) > new Version(existingStateRecord.Result.DatabaseVersion);
 
+        if (!databaseUpgrade)
+        {
+            _logger.Information($"App & Database version match, no migrations necessary, skipping DB migrations");
+            return;
+        }
+
         databaseMigrations = databaseUpgrade
             // Filter migrations in ascending order that are newer than the database version but equal or older than the app version
             ? databaseMigrations.OrderBy(x => x.VersionTarget)
@@ -374,7 +384,7 @@ public class SqlDatabaseSeederService : IHostedService
             return;
         }
         
-        _logger.Information("Created server state record: {Id} {AppVersion}/{DatabaseVersion}",
-            createRecordRequest.Result, _serverState.ApplicationVersion, _serverState.ApplicationVersion);
+        _logger.Information("Updated server state record post DB migration: {Id} {AppVersion}/{DatabaseVersion}",
+            createRecordRequest.Result, newRecord.AppVersion, newRecord.DatabaseVersion);
     }
 }

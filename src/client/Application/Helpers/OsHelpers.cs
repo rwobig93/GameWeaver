@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using Domain.Enums;
 using Domain.Models.Network;
 using Serilog;
 
@@ -15,15 +16,18 @@ public static class OsHelpers
         return Directory.GetCurrentDirectory();
     }
 
-    public static OSPlatform GetCurrentOs()
+    public static OsType GetCurrentOs()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            return OSPlatform.Windows;
+            return OsType.Windows;
         
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            return OSPlatform.Linux;
+            return OsType.Linux;
         
-        return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OSPlatform.OSX : OSPlatform.FreeBSD;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
+            return OsType.Linux;
+        
+        return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OsType.Mac : OsType.Unknown;
     }
 
     public static string GetConfigPath()
@@ -53,7 +57,7 @@ public static class OsHelpers
 
     public static string GetSteamCmdPath()
     {
-        return GetCurrentOs() == OSPlatform.Windows ?
+        return GetCurrentOs() == OsType.Windows ?
             Path.Combine(GetSteamCmdDirectory(), "steamcmd.exe") :
             Path.Combine(GetSteamCmdDirectory(), "steamcmd");
     }

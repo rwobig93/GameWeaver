@@ -5,6 +5,7 @@ using Application.Constants.Communication;
 using Domain.Contracts;
 using Domain.Exceptions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Infrastructure.Middleware;
@@ -13,11 +14,13 @@ public class ErrorHandlerMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger _logger;
+    private readonly IHostEnvironment _environment;
 
-    public ErrorHandlerMiddleware(RequestDelegate next, ILogger logger)
+    public ErrorHandlerMiddleware(RequestDelegate next, ILogger logger, IHostEnvironment environment)
     {
         _next = next;
         _logger = logger;
+        _environment = environment;
     }
 
     public async Task Invoke(HttpContext context)
@@ -33,8 +36,7 @@ public class ErrorHandlerMiddleware
 
             var response = context.Response;
             response.ContentType = "application/json";
-            // TODO: Configure error message based on environment - development should be error.Message and prod should be Generic internal error message
-            var errorMessage = error.Message;
+            var errorMessage = _environment.IsDevelopment() ? error.Message : ErrorMessageConstants.Generic.ContactAdmin;
             
             switch (error)
             {

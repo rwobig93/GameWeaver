@@ -55,11 +55,11 @@ public static class WebServerConfiguration
             try
             {
                 app.Urls.Add(altUrl);
-                logger.Information("Successfully bound application to Url: {Url}", altUrl);
+                logger.Information("Successfully bound alternate application to Url: {Url}", altUrl);
             }
             catch (Exception ex)
             {
-                logger.Fatal(ex, "Failed to map to url provided: {Error}", ex.Message);
+                logger.Fatal(ex, "Failed to map to alternate url provided: [{Url}] {Error}", altUrl, ex.Message);
             }
         }
     }
@@ -74,12 +74,10 @@ public static class WebServerConfiguration
             return;
         }
         
-        // TODO: Register headers and trusted proxies from general configuration
-        // app.UseForwardedHeaders(new ForwardedHeadersOptions
-        // {
-        //     ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
-        //                        Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
-        // });
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
+        {
+            ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All
+        });
         
         app.UseExceptionHandler("/Error");
         app.UseHsts();
@@ -178,8 +176,18 @@ public static class WebServerConfiguration
         // Map all other endpoints for the application (not identity and not examples)
         app.MapEndpointsAudit();
         app.MapEndpointsHost();
-        app.MapEndpointsGameserver();
+        app.MapEndpointsHostRegistration();
+        app.MapEndpointsHostCheckin();
+        app.MapEndpointsWeaverWork();
         app.MapEndpointsGame();
+        app.MapEndpointsGameGenre();
+        app.MapEndpointsDeveloper();
+        app.MapEndpointsPublisher();
+        app.MapEndpointsGameserver();
+        app.MapEndpointsConfigItem();
+        app.MapEndpointsGameProfile();
+        app.MapEndpointsLocalResource();
+        app.MapEndpointsMod();
         app.MapEndpointsNetwork();
     }
 
@@ -189,10 +197,9 @@ public static class WebServerConfiguration
         var hangfireJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
         var jobManager = scope.ServiceProvider.GetRequiredService<IJobManager>();
         
-        hangfireJobs.AddOrUpdate("UserHousekeeping", () =>
-            jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
-        
-        hangfireJobs.AddOrUpdate("DailyCleanup", () =>
-            jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
+        hangfireJobs.AddOrUpdate("UserHousekeeping", () => jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
+        hangfireJobs.AddOrUpdate("DailySystemCleanup", () => jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
+        hangfireJobs.AddOrUpdate("GameVersionCheck", () => jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));
+        hangfireJobs.AddOrUpdate("DailySteamSync", () => jobManager.DailySteamSync(), JobHelpers.CronString.Daily);
     }
 }

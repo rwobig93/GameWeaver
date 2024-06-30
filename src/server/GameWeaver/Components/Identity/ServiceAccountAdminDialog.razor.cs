@@ -56,7 +56,7 @@ public partial class ServiceAccountAdminDialog
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.ServiceAccounts.Admin);
+        _canAdminServiceAccounts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.ServiceAccounts.Admin);
     }
 
     private async Task GetServiceAccount()

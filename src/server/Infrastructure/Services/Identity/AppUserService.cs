@@ -21,18 +21,18 @@ public class AppUserService : IAppUserService
 {
     private readonly IAppUserRepository _userRepository;
     private readonly IAppPermissionRepository _permissionRepository;
-    private readonly IAuditTrailsRepository _auditRepository;
     private readonly IRunningServerState _serverState;
-    private readonly IDateTimeService _dateTimeService;
+    private readonly IDateTimeService _dateTime;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
-    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository,
-        IAuditTrailsRepository auditRepository, IRunningServerState serverState, IDateTimeService dateTimeService)
+    public AppUserService(IAppUserRepository userRepository, IAppPermissionRepository permissionRepository, IRunningServerState serverState, IDateTimeService dateTime,
+        ITroubleshootingRecordsRepository tshootRepository)
     {
         _userRepository = userRepository;
         _permissionRepository = permissionRepository;
-        _auditRepository = auditRepository;
         _serverState = serverState;
-        _dateTimeService = dateTimeService;
+        _dateTime = dateTime;
+        _tshootRepository = tshootRepository;
     }
 
     private static async Task<Result<AppUserFull?>> ConvertToFullAsync(AppUserFullDb? userFullDb)
@@ -246,27 +246,33 @@ public class AppUserService : IAppUserService
         {
             var foundUser = await GetByIdAsync(updateObject.Id);
             if (!foundUser.Succeeded || foundUser.Data is null)
+            {
                 return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
+            }
 
-            var updateUser = await _userRepository.UpdateAsync(updateObject);
-            if (!updateUser.Succeeded)
-                return await Result.FailAsync(updateUser.ErrorMessage);
+            updateObject.LastModifiedBy = modifyingUserId;
+            updateObject.LastModifiedOn = _dateTime.NowDatabaseTime;
+
+            var userUpdate = await _userRepository.UpdateAsync(updateObject);
+            if (!userUpdate.Succeeded)
+            {
+                return await Result.FailAsync(userUpdate.ErrorMessage);
+            }
 
             if (foundUser.Data.AccountType != AccountType.Service) return await Result.SuccessAsync();
             if (updateObject.Username is not null && foundUser.Data.Username == updateObject.Username) return await Result.SuccessAsync();
             
-            // Service Accounts have dynamic permissions so we need to update assigned permissions if the account name changed
+            // Service Accounts have dynamic permissions, so we need to update assigned permissions if the account name changed
             var claimValue = PermissionHelpers.GetClaimValueFromServiceAccount(
                 foundUser.Data.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin);
             var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
             if (!serviceAccountPermissions.Succeeded || serviceAccountPermissions.Result is null)
             {
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
-                    foundUser.Data.Id, new Dictionary<string, string>()
+                await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Users,
+                    foundUser.Data.Id, "Successfully updated service account but failed to update all dynamic permissions with the new name", new Dictionary<string, string>
                     {
                         {"Username Before", foundUser.Data.Username},
-                        {"Username After", updateObject.Username!},
-                        {"Detail", "Successfully updated service account but failed to update all dynamic permissions with the new name"},
+                        {"Username After", updateObject.Username ?? ""},
                         {"Error", serviceAccountPermissions.ErrorMessage}
                     });
                 return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
@@ -279,24 +285,23 @@ public class AppUserService : IAppUserService
                 var permissionUpdate = permission.ToUpdate();
                 permissionUpdate.Name = updateObject.Username;
                 permissionUpdate.LastModifiedBy = _serverState.SystemUserId;
-                permissionUpdate.LastModifiedOn = _dateTimeService.NowDatabaseTime;
+                permissionUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
                 
                 var updatePermissionRequest = await _permissionRepository.UpdateAsync(permissionUpdate);
                 if (!updatePermissionRequest.Succeeded)
                     errorMessages.Add(updatePermissionRequest.ErrorMessage);
             }
 
-            if (!errorMessages.Any())
+            if (errorMessages.Count == 0)
                 return await Result.SuccessAsync();
 
             // For any update requests that failed we'll create a troubleshooting audit trail to troubleshoot easier
             foreach (var message in errorMessages)
-                await _auditRepository.CreateTroubleshootLog(_serverState, _dateTimeService, AuditTableName.Users,
-                    foundUser.Data.Id, new Dictionary<string, string>()
+                await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Users,
+                    foundUser.Data.Id, "Successfully updated service account but failed to update all dynamic permissions with the new name", new Dictionary<string, string>
                     {
                         {"Username Before", foundUser.Data.Username},
-                        {"Username After", updateObject.Username!},
-                        {"Detail", "Successfully updated service account but failed to update all dynamic permissions with the new name"},
+                        {"Username After", updateObject.Username ?? ""},
                         {"Error", message}
                     });
             

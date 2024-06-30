@@ -4,8 +4,10 @@ using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
+using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using GameWeaver.Components.Identity;
+using Microsoft.Extensions.Options;
 
 namespace GameWeaver.Pages.Admin;
 
@@ -17,6 +19,7 @@ public partial class UserView
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] private IOptions<AppConfiguration> GeneralConfig { get; init; } = null!;
 
     [Parameter] public Guid UserId { get; set; }
 
@@ -42,6 +45,7 @@ public partial class UserView
     private bool _canViewExtendedAttrs;
     private bool _canAdminServiceAccount;
     private bool _canAdminEmail;
+    private bool _canForceLogin;
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -96,20 +100,21 @@ public partial class UserView
     private async Task GetPermissions()
     {
         _currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canEditUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Edit);
-        _canDisableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Disable);
-        _canEnableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.Enable);
-        _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.View);
-        _canAddRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Add);
-        _canRemoveRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Roles.Remove);
-        _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.View);
-        _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Add);
-        _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Permissions.Remove);
-        _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.ViewExtAttrs);
-        _canAdminEmail = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Users.AdminEmail);
+        _canEditUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.Edit);
+        _canDisableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.Disable);
+        _canEnableUsers = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.Enable);
+        _canViewRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Roles.View);
+        _canAddRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Roles.Add);
+        _canRemoveRoles = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Roles.Remove);
+        _canViewPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Permissions.View);
+        _canAddPermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Permissions.Add);
+        _canRemovePermissions = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Permissions.Remove);
+        _canViewExtendedAttrs = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.ViewExtAttrs);
+        _canAdminEmail = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.AdminEmail);
+        _canForceLogin = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.ForceLogin);
         if (_viewingUser.AccountType != AccountType.Service) return;
         
-        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.ServiceAccounts.Admin);
+        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.ServiceAccounts.Admin);
         if (_canAdminServiceAccount) return;
 
         // If not a service account admin check if the user has a dynamic permission to administrate this service account
@@ -265,5 +270,22 @@ public partial class UserView
         _processingEmailChange = false;
         StateHasChanged();
         Snackbar.Add(emailChangeRequest.Messages.First(), Severity.Success);
+    }
+    
+    private async Task ForceLogin()
+    {
+        var requestUserId = CurrentUserService.GetIdFromPrincipal(_currentUser);
+        var result = await AccountService.ForceUserLogin(_viewingUser.Id, requestUserId);
+        if (!result.Succeeded)
+        {
+            result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+        }
+        else
+        {
+            result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
+            Snackbar.Add("Successfully logged out all user device sessions!");
+            await GetViewingUser();
+            StateHasChanged();
+        }
     }
 }

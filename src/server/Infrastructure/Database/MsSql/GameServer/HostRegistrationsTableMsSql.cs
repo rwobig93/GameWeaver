@@ -12,7 +12,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
     
     public static readonly SqlTable Table = new()
     {
-        EnforcementOrder = 1,
+        EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
@@ -192,7 +192,8 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%'
                     OR h.[Key] LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%';
@@ -214,7 +215,8 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.HostId LIKE '%' + @SearchTerm + '%'
+                WHERE h.Id LIKE '%' + @SearchTerm + '%'
+                    OR h.HostId LIKE '%' + @SearchTerm + '%'
                     OR h.[Key] LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%'
@@ -247,6 +249,22 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
                     LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
                 WHERE Id = @Id;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure DeleteOlderThan = new()
+    {
+        Table = Table,
+        Action = "DeleteOlderThan",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteOlderThan]
+                @OlderThan DATETIME2
+            AS
+            begin
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE Active = 0
+                    AND CreatedOn < @OlderThan;
             end"
     };
 }

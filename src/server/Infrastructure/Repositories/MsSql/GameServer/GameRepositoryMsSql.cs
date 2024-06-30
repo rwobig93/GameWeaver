@@ -1,17 +1,13 @@
-﻿using Application.Helpers.Lifecycle;
-using Application.Helpers.Runtime;
-using Application.Mappers.GameServer;
+﻿using Application.Helpers.Runtime;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
+using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
-using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Domain.DatabaseEntities.GameServer;
-using Domain.Enums.Database;
-using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
 using Infrastructure.Database.MsSql.Shared;
@@ -23,14 +19,12 @@ public class GameRepositoryMsSql : IGameRepository
     private readonly ISqlDataService _database;
     private readonly ILogger _logger;
     private readonly IDateTimeService _dateTime;
-    private readonly IAuditTrailsRepository _auditRepository;
 
-    public GameRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IAuditTrailsRepository auditRepository)
+    public GameRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime)
     {
         _database = database;
         _logger = logger;
         _dateTime = dateTime;
-        _auditRepository = auditRepository;
     }
 
     public async Task<DatabaseActionResult<IEnumerable<GameDb>>> GetAllAsync()
@@ -87,9 +81,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameDb>> GetByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<GameDb?>> GetByIdAsync(Guid id)
     {
-        DatabaseActionResult<GameDb> actionReturn = new();
+        DatabaseActionResult<GameDb?> actionReturn = new();
 
         try
         {
@@ -123,9 +117,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameDb>> GetByFriendlyNameAsync(string friendlyName)
+    public async Task<DatabaseActionResult<GameDb?>> GetByFriendlyNameAsync(string friendlyName)
     {
-        DatabaseActionResult<GameDb> actionReturn = new();
+        DatabaseActionResult<GameDb?> actionReturn = new();
 
         try
         {
@@ -141,9 +135,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameDb>> GetBySteamGameIdAsync(int id)
+    public async Task<DatabaseActionResult<GameDb?>> GetBySteamGameIdAsync(int id)
     {
-        DatabaseActionResult<GameDb> actionReturn = new();
+        DatabaseActionResult<GameDb?> actionReturn = new();
 
         try
         {
@@ -159,9 +153,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameDb>> GetBySteamToolIdAsync(int id)
+    public async Task<DatabaseActionResult<GameDb?>> GetBySteamToolIdAsync(int id)
     {
-        DatabaseActionResult<GameDb> actionReturn = new();
+        DatabaseActionResult<GameDb?> actionReturn = new();
 
         try
         {
@@ -183,15 +177,7 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
-            createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createdId = await _database.SaveDataReturnId(GamesTableMsSql.Insert, createObject);
-
-            var foundHost = await GetByIdAsync(createdId);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Games, foundHost.Result!.Id,
-                createObject.CreatedBy, DatabaseActionType.Create, null, foundHost.Result!.ToSlim());
-
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -208,19 +194,7 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
-            var beforeObject = (await _database.LoadData<GameDb, dynamic>(
-                GamesTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-            
             await _database.SaveData(GamesTableMsSql.Update, updateObject);
-            
-            var afterObject = (await _database.LoadData<GameDb, dynamic>(
-                GamesTableMsSql.GetById, new {updateObject.Id})).FirstOrDefault();
-
-            var updateDiff = AuditHelpers.GetAuditDiff(beforeObject, afterObject);
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Games, beforeObject!.Id,
-                updateObject.LastModifiedBy.GetFromNullable(), DatabaseActionType.Update, updateDiff.Before, updateDiff.After);
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -231,26 +205,13 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId)
+    public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            var foundGame = await GetByIdAsync(id);
-            if (!foundGame.Succeeded || foundGame.Result is null)
-                throw new Exception(foundGame.ErrorMessage);
-            var gameUpdate = foundGame.Result.ToUpdate();
-            
-            // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
-            gameUpdate.LastModifiedBy = modifyingUserId;
-            await UpdateAsync(gameUpdate);
-            await _database.SaveData(GamesTableMsSql.Delete, 
-                new { Id = id, DeletedOn = _dateTime.NowDatabaseTime });
-
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Games, id,
-                gameUpdate.LastModifiedBy.GetFromNullable(), DatabaseActionType.Delete, gameUpdate);
-            
+            await _database.SaveData(GamesTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -354,9 +315,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<DeveloperDb>> GetDeveloperByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<DeveloperDb?>> GetDeveloperByIdAsync(Guid id)
     {
-        DatabaseActionResult<DeveloperDb> actionReturn = new();
+        DatabaseActionResult<DeveloperDb?> actionReturn = new();
 
         try
         {
@@ -372,9 +333,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<DeveloperDb>> GetDeveloperByNameAsync(string name)
+    public async Task<DatabaseActionResult<DeveloperDb?>> GetDeveloperByNameAsync(string name)
     {
-        DatabaseActionResult<DeveloperDb> actionReturn = new();
+        DatabaseActionResult<DeveloperDb?> actionReturn = new();
 
         try
         {
@@ -415,7 +376,6 @@ public class GameRepositoryMsSql : IGameRepository
         try
         {
             var createdId = await _database.SaveDataReturnId(DevelopersTableMsSql.Insert, createObject);
-            
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -432,12 +392,7 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
-            var foundDeveloper = await GetDeveloperByIdAsync(id);
-            if (!foundDeveloper.Succeeded || foundDeveloper.Result is null)
-                throw new Exception(foundDeveloper.ErrorMessage);
-
             await _database.SaveData(DevelopersTableMsSql.Delete, new { Id = id });
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -541,9 +496,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<PublisherDb>> GetPublisherByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<PublisherDb?>> GetPublisherByIdAsync(Guid id)
     {
-        DatabaseActionResult<PublisherDb> actionReturn = new();
+        DatabaseActionResult<PublisherDb?> actionReturn = new();
 
         try
         {
@@ -559,9 +514,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<PublisherDb>> GetPublisherByNameAsync(string name)
+    public async Task<DatabaseActionResult<PublisherDb?>> GetPublisherByNameAsync(string name)
     {
-        DatabaseActionResult<PublisherDb> actionReturn = new();
+        DatabaseActionResult<PublisherDb?> actionReturn = new();
 
         try
         {
@@ -602,7 +557,6 @@ public class GameRepositoryMsSql : IGameRepository
         try
         {
             var createdId = await _database.SaveDataReturnId(PublishersTableMsSql.Insert, createObject);
-            
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -619,12 +573,7 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
-            var foundPublisher = await GetPublisherByIdAsync(id);
-            if (!foundPublisher.Succeeded || foundPublisher.Result is null)
-                throw new Exception(foundPublisher.ErrorMessage);
-
             await _database.SaveData(PublishersTableMsSql.Delete, new { Id = id });
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -728,9 +677,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameGenreDb>> GetGameGenreByIdAsync(Guid id)
+    public async Task<DatabaseActionResult<GameGenreDb?>> GetGameGenreByIdAsync(Guid id)
     {
-        DatabaseActionResult<GameGenreDb> actionReturn = new();
+        DatabaseActionResult<GameGenreDb?> actionReturn = new();
 
         try
         {
@@ -746,9 +695,9 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameGenreDb>> GetGameGenreByNameAsync(string name)
+    public async Task<DatabaseActionResult<GameGenreDb?>> GetGameGenreByNameAsync(string name)
     {
-        DatabaseActionResult<GameGenreDb> actionReturn = new();
+        DatabaseActionResult<GameGenreDb?> actionReturn = new();
 
         try
         {
@@ -789,7 +738,6 @@ public class GameRepositoryMsSql : IGameRepository
         try
         {
             var createdId = await _database.SaveDataReturnId(GameGenreTableMsSql.Insert, createObject);
-            
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -806,12 +754,7 @@ public class GameRepositoryMsSql : IGameRepository
 
         try
         {
-            var foundGenre = await GetGameGenreByIdAsync(id);
-            if (!foundGenre.Succeeded || foundGenre.Result is null)
-                throw new Exception(foundGenre.ErrorMessage);
-
             await _database.SaveData(GameGenreTableMsSql.Delete, new { Id = id });
-            
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -856,6 +799,188 @@ public class GameRepositoryMsSql : IGameRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, GameGenreTableMsSql.SearchPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesAsync()
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var foundUpdates = await _database.LoadData<GameUpdateDb, dynamic>(GameUpdatesTableMsSql.GetAll, new { });
+
+            actionReturn.Succeed(foundUpdates);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetAll.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.GetAllPaginated, new { Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetAllPaginated.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<int>> GetGameUpdatesCountAsync()
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var rowCount = (await _database.LoadData<int, dynamic>(
+                GeneralTableMsSql.GetRowCount, new {GameUpdatesTableMsSql.Table.TableName})).FirstOrDefault();
+            actionReturn.Succeed(rowCount);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GeneralTableMsSql.GetRowCount.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<GameUpdateDb?>> GetGameUpdateByIdAsync(Guid id)
+    {
+        DatabaseActionResult<GameUpdateDb?> actionReturn = new();
+
+        try
+        {
+            var foundUpdate = (await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.GetById, new {Id = id})).FirstOrDefault();
+            actionReturn.Succeed(foundUpdate);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetGameUpdatesByGameId(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var foundUpdates = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.GetByGameId, new {Id = id});
+            actionReturn.Succeed(foundUpdates);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.GetByGameId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<Guid>> CreateGameUpdateAsync(GameUpdateCreate createObject)
+    {
+        DatabaseActionResult<Guid> actionReturn = new();
+
+        try
+        {
+            var createdId = await _database.SaveDataReturnId(GameUpdatesTableMsSql.Insert, createObject);
+            actionReturn.Succeed(createdId);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.Insert.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteGameUpdateAsync(Guid id)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(GameUpdatesTableMsSql.Delete, new { Id = id });
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.Delete.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult> DeleteGameUpdatesForGameIdAsync(Guid id)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(GameUpdatesTableMsSql.DeleteForGameId, new { Id = id });
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.DeleteForGameId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdateAsync(string searchText)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var searchResults = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.Search, new { SearchTerm = searchText });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.Search.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<IEnumerable<GameUpdateDb>> actionReturn = new();
+
+        try
+        {
+            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var searchResults = await _database.LoadData<GameUpdateDb, dynamic>(
+                GameUpdatesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+
+            actionReturn.Succeed(searchResults);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameUpdatesTableMsSql.SearchPaginated.Path, ex.Message);
         }
 
         return actionReturn;

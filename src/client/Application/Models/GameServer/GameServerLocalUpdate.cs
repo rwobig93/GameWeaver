@@ -18,6 +18,7 @@ public class GameServerLocalUpdate
     public string? IpAddress { get; set; }
     public string? ExtHostname { get; set; }
     public int? PortGame { get; set; }
+    public int? PortPeer { get; set; }
     public int? PortQuery { get; set; }
     public int? PortRcon { get; set; }
     public bool? Modded { get; set; }

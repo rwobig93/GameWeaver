@@ -9,7 +9,7 @@ using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
-using Domain.Enums.Integration;
+using Domain.Enums.Integrations;
 using Microsoft.Extensions.Options;
 using GameWeaver.Components.Account;
 
@@ -57,6 +57,7 @@ public partial class SecuritySettings
     
     // User API Tokens
     private List<AppUserExtendedAttributeSlim> _userApiTokens = [];
+    private List<AppUserExtendedAttributeSlim> _userClientSessions = [];
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = [];
     
@@ -75,6 +76,7 @@ public partial class SecuritySettings
             await GetPermissions();
             await GetClientTimezone();
             await GetUserApiTokens();
+            await GetUserClientSessions();
             await GetUserExternalAuthLinks();
             await UpdatePageElementStates();
             await HandleExternalLoginRedirect();
@@ -106,7 +108,7 @@ public partial class SecuritySettings
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canGenerateApiTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Api.GenerateToken);
+        _canGenerateApiTokens = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.GenerateToken);
     }
 
     private async Task UpdatePageElementStates()
@@ -317,6 +319,18 @@ public partial class SecuritySettings
         _userApiTokens = tokensRequest.Data.ToList();
     }
 
+    private async Task GetUserClientSessions()
+    {
+        var clientSessionsRequest = await UserService.GetUserExtendedAttributesByTypeAsync(CurrentUser.Id, ExtendedAttributeType.UserClientId);
+        if (!clientSessionsRequest.Succeeded)
+        {
+            clientSessionsRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _userClientSessions = clientSessionsRequest.Data.ToList();
+    }
+
     private async Task GetUserExternalAuthLinks()
     {
         if (!ExternalAuthService.AnyProvidersEnabled) return;
@@ -484,6 +498,23 @@ public partial class SecuritySettings
         {
             Logger.Warning(ex, "Failure occurred when attempting to handle external login redirect, likely invalid data provided");
             Snackbar.Add("Invalid external login data provided, please try logging in again", Severity.Error);
+        }
+    }
+
+    private async Task ForceLogin()
+    {
+        var result = await AccountService.ForceUserLogin(CurrentUser.Id, CurrentUser.Id);
+        if (!result.Succeeded)
+        {
+            result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+        }
+        else
+        {
+            result.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
+            Snackbar.Add("Successfully logged out all device sessions!");
+            await Task.Delay(2500);
+            await AccountService.LogoutGuiAsync(CurrentUser.Id);
+            NavManager.NavigateTo(AppConfig.Value.GetLoginRedirect(LoginRedirectReason.ReAuthenticationForceUser), true);
         }
     }
 }

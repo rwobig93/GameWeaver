@@ -1,8 +1,9 @@
+@using Application.Constants.Communication
 @using Application.Constants.Identity
 @using Application.Helpers.Runtime
 
 @attribute [Route(AppRouteConstants.Admin.AuditTrailView)]
-@attribute [Authorize(PermissionConstants.Audit.View)]
+@attribute [Authorize(PermissionConstants.System.Audit.View)]
 
 @if (_invalidDataProvided)
 {

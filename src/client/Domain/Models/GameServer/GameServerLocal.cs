@@ -6,6 +6,7 @@ namespace Domain.Models.GameServer;
 public class GameServerLocal
 {
     public Guid Id { get; set; }
+    public Guid GameId { get; set; }
     public string SteamName { get; set; } = "";
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }
@@ -17,6 +18,7 @@ public class GameServerLocal
     public string IpAddress { get; set; } = "";
     public string ExtHostname { get; set; } = "";
     public int PortGame { get; set; } = 0;
+    public int PortPeer { get; set; } = 0;
     public int PortQuery { get; set; } = 0;
     public int PortRcon { get; set; }
     public bool Modded { get; set; }

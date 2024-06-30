@@ -1,9 +1,10 @@
+@using Application.Constants.Communication
 @using Application.Constants.Identity
 @using Domain.Enums.Identity
 @using GameWeaver.Converters
 
 @attribute [Route(AppRouteConstants.Admin.UserView)]
-@attribute [Authorize(PermissionConstants.Users.View)]
+@attribute [Authorize(PermissionConstants.Identity.Users.View)]
 
 @if (_invalidDataProvided)
 {
@@ -45,6 +46,12 @@ else
                        OnClick="@ChangeEmail">Change Email
             </MudButton>
         }
+        @if (_canForceLogin)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login"
+                       OnClick="@ForceLogin">Force Logout
+            </MudButton>
+        }
         @if (_editMode)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 
@@ -77,12 +84,16 @@ else
             <MudTextField @bind-Value="_viewingUser.LastName" Label="Last Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudCheckBox @bind-Checked="_viewingUser.AuthState" Converter="@(new AuthStateConverter())" Label="Is Enabled" Disabled="@(!_enableEditable)"
+            <MudCheckBox @bind-Value="_viewingUser.AuthState" Converter="@(new AuthStateConverter())" Label="Is Enabled" Disabled="@(!_enableEditable)"
                          Class="pe-4"/>
             <MudTextField @bind-Value="_viewingUser.ProfilePictureDataUrl" Label="Avatar URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pb-4">
             <MudTextField @bind-Value="_viewingUser.Notes" Label="Notes" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            @if (GeneralConfig.Value.UseCurrency)
+            {
+                <MudTextField @bind-Value="_viewingUser.Currency" Label="@GeneralConfig.Value.CurrencyName" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            }
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_createdByUsername" Label="Created By" Variant="Variant.Outlined" Disabled="true"/>

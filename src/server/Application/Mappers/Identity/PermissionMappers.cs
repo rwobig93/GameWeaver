@@ -1,7 +1,8 @@
-﻿using Application.Helpers.Identity;
+﻿using Application.Constants.Identity;
+using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
-using Application.Requests.v1.Identity.Permission;
+using Application.Requests.Identity.Permission;
 using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
@@ -102,7 +103,7 @@ public static class PermissionMappers
         return new AppPermissionCreate
         {
             RoleId = permissionCreate.RoleId,
-            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimType = ClaimConstants.Permission,
             ClaimValue = PermissionHelpers.GetClaimValueFromPermission(permissionCreate.Group, permissionCreate.Name, permissionCreate.Access) ?? "",
             Name = permissionCreate.Name,
             Description = permissionCreate.Description,
@@ -116,7 +117,7 @@ public static class PermissionMappers
         return new AppPermissionCreate
         {
             UserId = permissionCreate.UserId,
-            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimType = ClaimConstants.Permission,
             ClaimValue = PermissionHelpers.GetClaimValueFromPermission(permissionCreate.Group, permissionCreate.Name, permissionCreate.Access) ?? "",
             Name = permissionCreate.Name,
             Description = permissionCreate.Description,
@@ -138,7 +139,7 @@ public static class PermissionMappers
         {
             RoleId = GuidHelpers.GetMax(),
             UserId = GuidHelpers.GetMax(),
-            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimType = ClaimConstants.Permission,
             ClaimValue = permissionValue,
             Name = permissionName,
             Group = permissionGroup,
@@ -157,7 +158,7 @@ public static class PermissionMappers
         {
             RoleId = GuidHelpers.GetMax(),
             UserId = GuidHelpers.GetMax(),
-            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimType = ClaimConstants.Permission,
             ClaimValue = PermissionHelpers.GetClaimValueFromServiceAccount(serviceAccount.Id, DynamicPermissionGroup.ServiceAccounts, permissionLevel),
             Group = DynamicPermissionGroup.ServiceAccounts.ToString(),
             Name = serviceAccount.Username,
@@ -254,7 +255,7 @@ public static class PermissionMappers
         return new AppPermissionUpdate
         {
             Id = permissionUpdate.Id,
-            ClaimType = ApplicationClaimTypes.Permission,
+            ClaimType = ClaimConstants.Permission,
             ClaimValue = PermissionHelpers.GetClaimValueFromPermission(permissionUpdate.Group, permissionUpdate.Name, permissionUpdate.Access),
             Name = permissionUpdate.Name,
             Description = permissionUpdate.Description,
