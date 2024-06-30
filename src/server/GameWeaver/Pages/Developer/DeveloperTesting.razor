@@ -111,10 +111,16 @@
                             </MudContainer>
                             <MudSpacer/>
                             <MudContainer Class="d-flex flex-row gap-3">
-                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadGameFile">
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
-                                        Upload File
-                                    </MudButton>
+                                <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="UploadGameFile">
+                                    <ButtonTemplate>
+                                        <MudButton HtmlTag="label"
+                                                   Variant="Variant.Outlined"
+                                                   Color="Color.Primary"
+                                                   StartIcon="@Icons.Material.Filled.UploadFile"
+                                                   for="@fileInput">
+                                            Upload File
+                                        </MudButton>
+                                    </ButtonTemplate>
                                 </MudFileUpload>
                                 <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" OnClick="@(RefreshFileRecords)">
                                     Refresh Files

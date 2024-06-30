@@ -156,6 +156,7 @@ public class FileStorageRecordService : IFileStorageRecordService
             var convertedRecord = request.ToCreate();
             convertedRecord.CreatedBy = requestUserId;
             convertedRecord.CreatedOn = _dateTime.NowDatabaseTime;
+            convertedRecord.HashSha256 = "";
             
             var recordCreate = await _recordRepository.CreateAsync(convertedRecord);
             if (!recordCreate.Succeeded)
@@ -175,8 +176,10 @@ public class FileStorageRecordService : IFileStorageRecordService
             }
 
             var createdRecord = await _recordRepository.GetByIdAsync(recordCreate.Result);
+            var filePath = createdRecord.Result!.GetLocalFilePath();
             try
             {
+                Directory.CreateDirectory(new FileInfo(filePath).DirectoryName!);
                 await using (var stream = new FileStream(createdRecord.Result!.GetLocalFilePath(), FileMode.Create))
                 {
                     await content.CopyToAsync(stream);
@@ -200,7 +203,18 @@ public class FileStorageRecordService : IFileStorageRecordService
                 return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
 
-            return await Result<Guid>.SuccessAsync(recordCreate.Result);
+            var fileHash = FileHelpers.ComputeSha256Hash(filePath);
+            var recordUpdate = await _recordRepository.UpdateAsync(new FileStorageRecordUpdate() {Id = recordCreate.Result, HashSha256 = fileHash});
+            if (recordUpdate.Succeeded) return await Result<Guid>.SuccessAsync(recordCreate.Result);
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.FileStorage, recordCreate.Result, requestUserId,
+                    "Failed to update new file hash", new Dictionary<string, string>
+                    {
+                        {"HashSha256", fileHash ?? ""},
+                        {"Error", recordUpdate.ErrorMessage}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
         }
         catch (Exception ex)
         {

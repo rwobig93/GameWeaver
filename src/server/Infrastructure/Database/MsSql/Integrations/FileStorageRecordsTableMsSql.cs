@@ -1,9 +1,8 @@
 ﻿using Application.Database;
 using Application.Database.MsSql;
 using Application.Helpers.Runtime;
-using Infrastructure.Database.MsSql.Identity;
 
-namespace Infrastructure.Database.MsSql.System;
+namespace Infrastructure.Database.MsSql.Integrations;
 
 public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
 {
@@ -47,6 +46,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT *
                 FROM dbo.[{Table.TableName}]
+                WHERE IsDeleted = 0
                 ORDER BY CreatedOn DESC;
             end"
     };
@@ -63,6 +63,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT *
                 FROM dbo.[{Table.TableName}]
+                WHERE IsDeleted = 0
                 ORDER BY CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
@@ -94,7 +95,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT r.*
                 FROM dbo.[{Table.TableName}] r
-                WHERE r.LinkedId = @LinkedId
+                WHERE r.LinkedId = @LinkedId AND r.IsDeleted = 0
                 ORDER BY CreatedOn DESC;
             end"
     };
@@ -110,7 +111,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT r.*
                 FROM dbo.[{Table.TableName}] r
-                WHERE r.LinkedType = @LinkedType
+                WHERE r.LinkedType = @LinkedType AND r.IsDeleted = 0
                 ORDER BY CreatedOn DESC;
             end"
     };
@@ -157,7 +158,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT *
                 FROM dbo.[{Table.TableName}]
-                WHERE Id LIKE '%' + @SearchTerm + '%'
+                WHERE IsDeleted = 0 AND Id LIKE '%' + @SearchTerm + '%'
                     OR LinkedId LIKE '%' + @SearchTerm + '%'
                     OR FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR Filename LIKE '%' + @SearchTerm + '%'
@@ -183,7 +184,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT *
                 FROM dbo.[{Table.TableName}]
-                WHERE Id LIKE '%' + @SearchTerm + '%'
+                WHERE IsDeleted = 0 AND Id LIKE '%' + @SearchTerm + '%'
                     OR LinkedId LIKE '%' + @SearchTerm + '%'
                     OR FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR Filename LIKE '%' + @SearchTerm + '%'

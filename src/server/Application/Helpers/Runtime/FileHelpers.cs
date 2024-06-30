@@ -26,7 +26,7 @@ public static class FileHelpers
 
     public static string GetServerRootDirectory()
     {
-        return Directory.GetCurrentDirectory();
+        return Path.Join(Directory.GetCurrentDirectory(), "_local_storage");
     }
 
     public static string GetLocalFilePath(this FileStorageRecordDb record)

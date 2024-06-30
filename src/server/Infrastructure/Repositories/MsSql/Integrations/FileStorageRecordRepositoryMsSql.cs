@@ -6,8 +6,8 @@ using Application.Services.System;
 using Domain.DatabaseEntities.Integrations;
 using Domain.Enums.Integrations;
 using Domain.Models.Database;
+using Infrastructure.Database.MsSql.Integrations;
 using Infrastructure.Database.MsSql.Shared;
-using Infrastructure.Database.MsSql.System;
 
 namespace Infrastructure.Repositories.MsSql.Integrations;
 

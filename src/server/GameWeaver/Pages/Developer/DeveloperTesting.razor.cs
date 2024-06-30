@@ -901,6 +901,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         }
 
         Snackbar.Add("Successfully deleted file!", Severity.Success);
+        RefreshFileRecords();
     }
     
     public async ValueTask DisposeAsync()
