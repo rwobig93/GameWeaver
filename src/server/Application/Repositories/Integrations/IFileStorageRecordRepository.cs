@@ -1,4 +1,4 @@
-using Application.Models.System;
+using Application.Models.Integrations;
 using Domain.DatabaseEntities.Integrations;
 using Domain.Enums.Integrations;
 using Domain.Models.Database;

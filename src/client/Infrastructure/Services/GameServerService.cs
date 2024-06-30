@@ -23,15 +23,17 @@ public class GameServerService : IGameServerService
     private readonly IOptions<GeneralConfiguration> _generalConfig;
     private readonly IGameServerRepository _gameServerRepository;
     private readonly ISerializerService _serializerService;
+    private readonly IControlServerService _serverService;
 
     public GameServerService(ILogger logger, IDateTimeService dateTimeService, IOptions<GeneralConfiguration> generalConfig, IGameServerRepository gameServerRepository,
-        ISerializerService serializerService)
+        ISerializerService serializerService, IControlServerService serverService)
     {
         _logger = logger;
         _dateTimeService = dateTimeService;
         _generalConfig = generalConfig;
         _gameServerRepository = gameServerRepository;
         _serializerService = serializerService;
+        _serverService = serverService;
     }
 
     public static bool SteamCmdUpdateInProgress { get; private set; }
@@ -260,12 +262,13 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> InstallOrUpdateGame(Guid id, bool validate = false)
     {
-        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
         try
         {
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
+            {
                 return await Result.FailAsync(gameServerRequest.Messages);
+            }
             
             var gameServer = gameServerRequest.Data;
             if (!Directory.Exists(gameServer.GetInstallDirectory()))
@@ -273,25 +276,89 @@ public class GameServerService : IGameServerService
                 Directory.CreateDirectory(gameServer.GetInstallDirectory());
                 _logger.Information("Created directory for gameserver install: {Directory}", gameServer.GetInstallDirectory());
             }
-            
-            // TODO: Download manual game server client for manual sourced games via ApiConstants.GameServer.Game.DownloadLatest
-            // TODO: Add logic for manual vs steam sourced games within the client
 
-            var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer, validate));
-            if (!installResult.Succeeded)
+            return gameServer.Source switch
             {
-                _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-                return installResult;
-            }
-        
-            _logger.Information("Successfully installed/updated gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            return installResult;
+                GameSource.Steam => await InstallOrUpdateGameSteam(validate, gameServer),
+                GameSource.Manual => await InstallOrUpdateGameManual(gameServer),
+                _ => await Result.FailAsync($"Gameserver has an invalid source, unable to install: {id}")
+            };
         }
         catch (Exception ex)
         {
             _logger.Error(ex, "Failed to install gameserver: {GameserverId}", id);
             return await Result.FailAsync($"Failed to install gameserver: {id}");
         }
+    }
+
+    private async Task<IResult> InstallOrUpdateGameManual(GameServerLocal gameServer, bool secondRun = false)
+    {
+        var serverClientDownload = await _serverService.DownloadManualClient(gameServer.GameId);
+        if (!serverClientDownload.Succeeded)
+        {
+            _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            {
+                return serverClientDownload;
+            }
+        }
+        _logger.Debug("Downloaded manual game server client, now saving to the local file system: [{GameserverId}]{GameserverName} => {Filename}",
+            gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+
+        var clientDownloadPath = Path.Join(gameServer.GetInstallDirectory(), serverClientDownload.Data.FileName);
+        if (File.Exists(clientDownloadPath))
+        {
+            File.Delete(clientDownloadPath);
+            _logger.Debug("Deleted old manual server client: [{GameserverId}]{GameserverName} => {Filename}",
+                gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+        }
+                
+        File.WriteAllBytes(clientDownloadPath, serverClientDownload.Data.Content);
+        _logger.Debug("Successfully saved game server client to the local file system: [{GameserverId}]{GameserverName} => {Filename}",
+            gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+
+        var downloadedHash = FileHelpers.ComputeSha256Hash(clientDownloadPath);
+        if (downloadedHash != serverClientDownload.Data.HashSha256)
+        {
+            if (secondRun)
+            {
+                _logger.Error("Second install / update failed and hash doesn't match: [{GameserverId}]{GameserverName} => {Filename}",
+                    gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+                _logger.Error("  {Filename} expected hash: {IntegrityHash}", serverClientDownload.Data.FileName, serverClientDownload.Data.HashSha256);
+                _logger.Error("  {Filename} actual hash:   {IntegrityHash}", serverClientDownload.Data.FileName, downloadedHash);
+                return await Result.FailAsync(
+                    $"Second install / update failed and hash doesn't match [{gameServer.Id}]{gameServer.ServerName} => {serverClientDownload.Data.FileName}");
+            }
+            
+            _logger.Error("Integrity hash doesn't match for downloaded file: [{GameserverId}]{GameserverName} => {Filename}",
+                gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+            _logger.Error("  {Filename} expected hash: {IntegrityHash}", serverClientDownload.Data.FileName, serverClientDownload.Data.HashSha256);
+            _logger.Error("  {Filename} actual hash:   {IntegrityHash}", serverClientDownload.Data.FileName, downloadedHash);
+            return await InstallOrUpdateGameManual(gameServer, true);
+        }
+
+        if (serverClientDownload.Data.Format != FileStorageFormat.ArchiveZip) return serverClientDownload;
+        
+        ZipFile.ExtractToDirectory(clientDownloadPath, gameServer.GetInstallDirectory());
+        _logger.Debug("Extracted zip archive directly into game server install directory: [{GameserverId}]{GameserverName} => {Filename}",
+            gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
+
+        return serverClientDownload;
+    }
+
+    private async Task<IResult> InstallOrUpdateGameSteam(bool validate, GameServerLocal gameServer)
+    {
+        // See: https://steamcommunity.com/app/346110/discussions/0/535152511358957700/#c1768133742959565192
+        var steamInstall = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer, validate));
+        if (!steamInstall.Succeeded)
+        {
+            _logger.Error("Failed to install/update gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+            {
+                return steamInstall;
+            }
+        }
+        
+        _logger.Information("Successfully installed/updated gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
+        return steamInstall;
     }
 
     public async Task<IResult> InstallOrUpdateMod(Guid id, Mod mod)

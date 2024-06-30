@@ -14,7 +14,7 @@ using Application.Models.GameServer.HostCheckIn;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Network;
 using Application.Models.Identity.User;
-using Application.Models.System;
+using Application.Models.Integrations;
 using Application.Requests.GameServer.Game;
 using Application.Requests.GameServer.GameProfile;
 using Application.Requests.GameServer.GameServer;
@@ -850,6 +850,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         var fileName = Guid.NewGuid().ToString();
         var uploadRequest = await FileService.CreateAsync(new FileStorageRecordCreateRequest
         {
+            Format = FileStorageFormat.Binary,
             LinkedType = FileStorageType.Game,
             LinkedId = Guid.NewGuid(),
             FriendlyName = friendlyName,

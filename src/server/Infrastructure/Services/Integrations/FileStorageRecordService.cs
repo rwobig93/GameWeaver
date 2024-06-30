@@ -2,7 +2,7 @@ using Application.Constants.Communication;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.Integrations;
-using Application.Models.System;
+using Application.Models.Integrations;
 using Application.Repositories.Integrations;
 using Application.Repositories.Lifecycle;
 using Application.Requests.Integrations;

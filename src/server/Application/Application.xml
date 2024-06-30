@@ -1704,6 +1704,7 @@
             MemoryPack GenerateType: Object<br/>
             <code>
             <b>System.Guid</b> Id<br/>
+            <b>System.Guid</b> GameId<br/>
             <b>string</b> SteamName<br/>
             <b>int</b> SteamGameId<br/>
             <b>int</b> SteamToolId<br/>
@@ -1839,6 +1840,20 @@
             <b>float</b> Uptime<br/>
             <b>int</b> NetworkOutBytes<br/>
             <b>int</b> NetworkInBytes<br/>
+            </code>
+            </remarks>
+        </member>
+        <member name="T:Application.Responses.v1.GameServer.GameDownloadResponse">
+            <remarks>
+            MemoryPack GenerateType: Object<br/>
+            <code>
+            <b>System.Guid</b> Id<br/>
+            <b>Domain.Enums.Integrations.FileStorageFormat</b> Format<br/>
+            <b>string</b> GameName<br/>
+            <b>string</b> FileName<br/>
+            <b>string</b> Version<br/>
+            <b>string</b> HashSha256<br/>
+            <b>byte[]</b> Content<br/>
             </code>
             </remarks>
         </member>

@@ -12,45 +12,47 @@ public partial class GameServerToHost
     [MemoryPackOrder(0)]
     public Guid Id { get; set; }
     [MemoryPackOrder(1)]
-    public string SteamName { get; set; } = "";
+    public Guid GameId { get; set; }
     [MemoryPackOrder(2)]
-    public int SteamGameId { get; set; }
+    public string SteamName { get; set; } = "";
     [MemoryPackOrder(3)]
-    public int SteamToolId { get; set; }
+    public int SteamGameId { get; set; }
     [MemoryPackOrder(4)]
-    public string ServerName { get; set; } = "";
+    public int SteamToolId { get; set; }
     [MemoryPackOrder(5)]
-    public string Password { get; set; } = "";
+    public string ServerName { get; set; } = "";
     [MemoryPackOrder(6)]
-    public string PasswordRcon { get; set; } = "";
+    public string Password { get; set; } = "";
     [MemoryPackOrder(7)]
-    public string PasswordAdmin { get; set; } = "";
+    public string PasswordRcon { get; set; } = "";
     [MemoryPackOrder(8)]
-    public string ServerVersion { get; set; } = "";
+    public string PasswordAdmin { get; set; } = "";
     [MemoryPackOrder(9)]
-    public string IpAddress { get; set; } = "";
+    public string ServerVersion { get; set; } = "";
     [MemoryPackOrder(10)]
-    public string ExtHostname { get; set; } = "";
+    public string IpAddress { get; set; } = "";
     [MemoryPackOrder(11)]
-    public int PortGame { get; set; } = 0;
+    public string ExtHostname { get; set; } = "";
     [MemoryPackOrder(12)]
-    public int PortPeer { get; set; } = 0;
+    public int PortGame { get; set; }
     [MemoryPackOrder(13)]
-    public int PortQuery { get; set; } = 0;
+    public int PortPeer { get; set; }
     [MemoryPackOrder(14)]
-    public int PortRcon { get; set; }
+    public int PortQuery { get; set; }
     [MemoryPackOrder(15)]
-    public bool Modded { get; set; }
+    public int PortRcon { get; set; }
     [MemoryPackOrder(16)]
-    public string ManualRootUrl { get; set; } = "";
+    public bool Modded { get; set; }
     [MemoryPackOrder(17)]
-    public string ServerProcessName { get; set; } = "";
+    public string ManualRootUrl { get; set; } = "";
     [MemoryPackOrder(18)]
-    public ConnectivityState ServerState { get; set; }
+    public string ServerProcessName { get; set; } = "";
     [MemoryPackOrder(19)]
-    public GameSource Source { get; set; }
+    public ConnectivityState ServerState { get; set; }
     [MemoryPackOrder(20)]
-    public SerializableList<ModSlim> ModList { get; set; } = [];
+    public GameSource Source { get; set; }
     [MemoryPackOrder(21)]
+    public SerializableList<ModSlim> ModList { get; set; } = [];
+    [MemoryPackOrder(22)]
     public SerializableList<LocalResourceHost> Resources { get; set; } = [];
 }

@@ -1,16 +1,17 @@
-using Application.Models.System;
+using Application.Models.Integrations;
 using Application.Requests.Integrations;
 using Domain.DatabaseEntities.Integrations;
 
 namespace Application.Mappers.Integrations;
 
-public static class FileStorageRecordHelpers
+public static class FileStorageRecordMappers
 {
     public static FileStorageRecordSlim ToSlim(this FileStorageRecordDb record)
     {
         return new FileStorageRecordSlim
         {
             Id = record.Id,
+            Format = record.Format,
             LinkedType = record.LinkedType,
             LinkedId = record.LinkedId,
             FriendlyName = record.FriendlyName,
@@ -36,6 +37,7 @@ public static class FileStorageRecordHelpers
     {
         return new FileStorageRecordCreate
         {
+            Format = request.Format,
             LinkedType = request.LinkedType,
             LinkedId = request.LinkedId,
             FriendlyName = request.FriendlyName,
@@ -50,6 +52,7 @@ public static class FileStorageRecordHelpers
         return new FileStorageRecordUpdate
         {
             Id = request.Id,
+            Format = request.Format,
             LinkedType = null,
             LinkedId = null,
             FriendlyName = request.FriendlyName,

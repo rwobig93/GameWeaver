@@ -1,10 +1,10 @@
-using Domain.Enums.Integrations;
+using Domain.Enums;
 using MemoryPack;
 
-namespace Application.Responses.v1.GameServer;
+namespace Domain.Models.ControlServer;
 
 [MemoryPackable(SerializeLayout.Explicit)]
-public partial class GameDownloadResponse
+public partial class GameDownload
 {
     [MemoryPackOrder(0)]
     public Guid Id { get; set; }

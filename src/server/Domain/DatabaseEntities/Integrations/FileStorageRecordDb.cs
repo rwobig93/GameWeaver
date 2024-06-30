@@ -5,6 +5,7 @@ namespace Domain.DatabaseEntities.Integrations;
 public class FileStorageRecordDb
 {
     public Guid Id { get; set; }
+    public FileStorageFormat Format { get; set; }
     public FileStorageType LinkedType { get; set; }
     public Guid LinkedId { get; set; }
     public string FriendlyName { get; set; } = "";

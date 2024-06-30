@@ -1,10 +1,10 @@
 using Domain.Enums.Integrations;
 
-namespace Application.Models.System;
+namespace Application.Models.Integrations;
 
-public class FileStorageRecordSlim
+public class FileStorageRecordCreate
 {
-    public Guid Id { get; set; }
+    public FileStorageFormat Format { get; set; }
     public FileStorageType LinkedType { get; set; }
     public Guid LinkedId { get; set; }
     public string FriendlyName { get; set; } = "";

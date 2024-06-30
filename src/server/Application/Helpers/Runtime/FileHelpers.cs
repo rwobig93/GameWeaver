@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Application.Models.System;
+using Application.Models.Integrations;
 using Domain.DatabaseEntities.Integrations;
 
 namespace Application.Helpers.Runtime;

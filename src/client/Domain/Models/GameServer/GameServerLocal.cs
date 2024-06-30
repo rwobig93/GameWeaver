@@ -6,6 +6,7 @@ namespace Domain.Models.GameServer;
 public class GameServerLocal
 {
     public Guid Id { get; set; }
+    public Guid GameId { get; set; }
     public string SteamName { get; set; } = "";
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }

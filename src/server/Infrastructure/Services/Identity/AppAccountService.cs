@@ -620,8 +620,9 @@ public class AppAccountService : IAppAccountService
         
         // Previous pending account registration exists, return current value
         if (previousConfirmation is not null)
-            return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(
-                confirmationUri, "confirmationCode", previousConfirmation.Value));
+        {
+            return await Result<string>.SuccessAsync(QueryHelpers.AddQueryString(confirmationUri, "confirmationCode", previousConfirmation.Value));
+        }
 
         // No currently pending account registration exists, so we'll generate a new one, add it to the provided user
         //   and return the generated confirmation uri

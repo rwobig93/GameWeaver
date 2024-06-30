@@ -11,6 +11,7 @@ public static class GameServerMappers
         return new GameServerLocal
         {
             Id = gameServerToHost.Id,
+            GameId = gameServerToHost.GameId,
             SteamName = gameServerToHost.SteamName,
             SteamGameId = gameServerToHost.SteamGameId,
             SteamToolId = gameServerToHost.SteamToolId,

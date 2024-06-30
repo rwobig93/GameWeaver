@@ -121,6 +121,7 @@ public static class GameServerMappers
         return new GameServerToHost
         {
             Id = gameServerDb.Id,
+            GameId = gameServerDb.GameId,
             SteamName = gameServerDb.ServerName,
             SteamGameId = 0,
             SteamToolId = 0,

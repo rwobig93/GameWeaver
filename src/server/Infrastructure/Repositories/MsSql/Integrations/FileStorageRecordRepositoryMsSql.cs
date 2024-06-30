@@ -1,5 +1,5 @@
 using Application.Helpers.Runtime;
-using Application.Models.System;
+using Application.Models.Integrations;
 using Application.Repositories.Integrations;
 using Application.Services.Database;
 using Application.Services.System;

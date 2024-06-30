@@ -307,6 +307,7 @@ public class GameServerService : IGameServerService
         gameServerHost.SteamName = foundGame.Result.SteamName;
         gameServerHost.SteamGameId = foundGame.Result.SteamGameId;
         gameServerHost.SteamToolId = foundGame.Result.SteamToolId;
+        gameServerHost.ManualRootUrl = foundGame.Result.ManualVersionUrlDownload;
 
         var gameServerResources = await GetLocalResourcesForGameServerIdAsync(gameServerHost.Id);
         gameServerHost.Resources.AddRange(gameServerResources.Data.ToHosts(gameServerCreate.Result, foundHost.Result.Os));

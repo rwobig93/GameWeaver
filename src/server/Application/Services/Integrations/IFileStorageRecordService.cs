@@ -1,4 +1,4 @@
-using Application.Models.System;
+using Application.Models.Integrations;
 using Application.Requests.Integrations;
 using Domain.Contracts;
 using Domain.Enums.Integrations;

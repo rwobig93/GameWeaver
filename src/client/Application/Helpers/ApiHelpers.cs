@@ -15,7 +15,9 @@ public class ApiHelpers
 
         var isValidGuid = Guid.TryParse(hostId, out var hostIdConverted);
         if (hostId is null || string.IsNullOrWhiteSpace(registerKey) || !isValidGuid)
+        {
             return null;
+        }
 
         return new HostRegisterRequest
         {

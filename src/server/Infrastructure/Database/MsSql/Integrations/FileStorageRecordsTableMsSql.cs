@@ -19,6 +19,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             begin
                 CREATE TABLE [dbo].[{TableName}](
                     [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Format] INT NOT NULL,
                     [LinkedType] INT NOT NULL,
                     [LinkedId] UNIQUEIDENTIFIER NOT NULL,
                     [FriendlyName] NVARCHAR(100) NOT NULL,
@@ -84,6 +85,22 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
 
+    public static readonly SqlStoredProcedure GetByFormat = new()
+    {
+        Table = Table,
+        Action = "GetByFormat",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByFormat]
+                @Format INT
+            AS
+            begin
+                SELECT r.*
+                FROM dbo.[{Table.TableName}] r
+                WHERE r.Format = @Format AND r.IsDeleted = 0
+                ORDER BY CreatedOn DESC;
+            end"
+    };
+
     public static readonly SqlStoredProcedure GetByLinkedId = new()
     {
         Table = Table,
@@ -122,6 +139,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Format INT,
                 @LinkedType INT,
                 @LinkedId UNIQUEIDENTIFIER,
                 @FriendlyName NVARCHAR(100),
@@ -137,10 +155,10 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn DATETIME2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (LinkedType, LinkedId, FriendlyName, Filename, Description, HashSha256, Version, CreatedBy, CreatedOn, LastModifiedBy,
+                INSERT into dbo.[{Table.TableName}] (Format, LinkedType, LinkedId, FriendlyName, Filename, Description, HashSha256, Version, CreatedBy, CreatedOn, LastModifiedBy,
                                                      LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@LinkedType, @LinkedId, @FriendlyName, @Filename, @Description, @HashSha256, @Version, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn,
+                VALUES (@Format, @LinkedType, @LinkedId, @FriendlyName, @Filename, @Description, @HashSha256, @Version, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn,
                         @IsDeleted, @DeletedOn);
             end"
     };
@@ -219,6 +237,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
                 @Id UNIQUEIDENTIFIER,
+                @Format INT = null,
                 @LinkedType INT = null,
                 @LinkedId UNIQUEIDENTIFIER = null,
                 @FriendlyName NVARCHAR(100) = null,
@@ -235,11 +254,11 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
-                SET LinkedType = COALESCE(@LinkedType, LinkedType), LinkedId = COALESCE(@LinkedId, LinkedId), FriendlyName = COALESCE(@FriendlyName, FriendlyName),
-                    Filename = COALESCE(@Filename, Filename), Description = COALESCE(@Description, Description), HashSha256 = COALESCE(@HashSha256, HashSha256),
-                    Version = COALESCE(@Version, Version), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
-                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
-                    IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
+                SET Format = COALESCE(@Format, Format), LinkedType = COALESCE(@LinkedType, LinkedType), LinkedId = COALESCE(@LinkedId, LinkedId),
+                    FriendlyName = COALESCE(@FriendlyName, FriendlyName), Filename = COALESCE(@Filename, Filename), Description = COALESCE(@Description, Description),
+                    HashSha256 = COALESCE(@HashSha256, HashSha256), Version = COALESCE(@Version, Version), CreatedBy = COALESCE(@CreatedBy, CreatedBy),
+                    CreatedOn = COALESCE(@CreatedOn, CreatedOn), LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
+                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn), IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;
             end"
     };
