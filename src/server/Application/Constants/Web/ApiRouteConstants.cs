@@ -212,17 +212,18 @@ public static class ApiRouteConstants
 
         public static class Game
         {
-            public const string GetAllPaginated = "/api/gameserver/games";
-            public const string GetCount = "/api/gameserver/game/count";
-            public const string GetById = "/api/gameserver/game/id";
-            public const string GetBySteamName = "/api/gameserver/game/steamname";
-            public const string GetByFriendlyName = "/api/gameserver/game/friendlyname";
-            public const string GetBySteamGameId = "/api/gameserver/game/steamgameid";
-            public const string GetBySteamToolId = "/api/gameserver/game/steamtoolid";
-            public const string Create = "/api/gameserver/game";
-            public const string Update = "/api/gameserver/game";
-            public const string Delete = "/api/gameserver/game";
-            public const string Search = "/api/gameserver/game/search";
+            public const string GetAllPaginated = "/api/games";
+            public const string GetCount = "/api/game/count";
+            public const string GetById = "/api/game/id";
+            public const string GetBySteamName = "/api/game/steamname";
+            public const string GetByFriendlyName = "/api/game/friendlyname";
+            public const string GetBySteamGameId = "/api/game/steamgameid";
+            public const string GetBySteamToolId = "/api/game/steamtoolid";
+            public const string Create = "/api/game";
+            public const string Update = "/api/game";
+            public const string Delete = "/api/game";
+            public const string Search = "/api/game/search";
+            public const string DownloadLatest = "/api/game/download/latest";
         }
 
         public static class GameGenre

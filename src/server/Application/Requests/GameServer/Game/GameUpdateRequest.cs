@@ -18,4 +18,7 @@ public class GameUpdateRequest
     public bool? SupportsWindows { get; set; }
     public bool? SupportsLinux { get; set; }
     public bool? SupportsMac { get; set; }
+    public Guid? ManualFileRecordId { get; set; }
+    public string? ManualVersionUrlCheck { get; set; }
+    public string? ManualVersionUrlDownload { get; set; }
 }

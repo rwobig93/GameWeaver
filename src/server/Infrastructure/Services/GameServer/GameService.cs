@@ -258,7 +258,9 @@ public class GameService : IGameService
             });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-
+        
+        // TODO: Delete all local file uploads if game is manual
+        
         var deleteRequest = await _gameRepository.DeleteAsync(id, requestUserId);
         if (!deleteRequest.Succeeded)
         {

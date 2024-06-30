@@ -1,4 +1,5 @@
 using Domain.Contracts;
+using Domain.Enums.GameServer;
 
 namespace Domain.DatabaseEntities.GameServer;
 
@@ -39,4 +40,8 @@ public class GameDb : IAuditableEntity<Guid>
     public bool SupportsWindows { get; set; }
     public bool SupportsLinux { get; set; }
     public bool SupportsMac { get; set; }
+    public GameSource SourceType { get; set; }
+    public Guid? ManualFileRecordId { get; set; }
+    public string ManualVersionUrlCheck { get; set; } = "";
+    public string ManualVersionUrlDownload { get; set; } = "";
 }

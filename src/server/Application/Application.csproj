@@ -42,7 +42,6 @@
 
     <ItemGroup>
       <Folder Include="Requests\System\" />
-      <Folder Include="Responses\External\" />
     </ItemGroup>
 
 </Project>

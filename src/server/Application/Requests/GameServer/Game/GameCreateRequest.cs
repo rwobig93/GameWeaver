@@ -1,4 +1,6 @@
-﻿namespace Application.Requests.GameServer.Game;
+﻿using Domain.Enums.GameServer;
+
+namespace Application.Requests.GameServer.Game;
 
 public class GameCreateRequest
 {
@@ -9,4 +11,8 @@ public class GameCreateRequest
     public bool SupportsWindows { get; set; }
     public bool SupportsLinux { get; set; }
     public bool SupportsMac { get; set; }
+    public GameSource SourceType { get; set; }
+    public Guid? ManualFileRecordId { get; set; }
+    public string ManualVersionUrlCheck { get; set; } = "";
+    public string ManualVersionUrlDownload { get; set; } = "";
 }

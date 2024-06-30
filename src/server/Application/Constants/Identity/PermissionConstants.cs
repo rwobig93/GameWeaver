@@ -214,6 +214,7 @@ public static class PermissionConstants
             public const string Update = "Permissions.GameServer.Game.Update";
             public const string Delete = "Permissions.GameServer.Game.Delete";
             public const string Search = "Permissions.GameServer.Game.Search";
+            public const string DownloadLatest = "Permissions.GameServer.Game.Download";
         }
 
         public static class GameGenre

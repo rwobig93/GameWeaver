@@ -1,12 +1,17 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Models.GameServer.Game;
 using Application.Requests.GameServer.Game;
+using Application.Responses.v1.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Identity;
+using Application.Services.Integrations;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.Enums.GameServer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -32,6 +37,7 @@ public static class GameEndpoints
         app.MapPatch(ApiRouteConstants.GameServer.Game.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Game.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Game.Search, Search).ApiVersionOne();
+        app.MapGet(ApiRouteConstants.GameServer.Game.DownloadLatest, DownloadLatest).ApiVersionOne();
     }
     
     /// <summary>
@@ -261,6 +267,60 @@ public static class GameEndpoints
         catch (Exception ex)
         {
             return await Result<IEnumerable<GameSlim>>.FailAsync(ex.Message);
+        }
+    }
+    
+    /// <summary>
+    /// Download the latest server client for a manual source game
+    /// </summary>
+    /// <param name="gameId">ID of the game</param>
+    /// <param name="gameService"></param>
+    /// <param name="fileService"></param>
+    /// <returns>Information about the server client and the server client in a byte array</returns>
+    /// <remarks>Only works with Games of SourceType 'Manual'</remarks>
+    [Authorize(PermissionConstants.GameServer.Game.DownloadLatest)]
+    private static async Task<IResult<GameDownloadResponse>> DownloadLatest([FromQuery]Guid gameId, IGameService gameService, IFileStorageRecordService fileService)
+    {
+        try
+        {
+            var foundGame = await gameService.GetByIdAsync(gameId);
+            if (foundGame.Data is null)
+            {
+                return await Result<GameDownloadResponse>.FailAsync(ErrorMessageConstants.Games.NotFound);
+            }
+
+            if (foundGame.Data.SourceType != GameSource.Manual)
+            {
+                return await Result<GameDownloadResponse>.FailAsync(ErrorMessageConstants.Games.NotManualGame);
+            }
+
+            if (foundGame.Data.ManualFileRecordId is null)
+            {
+                return await Result<GameDownloadResponse>.FailAsync(ErrorMessageConstants.Games.NoServerClient);
+            }
+
+            var foundFile = await fileService.GetByIdAsync((Guid)foundGame.Data.ManualFileRecordId);
+            if (foundFile.Data is null)
+            {
+                return await Result<GameDownloadResponse>.FailAsync(ErrorMessageConstants.FileStorage.NotFound);
+            }
+
+            var fileContent = await File.ReadAllBytesAsync(foundFile.Data.GetLocalFilePath());
+            var response = new GameDownloadResponse
+            {
+                Id = foundGame.Data.Id,
+                GameName = foundGame.Data.FriendlyName,
+                FileName = foundFile.Data.Filename,
+                Version = foundFile.Data.Version,
+                HashSha256 = foundFile.Data.HashSha256,
+                Content = fileContent
+            };
+            
+            return await Result<GameDownloadResponse>.SuccessAsync(response);
+        }
+        catch (Exception ex)
+        {
+            return await Result<GameDownloadResponse>.FailAsync(ex.Message);
         }
     }
 }

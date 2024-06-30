@@ -30,5 +30,10 @@ public class ApiConstants
         {
             public const string UpdateStatus = "/api/weaver/work/status";
         }
+
+        public static class Game
+        {
+            public const string DownloadLatest = "/api/game/download/latest";
+        }
     }
 }

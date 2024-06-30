@@ -281,6 +281,16 @@
             <returns>List of games</returns>
             <remarks>Searches by: ID, FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
         </member>
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.DownloadLatest(System.Guid,Application.Services.GameServer.IGameService,Application.Services.Integrations.IFileStorageRecordService)">
+            <summary>
+            Download the latest server client for a manual source game
+            </summary>
+            <param name="gameId">ID of the game</param>
+            <param name="gameService"></param>
+            <param name="fileService"></param>
+            <returns>Information about the server client and the server client in a byte array</returns>
+            <remarks>Only works with Games of SourceType 'Manual'</remarks>
+        </member>
         <member name="M:Application.Api.v1.GameServer.GameGenreEndpoints.MapEndpointsGameGenre(Microsoft.AspNetCore.Routing.IEndpointRouteBuilder)">
             <summary>
             Registers the API endpoints

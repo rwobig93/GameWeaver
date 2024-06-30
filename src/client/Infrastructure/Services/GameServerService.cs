@@ -273,6 +273,9 @@ public class GameServerService : IGameServerService
                 Directory.CreateDirectory(gameServer.GetInstallDirectory());
                 _logger.Information("Created directory for gameserver install: {Directory}", gameServer.GetInstallDirectory());
             }
+            
+            // TODO: Download manual game server client for manual sourced games via ApiConstants.GameServer.Game.DownloadLatest
+            // TODO: Add logic for manual vs steam sourced games within the client
 
             var installResult = await RunSteamCmdCommand(SteamConstants.CommandInstallUpdateGame(gameServer, validate));
             if (!installResult.Succeeded)

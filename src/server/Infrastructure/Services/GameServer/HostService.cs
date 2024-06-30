@@ -377,7 +377,8 @@ public class HostService : IHostService
             new(ClaimTypes.Email, $"{hostId.ToString()}{HostConstants.HostPrincipalSuffix}"),
             new(ClaimTypes.Name, $"{hostId.ToString()}{HostConstants.HostPrincipalSuffix}"),
             new(ClaimConstants.Permission, PermissionConstants.GameServer.HostCheckins.CheckIn),
-            new(ClaimConstants.Permission, PermissionConstants.GameServer.WeaverWork.UpdateStatus)
+            new(ClaimConstants.Permission, PermissionConstants.GameServer.WeaverWork.UpdateStatus),
+            new(ClaimConstants.Permission, PermissionConstants.GameServer.Game.DownloadLatest)
         };
     }
 

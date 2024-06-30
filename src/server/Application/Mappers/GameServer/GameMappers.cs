@@ -3,6 +3,7 @@ using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Requests.GameServer.Game;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
@@ -40,7 +41,11 @@ public static class GameMappers
             RequirementsLinuxRecommended = gameDb.RequirementsLinuxRecommended,
             SupportsWindows = gameDb.SupportsWindows,
             SupportsLinux = gameDb.SupportsLinux,
-            SupportsMac = gameDb.SupportsMac
+            SupportsMac = gameDb.SupportsMac,
+            SourceType = gameDb.SourceType,
+            ManualFileRecordId = gameDb.ManualFileRecordId,
+            ManualVersionUrlCheck = gameDb.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = gameDb.ManualVersionUrlDownload
         };
     }
     
@@ -85,7 +90,11 @@ public static class GameMappers
             LastModifiedOn = gameDb.LastModifiedOn,
             SupportsWindows = gameDb.SupportsWindows,
             SupportsLinux = gameDb.SupportsLinux,
-            SupportsMac = gameDb.SupportsMac
+            SupportsMac = gameDb.SupportsMac,
+            SourceType = gameDb.SourceType,
+            ManualFileRecordId = gameDb.ManualFileRecordId,
+            ManualVersionUrlCheck = gameDb.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = gameDb.ManualVersionUrlDownload
         };
     }
 
@@ -126,6 +135,10 @@ public static class GameMappers
             SupportsWindows = gameDb.SupportsWindows,
             SupportsLinux = gameDb.SupportsLinux,
             SupportsMac = gameDb.SupportsMac,
+            SourceType = gameDb.SourceType,
+            ManualFileRecordId = gameDb.ManualFileRecordId,
+            ManualVersionUrlCheck = gameDb.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = gameDb.ManualVersionUrlDownload,
             Genres = [],
             Publishers = [],
             Developers = []
@@ -142,7 +155,11 @@ public static class GameMappers
             DescriptionShort = request.Description,
             SupportsWindows = request.SupportsWindows,
             SupportsLinux = request.SupportsLinux,
-            SupportsMac = request.SupportsMac
+            SupportsMac = request.SupportsMac,
+            SourceType = request.SourceType,
+            ManualFileRecordId = request.ManualFileRecordId,
+            ManualVersionUrlCheck = request.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = request.ManualVersionUrlDownload
         };
     }
 
@@ -165,7 +182,10 @@ public static class GameMappers
             UrlMetaCriticPage = request.UrlMetaCriticPage,
             SupportsWindows = request.SupportsWindows,
             SupportsLinux = request.SupportsLinux,
-            SupportsMac = request.SupportsMac
+            SupportsMac = request.SupportsMac,
+            ManualFileRecordId = request.ManualFileRecordId,
+            ManualVersionUrlCheck = request.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = request.ManualVersionUrlDownload
         };
     }
 
@@ -198,7 +218,8 @@ public static class GameMappers
             RequirementsLinuxRecommended = response.Linux_Requirements.Recommended,
             SupportsWindows = response.Platforms.Windows,
             SupportsLinux = response.Platforms.Linux,
-            SupportsMac = response.Platforms.Mac
+            SupportsMac = response.Platforms.Mac,
+            SourceType = GameSource.Steam
         };
     }
 }

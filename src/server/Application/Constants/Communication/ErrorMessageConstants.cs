@@ -86,6 +86,8 @@ public static class ErrorMessageConstants
         public const string AssignedGameServers = "Game is assigned to game servers, unable to delete the game without deleting the game servers";
         public const string DuplicateSteamToolId = "A game with that Steam Tool Id already exists";
         public const string InvalidSteamToolId = "The Steam Tool Id provided is invalid, please verify your input";
+        public const string NotManualGame = "The chosen game is not a manual sourced game so we can't do that";
+        public const string NoServerClient = "The desired game doesn't have a server client uploaded yet, please upload one or have an administrator do so";
     }
 
     public static class Developers
