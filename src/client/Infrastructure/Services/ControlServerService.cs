@@ -249,6 +249,11 @@ public class ControlServerService : IControlServerService
         return await Result.SuccessAsync();
     }
 
+    /// <summary>
+    /// Download a game server client for a manual sourced game
+    /// </summary>
+    /// <param name="gameId">ID of the game</param>
+    /// <returns>Game server client and download details</returns>
     public async Task<IResult<GameDownload>> DownloadManualClient(Guid gameId)
     {
         if (!RegisteredWithServer) { return await Result<GameDownload>.FailAsync("Not currently registered with a control server"); }
