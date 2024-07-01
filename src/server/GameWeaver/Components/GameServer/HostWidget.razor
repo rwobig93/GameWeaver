@@ -1,0 +1,48 @@
+@using System.Globalization
+<MudPaper Elevation="6" Class="l-container pa-2">
+    <MudStack Row="true" Spacing="2" Class="justify-center pa-2">
+        <MudText Typo="Typo.body2" Align="Align.Left">@FriendlyName</MudText>
+        <MudSpacer/>
+        <MudText Typo="Typo.body2" Align="Align.Left">@PublicIp</MudText>
+    </MudStack>
+    <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2">
+        <MudItem Class="d-flex flex-column justify-center b-game-card__cover">
+            <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCompute">
+                <CustomGraphics>
+                    <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@PrimaryColor">
+                        @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                    </text>
+                </CustomGraphics>
+            </MudChart>
+            <MudText Typo="Typo.body2" Align="Align.Center">CPU</MudText>
+        </MudItem>
+        <MudItem Class="d-flex flex-column justify-center b-game-card_cover">
+            <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsCompute">
+                <CustomGraphics>
+                    <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@PrimaryColor">
+                        @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                    </text>
+                </CustomGraphics>
+            </MudChart>
+            <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText>
+        </MudItem>
+        <MudStack Spacing="2" Row="true">
+            <MudItem Class="d-flex flex-column justify-center b-game-card__cover">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netIn" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
+            </MudItem>
+            <MudItem Class="d-flex flex-column justify-center b-game-card__cover">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOut" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
+            </MudItem>
+        </MudStack>
+    </MudStack>
+    <MudStack Row="true" Spacing="2" Class="justify-center pa-2">
+        <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(UpdateData)" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.RemoveRedEye" FullWidth="true">
+            View
+        </MudButton>
+    </MudStack>
+</MudPaper>
