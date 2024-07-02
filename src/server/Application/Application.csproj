@@ -22,6 +22,7 @@
       <PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
       <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
       <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+      <PackageReference Include="CodenameGenerator" Version="1.2.47" />
       <PackageReference Include="FluentEmail.Core" Version="3.0.2" />
       <PackageReference Include="Hangfire" Version="1.8.12" />
       <PackageReference Include="Hangfire.Core" Version="1.8.12" />

@@ -1,0 +1,43 @@
+@using Application.Constants.Identity
+@using GameWeaver.Components.GameServer
+@attribute [Route(AppRouteConstants.GameServer.Host.HostsDashboard)]
+@attribute [Authorize(PermissionConstants.GameServer.Hosts.Get)]
+
+<MudPaper Elevation="25" Class="pb-4 mb-6">
+    <MudToolBar Class="mx-1">
+        <MudFab Color="Color.Success" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Add"
+                Label="Add" Class="px-2"/>
+        <MudFab Color="Color.Primary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Refresh"
+                aria-label="refresh" Label="Search" Class="ml-2 px-2"/>
+        <MudTextField T="string" Label="Search:" Class="mb-5 ml-3"/>
+    </MudToolBar>
+</MudPaper>
+<MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
+    <HostWidget/>
+    <HostWidget FriendlyName="offline"/>
+    <HostWidget/>
+    @foreach (var host in _pagedData)
+    {
+    <HostWidget FriendlyName="@host.FriendlyName" Hostname="@host.Hostname" PublicIp="@host.PublicIp"/>
+    }
+    <HostWidget/>
+    <HostWidget/>
+    <HostWidget FriendlyName="offline"/>
+    <HostWidget/>
+</MudGrid>
+<MudPaper Elevation="25" Class="pt-4 mt-6" align-content-stretch>
+    <MudToolBar>
+        <MudText>Viewing: @GetCurrentPageViewData()</MudText>
+        <MudSpacer/>
+        <MudPagination ShowFirstButton="false" ShowLastButton="false" ShowPreviousButton="true" ShowNextButton="true"
+                       Count="@_totalPages" BoundaryCount="1" MiddleCount="3" SelectedChanged="PageChanged"/>
+        <MudSpacer/>
+        <MudSelect Label="Host Count" T="int" @bind-value="@_pageSize" SelectedValuesChanged="@RefreshData"
+                   Style="max-width: 130px;" Class="mb-2" align-self-end>
+            <MudSelectItem Value="10">10</MudSelectItem>
+            <MudSelectItem Value="25">25</MudSelectItem>
+            <MudSelectItem Value="50">50</MudSelectItem>
+            <MudSelectItem Value="100">100</MudSelectItem>
+        </MudSelect>
+    </MudToolBar>
+</MudPaper>

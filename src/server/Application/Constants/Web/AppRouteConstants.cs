@@ -53,4 +53,12 @@ public static class AppRouteConstants
     {
         public const string Root = "/jobs";
     }
+
+    public static class GameServer
+    {
+        public static class Host
+        {
+            public const string HostsDashboard = "/hosts/dashboard";
+        }
+    }
 }
