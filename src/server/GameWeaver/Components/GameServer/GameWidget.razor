@@ -1,5 +1,28 @@
-﻿<h3>GameWidget</h3>
-
-@code {
-    
+﻿@if (New)
+{
+    <div class="game-card-new">
+        <MudPaper>
+            <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
+        </MudPaper>
+        <MudPaper>
+            <MudStack Row="true">
+                <MudButton OnClick="ButtonClick">Test 1</MudButton>
+                <MudButton OnClick="ButtonClick">Test 2</MudButton>
+            </MudStack>
+        </MudPaper>
+    </div>
+}
+else
+{
+    <div class="game-card">
+        <MudPaper>
+            <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
+        </MudPaper>
+        <MudPaper>
+            <MudStack Row="true">
+                <MudButton OnClick="ButtonClick">Test 1</MudButton>
+                <MudButton OnClick="ButtonClick">Test 2</MudButton>
+            </MudStack>
+        </MudPaper>
+    </div>
 }

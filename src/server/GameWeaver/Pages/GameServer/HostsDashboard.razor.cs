@@ -45,7 +45,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         {
             try
             {
-                await widget.Value.UpdateState();
+                await Task.CompletedTask;
             }
             catch (Exception ex)
             {

@@ -68,6 +68,8 @@ public partial class HostWidget : ComponentBase
             
             await Task.CompletedTask;
             StateHasChanged();
+
+            await UpdateState();
         }
     }
 
