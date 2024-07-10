@@ -60,6 +60,7 @@
 }
 
 .game-card-new {
+    /* See: https://codepen.io/offeringofpie/pen/ExagprG */
     overflow: hidden;
     border-radius: 7px;
     object-fit: contain;
