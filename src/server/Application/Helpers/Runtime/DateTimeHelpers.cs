@@ -1,10 +1,17 @@
-﻿namespace Application.Helpers.Runtime;
+﻿using Application.Services.System;
+
+namespace Application.Helpers.Runtime;
 
 public static class DateTimeHelpers
 {
     public static DateTime ConvertToLocal(this DateTime originalDateTime, TimeZoneInfo timeZone)
     {
         return TimeZoneInfo.ConvertTimeFromUtc(originalDateTime, timeZone);
+    }
+    
+    public static DateTime ConvertToLocal(this IDateTimeService dateTimeService, TimeZoneInfo timeZone)
+    {
+        return TimeZoneInfo.ConvertTimeFromUtc(dateTimeService.NowDatabaseTime, timeZone);
     }
 
     public static string ToFriendlyDisplay(this DateTime dateTime)

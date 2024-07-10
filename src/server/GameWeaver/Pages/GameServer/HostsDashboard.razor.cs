@@ -1,10 +1,11 @@
 using Application.Models.GameServer.Host;
 using Application.Services.GameServer;
+using GameWeaver.Components.GameServer;
 using Microsoft.AspNetCore.Components;
 
 namespace GameWeaver.Pages.GameServer;
 
-public partial class HostsDashboard : ComponentBase
+public partial class HostsDashboard : ComponentBase, IAsyncDisposable
 {
     [Inject] private IHostService HostService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
@@ -12,6 +13,8 @@ public partial class HostsDashboard : ComponentBase
     private MudTable<HostSlim> _table = new();
     private IEnumerable<HostSlim> _pagedData = new List<HostSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    private Timer? _timer;
+    private Dictionary<Guid, HostWidget> _hostWidgets = new();
     
     private int _totalItems = 10;
     private int _totalPages = 1;
@@ -20,6 +23,38 @@ public partial class HostsDashboard : ComponentBase
     // private readonly string[] _orderings = null;
     // private string _searchString = "";
     // private List<string> _autocompleteList;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
+            
+            await Task.CompletedTask;
+        }
+    }
+
+    private async Task TimerDataUpdate()
+    {
+        if (!_pagedData.Any())
+        {
+            return;
+        }
+        
+        foreach (var widget in _hostWidgets)
+        {
+            try
+            {
+                await widget.Value.UpdateState();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add(ex.Message, Severity.Error);
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
     
     private async Task RefreshData()
     {
@@ -30,6 +65,7 @@ public partial class HostsDashboard : ComponentBase
             return;
         }
 
+        _hostWidgets.Clear();
         _pagedData = hosts.Data;
         StateHasChanged();
     }
@@ -55,5 +91,11 @@ public partial class HostsDashboard : ComponentBase
         _pageNumber = pageNumber;
         await RefreshData();
         await WebClientService.InvokeScrollToTop();
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        _timer?.Dispose();
+        await Task.CompletedTask;
     }
 }

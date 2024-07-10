@@ -1,66 +1,67 @@
 @using System.Globalization
 @using Application.Constants.Communication
-<MudPaper Elevation="6" Class="border-glow2 pa-2 border-solid" Style="position: relative;">
+@using Application.Helpers.Runtime
+<MudPaper Elevation="6" Class="pa-2 border-solid" Style="position: relative;">
     <MudProgressLinear Min="0" Max="100" Color="StatusColor" Value="100" Rounded="true" Style="{width: 100%}"/>
-    <div style="position: relative;">
-        <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
-            <MudPaper Outlined="true">
-                <MudStack Row="false" Spacing="2" Class="justify-center pa-2">
-                    <MudText Typo="Typo.body2" Align="Align.Center">Went Offline @@ @(_wentOffline.ToString(DataConstants.DateTime.UserFriendlyFormat))</MudText>
-                    <MudText Typo="Typo.body2" Align="Align.Center">Downtime: @GetDowntime()</MudText>
-                </MudStack>
-            </MudPaper>
-        </MudOverlay>
-        <MudStack Row="true" Spacing="2" Class="justify-center pa-2">
-            <MudText Typo="Typo.body2" Align="Align.Left">@FriendlyName</MudText>
-            <MudSpacer/>
-            <MudText Typo="Typo.body2" Align="Align.Right">@PublicIp</MudText>
-        </MudStack>
-        <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2">
-            <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu">
-                    <CustomGraphics>
-                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@PrimaryColor">
-                            @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
-                        </text>
-                    </CustomGraphics>
-                </MudChart>
-                <MudText Typo="Typo.body2" Align="Align.Center">CPU</MudText>
-            </MudItem>
-            <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsRam">
-                    <CustomGraphics>
-                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@SecondaryColor">
-                            @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
-                        </text>
-                    </CustomGraphics>
-                </MudChart>
-                <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText>
-            </MudItem>
-            <MudStack Spacing="2" Row="true">
-                <MudItem Class="d-flex flex-column justify-center">
-                    <MudChart ChartType="ChartType.Line" ChartSeries="@_netIn" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
-                    <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
-                </MudItem>
-                <MudItem Class="d-flex flex-column justify-center">
-                    <MudChart ChartType="ChartType.Line" ChartSeries="@_netOut" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
-                    <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
-                </MudItem>
+    <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
+        <MudPaper Outlined="true">
+            <MudStack Row="false" Spacing="2" Class="justify-center pa-2">
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Went Offline @@ @(WentOffline.ConvertToLocal(LocalTimeZone).ToString(DataConstants.DateTime.UserFriendlyFormat))
+                </MudText>
+                <MudText Typo="Typo.body2" Align="Align.Center">Downtime: @GetDowntime()</MudText>
             </MudStack>
-        </MudStack>
-        <MudStack Row="true" Spacing="2" Class="justify-center pa-2" AlignItems="AlignItems.Stretch" Justify="Justify.SpaceEvenly">
-            <MudItem Class="d-flex flex-column">
-                <MudText Class="pb-2" Typo="Typo.body2" Align="Align.Center">Storage Used: @_storageUsed%</MudText>
-                <MudProgressLinear Min="0" Max="100" Color="Color.Primary" Value="@_storageUsed"/>
-            </MudItem>
-            <MudItem Class="d-flex flex-column">
-                <MudText Typo="Typo.body2" Align="Align.Center">Uptime:</MudText>
-                <MudText Typo="Typo.body2" Align="Align.Left">@GetUptime()</MudText>
-            </MudItem>
-        </MudStack>
-    </div>
+        </MudPaper>
+    </MudOverlay>
     <MudStack Row="true" Spacing="2" Class="justify-center pa-2">
-        <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(UpdateData)" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true">
+        <MudText Typo="Typo.body2" Align="Align.Left">@Host.FriendlyName</MudText>
+        <MudSpacer/>
+        <MudText Typo="Typo.body2" Align="Align.Right">@Host.PublicIp</MudText>
+    </MudStack>
+    <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2">
+        <MudItem Class="d-flex flex-column justify-center">
+            <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu">
+                <CustomGraphics>
+                    <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@PrimaryColor">
+                        @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                    </text>
+                </CustomGraphics>
+            </MudChart>
+            <MudText Typo="Typo.body2" Align="Align.Center">CPU</MudText>
+        </MudItem>
+        <MudItem Class="d-flex flex-column justify-center">
+            <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsRam">
+                <CustomGraphics>
+                    <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@SecondaryColor">
+                        @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                    </text>
+                </CustomGraphics>
+            </MudChart>
+            <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText>
+        </MudItem>
+        <MudStack Spacing="2" Row="true">
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netIn" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
+            </MudItem>
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOut" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
+            </MudItem>
+        </MudStack>
+    </MudStack>
+    <MudStack Row="true" Spacing="2" Class="justify-center pa-2" AlignItems="AlignItems.Stretch" Justify="Justify.SpaceEvenly">
+        <MudItem Class="d-flex flex-column">
+            <MudText Class="pb-2" Typo="Typo.body2" Align="Align.Center">Storage Used: @StorageUsed%</MudText>
+            <MudProgressLinear Min="0" Max="100" Color="Color.Primary" Value="@StorageUsed"/>
+        </MudItem>
+        <MudItem Class="d-flex flex-column">
+            <MudText Typo="Typo.body2" Align="Align.Center">Uptime:</MudText>
+            <MudText Typo="Typo.body2" Align="Align.Left">@GetUptime()</MudText>
+        </MudItem>
+    </MudStack>
+    <MudStack Row="true" Spacing="2" Class="justify-center pa-2">
+        <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(UpdateCompute)" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true">
             Refresh
         </MudButton>
         <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.RemoveRedEye" FullWidth="true">

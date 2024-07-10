@@ -13,31 +13,15 @@
     </MudToolBar>
 </MudPaper>
 <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
-    <HostWidget/>
-    <HostWidget FriendlyName="offline"/>
-    <HostWidget/>
     @foreach (var host in _pagedData)
     {
-    <HostWidget FriendlyName="@host.FriendlyName" Hostname="@host.Hostname" PublicIp="@host.PublicIp"/>
+        <HostWidget ref="@(_hostWidgets[host.Id])" FriendlyName="@host.FriendlyName" Hostname="@host.Hostname" PublicIp="@host.PublicIp"/>
     }
-    <HostWidget/>
-    <HostWidget/>
-    <HostWidget FriendlyName="offline"/>
-    <HostWidget/>
 </MudGrid>
-<MudPaper Elevation="25" Class="pt-4 mt-6" align-content-stretch>
-    <MudToolBar>
-        <MudText>Viewing: @GetCurrentPageViewData()</MudText>
-        <MudSpacer/>
-        <MudPagination ShowFirstButton="false" ShowLastButton="false" ShowPreviousButton="true" ShowNextButton="true"
+<MudPaper Elevation="25" Class="pt-4 mt-6">
+    <MudStack Spacing="2" Row="true" Justify="Justify.SpaceBetween">
+        <MudText Class="pa-2">Viewing: @GetCurrentPageViewData()</MudText>
+        <MudPagination Class="pa-2" ShowFirstButton="false" ShowLastButton="false" ShowPreviousButton="true" ShowNextButton="true"
                        Count="@_totalPages" BoundaryCount="1" MiddleCount="3" SelectedChanged="PageChanged"/>
-        <MudSpacer/>
-        <MudSelect Label="Host Count" T="int" @bind-value="@_pageSize" SelectedValuesChanged="@RefreshData"
-                   Style="max-width: 130px;" Class="mb-2" align-self-end>
-            <MudSelectItem Value="10">10</MudSelectItem>
-            <MudSelectItem Value="25">25</MudSelectItem>
-            <MudSelectItem Value="50">50</MudSelectItem>
-            <MudSelectItem Value="100">100</MudSelectItem>
-        </MudSelect>
-    </MudToolBar>
+    </MudStack>
 </MudPaper>
