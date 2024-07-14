@@ -1,28 +1,53 @@
 ﻿@if (New)
 {
-    <div class="game-card-new">
-        <MudPaper>
-            <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
-        </MudPaper>
-        <MudPaper>
-            <MudStack Row="true">
-                <MudButton OnClick="ButtonClick">Test 1</MudButton>
-                <MudButton OnClick="ButtonClick">Test 2</MudButton>
-            </MudStack>
-        </MudPaper>
-    </div>
+    if (!Test)
+    {
+        <div class="game-card-new">
+            <MudPaper>
+                <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
+            </MudPaper>
+            <MudPaper>
+                <MudStack Row="true">
+                    <MudButton OnClick="ButtonClick" ClickPropagation="true">Test 1</MudButton>
+                    <MudButton OnClick="ButtonClick" ClickPropagation="true">Test 2</MudButton>
+                </MudStack>
+            </MudPaper>
+        </div>
+    }
+    else
+    {
+        <div class="game-card-new">
+            <MudButton OnClick="ButtonClick" ClickPropagation="true" Class="pa-0">
+                <MudPaper>
+                    <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
+                </MudPaper>
+            </MudButton>
+        </div>
+    }
 }
 else
 {
-    <div class="game-card">
-        <MudPaper>
-            <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
-        </MudPaper>
-        <MudPaper>
-            <MudStack Row="true">
-                <MudButton OnClick="ButtonClick">Test 1</MudButton>
-                <MudButton OnClick="ButtonClick">Test 2</MudButton>
-            </MudStack>
-        </MudPaper>
-    </div>
+    if (!Test)
+    {
+        <div class="game-card">
+            <MudPaper>
+                <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
+            </MudPaper>
+            <MudPaper>
+                <MudStack Row="true">
+                    <MudButton OnClick="ButtonClick" ClickPropagation="true">Test 1</MudButton>
+                    <MudButton OnClick="ButtonClick" ClickPropagation="true">Test 2</MudButton>
+                </MudStack>
+            </MudPaper>
+        </div> 
+    }
+    else
+    {
+        <div class="game-card">
+            <MudPaper>
+                <img src="@(GetUrl())" alt="game cover" width="150px" height="225px"/>
+                <MudButton OnClick="ButtonClick" ClickPropagation="true" Style="width: 0; height: 0;" />
+            </MudPaper>
+        </div>
+    }
 }

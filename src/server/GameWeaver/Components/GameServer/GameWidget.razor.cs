@@ -7,6 +7,7 @@ public partial class GameWidget : ComponentBase
     [Parameter] public bool New { get; set; }
     [Parameter] public bool Horizontal { get; set; } = true;
     [Parameter] public string Url { get; set; } = "";
+    [Parameter] public bool Test { get; set; }
 
     private string GetUrl()
     {
@@ -25,7 +26,8 @@ public partial class GameWidget : ComponentBase
 
     private async Task ButtonClick()
     {
-        Snackbar.Add("Clicked!", Severity.Success);
+        var randomClick = Random.Shared.Next(0, 1001);
+        Snackbar.Add($"Clicked! {randomClick}", Severity.Success);
         await Task.CompletedTask;
     }
 }

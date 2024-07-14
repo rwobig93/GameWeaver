@@ -3,9 +3,11 @@
     z-index: 1;
     border-radius: 7px;
     overflow: hidden;
+    object-fit: contain;
     perspective-origin: 50% 50%;
     transform-style: preserve-3d;
     transform-origin: top center;
+    cursor: pointer;
     will-change: transform;
     transform: skewX(.001deg);
     transition: transform .35s ease-in-out;
