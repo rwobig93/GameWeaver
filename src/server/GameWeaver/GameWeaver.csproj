@@ -68,6 +68,14 @@
       <EmbeddedResource Include="EmailTemplates\RegistrationConfirmation.cshtml">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </EmbeddedResource>
+      <Content Remove="wwwroot\images\gameserver\game-default.jpg" />
+      <EmbeddedResource Include="wwwroot\images\gameserver\game-default-horizontal.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+      <Content Remove="wwwroot\images\gameserver\game-default-vertical.jpg" />
+      <EmbeddedResource Include="wwwroot\images\gameserver\game-default-vertical.jpg">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>

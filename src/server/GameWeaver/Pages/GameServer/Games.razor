@@ -1,8 +1,7 @@
-@using Application.Constants.Identity
-@using Application.Models.GameServer.Host
+﻿@using Application.Constants.Identity
 @using GameWeaver.Components.GameServer
-@attribute [Route(AppRouteConstants.GameServer.Hosts.HostsDashboard)]
-@attribute [Authorize(PermissionConstants.GameServer.Hosts.Get)]
+@attribute [Route(AppRouteConstants.GameServer.Games.ViewAll)]
+@attribute [Authorize(PermissionConstants.GameServer.Game.Get)]
 
 <MudPaper Elevation="25" Class="pb-4 mb-6">
     <MudToolBar Class="mx-1">
@@ -10,13 +9,17 @@
                 Label="Add" Class="px-2"/>
         <MudFab Color="Color.Primary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Refresh"
                 aria-label="refresh" Label="Search" Class="ml-2 px-2"/>
+        <MudFab Color="Color.Secondary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Flip"
+                Label="Orientation" OnClick="@ChangeOrientation" Class="ml-2 px-2"/>
+        <MudFab Color="Color.Tertiary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Style"
+                Label="Style" OnClick="@ChangeStyle" Class="ml-2 px-2"/>
         <MudTextField T="string" Label="Search:" Class="mb-5 ml-3"/>
     </MudToolBar>
 </MudPaper>
 <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
-    @foreach (var host in _pagedData)
+    @foreach (var game in _pagedData)
     {
-        <HostWidget ref="@(_hostWidgets[host.Id])" Host="@host" LocalTimeZone="@_localTimeZone"/>
+        <GameWidget Game="@game" Vertical="@_displayVertical" CssDisplay="@_cssDisplay" />
     }
 </MudGrid>
 <MudPaper Elevation="25" Class="pt-4 mt-6">

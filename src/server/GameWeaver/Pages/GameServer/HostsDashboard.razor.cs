@@ -28,6 +28,9 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
+            await GetClientTimezone();
+            await RefreshData();
+            
             _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
             
             await Task.CompletedTask;
@@ -67,6 +70,8 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
 
         _hostWidgets.Clear();
         _pagedData = hosts.Data;
+        _totalItems = (await HostService.GetCountAsync()).Data;
+        _totalPages = _totalItems / _pageSize;
         StateHasChanged();
     }
     
@@ -91,6 +96,15 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         _pageNumber = pageNumber;
         await RefreshData();
         await WebClientService.InvokeScrollToTop();
+    }
+    
+    private async Task GetClientTimezone()
+    {
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
     }
     
     public async ValueTask DisposeAsync()

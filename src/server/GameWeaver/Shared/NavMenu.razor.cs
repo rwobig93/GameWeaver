@@ -13,6 +13,8 @@ public partial class NavMenu
     private bool _canViewTshootRecords;
     private bool _isDeveloper;
     private bool _canViewHosts;
+    private bool _canViewGames;
+    private bool _canViewGameServers;
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -39,5 +41,7 @@ public partial class NavMenu
         _canViewTshootRecords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Troubleshooting.View);
         _isDeveloper = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.AppDevelopment.Dev);
         _canViewHosts = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Hosts.Get);
+        _canViewGames = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Get);
+        _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
     }
 }

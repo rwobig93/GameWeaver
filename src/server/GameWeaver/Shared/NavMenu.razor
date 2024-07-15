@@ -2,7 +2,30 @@
     <MudNavLink Href="@AppRouteConstants.Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
         Home
     </MudNavLink>
-    @if (_canViewUsers || _canViewRoles)
+    @if (_canViewHosts || _canViewGames || _canViewGameServers)
+    {
+        <MudDivider Light="true" DividerType="DividerType.Middle"/>
+        @if (_canViewHosts)
+        {
+            // Alternative Icon could be @Icons.Material.Filled.Storage which looks like servers
+            <MudNavLink Href="@AppRouteConstants.GameServer.Hosts.HostsDashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Memory">
+                Hosts Dashboard
+            </MudNavLink>
+        }
+        @if (_canViewGames)
+        {
+            <MudNavLink Href="@AppRouteConstants.GameServer.Games.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Gamepad">
+                Games
+            </MudNavLink>
+        }
+        @if (_canViewGameServers)
+        {
+            <MudNavLink Href="@AppRouteConstants.GameServer.GameServers.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SportsEsports">
+                Game Servers
+            </MudNavLink>
+        }
+    }
+    @if (_canViewUsers || _canViewRoles || _canViewAuditTrails || _canViewTshootRecords)
     {
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
         @if (_canViewUsers)
@@ -53,16 +76,6 @@
         {
             <MudNavLink Href="@AppRouteConstants.Developer.Testing" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DeveloperMode">
                 Dev Testing
-            </MudNavLink>
-        }
-    }
-    @if (_canViewHosts)
-    {
-        <MudDivider Light="true" DividerType="DividerType.Middle"/>
-        @if (_canViewHosts)
-        {
-            <MudNavLink Href="@AppRouteConstants.GameServer.Host.HostsDashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Computer">
-                Hosts Dashboard
             </MudNavLink>
         }
     }

@@ -56,9 +56,19 @@ public static class AppRouteConstants
 
     public static class GameServer
     {
-        public static class Host
+        public static class Hosts
         {
             public const string HostsDashboard = "/hosts/dashboard";
+        }
+
+        public static class Games
+        {
+            public const string ViewAll = "/games";
+        }
+
+        public static class GameServers
+        {
+            public const string ViewAll = "/gameservers";
         }
     }
 }
