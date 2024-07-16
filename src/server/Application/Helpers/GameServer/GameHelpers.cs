@@ -20,6 +20,6 @@ public static partial class GameHelpers
             .Trim();
     }
 
-    [GeneratedRegex(@"[^a-zA-Z0-9]\s")]
+    [GeneratedRegex(@"[^a-zA-Z0-9:]\s")]
     private static partial Regex SteamNameSanitizeRegex();
 }

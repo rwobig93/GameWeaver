@@ -36,6 +36,5 @@ public static class ApiConstants
         }
         
         public static string StoreAppDetails(int appId) => $"/api/appdetails?appids={appId}";
-        
     }
 }

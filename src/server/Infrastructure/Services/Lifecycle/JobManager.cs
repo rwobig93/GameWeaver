@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.GameServer;
 using Application.Mappers.GameServer;
+using Application.Models.External.Steam;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
@@ -15,8 +16,10 @@ using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using Domain.Contracts;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
+using Hangfire;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.Lifecycle;
@@ -291,6 +294,8 @@ public class JobManager : IJobManager
         _logger.Debug("Finished game version check job");
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task DailySteamSync()
     {
         var allSteamApps = await _steamApiService.GetAllApps();
@@ -303,27 +308,33 @@ public class JobManager : IJobManager
         var serverApps = allSteamApps.Data.Where(x => x.Name.Contains("server", StringComparison.CurrentCultureIgnoreCase));
         foreach (var serverApp in serverApps)
         {
+            var appSanitizedName = serverApp.Name.SanitizeFromSteam();
+            if (string.IsNullOrWhiteSpace(appSanitizedName) || appSanitizedName.Length < 3)
+            {
+                _logger.Verbose("Steam app sanitized name is empty, skipping: [{ToolId}]{GameName}", serverApp.AppId, serverApp.Name);
+                continue;
+            }
+            
             var matchingGame = await _gameService.GetBySteamToolIdAsync(serverApp.AppId);
             if (matchingGame.Data is not null)
             {
+                // TODO: If ToolId isn't 0 but GameId is we should do an update if we can find game details
                 _logger.Verbose("Found matching game with tool id from steam: [{ToolId}]{GameName} => {GameId}",
                     matchingGame.Data.SteamToolId, matchingGame.Data.SteamName, matchingGame.Data.Id);
                 continue;
             }
 
-            var serverAppNameSanitized = serverApp.Name.SanitizeFromSteam();
-            var baseGame = allSteamApps.Data.FirstOrDefault(x =>
-                x.AppId != serverApp.AppId &&
-                !x.Name.EndsWith(" beta", StringComparison.InvariantCultureIgnoreCase) &&
-                !x.Name.EndsWith(" test", StringComparison.InvariantCultureIgnoreCase) &&
-                !x.Name.EndsWith(" demo", StringComparison.InvariantCultureIgnoreCase) &&
-                !x.Name.Contains("developer build", StringComparison.InvariantCultureIgnoreCase) &&
-                x.Name.Contains(serverAppNameSanitized));
+            var baseGame = await GetBaseGame(allSteamApps, serverApp);
+            if (baseGame is null)
+            {
+                _logger.Information("Unable to find base game for server app from steam: [{ToolId}]{GameName}", serverApp.AppId, serverApp.Name);
+                continue;
+            }
             
             var gameCreate = await _gameService.CreateAsync(new GameCreateRequest
             {
                 Name = serverApp.Name,
-                SteamGameId = baseGame?.AppId ?? 0,
+                SteamGameId = 0,
                 SteamToolId = serverApp.AppId
             }, _serverState.SystemUserId);
             if (!gameCreate.Succeeded)
@@ -335,50 +346,21 @@ public class JobManager : IJobManager
             _logger.Information("Created missing server app from steam: [{ToolId}]{GameName} => {GameId}",
                 serverApp.AppId, serverApp.Name, gameCreate.Data);
 
-            if (baseGame is null)
-            {
-                _logger.Information("Unable to find base game for server app from steam: [{ToolId}]{GameName} => {GameId}",
-                    serverApp.AppId, serverApp.Name, gameCreate.Data);
-            
-                var gameUpdateSlim = await _gameRepository.UpdateAsync(new GameUpdate
-                {
-                    Id = gameCreate.Data,
-                    SteamName = serverApp.Name,
-                    FriendlyName = serverAppNameSanitized,
-                    LastModifiedBy = _serverState.SystemUserId,
-                    LastModifiedOn = _dateTime.NowDatabaseTime
-                });
-                if (!gameUpdateSlim.Succeeded)
-                {
-                    _logger.Error("Failed to get update game without base game details from steam: [{ToolId}]{Error}", serverApp.AppId, gameCreate.Messages);
-                }
-
-                continue;
-            }
-            
-            var baseGameDetails = await _steamApiService.GetAppDetail(baseGame.AppId);
-            if (baseGameDetails.Data is null)
-            {
-                _logger.Information("Failed to get base game details from steam: [{ToolId}/{GameId}]{Error}",
-                    serverApp.AppId, baseGame.AppId, gameCreate.Messages);
-                continue;
-            }
-
-            var convertedGameUpdate = baseGameDetails.Data.ToUpdate(gameCreate.Data);
+            var convertedGameUpdate = baseGame.ToUpdate(gameCreate.Data);
+            convertedGameUpdate.SteamName = serverApp.Name;
+            convertedGameUpdate.FriendlyName = baseGame?.Name;
             convertedGameUpdate.LastModifiedBy = _serverState.SystemUserId;
             convertedGameUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
-            convertedGameUpdate.SteamName = serverApp.Name;
-            convertedGameUpdate.FriendlyName = baseGameDetails.Data.Name;
             
             var gameUpdate = await _gameRepository.UpdateAsync(convertedGameUpdate);
             if (!gameUpdate.Succeeded)
             {
                 _logger.Error("Failed to get update game with details from steam: [{ToolId}/{GameId}]{Error}",
-                    serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                    serverApp.AppId, baseGame?.Steam_AppId ?? 0, gameCreate.Messages);
                 continue;
             }
             
-            foreach (var publisher in baseGameDetails.Data.Publishers)
+            foreach (var publisher in baseGame!.Publishers)
             {
                 var createPublisher = await _gameService.CreatePublisherAsync(new PublisherCreate
                 {
@@ -388,11 +370,11 @@ public class JobManager : IJobManager
                 if (!createPublisher.Succeeded)
                 {
                     _logger.Error("Failed to create publisher for game: [{ToolId}/{GameId}]{Error}",
-                        serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                        serverApp.AppId, baseGame.Steam_AppId, gameCreate.Messages);
                 }
             }
 
-            foreach (var developer in baseGameDetails.Data.Developers)
+            foreach (var developer in baseGame.Developers)
             {
                 var createDeveloper = await _gameService.CreateDeveloperAsync(new DeveloperCreate
                 {
@@ -402,11 +384,11 @@ public class JobManager : IJobManager
                 if (!createDeveloper.Succeeded)
                 {
                     _logger.Error("Failed to create developer for game: [{ToolId}/{GameId}]{Error}",
-                        serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                        serverApp.AppId, baseGame.Steam_AppId, gameCreate.Messages);
                 }
             }
 
-            foreach (var genre in baseGameDetails.Data.Genres)
+            foreach (var genre in baseGame.Genres)
             {
                 var createGenre = await _gameService.CreateGameGenreAsync(new GameGenreCreate
                 {
@@ -417,11 +399,67 @@ public class JobManager : IJobManager
                 if (!createGenre.Succeeded)
                 {
                     _logger.Error("Failed to create genre for game: [{ToolId}/{GameId}]{Error}",
-                        serverApp.AppId, baseGame.AppId, gameCreate.Messages);
+                        serverApp.AppId, baseGame.Steam_AppId, gameCreate.Messages);
                 }
             }
             
-            _logger.Information("Successfully synchronized game from steam: [{ToolId}/{GameId}]", serverApp.AppId, baseGame.AppId);
+            _logger.Information("Successfully synchronized game from steam: [{ToolId}/{GameId}] {GameLocalId}",
+                serverApp.AppId, baseGame.Steam_AppId, gameCreate.Data);
         }
+    }
+
+    private async Task<SteamAppDetailResponseJson?> GetBaseGame(IResult<IEnumerable<SteamApiAppResponseJson>> allSteamApps, SteamApiAppResponseJson serverApp)
+    {
+        var sanitizedServerAppName = serverApp.Name.SanitizeFromSteam();
+        _logger.Debug("Attempting to find base game for server app: [{ToolId}]{GameName} => {AppName}", serverApp.AppId, serverApp.Name, sanitizedServerAppName);
+        List<SteamAppDetailResponseJson> filteredGameMatches = [];
+        
+        var baseGameMatches = allSteamApps.Data.Where(x =>
+            x.AppId != serverApp.AppId &&
+            !x.Name.EndsWith(" beta", StringComparison.InvariantCultureIgnoreCase) &&
+            !x.Name.EndsWith(" test", StringComparison.InvariantCultureIgnoreCase) &&
+            !x.Name.EndsWith(" demo", StringComparison.InvariantCultureIgnoreCase) &&
+            !x.Name.Contains("developer build", StringComparison.InvariantCultureIgnoreCase) &&
+            x.Name.Contains(sanitizedServerAppName));
+
+        foreach (var game in baseGameMatches)
+        {
+            await Task.Delay(1500);
+            var appDetail = await _steamApiService.GetAppDetail(game.AppId);
+            if (appDetail.Data is null)
+            {
+                _logger.Debug("Failed to get base game details from steam: [{ToolId}/{GameId}] => {Error}", serverApp.AppId, game.AppId, appDetail.Messages);
+                continue;
+            }
+
+            if (appDetail.Data.Type != "game")
+            {
+                _logger.Debug("App detail found but isn't a game, skipping for base game match: [{ToolId}/{GameId}] {AppType}",
+                    serverApp.AppId, game.AppId, appDetail.Data.Type);
+                continue;
+            }
+
+            filteredGameMatches.Add(appDetail.Data);
+            _logger.Debug("Found game match from app detail: [{ToolId}/{GameId}] {GameName}", serverApp.AppId, game.AppId, appDetail.Data.Name);
+        }
+
+        if (filteredGameMatches.Count == 1)
+        {
+            var selectedGame = filteredGameMatches.First();
+            _logger.Information("Selected and found game match for server: [{ToolId}/{GameId}] {GameName}",
+                serverApp.AppId, selectedGame.Steam_AppId, selectedGame.Name);
+            return selectedGame;
+        }
+
+        if (filteredGameMatches.Count > 1)
+        {
+            _logger.Information("Found {MatchCount} base game matches for {GameName}, will select the first but all matches were:", filteredGameMatches.Count, sanitizedServerAppName);
+            foreach (var gameMatch in filteredGameMatches)
+            {
+                _logger.Information("  Matching Game: [{GameId}] {GameName}", gameMatch.Steam_AppId, gameMatch.Name);
+            }
+        }
+
+        return filteredGameMatches.FirstOrDefault();
     }
 }

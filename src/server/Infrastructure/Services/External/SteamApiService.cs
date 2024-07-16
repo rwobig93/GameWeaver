@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Net;
+using System.Text.Json;
 using Application.Constants.Web;
 using Application.Helpers.External;
 using Application.Helpers.Runtime;
@@ -114,20 +115,48 @@ public class SteamApiService : ISteamApiService
     {
         try
         {
+            var backOffTimer = 0;
             var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamStoreUnauthenticated);
-            var response = await httpClient.GetAsync(ApiConstants.Steam.StoreAppDetails(appId));
-            if (!response.IsSuccessStatusCode)
+            while (true)
             {
-                return await Result<SteamAppDetailResponseJson?>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
-            }
+                if (backOffTimer >= 20000)
+                {
+                    return await Result<SteamAppDetailResponseJson?>.FailAsync($"Maximum retry backoff timer hit, unable to get response");
+                }
+                
+                var response = await httpClient.GetAsync(ApiConstants.Steam.StoreAppDetails(appId));
+                if (response.StatusCode == HttpStatusCode.TooManyRequests)
+                {
+                    backOffTimer += 2000;
+                    _logger.Debug("Got too many requests response from steam, waiting {Delay}ms", backOffTimer);
+                    await Task.Delay(backOffTimer);
+                    continue;
+                }
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    return await Result<SteamAppDetailResponseJson?>.FailAsync($"Error: {response.ReasonPhrase}");
+                }
 
-            var convertedResponse = _serializerService.ParseSteamAppDetailJson(await response.Content.ReadAsStringAsync());
-            if (convertedResponse is null)
-            {
-                return await Result<SteamAppDetailResponseJson?>.FailAsync("Failed to parse app detail response");
-            }
+                var rawResponse = await response.Content.ReadAsStringAsync();
+                if (string.IsNullOrWhiteSpace(rawResponse) || rawResponse == "null")
+                {
+                    return await Result<SteamAppDetailResponseJson?>.FailAsync("Empty response received");
+                }
+
+                if (rawResponse.Contains("\"success\":false"))
+                {
+                    return await Result<SteamAppDetailResponseJson?>.FailAsync($"Game couldn't be found for the appid provided: {appId}");
+                }
+
+                var convertedResponse = _serializerService.ParseSteamAppDetailJson(rawResponse);
+                if (convertedResponse is null)
+                {
+                    return await Result<SteamAppDetailResponseJson?>.FailAsync("Response was provided but was malformed or couldn't be parsed");
+                }
             
-            return await Result<SteamAppDetailResponseJson?>.SuccessAsync(convertedResponse);
+                return await Result<SteamAppDetailResponseJson?>.SuccessAsync(convertedResponse);
+            }
         }
         catch (Exception ex)
         {
