@@ -19,7 +19,8 @@ public partial class Games : ComponentBase
     // private string _searchString = "";
     // private List<string> _autocompleteList;
     private bool _displayVertical;
-    private string _cssDisplay = "game-card-new";
+    private bool _showNames;
+    private string _cssDisplay = "game-card-lift";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -42,6 +43,7 @@ public partial class Games : ComponentBase
         _pagedData = games.Data;
         _totalItems = (await GameService.GetCountAsync()).Data;
         _totalPages = _totalItems / _pageSize;
+        GetCurrentPageViewData();
         StateHasChanged();
     }
     
@@ -75,7 +77,18 @@ public partial class Games : ComponentBase
 
     private void ChangeStyle()
     {
-        _cssDisplay = _cssDisplay == "game-card-new" ? "game-card" : "game-card-new";
+        _cssDisplay = _cssDisplay == "game-card-lift" ? "game-card-slide" : "game-card-lift";
         StateHasChanged();
+    }
+
+    private void ToggleNames()
+    {
+        _showNames = !_showNames;
+        StateHasChanged();
+    }
+
+    private async Task CreateGame()
+    {
+        await Task.CompletedTask;
     }
 }

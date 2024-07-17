@@ -1,5 +1,6 @@
 ﻿using Application.Services.System;
 using Domain.Contracts;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace Infrastructure.Services.System;
@@ -124,6 +125,24 @@ public class WebClientService : IWebClientService
         catch (Exception ex)
         {
             return await Result.FailAsync($"Failed to invoke clipboard copy: {ex.Message}");
+        }
+    }
+
+    public async Task<IResult<bool>> GetImageUrlEnsured(ElementReference image, string fallbackUrl)
+    {
+        try
+        {
+            var imageExists = await _jsRuntime.InvokeAsync<bool>("ensureImageExists", new
+            {
+                img = image,
+                fallback = fallbackUrl
+            });
+
+            return await Result<bool>.SuccessAsync(imageExists);
+        }
+        catch (Exception ex)
+        {
+            return await Result<bool>.FailAsync(false, $"Failed to invoke image existence insurance: {ex.Message}");
         }
     }
 }

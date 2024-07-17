@@ -1,4 +1,4 @@
-﻿.game-card {
+﻿.game-card-slide {
     /* See: https://codepen.io/andrewhawkes/pen/RwwOJrO */
     z-index: 1;
     border-radius: 7px;
@@ -61,7 +61,7 @@
     }
 }
 
-.game-card-new {
+.game-card-lift {
     /* See: https://codepen.io/offeringofpie/pen/ExagprG */
     overflow: hidden;
     border-radius: 7px;

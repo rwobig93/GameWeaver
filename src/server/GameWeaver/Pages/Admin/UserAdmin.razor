@@ -61,8 +61,8 @@
             <MudContainer Class="d-flex flex-row gap-3">
                 <MudMenu Label="Filters" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
                          IconColor="Color.Primary" Color="Color.Primary" AnchorOrigin="Origin.BottomLeft" Class="d-flex flex-column">
-                    <MudCheckBox @bind-Checked="_filterLockedOut" Label="Locked Out" Color="Color.Secondary" Class="d-flex me-4"/>
-                    <MudCheckBox @bind-Checked="_filterDisabled" Label="Disabled" Color="Color.Primary" Class="d-flex me-4"/>
+                    <MudCheckBox @bind-Value="_filterLockedOut" Label="Locked Out" Color="Color.Secondary" Class="d-flex me-4"/>
+                    <MudCheckBox @bind-Value="_filterDisabled" Label="Disabled" Color="Color.Primary" Class="d-flex me-4"/>
                 </MudMenu>
                 <MudTextField T="string" ValueChanged="@(SearchText)" Placeholder="Search" Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"/>
@@ -114,10 +114,10 @@
         </FooterContent>
         <PagerContent>
             <MudContainer Class="d-flex flex-wrap gap-4">
-                <MudSwitch @bind-Checked="@_hover" Color="Color.Primary">Hover</MudSwitch>
-                <MudSwitch @bind-Checked="@_dense" Color="Color.Secondary">Dense</MudSwitch>
-                <MudSwitch @bind-Checked="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
-                <MudSwitch @bind-Checked="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
+                <MudSwitch @bind-Value="@_hover" Color="Color.Primary">Hover</MudSwitch>
+                <MudSwitch @bind-Value="@_dense" Color="Color.Secondary">Dense</MudSwitch>
+                <MudSwitch @bind-Value="@_striped" Color="Color.Tertiary">Striped</MudSwitch>
+                <MudSwitch @bind-Value="@_bordered" Color="Color.Warning">Bordered</MudSwitch>
                 <MudSpacer/>
                 <MudTablePager/>
             </MudContainer>

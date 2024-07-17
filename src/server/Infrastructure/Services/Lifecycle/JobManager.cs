@@ -30,9 +30,9 @@ public class JobManager : IJobManager
     private readonly IAppUserRepository _userRepository;
     private readonly IAppAccountService _accountService;
     private readonly IDateTimeService _dateTime;
-    private readonly SecurityConfiguration _securityConfig;
+    private readonly IOptions<SecurityConfiguration> _securityConfig;
     private readonly IAuditTrailService _auditService;
-    private readonly LifecycleConfiguration _lifecycleConfig;
+    private readonly IOptions<LifecycleConfiguration> _lifecycleConfig;
     private readonly IGameServerService _gameServerService;
     private readonly IGameService _gameService;
     private readonly ISteamApiService _steamApiService;
@@ -40,11 +40,12 @@ public class JobManager : IJobManager
     private readonly IGameRepository _gameRepository;
     private readonly IHostService _hostService;
     private readonly IGameServerRepository _gameServerRepository;
+    private readonly IOptionsMonitor<AppConfiguration> _appConfig;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
         IOptions<SecurityConfiguration> securityConfig, IAuditTrailService auditService, IOptions<LifecycleConfiguration> lifecycleConfig,
         IGameServerService gameServerService, IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository,
-        IHostService hostService, IGameServerRepository gameServerRepository)
+        IHostService hostService, IGameServerRepository gameServerRepository, IOptionsMonitor<AppConfiguration> appConfig)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -58,8 +59,9 @@ public class JobManager : IJobManager
         _gameRepository = gameRepository;
         _hostService = hostService;
         _gameServerRepository = gameServerRepository;
-        _lifecycleConfig = lifecycleConfig.Value;
-        _securityConfig = securityConfig.Value;
+        _appConfig = appConfig;
+        _lifecycleConfig = lifecycleConfig;
+        _securityConfig = securityConfig;
     }
 
     public async Task UserHousekeeping()
@@ -98,7 +100,7 @@ public class JobManager : IJobManager
 
     private async Task HostCheckInCleanup()
     {
-        var hostCheckInCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.HostCheckInCleanupAfterDays);
+        var hostCheckInCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.Value.HostCheckInCleanupAfterDays);
         var hostCheckInCleanup = await _hostService.DeleteAllOldCheckInsAsync(hostCheckInCleanupTimestamp, _serverState.SystemUserId);
         if (!hostCheckInCleanup.Succeeded)
         {
@@ -109,7 +111,7 @@ public class JobManager : IJobManager
 
     private async Task WeaverWorkCleanup()
     {
-        var workCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.WeaverWorkCleanupAfterDays);
+        var workCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.Value.WeaverWorkCleanupAfterDays);
         var weaverWorkCleanup = await _hostService.DeleteWeaverWorkOlderThanAsync(workCleanupTimestamp, _serverState.SystemUserId);
         if (!weaverWorkCleanup.Succeeded)
         {
@@ -147,7 +149,7 @@ public class JobManager : IJobManager
 
     private async Task HostRegistrationCleanup()
     {
-        var hostRegistrationCleanup = await _hostService.DeleteRegistrationsOlderThanAsync(_serverState.SystemUserId, _lifecycleConfig.HostRegistrationCleanupHours);
+        var hostRegistrationCleanup = await _hostService.DeleteRegistrationsOlderThanAsync(_serverState.SystemUserId, _lifecycleConfig.Value.HostRegistrationCleanupHours);
         if (!hostRegistrationCleanup.Succeeded)
         {
             _logger.Error("{LogPrefix} Host registration cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, hostRegistrationCleanup.Messages);
@@ -157,7 +159,7 @@ public class JobManager : IJobManager
 
     private async Task AuditTrailCleanup()
     {
-        var auditCleanup = await _auditService.DeleteOld(_lifecycleConfig.AuditLogLifetime);
+        var auditCleanup = await _auditService.DeleteOld(_lifecycleConfig.Value.AuditLogLifetime);
         if (!auditCleanup.Succeeded)
         {
             _logger.Error("{LogPrefix} Audit cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, auditCleanup.Messages);
@@ -168,7 +170,7 @@ public class JobManager : IJobManager
     private async Task HandleLockedOutUsers()
     {
         // If account lockout threshold is 0 minutes then accounts are locked until unlocked by an administrator
-        if (_securityConfig.AccountLockoutMinutes == 0)
+        if (_securityConfig.Value.AccountLockoutMinutes == 0)
         {
             return;
         }
@@ -191,7 +193,7 @@ public class JobManager : IJobManager
             try
             {
                 // Account hasn't reached lockout threshold, skipping for now
-                if (user.AuthStateTimestamp!.Value.AddMinutes(_securityConfig.AccountLockoutMinutes) < _dateTime.NowDatabaseTime)
+                if (user.AuthStateTimestamp!.Value.AddMinutes(_securityConfig.Value.AccountLockoutMinutes) < _dateTime.NowDatabaseTime)
                 {
                     continue;
                 }
@@ -305,7 +307,9 @@ public class JobManager : IJobManager
             return;
         }
         
-        var serverApps = allSteamApps.Data.Where(x => x.Name.Contains("server", StringComparison.CurrentCultureIgnoreCase));
+        var serverApps = allSteamApps.Data.Where(x =>
+            x.Name.Contains(_appConfig.CurrentValue.SteamAppNameFilter, StringComparison.CurrentCultureIgnoreCase) ||
+            x.Name.Contains(_appConfig.CurrentValue.SteamAppNameFilter.Replace(" ", ""), StringComparison.CurrentCultureIgnoreCase));
         foreach (var serverApp in serverApps)
         {
             var appSanitizedName = serverApp.Name.SanitizeFromSteam();
@@ -316,13 +320,17 @@ public class JobManager : IJobManager
             }
             
             var matchingGame = await _gameService.GetBySteamToolIdAsync(serverApp.AppId);
-            if (matchingGame.Data is not null)
+            if (matchingGame.Data is not null
+                && matchingGame.Data.SourceType == GameSource.Steam
+                && matchingGame.Data.SteamToolId != 0
+                && matchingGame.Data.SteamGameId != 0)
             {
-                // TODO: If ToolId isn't 0 but GameId is we should do an update if we can find game details
-                _logger.Verbose("Found matching game with tool id from steam: [{ToolId}]{GameName} => {GameId}",
+                _logger.Verbose("Found matching fully synced game with tool id from steam: [{ToolId}]{GameName} => {GameId}",
                     matchingGame.Data.SteamToolId, matchingGame.Data.SteamName, matchingGame.Data.Id);
                 continue;
             }
+
+            var gameId = matchingGame.Data?.Id ?? Guid.Empty;
 
             var baseGame = await GetBaseGame(allSteamApps, serverApp);
             if (baseGame is null)
@@ -330,25 +338,30 @@ public class JobManager : IJobManager
                 _logger.Information("Unable to find base game for server app from steam: [{ToolId}]{GameName}", serverApp.AppId, serverApp.Name);
                 continue;
             }
-            
-            var gameCreate = await _gameService.CreateAsync(new GameCreateRequest
-            {
-                Name = serverApp.Name,
-                SteamGameId = 0,
-                SteamToolId = serverApp.AppId
-            }, _serverState.SystemUserId);
-            if (!gameCreate.Succeeded)
-            {
-                _logger.Error("Failed to create server app game from steam: [{ToolId}]{Error}", serverApp.AppId, gameCreate.Messages);
-                continue;
-            }
-            
-            _logger.Information("Created missing server app from steam: [{ToolId}]{GameName} => {GameId}",
-                serverApp.AppId, serverApp.Name, gameCreate.Data);
 
-            var convertedGameUpdate = baseGame.ToUpdate(gameCreate.Data);
+            if (matchingGame.Data is null)
+            {
+                var gameCreate = await _gameService.CreateAsync(new GameCreateRequest
+                {
+                    Name = serverApp.Name,
+                    SteamGameId = 0,
+                    SteamToolId = serverApp.AppId
+                }, _serverState.SystemUserId);
+                if (!gameCreate.Succeeded)
+                {
+                    _logger.Error("Failed to create server app game from steam: [{ToolId}]{Error}", serverApp.AppId, gameCreate.Messages);
+                    continue;
+                }
+                
+                _logger.Information("Created missing server app from steam: [{ToolId}]{GameName} => {GameId}",
+                    serverApp.AppId, serverApp.Name, gameCreate.Data);
+                
+                gameId = gameCreate.Data;
+            }
+
+            var convertedGameUpdate = baseGame.ToUpdate(gameId);
             convertedGameUpdate.SteamName = serverApp.Name;
-            convertedGameUpdate.FriendlyName = baseGame?.Name;
+            convertedGameUpdate.FriendlyName = baseGame.Name;
             convertedGameUpdate.LastModifiedBy = _serverState.SystemUserId;
             convertedGameUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
             
@@ -356,21 +369,21 @@ public class JobManager : IJobManager
             if (!gameUpdate.Succeeded)
             {
                 _logger.Error("Failed to get update game with details from steam: [{ToolId}/{GameId}]{Error}",
-                    serverApp.AppId, baseGame?.Steam_AppId ?? 0, gameCreate.Messages);
+                    serverApp.AppId, baseGame.Steam_AppId, gameUpdate.ErrorMessage);
                 continue;
             }
             
-            foreach (var publisher in baseGame!.Publishers)
+            foreach (var publisher in baseGame.Publishers)
             {
                 var createPublisher = await _gameService.CreatePublisherAsync(new PublisherCreate
                 {
-                    GameId = gameCreate.Data,
+                    GameId = gameId,
                     Name = publisher
                 }, _serverState.SystemUserId);
                 if (!createPublisher.Succeeded)
                 {
                     _logger.Error("Failed to create publisher for game: [{ToolId}/{GameId}]{Error}",
-                        serverApp.AppId, baseGame.Steam_AppId, gameCreate.Messages);
+                        serverApp.AppId, baseGame.Steam_AppId, createPublisher.Messages);
                 }
             }
 
@@ -378,13 +391,13 @@ public class JobManager : IJobManager
             {
                 var createDeveloper = await _gameService.CreateDeveloperAsync(new DeveloperCreate
                 {
-                    GameId = gameCreate.Data,
+                    GameId = gameId,
                     Name = developer
                 }, _serverState.SystemUserId);
                 if (!createDeveloper.Succeeded)
                 {
                     _logger.Error("Failed to create developer for game: [{ToolId}/{GameId}]{Error}",
-                        serverApp.AppId, baseGame.Steam_AppId, gameCreate.Messages);
+                        serverApp.AppId, baseGame.Steam_AppId, createDeveloper.Messages);
                 }
             }
 
@@ -392,19 +405,19 @@ public class JobManager : IJobManager
             {
                 var createGenre = await _gameService.CreateGameGenreAsync(new GameGenreCreate
                 {
-                    GameId = gameCreate.Data,
+                    GameId = gameId,
                     Name = genre.Description,
                     Description = $"[{genre.Id}]{genre.Description}"
                 }, _serverState.SystemUserId);
                 if (!createGenre.Succeeded)
                 {
                     _logger.Error("Failed to create genre for game: [{ToolId}/{GameId}]{Error}",
-                        serverApp.AppId, baseGame.Steam_AppId, gameCreate.Messages);
+                        serverApp.AppId, baseGame.Steam_AppId, createGenre.Messages);
                 }
             }
             
             _logger.Information("Successfully synchronized game from steam: [{ToolId}/{GameId}] {GameLocalId}",
-                serverApp.AppId, baseGame.Steam_AppId, gameCreate.Data);
+                serverApp.AppId, baseGame.Steam_AppId, gameId);
         }
     }
 
@@ -420,7 +433,7 @@ public class JobManager : IJobManager
             !x.Name.EndsWith(" test", StringComparison.InvariantCultureIgnoreCase) &&
             !x.Name.EndsWith(" demo", StringComparison.InvariantCultureIgnoreCase) &&
             !x.Name.Contains("developer build", StringComparison.InvariantCultureIgnoreCase) &&
-            x.Name.Contains(sanitizedServerAppName));
+            x.Name.Contains(sanitizedServerAppName)).ToArray();
 
         foreach (var game in baseGameMatches)
         {
@@ -437,6 +450,13 @@ public class JobManager : IJobManager
                 _logger.Debug("App detail found but isn't a game, skipping for base game match: [{ToolId}/{GameId}] {AppType}",
                     serverApp.AppId, game.AppId, appDetail.Data.Type);
                 continue;
+            }
+
+            if (appDetail.Data.Name == sanitizedServerAppName)
+            {
+                _logger.Information("Selected and found game match for server: [{ToolId}/{GameId}] {GameName}",
+                    serverApp.AppId, appDetail.Data.Steam_AppId, appDetail.Data.Name);
+                return appDetail.Data;
             }
 
             filteredGameMatches.Add(appDetail.Data);

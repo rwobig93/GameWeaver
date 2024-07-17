@@ -3,23 +3,31 @@
 @attribute [Route(AppRouteConstants.GameServer.Games.ViewAll)]
 @attribute [Authorize(PermissionConstants.GameServer.Game.Get)]
 
-<MudPaper Elevation="25" Class="pb-4 mb-6">
-    <MudToolBar Class="mx-1">
-        <MudFab Color="Color.Success" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Add"
-                Label="Add" Class="px-2"/>
-        <MudFab Color="Color.Primary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Refresh"
-                aria-label="refresh" Label="Search" Class="ml-2 px-2"/>
-        <MudFab Color="Color.Secondary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Flip"
-                Label="Orientation" OnClick="@ChangeOrientation" Class="ml-2 px-2"/>
-        <MudFab Color="Color.Tertiary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Style"
-                Label="Style" OnClick="@ChangeStyle" Class="ml-2 px-2"/>
-        <MudTextField T="string" Label="Search:" Class="mb-5 ml-3"/>
-    </MudToolBar>
+<MudPaper Elevation="25" Class="mb-6">
+    <MudStack Class="pa-3" Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" AlignItems="AlignItems.End" Spacing="3">
+        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@CreateGame">
+            Create
+        </MudButton>
+        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Outlined.Flip" OnClick="@ChangeOrientation">
+            Orientation
+        </MudButton>
+        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Style" OnClick="@ChangeStyle">
+            Style
+        </MudButton>
+        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Subtitles" OnClick="@ToggleNames">
+            Names
+        </MudButton>
+        <MudDivider Vertical="true" />
+        <MudTextField T="string" Label="Find a game" Class="mt-0" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Search" OnClick="@RefreshData">
+            Search
+        </MudButton>
+    </MudStack>
 </MudPaper>
 <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var game in _pagedData)
     {
-        <GameWidget Game="@game" Vertical="@_displayVertical" CssDisplay="@_cssDisplay" />
+        <GameWidget Game="@game" Vertical="@_displayVertical" CssDisplay="@_cssDisplay" ShowName="@_showNames" />
     }
 </MudGrid>
 <MudPaper Elevation="25" Class="pt-4 mt-6">

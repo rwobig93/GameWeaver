@@ -25,4 +25,6 @@ public class AppConfiguration : IAppSettingsSection
 
     [Range(0, 999_999)]
     public int StartingCurrency { get; set; } = 3;
+
+    public string SteamAppNameFilter { get; set; } = "dedicated server";
 }
