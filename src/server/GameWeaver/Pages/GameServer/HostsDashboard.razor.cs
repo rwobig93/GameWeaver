@@ -1,7 +1,6 @@
 using Application.Models.GameServer.Host;
 using Application.Services.GameServer;
 using GameWeaver.Components.GameServer;
-using Microsoft.AspNetCore.Components;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -14,7 +13,11 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     private IEnumerable<HostSlim> _pagedData = new List<HostSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private Timer? _timer;
-    private Dictionary<Guid, HostWidget> _hostWidgets = new();
+    private List<HostWidget> _hostWidgets = [];
+    public HostWidget WidgetReference
+    {
+        set => _hostWidgets.Add(value);
+    }
     
     private int _totalItems = 10;
     private int _totalPages = 1;
@@ -39,7 +42,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
 
     private async Task TimerDataUpdate()
     {
-        if (!_pagedData.Any())
+        if (_hostWidgets.Count == 0)
         {
             return;
         }
@@ -48,7 +51,16 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         {
             try
             {
-                await widget.Value.UpdateState();
+                if (widget.GetCheckinCount() == 0)
+                {
+                    var hostCheckins = await HostService.GetCheckInsLatestByHostIdAsync(widget.Host.Id, 100);
+                    await widget.SetCheckins(hostCheckins.Data.ToList());
+                }
+                else
+                {
+                    var latestCheckin = await HostService.GetCheckInsLatestByHostIdAsync(widget.Host.Id, 1);
+                    await widget.UpdateState(latestCheckin.Data.FirstOrDefault());
+                }
             }
             catch (Exception ex)
             {
@@ -72,6 +84,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         _pagedData = hosts.Data;
         _totalItems = (await HostService.GetCountAsync()).Data;
         _totalPages = _totalItems / _pageSize;
+        
         StateHasChanged();
     }
     
