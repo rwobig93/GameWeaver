@@ -272,12 +272,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Search(System.String,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
-            Search a game by it's properties
+            Search a game by its properties
             </summary>
             <param name="searchText">Text to search with</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameService"></param>
+            <param name="appConfig"></param>
             <returns>List of games</returns>
             <remarks>Searches by: ID, FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
         </member>

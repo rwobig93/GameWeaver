@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Data;
 using Application.Database;
 using Application.Database.MsSql;
@@ -6,6 +7,7 @@ using Application.Helpers.Runtime;
 using Application.Services.Database;
 using Application.Settings.AppSettings;
 using Dapper;
+using Domain.Contracts;
 using Domain.Enums.Database;
 using Microsoft.Extensions.Options;
 using Microsoft.Data.SqlClient;
@@ -71,6 +73,17 @@ public class SqlDataService : ISqlDataService
 
         return await connection.QueryAsync<TDataClass>(
             script.Path, parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
+    }
+
+    public async Task<PaginatedDbEntity<IEnumerable<TDataClass>>> LoadDataPaginated<TDataClass, TParameters>(ISqlDatabaseScript script, TParameters parameters,
+        string connectionId, int timeoutSeconds = 5)
+    {
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
+
+        var response = (await connection.QueryAsync<int, TDataClass, (int, TDataClass)>(
+            script.Path, (totalCount, entity) => (totalCount, entity), parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds)).ToArray();
+
+        return new PaginatedDbEntity<IEnumerable<TDataClass>> { Data = response.Select(x => x.Item2), TotalCount = response.FirstOrDefault().Item1 };
     }
     
     public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(ISqlDatabaseScript script,

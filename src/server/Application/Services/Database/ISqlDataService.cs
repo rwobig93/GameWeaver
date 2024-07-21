@@ -1,4 +1,5 @@
 using Application.Database;
+using Domain.Contracts;
 
 namespace Application.Services.Database;
 
@@ -16,6 +17,9 @@ public interface ISqlDataService
         int timeoutSeconds = 5);
     
     public Task<IEnumerable<TDataClass>> LoadData<TDataClass, TParameters>(ISqlDatabaseScript script, TParameters parameters,
+        string connectionId = "DefaultConnection", int timeoutSeconds = 5);
+    
+    public Task<PaginatedDbEntity<IEnumerable<TDataClass>>> LoadDataPaginated<TDataClass, TParameters>(ISqlDatabaseScript script, TParameters parameters,
         string connectionId = "DefaultConnection", int timeoutSeconds = 5);
     
     public Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(ISqlDatabaseScript script,

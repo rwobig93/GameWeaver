@@ -50,11 +50,24 @@ public class GameService : IGameService
 
     public async Task<IResult<IEnumerable<GameSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
+        
+        var response = await _gameRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync([]);
+        }
 
-        return await Result<IEnumerable<GameSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameSlim>());
+        return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.CurrentPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetCountAsync()
@@ -288,11 +301,22 @@ public class GameService : IGameService
 
     public async Task<IResult<IEnumerable<GameSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameSlim>());
+        var response = await _gameRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+            return await Result<IEnumerable<GameSlim>>.FailAsync(response.ErrorMessage);
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.CurrentPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<DeveloperSlim>>> GetAllDevelopersAsync()

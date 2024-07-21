@@ -3,6 +3,7 @@ using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
+using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Models.Database;
 
@@ -11,7 +12,7 @@ namespace Application.Repositories.GameServer;
 public interface IGameRepository
 {
     Task<DatabaseActionResult<IEnumerable<GameDb>>> GetAllAsync();
-    Task<DatabaseActionResult<IEnumerable<GameDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<GameDb?>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameDb>>> GetBySteamNameAsync(string steamName);
@@ -22,7 +23,7 @@ public interface IGameRepository
     Task<DatabaseActionResult> UpdateAsync(GameUpdate updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<DatabaseActionResult<IEnumerable<GameDb>>> SearchAsync(string searchText);
-    Task<DatabaseActionResult<IEnumerable<GameDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<DeveloperDb>>> GetAllDevelopersAsync();
     Task<DatabaseActionResult<IEnumerable<DeveloperDb>>> GetAllDevelopersPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetDevelopersCountAsync();

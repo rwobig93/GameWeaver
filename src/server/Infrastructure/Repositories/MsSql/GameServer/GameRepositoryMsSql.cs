@@ -7,6 +7,7 @@ using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.GameServer;
@@ -44,16 +45,20 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<GameDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<GameDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameDb>>> actionReturn = new();
 
         try
         {
             var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allGames = await _database.LoadData<GameDb, dynamic>(
-                GamesTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allGames);
+            var response = await _database.LoadDataPaginated<GameDb, dynamic>(
+                GamesTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
+
+            response.CurrentPage = pageNumber;
+            response.PageSize = pageSize;
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -241,17 +246,20 @@ public class GameRepositoryMsSql : IGameRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<GameDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<GameDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameDb>>> actionReturn = new();
 
         try
         {
             var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<GameDb, dynamic>(
+            var response = await _database.LoadDataPaginated<GameDb, dynamic>(
                 GamesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
 
-            actionReturn.Succeed(searchResults);
+            response.CurrentPage = pageNumber;
+            response.PageSize = pageSize;
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {

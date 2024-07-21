@@ -103,7 +103,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT g.*
+                SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
                 ORDER BY g.CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -305,7 +305,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SET nocount on;
                 
-                SELECT g.*
+                SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
                     AND g.Id LIKE '%' + @SearchTerm + '%'
