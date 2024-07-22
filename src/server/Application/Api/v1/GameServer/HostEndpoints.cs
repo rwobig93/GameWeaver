@@ -73,7 +73,7 @@ public static class HostEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.GetAllPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<HostSlim>>;
+            var result = await hostService.GetAllPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<HostSlim>>.FailAsync(result.Messages);
@@ -210,7 +210,7 @@ public static class HostEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.SearchPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<HostSlim>>;
+            var result = await hostService.SearchPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<HostSlim>>.FailAsync(result.Messages);

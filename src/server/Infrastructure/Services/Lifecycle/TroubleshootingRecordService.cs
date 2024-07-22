@@ -41,7 +41,7 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<TroubleshootingRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
@@ -68,7 +68,7 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -208,7 +208,7 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<TroubleshootingRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
@@ -235,7 +235,7 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
         }
     }
 

@@ -46,7 +46,7 @@ public static class PublisherEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameService.GetAllPublishersPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<PublisherSlim>>;
+            var result = await gameService.GetAllPublishersPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<PublisherSlim>>.FailAsync(result.Messages);
@@ -199,7 +199,7 @@ public static class PublisherEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameService.SearchPublishersPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<PublisherSlim>>;
+            var result = await gameService.SearchPublishersPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<PublisherSlim>>.FailAsync(result.Messages);

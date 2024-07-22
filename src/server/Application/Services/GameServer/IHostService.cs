@@ -17,7 +17,7 @@ public interface IHostService
     Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request);
     Task<IResult> IsProvidedKeyCorrect(Guid hostId, string key);
     Task<IResult<IEnumerable<HostSlim>>> GetAllAsync();
-    Task<IResult<IEnumerable<HostSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<HostSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
     Task<IResult<HostSlim>> GetByIdAsync(Guid id);
     Task<IResult<HostSlim>> GetByHostnameAsync(string hostName);
@@ -25,9 +25,9 @@ public interface IHostService
     Task<IResult> UpdateAsync(HostUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<HostSlim>>> SearchAsync(string searchText);
-    Task<IResult<IEnumerable<HostSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<HostSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsAsync();
-    Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllActiveRegistrationsAsync();
     Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllInActiveRegistrationsAsync();
     Task<IResult<int>> GetRegistrationCountAsync();
@@ -36,10 +36,10 @@ public interface IHostService
     Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdateRequest request, Guid requestUserId);
     Task<IResult<int>> DeleteRegistrationsOlderThanAsync(Guid requestUserId, int olderThanHours = 24);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsAsync(string searchText);
-    Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAsync();
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAfterAsync(DateTime afterDate);
-    Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCheckInCountAsync();
     Task<IResult<HostCheckInFull>> GetCheckInByIdAsync(int id);
     Task<IResult<IEnumerable<HostCheckInFull>>> GetChecksInByHostIdAsync(Guid id);
@@ -48,9 +48,9 @@ public interface IHostService
     Task<IResult<int>> DeleteAllCheckInsForHostIdAsync(Guid id, Guid requestUserId);
     Task<IResult<int>> DeleteAllOldCheckInsAsync(DateTime olderThan, Guid requestUserId);
     Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckInsAsync(string searchText);
-    Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<HostCheckInFull>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkAsync();
-    Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetWeaverWorkCountAsync();
     Task<IResult<WeaverWorkSlim>> GetWeaverWorkByIdAsync(int id);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByHostIdAsync(Guid id);
@@ -65,5 +65,5 @@ public interface IHostService
     Task<IResult> DeleteWeaverWorkForHostAsync(Guid hostId, Guid requestUserId);
     Task<IResult<int>> DeleteWeaverWorkOlderThanAsync(DateTime olderThan, Guid requestUserId);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkAsync(string searchText);
-    Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

@@ -12,6 +12,7 @@ using Application.Repositories.GameServer;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.Game;
 using Application.Services.GameServer;
+using Application.Services.Integrations;
 using Application.Services.System;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
@@ -27,9 +28,10 @@ public class GameService : IGameService
     private readonly IEventService _eventService;
     private readonly IAuditTrailsRepository _auditRepository;
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
+    private readonly IFileStorageRecordService _fileStorageService;
 
     public GameService(IGameRepository gameRepository, IDateTimeService dateTime, IGameServerRepository gameServerRepository, IEventService eventService,
-        IAuditTrailsRepository auditRepository, ITroubleshootingRecordsRepository tshootRepository)
+        IAuditTrailsRepository auditRepository, ITroubleshootingRecordsRepository tshootRepository, IFileStorageRecordService fileStorageService)
     {
         _gameRepository = gameRepository;
         _dateTime = dateTime;
@@ -37,6 +39,7 @@ public class GameService : IGameService
         _eventService = eventService;
         _auditRepository = auditRepository;
         _tshootRepository = tshootRepository;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<IResult<IEnumerable<GameSlim>>> GetAllAsync()
@@ -48,16 +51,16 @@ public class GameService : IGameService
         return await Result<IEnumerable<GameSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
-        
+
         var response = await _gameRepository.GetAllPaginatedAsync(pageNumber, pageSize);
         if (!response.Succeeded)
         {
             return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync([]);
@@ -140,18 +143,18 @@ public class GameService : IGameService
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.InvalidSteamToolId);
         }
-        
+
         var matchingGame = await _gameRepository.GetBySteamToolIdAsync(request.SteamToolId);
         if (matchingGame.Result is not null)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.DuplicateSteamToolId);
         }
-        
+
         var convertedRequest = request.ToCreate();
         convertedRequest.CreatedBy = requestUserId;
         convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
         convertedRequest.DefaultGameProfileId = Guid.Empty;
-        
+
         var createRequest = await _gameRepository.CreateAsync(convertedRequest);
         if (!createRequest.Succeeded)
         {
@@ -172,10 +175,10 @@ public class GameService : IGameService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Games, Guid.Empty, requestUserId,
                 "Successfully created game but failed to create default profile", new Dictionary<string, string>
-            {
-                {"GameId", createRequest.Result.ToString()},
-                {"Error", defaultProfileCreate.ErrorMessage}
-            });
+                {
+                    {"GameId", createRequest.Result.ToString()},
+                    {"Error", defaultProfileCreate.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -184,10 +187,10 @@ public class GameService : IGameService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Games, Guid.Empty, requestUserId,
                 "Successfully created game and default profile, failed to assign default profile to the game", new Dictionary<string, string>
-            {
-                {"GameId", createRequest.Result.ToString()},
-                {"Error", updateGameProfile.ErrorMessage}
-            });
+                {
+                    {"GameId", createRequest.Result.ToString()},
+                    {"Error", updateGameProfile.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -252,38 +255,52 @@ public class GameService : IGameService
             {
                 var profileDeleteRequest = await _gameServerRepository.DeleteGameProfileAsync(profile.Id, requestUserId);
                 if (profileDeleteRequest.Succeeded) continue;
-                
+
                 errorMessages.Add(profileDeleteRequest.ErrorMessage);
             }
-            
+
             if (errorMessages.Count > 0)
             {
                 return await Result.FailAsync(errorMessages);
             }
         }
-        
+
         // Delete all update records for this game
         var deleteUpdatesRequest = await _gameRepository.DeleteGameUpdatesForGameIdAsync(foundGame.Result.Id);
         if (!deleteUpdatesRequest.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Games, foundGame.Result.Id, requestUserId,
                 "Deleted any assigned profiles for game but failed to delete game update records before deleting the game", new Dictionary<string, string>
-            {
-                {"Error", deleteUpdatesRequest.ErrorMessage}
-            });
+                {
+                    {"Error", deleteUpdatesRequest.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        
-        // TODO: Delete all local file uploads if game is manual
-        
+
+        // Delete all local file uploads if game is manual
+        var gameFiles = await _fileStorageService.GetByLinkedIdAsync(foundGame.Result.Id);
+        foreach (var gameFile in gameFiles.Data)
+        {
+            var fileDeleteResponse = await _fileStorageService.DeleteAsync(gameFile.Id, requestUserId);
+            if (!fileDeleteResponse.Succeeded)
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Games, foundGame.Result.Id, requestUserId,
+                    "Failed to delete local file storage file before deleting the game", new Dictionary<string, string>
+                    {
+                        {"Error", fileDeleteResponse.Messages.ToString() ?? ""}
+                    });
+                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
+        }
+
         var deleteRequest = await _gameRepository.DeleteAsync(id, requestUserId);
         if (!deleteRequest.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Games, foundGame.Result.Id, requestUserId,
                 "Deleted any assigned profiles and update records but failed to delete the game", new Dictionary<string, string>
-            {
-                {"Error", deleteRequest.ErrorMessage}
-            });
+                {
+                    {"Error", deleteRequest.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -292,23 +309,25 @@ public class GameService : IGameService
         return await Result.SuccessAsync();
     }
 
-    public async Task<IResult<IEnumerable<GameSlim>>> SearchAsync(string searchText)
+    public async Task<PaginatedResult<IEnumerable<GameSlim>>> SearchAsync(string searchText)
     {
         var request = await _gameRepository.SearchAsync(searchText);
         if (!request.Succeeded)
-            return await Result<IEnumerable<GameSlim>>.FailAsync(request.ErrorMessage);
+            return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(request.ErrorMessage);
 
-        return await Result<IEnumerable<GameSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameSlim>());
+        return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
         var response = await _gameRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
         if (!response.Succeeded)
-            return await Result<IEnumerable<GameSlim>>.FailAsync(response.ErrorMessage);
-        
+        {
+            return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(response.ErrorMessage);
+        }
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync([]);
@@ -332,7 +351,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<DeveloperSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<DeveloperSlim>());
     }
 
-    public async Task<IResult<IEnumerable<DeveloperSlim>>> GetAllDevelopersPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<DeveloperSlim>>> GetAllDevelopersPaginatedAsync(int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -341,7 +360,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<DeveloperSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<DeveloperSlim>>.SuccessAsync([]);
@@ -407,7 +426,7 @@ public class GameService : IGameService
         }
 
         var createdDeveloper = await _gameRepository.GetDeveloperByIdAsync(developerCreate.Result);
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Developers, developerCreate.Result, requestUserId, AuditAction.Create, 
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Developers, developerCreate.Result, requestUserId, AuditAction.Create,
             null, createdDeveloper.Result);
 
         return await Result<Guid>.SuccessAsync(developerCreate.Result);
@@ -428,7 +447,7 @@ public class GameService : IGameService
                 "Failed to delete developer", new Dictionary<string, string> {{"Error", deleteDeveloper.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        
+
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Developers, foundDeveloper.Result.Id, requestUserId, AuditAction.Delete,
             foundDeveloper.Result);
 
@@ -444,7 +463,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<DeveloperSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<DeveloperSlim>());
     }
 
-    public async Task<IResult<IEnumerable<DeveloperSlim>>> SearchDevelopersPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<DeveloperSlim>>> SearchDevelopersPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -453,7 +472,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<DeveloperSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<DeveloperSlim>>.SuccessAsync([]);
@@ -477,7 +496,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<PublisherSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<PublisherSlim>());
     }
 
-    public async Task<IResult<IEnumerable<PublisherSlim>>> GetAllPublishersPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<PublisherSlim>>> GetAllPublishersPaginatedAsync(int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -486,7 +505,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<PublisherSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<PublisherSlim>>.SuccessAsync([]);
@@ -573,7 +592,7 @@ public class GameService : IGameService
                 "Failed to delete publisher", new Dictionary<string, string> {{"Error", deletePublisher.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        
+
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Publishers, foundPublisher.Result.Id, requestUserId, AuditAction.Delete,
             foundPublisher.Result);
 
@@ -589,7 +608,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<PublisherSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<PublisherSlim>());
     }
 
-    public async Task<IResult<IEnumerable<PublisherSlim>>> SearchPublishersPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<PublisherSlim>>> SearchPublishersPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -598,7 +617,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<PublisherSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<PublisherSlim>>.SuccessAsync([]);
@@ -622,7 +641,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<GameGenreSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameGenreSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameGenreSlim>>> GetAllGameGenresPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameGenreSlim>>> GetAllGameGenresPaginatedAsync(int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -631,7 +650,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<GameGenreSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<GameGenreSlim>>.SuccessAsync([]);
@@ -718,7 +737,7 @@ public class GameService : IGameService
                 "Failed to delete game genre", new Dictionary<string, string> {{"Error", deleteGenre.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        
+
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameGenres, foundGameGenre.Result.Id, requestUserId, AuditAction.Delete,
             foundGameGenre.Result);
 
@@ -734,7 +753,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<GameGenreSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameGenreSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameGenreSlim>>> SearchGameGenresPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameGenreSlim>>> SearchGameGenresPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -743,7 +762,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<GameGenreSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<GameGenreSlim>>.SuccessAsync([]);
@@ -769,7 +788,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<GameUpdateSlim>>.SuccessAsync(request.Result?.ToSlims() ?? []);
     }
 
-    public async Task<IResult<IEnumerable<GameUpdateSlim>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameUpdateSlim>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -778,7 +797,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<GameUpdateSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<GameUpdateSlim>>.SuccessAsync([]);
@@ -833,7 +852,7 @@ public class GameService : IGameService
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
-        
+
         var request = await _gameRepository.CreateGameUpdateAsync(createObject);
         if (!request.Succeeded)
             return await Result<Guid>.FailAsync(request.ErrorMessage);
@@ -878,7 +897,7 @@ public class GameService : IGameService
         return await Result<IEnumerable<GameUpdateSlim>>.SuccessAsync(request.Result?.ToSlims() ?? []);
     }
 
-    public async Task<IResult<IEnumerable<GameUpdateSlim>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameUpdateSlim>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -887,7 +906,7 @@ public class GameService : IGameService
         {
             return await PaginatedResult<IEnumerable<GameUpdateSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<GameUpdateSlim>>.SuccessAsync([]);

@@ -92,7 +92,7 @@ public static class HostRegistrationEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.GetAllRegistrationsPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<HostRegistrationFull>>;
+            var result = await hostService.GetAllRegistrationsPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<HostRegistrationFull>>.FailAsync(result.Messages);
@@ -203,7 +203,7 @@ public static class HostRegistrationEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.SearchRegistrationsPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<HostRegistrationFull>>;
+            var result = await hostService.SearchRegistrationsPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<HostRegistrationFull>>.FailAsync(result.Messages);

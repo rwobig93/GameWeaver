@@ -49,7 +49,7 @@ public static class AuditEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            var result = await auditTrailService.GetAllPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<AuditTrailSlim>>;
+            var result = await auditTrailService.GetAllPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<AuditTrailResponse>>.FailAsync(result.Messages);

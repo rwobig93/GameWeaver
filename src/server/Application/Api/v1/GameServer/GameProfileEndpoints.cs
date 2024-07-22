@@ -50,7 +50,7 @@ public static class GameProfileEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.GetAllGameProfilesPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<GameProfileSlim>>;
+            var result = await gameServerService.GetAllGameProfilesPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameProfileSlim>>.FailAsync(result.Messages);
@@ -244,7 +244,7 @@ public static class GameProfileEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.SearchGameProfilesPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<GameProfileSlim>>;
+            var result = await gameServerService.SearchGameProfilesPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameProfileSlim>>.FailAsync(result.Messages);

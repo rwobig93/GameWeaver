@@ -16,7 +16,6 @@
 <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var host in _pagedData)
     {
-        // TODO: Unregistered hosts are showing up, need to update the gather method
         <HostWidget @ref="@WidgetReference" Host="@host" LocalTimeZone="@_localTimeZone" />
     }
 </MudGrid>

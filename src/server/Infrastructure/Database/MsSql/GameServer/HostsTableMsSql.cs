@@ -92,7 +92,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0
+                WHERE h.IsDeleted = 0 AND h.CurrentState != 1
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

@@ -67,7 +67,7 @@ public class AuditTrailService : IAuditTrailService
         }
     }
 
-    public async Task<IResult<IEnumerable<AuditTrailSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AuditTrailSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
@@ -94,7 +94,7 @@ public class AuditTrailService : IAuditTrailService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -202,7 +202,7 @@ public class AuditTrailService : IAuditTrailService
         }
     }
 
-    public async Task<IResult<IEnumerable<AuditTrailSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AuditTrailSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
@@ -229,7 +229,7 @@ public class AuditTrailService : IAuditTrailService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
         }
     }
 

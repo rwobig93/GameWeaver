@@ -93,7 +93,7 @@ public static class HostCheckinEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.GetAllCheckInsPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<HostCheckInFull>>;
+            var result = await hostService.GetAllCheckInsPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(result.Messages);
@@ -208,7 +208,7 @@ public static class HostCheckinEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.SearchCheckInsPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<HostCheckInFull>>;
+            var result = await hostService.SearchCheckInsPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(result.Messages);

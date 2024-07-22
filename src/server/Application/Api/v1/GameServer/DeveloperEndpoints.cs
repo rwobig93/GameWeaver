@@ -46,7 +46,7 @@ public static class DeveloperEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameService.GetAllDevelopersPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<DeveloperSlim>>;
+            var result = await gameService.GetAllDevelopersPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<DeveloperSlim>>.FailAsync(result.Messages);
@@ -199,7 +199,7 @@ public static class DeveloperEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameService.SearchDevelopersPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<DeveloperSlim>>;
+            var result = await gameService.SearchDevelopersPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<DeveloperSlim>>.FailAsync(result.Messages);

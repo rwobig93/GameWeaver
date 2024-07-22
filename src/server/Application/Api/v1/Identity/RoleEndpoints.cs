@@ -58,7 +58,7 @@ public static class RoleEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            var result = await roleService.GetAllPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<AppRoleSlim>>;
+            var result = await roleService.GetAllPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<RoleResponse>>.FailAsync(result.Messages);

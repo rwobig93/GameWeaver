@@ -14,7 +14,7 @@ public partial class Games : ComponentBase
     private int _totalItems = 10;
     private int _totalPages = 1;
     private int _pageSize = 25;
-    private int _pageNumber;
+    private int _currentPage;
     // private readonly string[] _orderings = null;
     // private string _searchString = "";
     // private List<string> _autocompleteList;
@@ -32,17 +32,16 @@ public partial class Games : ComponentBase
     
     private async Task RefreshData()
     {
-        // TODO: Add paginated detail to paginated method return
-        var games = await GameService.GetAllPaginatedAsync(_pageNumber, _pageSize);
-        if (!games.Succeeded)
+        var response = await GameService.GetAllPaginatedAsync(_currentPage, _pageSize);
+        if (!response.Succeeded)
         {
-            games.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
-        _pagedData = games.Data;
-        _totalItems = (await GameService.GetCountAsync()).Data;
-        _totalPages = _totalItems / _pageSize;
+        _pagedData = response.Data;
+        _totalItems = response.TotalCount;
+        _totalPages = response.EndPage;
         GetCurrentPageViewData();
         StateHasChanged();
     }
@@ -50,14 +49,14 @@ public partial class Games : ComponentBase
     private string GetCurrentPageViewData()
     {
         var currentStart = 1;
-        var currentEnd = _pageSize * _pageNumber;
+        var currentEnd = _pageSize * _currentPage;
 
-        if (_pageNumber > 1)
+        if (_currentPage > 1)
         {
-            currentStart += (_pageNumber - 1) * _pageSize;
+            currentStart += (_currentPage - 1) * _pageSize;
         }
 
-        if (_pageSize * _pageNumber > _totalItems)
+        if (_pageSize * _currentPage > _totalItems)
             currentEnd = _totalItems;
 
         return $"{currentStart}-{currentEnd} of {_totalItems}";
@@ -65,7 +64,7 @@ public partial class Games : ComponentBase
     
     private async Task PageChanged(int pageNumber)
     {
-        _pageNumber = pageNumber;
+        _currentPage = pageNumber;
         await RefreshData();
     }
 

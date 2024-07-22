@@ -48,7 +48,7 @@ public static class ConfigItemEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            var result = await gameServerService.GetAllConfigurationItemsPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<ConfigurationItemSlim>>;
+            var result = await gameServerService.GetAllConfigurationItemsPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(result.Messages);
@@ -205,7 +205,7 @@ public static class ConfigItemEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            var result = await gameServerService.SearchConfigurationItemsPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<ConfigurationItemSlim>>;
+            var result = await gameServerService.SearchConfigurationItemsPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(result.Messages);

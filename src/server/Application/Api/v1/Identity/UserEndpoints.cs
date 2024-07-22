@@ -86,8 +86,8 @@ public static class UserEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            var result = await userService.GetAllPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<AppUserSlim>>;
-            if (!result!.Succeeded)
+            var result = await userService.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!result.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<UserBasicResponse>>.FailAsync(result.Messages);
             }

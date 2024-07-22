@@ -62,7 +62,7 @@ public static class PermissionEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            var result = await permissionService.GetAllAssignedPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<AppPermissionSlim>>;
+            var result = await permissionService.GetAllAssignedPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<PermissionResponse>>.FailAsync(result.Messages);

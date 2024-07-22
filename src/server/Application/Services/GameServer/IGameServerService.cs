@@ -13,7 +13,7 @@ namespace Application.Services.GameServer;
 public interface IGameServerService
 {
     Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync();
-    Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
     Task<IResult<GameServerSlim>> GetByIdAsync(Guid id);
     Task<IResult<GameServerSlim>> GetByServerNameAsync(string serverName);
@@ -25,9 +25,9 @@ public interface IGameServerService
     Task<IResult> UpdateAsync(GameServerUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId, bool sendHostUninstall = true);
     Task<IResult<IEnumerable<GameServerSlim>>> SearchAsync(string searchText);
-    Task<IResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsAsync();
-    Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetConfigurationItemsCountAsync();
     Task<IResult<ConfigurationItemSlim>> GetConfigurationItemByIdAsync(Guid id);
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetConfigurationItemsByLocalResourceIdAsync(Guid id);
@@ -35,9 +35,9 @@ public interface IGameServerService
     Task<IResult> UpdateConfigurationItemAsync(ConfigurationItemUpdate updateObject, Guid requestUserId);
     Task<IResult> DeleteConfigurationItemAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsAsync(string searchText);
-    Task<IResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesAsync();
-    Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetLocalResourcesCountAsync();
     Task<IResult<LocalResourceSlim>> GetLocalResourceByIdAsync(Guid id);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameProfileIdAsync(Guid id);
@@ -48,9 +48,9 @@ public interface IGameServerService
     Task<IResult> UpdateLocalResourceOnGameServerAsync(Guid serverId, Guid resourceId, Guid requestUserId);
     Task<IResult> UpdateAllLocalResourcesOnGameServerAsync(Guid serverId, Guid requestUserId);
     Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourceAsync(string searchText);
-    Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourcePaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourcePaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesAsync();
-    Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetGameProfileCountAsync();
     Task<IResult<GameProfileSlim>> GetGameProfileByIdAsync(Guid id);
     Task<IResult<GameProfileSlim>> GetGameProfileByFriendlyNameAsync(string friendlyName);
@@ -60,9 +60,9 @@ public interface IGameServerService
     Task<IResult> UpdateGameProfileAsync(GameProfileUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteGameProfileAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<GameProfileSlim>>> SearchGameProfilesAsync(string searchText);
-    Task<IResult<IEnumerable<GameProfileSlim>>> SearchGameProfilesPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<GameProfileSlim>>> SearchGameProfilesPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<ModSlim>>> GetAllModsAsync();
-    Task<IResult<IEnumerable<ModSlim>>> GetAllModsPaginatedAsync(int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<ModSlim>>> GetAllModsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetModCountAsync();
     Task<IResult<ModSlim>> GetModByIdAsync(Guid id);
     Task<IResult<ModSlim>> GetModByCurrentHashAsync(string hash);
@@ -75,7 +75,7 @@ public interface IGameServerService
     Task<IResult> UpdateModAsync(ModUpdate request, Guid requestUserId);
     Task<IResult> DeleteModAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<ModSlim>>> SearchModsAsync(string searchText);
-    Task<IResult<IEnumerable<ModSlim>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<ModSlim>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult> StartServerAsync(Guid id, Guid requestUserId);
     Task<IResult> StopServerAsync(Guid id, Guid requestUserId);
     Task<IResult> RestartServerAsync(Guid id, Guid requestUserId);

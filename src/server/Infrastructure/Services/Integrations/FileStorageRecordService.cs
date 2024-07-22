@@ -51,7 +51,7 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<FileStorageRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
@@ -78,7 +78,7 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -319,7 +319,7 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<FileStorageRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<FileStorageRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
@@ -346,7 +346,7 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
         }
     }
 

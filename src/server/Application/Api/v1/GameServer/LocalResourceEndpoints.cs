@@ -49,7 +49,7 @@ public static class LocalResourceEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<LocalResourceSlim>>;
+            var result = await gameServerService.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(result.Messages);
@@ -224,7 +224,7 @@ public static class LocalResourceEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<LocalResourceSlim>>;
+            var result = await gameServerService.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(result.Messages);

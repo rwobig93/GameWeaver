@@ -55,7 +55,7 @@ public static class WeaverWorkEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<WeaverWorkSlim>>;
+            var result = await hostService.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(result.Messages);
@@ -319,7 +319,7 @@ public static class WeaverWorkEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await hostService.SearchWeaverWorkPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<WeaverWorkSlim>>;
+            var result = await hostService.SearchWeaverWorkPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(result.Messages);

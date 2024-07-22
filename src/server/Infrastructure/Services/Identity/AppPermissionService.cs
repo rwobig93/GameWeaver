@@ -132,7 +132,7 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
@@ -164,7 +164,7 @@ public class AppPermissionService : IAppPermissionService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -189,7 +189,7 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppPermissionSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppPermissionSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
     {
         try
         {
@@ -221,7 +221,7 @@ public class AppPermissionService : IAppPermissionService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
         }
     }
 

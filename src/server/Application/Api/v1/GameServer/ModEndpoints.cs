@@ -52,7 +52,7 @@ public static class ModEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.GetAllModsPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<ModSlim>>;
+            var result = await gameServerService.GetAllModsPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(result.Messages);
@@ -302,7 +302,7 @@ public static class ModEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.SearchModsPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<ModSlim>>;
+            var result = await gameServerService.SearchModsPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(result.Messages);

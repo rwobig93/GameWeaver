@@ -46,7 +46,7 @@ public static class GameGenreEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameService.GetAllGameGenresPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<GameGenreSlim>>;
+            var result = await gameService.GetAllGameGenresPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameGenreSlim>>.FailAsync(result.Messages);
@@ -199,7 +199,7 @@ public static class GameGenreEndpoints
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameService.SearchGameGenresPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<GameGenreSlim>>;
+            var result = await gameService.SearchGameGenresPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameGenreSlim>>.FailAsync(result.Messages);

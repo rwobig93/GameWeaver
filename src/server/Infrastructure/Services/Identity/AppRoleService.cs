@@ -107,7 +107,7 @@ public class AppRoleService : IAppRoleService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppRoleSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppRoleSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
@@ -134,7 +134,7 @@ public class AppRoleService : IAppRoleService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppRoleSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppRoleSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -246,7 +246,7 @@ public class AppRoleService : IAppRoleService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppRoleSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppRoleSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
@@ -276,7 +276,7 @@ public class AppRoleService : IAppRoleService
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppRoleSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppRoleSlim>>.FailAsync(ex.Message);
         }
     }
 
