@@ -61,10 +61,10 @@ public partial class HostWidget : ComponentBase
         if (firstRender)
         {
             UpdateThemeColors();
-            UpdateStatus();
             UpdateStorage();
             
-            await Task.CompletedTask;
+            await Task.Delay(100); // Delay for checkin status, *feels* better to view the widget this way on the page
+            UpdateStatus();
             StateHasChanged();
 
             await UpdateState();
@@ -214,5 +214,10 @@ public partial class HostWidget : ComponentBase
         var totalSpace = Host.Storage?.Sum(x => (double) x.TotalSpace) ?? 0;
         
         StorageUsed = 100 - Math.Round(freeSpace / totalSpace * 100);
+    }
+
+    private void ViewHost()
+    {
+        NavManager.NavigateTo(AppRouteConstants.GameServer.Hosts.ViewId(Host.Id));
     }
 }

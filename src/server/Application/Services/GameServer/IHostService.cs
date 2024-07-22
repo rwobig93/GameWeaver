@@ -19,8 +19,8 @@ public interface IHostService
     Task<IResult<IEnumerable<HostSlim>>> GetAllAsync();
     Task<PaginatedResult<IEnumerable<HostSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
-    Task<IResult<HostSlim>> GetByIdAsync(Guid id);
-    Task<IResult<HostSlim>> GetByHostnameAsync(string hostName);
+    Task<IResult<HostSlim?>> GetByIdAsync(Guid id);
+    Task<IResult<HostSlim?>> GetByHostnameAsync(string hostName);
     Task<IResult<Guid>> CreateAsync(HostCreateRequest request, Guid requestUserId);
     Task<IResult> UpdateAsync(HostUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId);

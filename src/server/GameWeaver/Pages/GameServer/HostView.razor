@@ -1,0 +1,64 @@
+﻿@using Application.Constants.Identity
+
+@attribute [Route(AppRouteConstants.GameServer.Hosts.View)]
+@attribute [Authorize(PermissionConstants.GameServer.Hosts.Get)]
+
+@if (!_validIdProvided)
+{
+    <IconWithMessageDisplay Icon="@Icons.Material.Filled.ErrorOutline" Text="Invalid Host Id provided"/>
+}
+else
+{
+    <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@GoBack">Go Back
+        </MudButton>
+        @if (_canEditHost)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="@ToggleEditMode">@_editButtonText
+            </MudButton>
+        }
+        @if (_editMode)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 
+                       OnClick="@Save">Save Changes
+            </MudButton>
+        }
+    </MudPaper>
+
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Info</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_host.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_host.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+        </MudItem>
+    </MudPaper>
+    
+    @if (_canViewGameServers)
+    {
+        <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Gameservers Running This Game</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTable Items="@_runningGameservers" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Modded</MudTh>
+                        <MudTh>State</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
+                        <MudTd DataLabel="Name">@context.ServerName</MudTd>
+                        <MudTd DataLabel="Modded">@context.Modded</MudTd>
+                        <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudPaper>
+    }
+}

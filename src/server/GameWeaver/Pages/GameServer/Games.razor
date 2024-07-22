@@ -4,7 +4,7 @@
 @attribute [Authorize(PermissionConstants.GameServer.Game.Get)]
 
 <MudPaper Elevation="25" Class="mb-6">
-    <MudStack Class="pa-3" Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.Wrap" AlignItems="AlignItems.End" Spacing="3">
+    <MudContainer Class="d-flex flex-row gap-3">
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@CreateGame">
             Create
         </MudButton>
@@ -17,12 +17,14 @@
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Subtitles" OnClick="@ToggleNames">
             Names
         </MudButton>
-        <MudDivider Vertical="true" />
-        <MudTextField T="string" Label="Find a game" Class="mt-0" Variant="Variant.Outlined" Margin="Margin.Dense" />
+        <MudSpacer />
+        <MudDivider Vertical="true"/>
+        <MudTextField T="string" bind-Value="@_searchText" Placeholder="Find a game" Adornment="Adornment.Start" Class="py-1"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense"/>
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Search" OnClick="@RefreshData">
             Search
         </MudButton>
-    </MudStack>
+    </MudContainer>
 </MudPaper>
 <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var game in _pagedData)

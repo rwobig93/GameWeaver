@@ -98,7 +98,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <returns>Host object</returns>
     [Authorize(PermissionConstants.GameServer.Hosts.Get)]
-    private static async Task<IResult<HostSlim>> GetById([FromQuery]Guid id, IHostService hostService)
+    private static async Task<IResult<HostSlim?>> GetById([FromQuery]Guid id, IHostService hostService)
     {
         try
         {
@@ -117,7 +117,7 @@ public static class HostEndpoints
     /// <param name="hostService"></param>
     /// <returns>Host object</returns>
     [Authorize(PermissionConstants.GameServer.Hosts.Get)]
-    private static async Task<IResult<HostSlim>> GetByHostname([FromQuery]string hostname, IHostService hostService)
+    private static async Task<IResult<HostSlim?>> GetByHostname([FromQuery]string hostname, IHostService hostService)
     {
         try
         {

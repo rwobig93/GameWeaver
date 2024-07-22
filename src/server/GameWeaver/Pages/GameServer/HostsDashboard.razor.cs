@@ -18,7 +18,8 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     {
         set => _hostWidgets.Add(value);
     }
-    
+
+    private string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
     private int _pageSize = 25;

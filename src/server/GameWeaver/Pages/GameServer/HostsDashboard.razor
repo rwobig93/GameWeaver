@@ -5,13 +5,17 @@
 @attribute [Authorize(PermissionConstants.GameServer.Hosts.Get)]
 
 <MudPaper Elevation="25" Class="pb-4 mb-6">
-    <MudToolBar Class="mx-1">
-        <MudFab Color="Color.Success" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Add"
-                Label="Add" Class="px-2"/>
-        <MudFab Color="Color.Primary" Size="Size.Small" IconSize="Size.Small" StartIcon="@Icons.Material.Outlined.Refresh"
-                aria-label="refresh" Label="Search" Class="ml-2 px-2"/>
-        <MudTextField T="string" Label="Search:" Class="mb-5 ml-3"/>
-    </MudToolBar>
+    <MudContainer Class="d-flex flex-row gap-3">
+        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add">
+            Add
+        </MudButton>
+        <MudSpacer />
+        <MudTextField T="string" bind-Value="@_searchText" Placeholder="Find a host" Adornment="Adornment.Start" Class="py-1"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense"/>
+        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Search" OnClick="@RefreshData">
+            Search
+        </MudButton>
+    </MudContainer>
 </MudPaper>
 <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var host in _pagedData)

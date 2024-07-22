@@ -44,10 +44,9 @@ public partial class GameWidget : ComponentBase
         return Vertical ? "/images/gameserver/game-default-vertical.jpg" : "/images/gameserver/game-default-horizontal.jpg";
     }
 
-    private async Task ButtonClick()
+    private void ViewGame()
     {
-        Snackbar.Add($"View game: {Game.FriendlyName}", Severity.Success);
-        await Task.CompletedTask;
+        NavManager.NavigateTo(AppRouteConstants.GameServer.Games.ViewId(Game.Id));
     }
 
     private async Task UpdateImage()

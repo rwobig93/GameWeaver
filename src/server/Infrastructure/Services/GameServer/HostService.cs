@@ -424,24 +424,32 @@ public class HostService : IHostService
         return await Result<int>.SuccessAsync(hostCount.Result);
     }
 
-    public async Task<IResult<HostSlim>> GetByIdAsync(Guid id)
+    public async Task<IResult<HostSlim?>> GetByIdAsync(Guid id)
     {
         var foundHost = await _hostRepository.GetByIdAsync(id);
         if (!foundHost.Succeeded)
+        {
             return await Result<HostSlim>.FailAsync(foundHost.ErrorMessage);
+        }
         if (foundHost.Result is null)
+        {
             return await Result<HostSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
 
         return await Result<HostSlim>.SuccessAsync(foundHost.Result.ToSlim());
     }
 
-    public async Task<IResult<HostSlim>> GetByHostnameAsync(string hostName)
+    public async Task<IResult<HostSlim?>> GetByHostnameAsync(string hostName)
     {
         var foundHost = await _hostRepository.GetByHostnameAsync(hostName);
         if (!foundHost.Succeeded)
+        {
             return await Result<HostSlim>.FailAsync(foundHost.ErrorMessage);
+        }
         if (foundHost.Result is null)
+        {
             return await Result<HostSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
 
         return await Result<HostSlim>.SuccessAsync(foundHost.Result.ToSlim());
     }

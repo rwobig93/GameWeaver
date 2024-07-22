@@ -145,4 +145,18 @@ public class WebClientService : IWebClientService
             return await Result<bool>.FailAsync(false, $"Failed to invoke image existence insurance: {ex.Message}");
         }
     }
+
+    public async Task<IResult> OpenExternalUrl(string url)
+    {
+        try
+        {
+            await _jsRuntime.InvokeVoidAsync("openExternalUrl", url);
+
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync($"Failed to invoke external url open: {ex.Message}");
+        }
+    }
 }

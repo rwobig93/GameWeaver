@@ -59,11 +59,15 @@ public static class AppRouteConstants
         public static class Hosts
         {
             public const string HostsDashboard = "/hosts/dashboard";
+            public const string View = "/hosts/{HostId:guid}";
+            public static string ViewId (Guid id) => $"/hosts/{id}";
         }
 
         public static class Games
         {
             public const string ViewAll = "/games";
+            public const string View = "/games/{GameId:guid}";
+            public static string ViewId (Guid id) => $"/games/{id}";
         }
 
         public static class GameServers

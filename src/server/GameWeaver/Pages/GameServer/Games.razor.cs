@@ -8,9 +8,9 @@ public partial class Games : ComponentBase
     [Inject] private IGameService GameService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
     
-    private MudTable<GameSlim> _table = new();
     private IEnumerable<GameSlim> _pagedData = [];
     
+    private string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
     private int _pageSize = 25;
@@ -32,7 +32,7 @@ public partial class Games : ComponentBase
     
     private async Task RefreshData()
     {
-        var response = await GameService.GetAllPaginatedAsync(_currentPage, _pageSize);
+        var response = await GameService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -89,5 +89,6 @@ public partial class Games : ComponentBase
     private async Task CreateGame()
     {
         await Task.CompletedTask;
+        Snackbar.Add("Not currently implemented", Severity.Warning);
     }
 }
