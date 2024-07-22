@@ -17,7 +17,6 @@
         <MudStack Row="true" Spacing="2" Class="justify-center pa-2">
             <MudText Typo="Typo.body2" Align="Align.Left">@Host.FriendlyName</MudText>
             <MudSpacer/>
-            @* TODO: If Public IP is ::1 (localhost) we need to do a call to check the actual public ip *@
             <MudText Typo="Typo.body2" Align="Align.Right">@Host.PublicIp</MudText>
         </MudStack>
         <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2">

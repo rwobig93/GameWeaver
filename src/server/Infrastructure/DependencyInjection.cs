@@ -151,6 +151,7 @@ public static class DependencyInjection
         {
             options.BaseAddress = new Uri(configuration.GetApplicationSettings().BaseUrl);
         }).ConfigureCertificateHandling(configuration);
+        services.AddHttpClient(ApiConstants.Clients.GeneralWeb).ConfigureCertificateHandling(configuration);
         services.AddHttpClient(ApiConstants.Clients.SteamApiNetUnauthenticated, options =>
         {
             options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlApiNet);

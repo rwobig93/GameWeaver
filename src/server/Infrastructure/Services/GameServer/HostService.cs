@@ -51,11 +51,12 @@ public class HostService : IHostService
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
     private readonly IAppUserRepository _userRepository;
     private readonly IOptions<AppConfiguration> _generalConfig;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
         IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService,
         IEventService eventService, IGameRepository gameRepository, IAuditTrailsRepository auditRepository, INotifyRecordRepository recordRepository,
-        ITroubleshootingRecordsRepository tshootRepository, IAppUserRepository userRepository, IOptions<AppConfiguration> generalConfig)
+        ITroubleshootingRecordsRepository tshootRepository, IAppUserRepository userRepository, IOptions<AppConfiguration> generalConfig, IHttpClientFactory httpClientFactory)
     {
         _hostRepository = hostRepository;
         _dateTime = dateTime;
@@ -70,6 +71,7 @@ public class HostService : IHostService
         _tshootRepository = tshootRepository;
         _userRepository = userRepository;
         _generalConfig = generalConfig;
+        _httpClientFactory = httpClientFactory;
         _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
     }
@@ -1193,9 +1195,30 @@ public class HostService : IHostService
             request.HostId = foundHost.Result.Id;
 
             var convertedRequest = deserializedData.ToUpdate();
-            convertedRequest.PublicIp = sourceIp;
             convertedRequest.PrivateIp = convertedRequest.NetworkInterfaces.GetPrimaryIp();
             convertedRequest.FriendlyName = string.IsNullOrWhiteSpace(foundHost.Result.FriendlyName) ? convertedRequest.Hostname : foundHost.Result.FriendlyName;
+            convertedRequest.PublicIp = sourceIp;
+            if (convertedRequest.PublicIp == "::1")
+            {
+                _logger.Debug("Host public ip is local, attempting to get public ip address: [{HostId}] {PublicIp}", request.HostId, convertedRequest.PublicIp);
+                var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.GeneralWeb);
+                var publicIpResponse = await httpClient.GetAsync(ApiConstants.GeneralExternal.UrlGetPublicIp);
+                switch (publicIpResponse.IsSuccessStatusCode)
+                {
+                    case false:
+                        _logger.Error("Failed to update local host public ip, couldn't get public ip from ip service: [{HostId}] {PublicIp}", request.HostId, convertedRequest.PublicIp);
+                        break;
+                    case true:
+                    {
+                        var parsedPublicIp = await publicIpResponse.Content.ReadAsStringAsync();
+                        var sanitizedPublicIp = parsedPublicIp.Trim();
+                        _logger.Information("Updated local host public ip: [{HostId}] {PublicIpBefore} => {PublicIpAfter}",
+                            request.HostId, convertedRequest.PublicIp, sanitizedPublicIp);
+                        convertedRequest.PublicIp = sanitizedPublicIp;
+                        break;
+                    }
+                }
+            }
 
             var hostUpdate = await _hostRepository.UpdateAsync(convertedRequest.ToUpdateDb());
             if (!hostUpdate.Succeeded)
