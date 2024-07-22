@@ -99,12 +99,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.ConfigItemEndpoints.Search(System.String,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.ConfigItemEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search for configuration items by properties
             </summary>
             <param name="searchText">Text to search for</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameServerService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching configuration items</returns>
             <remarks>Searches by: ID, GameProfileId, Path, Category, Key, Value</remarks>
         </member>
@@ -173,12 +176,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.DeveloperEndpoints.Search(System.String,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.DeveloperEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search developers by properties
             </summary>
             <param name="searchText">Text to search for</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameService"></param>
+            <param name="appConfig"></param>
             <returns>List of developers</returns>
             <remarks>Searches by: ID, Name</remarks>
         </member>
@@ -359,12 +365,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameGenreEndpoints.Search(System.String,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.GameGenreEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search game genres by properties
             </summary>
             <param name="searchText">Text to search for</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameService"></param>
+            <param name="appConfig"></param>
             <returns>List of game genres</returns>
             <remarks>Searches by: ID, Name, Description</remarks>
         </member>
@@ -450,12 +459,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameProfileEndpoints.Search(System.String,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameProfileEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search game profiles by properties
             </summary>
             <param name="searchText">Text to search for</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameServerService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching game profiles</returns>
             <remarks>Searches by: ID, FriendlyName, OwnerId, GameId, ServerProcessName</remarks>
         </member>
@@ -562,12 +574,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Search(System.String,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search for game servers
             </summary>
             <param name="searchText">Text to search</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameServerService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching game servers</returns>
             <remarks>Searches by: ID, OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
         </member>
@@ -677,12 +692,15 @@
             <param name="dateTime"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.Search(System.String,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search for checkins by properties
             </summary>
             <param name="searchText">Text to search by</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="hostService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching host checkins</returns>
             <remarks>Searches by: ID, HostId</remarks>
         </member>
@@ -761,12 +779,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Search(System.String,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search for a host by properties
             </summary>
             <param name="searchText">Text to search by</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="hostService"></param>
+            <param name="appConfig"></param>
             <returns>List of hosts matching the search criteria</returns>
             <remarks>Search matches against ID, FriendlyName, Description, PrivateIp and PublicIp</remarks>
         </member>
@@ -834,12 +855,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostRegistrationEndpoints.Search(System.String,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.HostRegistrationEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search for registrations by properties
             </summary>
             <param name="searchText">Text to search by</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="hostService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching registrations</returns>
             <remarks>Searches by ID, HostId, Key, Description and Public Ip</remarks>
         </member>
@@ -917,12 +941,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.Search(System.String,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search local resources by properties
             </summary>
             <param name="searchText">Text to search for</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameServerService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching local resources</returns>
             <remarks>Searches by: ID, GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
         </member>
@@ -1032,12 +1059,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.ModEndpoints.Search(System.String,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.ModEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search mods by properties
             </summary>
             <param name="searchText">Text to search</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameServerService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching mods</returns>
             <remarks>Searches by: ID, GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
         </member>
@@ -1136,12 +1166,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.PublisherEndpoints.Search(System.String,Application.Services.GameServer.IGameService)">
+        <member name="M:Application.Api.v1.GameServer.PublisherEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search for publishers by properties
             </summary>
             <param name="searchText">Text to search for</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="gameService"></param>
+            <param name="appConfig"></param>
             <returns>List of publishers</returns>
             <remarks>Searches by: ID, Name</remarks>
         </member>
@@ -1256,12 +1289,15 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.WeaverWorkEndpoints.Search(System.String,Application.Services.GameServer.IHostService)">
+        <member name="M:Application.Api.v1.GameServer.WeaverWorkEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Search for weaver work by properties
             </summary>
             <param name="searchText">Text to search for</param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="hostService"></param>
+            <param name="appConfig"></param>
             <returns>List of matching weaver work</returns>
             <remarks>Search by: ID, HostId</remarks>
         </member>
@@ -1276,11 +1312,14 @@
             </summary>
             <param name="app"></param>
         </member>
-        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetAllPermissions(Application.Services.Identity.IAppPermissionService)">
+        <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetAllPermissions(System.Int32,System.Int32,Application.Services.Identity.IAppPermissionService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Get all application permissions for roles and users
             </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="permissionService"></param>
+            <param name="appConfig"></param>
             <returns>List of application permissions for both roles and users</returns>
         </member>
         <member name="M:Application.Api.v1.Identity.PermissionEndpoints.GetPermission(System.Guid,Application.Services.Identity.IAppPermissionService)">
@@ -1378,11 +1417,14 @@
             </summary>
             <param name="app"></param>
         </member>
-        <member name="M:Application.Api.v1.Identity.RoleEndpoints.GetAllRoles(Application.Services.Identity.IAppRoleService)">
+        <member name="M:Application.Api.v1.Identity.RoleEndpoints.GetAllRoles(System.Int32,System.Int32,Application.Services.Identity.IAppRoleService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Get all roles
             </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="roleService"></param>
+            <param name="appConfig"></param>
             <returns>List of all roles</returns>
         </member>
         <member name="M:Application.Api.v1.Identity.RoleEndpoints.GetById(System.Guid,Application.Services.Identity.IAppRoleService)">
@@ -1476,11 +1518,14 @@
             <param name="accountService"></param>
             <returns></returns>
         </member>
-        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetAllUsers(Application.Services.Identity.IAppUserService)">
+        <member name="M:Application.Api.v1.Identity.UserEndpoints.GetAllUsers(System.Int32,System.Int32,Application.Services.Identity.IAppUserService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
             Get all users
             </summary>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
             <param name="userService"></param>
+            <param name="appConfig"></param>
             <returns>List of all users</returns>
         </member>
         <member name="M:Application.Api.v1.Identity.UserEndpoints.GetUserById(System.Guid,Application.Services.Identity.IAppUserService)">
@@ -1602,11 +1647,14 @@
             </summary>
             <param name="app"></param>
         </member>
-        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.GetAllTrails(Application.Services.Lifecycle.IAuditTrailService)">
+        <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.GetAllTrails(System.Int32,System.Int32,Application.Services.Lifecycle.IAuditTrailService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
             <summary>
-            Get all audit trails
+            Get all audit trails with pagination
             </summary>
-            <param name="auditService"></param>
+            <param name="pageNumber">Page number to get</param>
+            <param name="pageSize">Number of items per page</param>
+            <param name="auditTrailService"></param>
+            <param name="appConfig"></param>
             <returns>List of all audit trails</returns>
         </member>
         <member name="M:Application.Api.v1.Lifecycle.AuditEndpoints.GetAuditTrailById(System.Guid,Application.Services.Lifecycle.IAuditTrailService)">

@@ -111,11 +111,26 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
-            var roles = await _roleRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!roles.Succeeded)
-                return await Result<IEnumerable<AppRoleSlim>>.FailAsync(roles.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            return await Result<IEnumerable<AppRoleSlim>>.SuccessAsync(roles.Result?.ToSlims() ?? new List<AppRoleSlim>());
+            var response = await _roleRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppRoleSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppRoleSlim>>.SuccessAsync([]);
+            }
+
+            return await PaginatedResult<IEnumerable<AppRoleSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
@@ -235,14 +250,29 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
-            var searchResult = await _roleRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-            if (!searchResult.Succeeded)
-                return await Result<IEnumerable<AppRoleSlim>>.FailAsync(searchResult.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            var results = (searchResult.Result?.ToSlims() ?? new List<AppRoleSlim>())
+            var response = await _roleRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppRoleSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppRoleSlim>>.SuccessAsync([]);
+            }
+
+            var results = (response.Result?.Data.ToSlims() ?? new List<AppRoleSlim>())
                 .OrderBy(x => x.Name);
 
-            return await Result<IEnumerable<AppRoleSlim>>.SuccessAsync(results);
+            return await PaginatedResult<IEnumerable<AppRoleSlim>>.SuccessAsync(
+                results,
+                response.Result!.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {

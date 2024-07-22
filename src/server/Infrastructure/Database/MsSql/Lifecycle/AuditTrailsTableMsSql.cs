@@ -86,7 +86,7 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                SELECT COUNT(*) OVER() AS TotalCount, a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -215,9 +215,7 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                set nocount on;
-                
-                SELECT *
+                SELECT COUNT(*) OVER() AS TotalCount, *
                 FROM dbo.[{Table.TableName}]
                 WHERE Id LIKE '%' + @SearchTerm + '%'
                     OR TableName LIKE '%' + @SearchTerm + '%'
@@ -264,9 +262,7 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                set nocount on;
-                
-                SELECT a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
+                SELECT COUNT(*) OVER() AS TotalCount, a.*, u.Id as ChangedBy, u.Username as ChangedByUsername
                 FROM dbo.[{Table.TableName}] a
                 JOIN {AppUsersTableMsSql.Table.TableName} u ON a.ChangedBy = u.Id
                 WHERE a.Id LIKE '%' + @SearchTerm + '%'

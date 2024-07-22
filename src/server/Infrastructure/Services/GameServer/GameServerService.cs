@@ -66,11 +66,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
+        var response = await _gameServerRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetCountAsync()
@@ -380,7 +395,7 @@ public class GameServerService : IGameServerService
     /// </summary>
     /// <param name="id">Game server Id</param>
     /// <param name="requestUserId">User Id making the request</param>
-    /// <param name="sendHostUninstall">Whether to send an uninstall request to the game server host</param>
+    /// <param name="sendHostUninstall">Whether to send an uninstallation request to the game server host</param>
     /// <returns>Success or failure with context messages</returns>
     public async Task<IResult> DeleteAsync(Guid id, Guid requestUserId, bool sendHostUninstall = true)
     {
@@ -495,11 +510,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
+        var response = await _gameServerRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsAsync()
@@ -513,11 +543,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllConfigurationItemsPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ConfigurationItemSlim>());
+        var response = await _gameServerRepository.GetAllConfigurationItemsPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetConfigurationItemsCountAsync()
@@ -664,11 +709,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchConfigurationItemsPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ConfigurationItemSlim>());
+        var response = await _gameServerRepository.SearchConfigurationItemsPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesAsync()
@@ -682,11 +742,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<LocalResourceSlim>());
+        var response = await _gameServerRepository.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetLocalResourcesCountAsync()
@@ -1047,18 +1122,33 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourcePaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var localResourcesRequest = await _gameServerRepository.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize);
-        if (!localResourcesRequest.Succeeded || localResourcesRequest.Result is null)
-            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(localResourcesRequest.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        var convertedLocalResources = localResourcesRequest.Result.ToSlims().ToList();
+        var response = await _gameServerRepository.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync([]);
+        }
+
+        var convertedLocalResources = response.Result.Data.ToSlims().ToList();
         
         foreach (var resource in convertedLocalResources)
         {
             resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
         }
 
-        return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(localResourcesRequest.Result?.ToSlims() ?? new List<LocalResourceSlim>());
+        return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesAsync()
@@ -1072,11 +1162,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllGameProfilesPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameProfileSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameProfileSlim>());
+        var response = await _gameServerRepository.GetAllGameProfilesPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetGameProfileCountAsync()
@@ -1287,11 +1392,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<GameProfileSlim>>> SearchGameProfilesPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchGameProfilesPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameProfileSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameProfileSlim>());
+        var response = await _gameServerRepository.SearchGameProfilesPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<ModSlim>>> GetAllModsAsync()
@@ -1305,11 +1425,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<ModSlim>>> GetAllModsPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllModsPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ModSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
+        var response = await _gameServerRepository.GetAllModsPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetModCountAsync()
@@ -1473,11 +1608,26 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<IEnumerable<ModSlim>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchModsPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ModSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
+        var response = await _gameServerRepository.SearchModsPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult> StartServerAsync(Guid id, Guid requestUserId)

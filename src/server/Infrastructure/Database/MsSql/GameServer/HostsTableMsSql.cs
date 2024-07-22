@@ -90,7 +90,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT h.*
+                SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.IsDeleted = 0
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -207,9 +207,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT h.*
+                SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.IsDeleted = 0
                     AND h.Id LIKE '%' + @SearchTerm + '%'

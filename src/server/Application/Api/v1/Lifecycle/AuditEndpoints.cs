@@ -3,12 +3,15 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Mappers.Lifecycle;
+using Application.Models.Lifecycle;
 using Application.Responses.v1.Lifecycle;
 using Application.Services.Lifecycle;
+using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Application.Api.v1.Lifecycle;
 
@@ -31,20 +34,40 @@ public static class AuditEndpoints
     }
 
     /// <summary>
-    /// Get all audit trails
+    /// Get all audit trails with pagination
     /// </summary>
-    /// <param name="auditService"></param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
+    /// <param name="auditTrailService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of all audit trails</returns>
     [Authorize(PermissionConstants.System.Audit.View)]
-    private static async Task<IResult<List<AuditTrailResponse>>> GetAllTrails(IAuditTrailService auditService)
+    private static async Task<IResult<IEnumerable<AuditTrailResponse>>> GetAllTrails([FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IAuditTrailService auditTrailService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            var allAuditTrails = await auditService.GetAllAsync();
-            if (!allAuditTrails.Succeeded)
-                return await Result<List<AuditTrailResponse>>.FailAsync(allAuditTrails.Messages);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            return await Result<List<AuditTrailResponse>>.SuccessAsync(allAuditTrails.Data.ToResponses().ToList());
+            var result = await auditTrailService.GetAllPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<AuditTrailSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AuditTrailResponse>>.FailAsync(result.Messages);
+            }
+            
+            var convertedResult = await PaginatedResult<IEnumerable<AuditTrailResponse>>.SuccessAsync(
+                result.Data.ToResponses(),
+                result.StartPage,
+                result.CurrentPage,
+                result.EndPage,
+                result.TotalCount,
+                result.PageSize);
+
+            if (result.TotalCount <= 0) return convertedResult;
+
+            convertedResult.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.Lifecycle.Audit.GetAll, pageNumber, pageSize);
+            convertedResult.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.Lifecycle.Audit.GetAll, pageNumber, pageSize, convertedResult.TotalCount);
+            return convertedResult;
         }
         catch (Exception ex)
         {

@@ -62,12 +62,10 @@ public static class GameEndpoints
                 return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(result.Messages);
             }
 
-            if (result.TotalCount > 0)
-            {
-                result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize);
-                result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize, result.TotalCount);
-            }
+            if (result.TotalCount <= 0) return result;
             
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize, result.TotalCount);
             return result;
         }
         catch (Exception ex)

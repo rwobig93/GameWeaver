@@ -44,19 +44,19 @@ public static class GameGenreEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameService.GetAllGameGenresPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<GameGenreSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<GameGenreSlim>>.FailAsync(result.Messages);
+            }
 
-            var result = await gameService.GetAllGameGenresPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<GameGenreSlim>>.FailAsync(result.Messages);
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await gameService.GetGameGenresCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameGenre.GetAll,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameGenre.GetAll,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<GameGenreSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameGenre.GetAll, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameGenre.GetAll, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -180,20 +180,36 @@ public static class GameGenreEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Search game genres by properties
     /// </summary>
     /// <param name="searchText">Text to search for</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of game genres</returns>
     /// <remarks>Searches by: ID, Name, Description</remarks>
     [Authorize(PermissionConstants.GameServer.GameGenre.Search)]
-    private static async Task<IResult<IEnumerable<GameGenreSlim>>> Search([FromQuery]string searchText, IGameService gameService)
+    private static async Task<IResult<IEnumerable<GameGenreSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IGameService gameService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await gameService.SearchGameGenresAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameService.SearchGameGenresPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<GameGenreSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<GameGenreSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+            
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameGenre.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameGenre.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

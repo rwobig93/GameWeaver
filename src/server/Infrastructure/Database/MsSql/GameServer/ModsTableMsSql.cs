@@ -76,7 +76,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT m.*
+                SELECT COUNT(*) OVER() AS TotalCount, m.*
                 FROM dbo.[{Table.TableName}] m
                 WHERE m.IsDeleted = 0
                 ORDER BY m.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -257,9 +257,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT m.*
+                SELECT COUNT(*) OVER() AS TotalCount, m.*
                 FROM dbo.[{Table.TableName}] m
                 WHERE m.IsDeleted = 0
                     AND m.Id LIKE '%' + @SearchTerm + '%'

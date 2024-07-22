@@ -3,6 +3,7 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Models.Database;
 using Infrastructure.Database.MsSql.Lifecycle;
@@ -39,16 +40,19 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<NotifyRecordDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<NotifyRecordDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var foundRecords = await _database.LoadData<NotifyRecordDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<NotifyRecordDb, dynamic>(
                 NotifyRecordsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(foundRecords);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -148,17 +152,20 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<NotifyRecordDb>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<NotifyRecordDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults =
-                await _database.LoadData<NotifyRecordDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response =
+                await _database.LoadDataPaginated<NotifyRecordDb, dynamic>(
                     NotifyRecordsTableMsSql.SearchPaginated, new { SearchTerm = searchTerm, Offset = offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {

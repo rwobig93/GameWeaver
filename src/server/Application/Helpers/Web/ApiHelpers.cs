@@ -48,7 +48,7 @@ public static class ApiHelpers
 
     public static string? GetPaginatedPreviousUrl(this string baseUrl, string endpoint, int pageNumber, int pageSize)
     {
-        return pageNumber >= 1 ? baseUrl.GetPaginatedUrl(endpoint, pageNumber - 1, pageSize) : null;
+        return pageNumber >= 2 ? baseUrl.GetPaginatedUrl(endpoint, pageNumber - 1, pageSize) : null;
     }
 
     public static string? GetPaginatedNextUrl(this string baseUrl, string endpoint, int pageNumber, int pageSize, int totalCount)

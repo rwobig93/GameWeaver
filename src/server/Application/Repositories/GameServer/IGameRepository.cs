@@ -25,7 +25,7 @@ public interface IGameRepository
     Task<DatabaseActionResult<IEnumerable<GameDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<DeveloperDb>>> GetAllDevelopersAsync();
-    Task<DatabaseActionResult<IEnumerable<DeveloperDb>>> GetAllDevelopersPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<DeveloperDb>>>> GetAllDevelopersPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetDevelopersCountAsync();
     Task<DatabaseActionResult<DeveloperDb?>> GetDeveloperByIdAsync(Guid id);
     Task<DatabaseActionResult<DeveloperDb?>> GetDeveloperByNameAsync(string name);
@@ -33,9 +33,9 @@ public interface IGameRepository
     Task<DatabaseActionResult<Guid>> CreateDeveloperAsync(DeveloperCreate createObject);
     Task<DatabaseActionResult> DeleteDeveloperAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<DeveloperDb>>> SearchDevelopersAsync(string searchText);
-    Task<DatabaseActionResult<IEnumerable<DeveloperDb>>> SearchDevelopersPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<DeveloperDb>>>> SearchDevelopersPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<PublisherDb>>> GetAllPublishersAsync();
-    Task<DatabaseActionResult<IEnumerable<PublisherDb>>> GetAllPublishersPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<PublisherDb>>>> GetAllPublishersPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetPublishersCountAsync();
     Task<DatabaseActionResult<PublisherDb?>> GetPublisherByIdAsync(Guid id);
     Task<DatabaseActionResult<PublisherDb?>> GetPublisherByNameAsync(string name);
@@ -43,9 +43,9 @@ public interface IGameRepository
     Task<DatabaseActionResult<Guid>> CreatePublisherAsync(PublisherCreate createObject);
     Task<DatabaseActionResult> DeletePublisherAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<PublisherDb>>> SearchPublishersAsync(string searchText);
-    Task<DatabaseActionResult<IEnumerable<PublisherDb>>> SearchPublishersPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<PublisherDb>>>> SearchPublishersPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> GetAllGameGenresAsync();
-    Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> GetAllGameGenresPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameGenreDb>>>> GetAllGameGenresPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetGameGenresCountAsync();
     Task<DatabaseActionResult<GameGenreDb?>> GetGameGenreByIdAsync(Guid id);
     Task<DatabaseActionResult<GameGenreDb?>> GetGameGenreByNameAsync(string name);
@@ -53,9 +53,9 @@ public interface IGameRepository
     Task<DatabaseActionResult<Guid>> CreateGameGenreAsync(GameGenreCreate createObject);
     Task<DatabaseActionResult> DeleteGameGenreAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> SearchGameGenresAsync(string searchText);
-    Task<DatabaseActionResult<IEnumerable<GameGenreDb>>> SearchGameGenresPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameGenreDb>>>> SearchGameGenresPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesAsync();
-    Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameUpdateDb>>>> GetAllGameUpdatesPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetGameUpdatesCountAsync();
     Task<DatabaseActionResult<GameUpdateDb?>> GetGameUpdateByIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> GetGameUpdatesByGameId(Guid id);
@@ -63,5 +63,5 @@ public interface IGameRepository
     Task<DatabaseActionResult> DeleteGameUpdateAsync(Guid id);
     Task<DatabaseActionResult> DeleteGameUpdatesForGameIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdateAsync(string searchText);
-    Task<DatabaseActionResult<IEnumerable<GameUpdateDb>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameUpdateDb>>>> SearchGameUpdatePaginatedAsync(string searchText, int pageNumber, int pageSize);
 }

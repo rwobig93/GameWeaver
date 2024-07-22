@@ -7,6 +7,7 @@ using Application.Models.GameServer.WeaverWork;
 using Application.Repositories.GameServer;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 using Domain.Models.Database;
@@ -45,16 +46,19 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<HostDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<HostDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allHosts = await _database.LoadData<HostDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<HostDb, dynamic>(
                 HostsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allHosts);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -177,7 +181,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var searchResults = await _database.LoadData<HostDb, dynamic>(
                 HostsTableMsSql.Search, new { SearchTerm = searchText });
-            
+
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
@@ -188,17 +192,19 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<HostDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<HostDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<HostDb, dynamic>(
                 HostsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
 
-            actionReturn.Succeed(searchResults);
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -226,16 +232,19 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetAllRegistrationsPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostRegistrationDb>>>> GetAllRegistrationsPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<HostRegistrationDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostRegistrationDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allRegistrations = await _database.LoadData<HostRegistrationDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<HostRegistrationDb, dynamic>(
                 HostRegistrationsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allRegistrations);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -431,7 +440,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var searchResults = await _database.LoadData<HostRegistrationDb, dynamic>(
                 HostRegistrationsTableMsSql.Search, new { SearchTerm = searchText });
-            
+
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
@@ -442,17 +451,19 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostRegistrationDb>>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<HostRegistrationDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostRegistrationDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<HostRegistrationDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<HostRegistrationDb, dynamic>(
                 HostRegistrationsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
 
-            actionReturn.Succeed(searchResults);
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -469,7 +480,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var allCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(HostCheckInTableMsSql.GetAll, new { });
-            
+
             actionReturn.Succeed(allCheckIns);
         }
         catch (Exception ex)
@@ -488,7 +499,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.GetAllAfter, new {AfterDate = afterDate});
-            
+
             actionReturn.Succeed(foundCheckIns);
         }
         catch (Exception ex)
@@ -499,18 +510,20 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostCheckInDb>>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostCheckInDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            
-            var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+
+            var response = await _database.LoadDataPaginated<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
-            
-            actionReturn.Succeed(foundCheckIns);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -528,7 +541,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var rowCount = (await _database.LoadData<int, dynamic>(
                 GeneralTableMsSql.GetRowCount, new {HostCheckInTableMsSql.Table.TableName})).FirstOrDefault();
-            
+
             actionReturn.Succeed(rowCount);
         }
         catch (Exception ex)
@@ -547,7 +560,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var foundCheckIn = (await _database.LoadData<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.GetById, new {Id = id})).FirstOrDefault();
-            
+
             actionReturn.Succeed(foundCheckIn);
         }
         catch (Exception ex)
@@ -566,7 +579,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.GetByHostId, new {HostId = id});
-            
+
             actionReturn.Succeed(foundCheckIns);
         }
         catch (Exception ex)
@@ -585,7 +598,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.GetByHostIdLatest, new {HostId = id, Count = count});
-            
+
             actionReturn.Succeed(foundCheckIns);
         }
         catch (Exception ex)
@@ -655,7 +668,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var searchResults = await _database.LoadData<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.Search, new { SearchTerm = searchText });
-            
+
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
@@ -666,18 +679,20 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostCheckInDb>>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostCheckInDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            
-            var searchResults = await _database.LoadData<HostCheckInDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+
+            var response = await _database.LoadDataPaginated<HostCheckInDb, dynamic>(
                 HostCheckInTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
-            
-            actionReturn.Succeed(searchResults);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -694,7 +709,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var allWork = await _database.LoadData<WeaverWorkDb, dynamic>(WeaverWorksTableMsSql.GetAll, new { });
-            
+
             actionReturn.Succeed(allWork);
         }
         catch (Exception ex)
@@ -705,17 +720,19 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<WeaverWorkDb>>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<WeaverWorkDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allWork = await _database.LoadData<WeaverWorkDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<WeaverWorkDb, dynamic>(
                 WeaverWorksTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
-            
-            actionReturn.Succeed(allWork);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -962,7 +979,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var searchResults = await _database.LoadData<WeaverWorkDb, dynamic>(
                 WeaverWorksTableMsSql.Search, new { SearchTerm = searchText });
-            
+
             actionReturn.Succeed(searchResults);
         }
         catch (Exception ex)
@@ -973,17 +990,19 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<WeaverWorkDb>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<WeaverWorkDb>>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<WeaverWorkDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<WeaverWorkDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<WeaverWorkDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<WeaverWorkDb, dynamic>(
                 WeaverWorksTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
 
-            actionReturn.Succeed(searchResults);
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {

@@ -98,7 +98,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT w.*
+                SELECT COUNT(*) OVER() AS TotalCount, w.*
                 FROM dbo.[{Table.TableName}] w
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -268,9 +268,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT w.*
+                SELECT COUNT(*) OVER() AS TotalCount, w.*
                 FROM dbo.[{Table.TableName}] w
                 WHERE w.Id LIKE '%' + @SearchTerm + '%'
                     OR w.HostId LIKE '%' + @SearchTerm + '%'

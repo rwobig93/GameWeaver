@@ -7,6 +7,7 @@ using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
@@ -48,16 +49,19 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppRoleDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppRoleDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allRoles = await _database.LoadData<AppRoleDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppRoleDb, dynamic>(
                 AppRolesTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allRoles);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -138,16 +142,19 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppRoleDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppRoleDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppRoleDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<AppRoleDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppRoleDb, dynamic>(
                 AppRolesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset =  offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {

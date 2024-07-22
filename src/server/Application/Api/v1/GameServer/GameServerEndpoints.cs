@@ -57,19 +57,19 @@ public static class GameServerEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameServerService.GetAllPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<GameServerSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
+            }
 
-            var result = await gameServerService.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await gameServerService.GetCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAll,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAll,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAll, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAll, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -271,20 +271,36 @@ public static class GameServerEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Search for game servers
     /// </summary>
     /// <param name="searchText">Text to search</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameServerService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of matching game servers</returns>
     /// <remarks>Searches by: ID, OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
     [Authorize(PermissionConstants.GameServer.Gameserver.Search)]
-    private static async Task<IResult<IEnumerable<GameServerSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<GameServerSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await gameServerService.SearchAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameServerService.SearchPaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<GameServerSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+            
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

@@ -136,16 +136,31 @@ public class AppPermissionService : IAppPermissionService
     {
         try
         {
-            var permissionsRequest = await _permissionRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!permissionsRequest.Succeeded)
-                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(permissionsRequest.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            var permissions = (permissionsRequest.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+            var response = await _permissionRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync([]);
+            }
+
+            var permissions = (response.Result?.Data.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access);
 
-            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync(
+                permissions,
+                response.Result!.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
@@ -178,16 +193,31 @@ public class AppPermissionService : IAppPermissionService
     {
         try
         {
-            var searchResult = await _permissionRepository.SearchPaginatedAsync(searchTerm, pageNumber, pageSize);
-            if (!searchResult.Succeeded)
-                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(searchResult.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            var permissions = (searchResult.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+            var response = await _permissionRepository.SearchPaginatedAsync(searchTerm, pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync([]);
+            }
+
+            var permissions = (response.Result?.Data.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access);
 
-            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync(
+                permissions,
+                response.Result!.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {

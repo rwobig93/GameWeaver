@@ -1,4 +1,5 @@
 ﻿using Application.Models.Identity.Role;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Database;
 
@@ -7,12 +8,12 @@ namespace Application.Repositories.Identity;
 public interface IAppRoleRepository
 {
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllAsync();
-    Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppRoleDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<AppRoleDb>> GetByIdAsync(Guid roleId);
     Task<DatabaseActionResult<AppRoleDb>> GetByNameAsync(string roleName);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchAsync(string searchText);
-    Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppRoleDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<Guid>> CreateAsync(AppRoleCreate createObject);
     Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id, Guid modifyingUserId);

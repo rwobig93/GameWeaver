@@ -4,12 +4,16 @@ using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
+using Application.Models.GameServer.ConfigurationItem;
+using Application.Models.Identity.Permission;
 using Application.Requests.Identity.Permission;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
+using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Application.Api.v1.Identity;
 
@@ -45,18 +49,38 @@ public static class PermissionEndpoints
     /// <summary>
     /// Get all application permissions for roles and users
     /// </summary>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="permissionService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of application permissions for both roles and users</returns>
     [Authorize(PermissionConstants.Identity.Permissions.View)]
-    private static async Task<IResult<List<PermissionResponse>>> GetAllPermissions(IAppPermissionService permissionService)
+    private static async Task<IResult<IEnumerable<PermissionResponse>>> GetAllPermissions([FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IAppPermissionService permissionService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            var allPermissions = await permissionService.GetAllAssignedAsync();
-            if (!allPermissions.Succeeded)
-                return await Result<List<PermissionResponse>>.FailAsync(allPermissions.Messages);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            return await Result<List<PermissionResponse>>.SuccessAsync(allPermissions.Data.ToResponses());
+            var result = await permissionService.GetAllAssignedPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<AppPermissionSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<PermissionResponse>>.FailAsync(result.Messages);
+            }
+            
+            var convertedResult = await PaginatedResult<IEnumerable<PermissionResponse>>.SuccessAsync(
+                result.Data.ToResponses(),
+                result.StartPage,
+                result.CurrentPage,
+                result.EndPage,
+                result.TotalCount,
+                result.PageSize);
+
+            if (convertedResult.TotalCount <= 0) return convertedResult;
+
+            convertedResult.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.Identity.Permission.GetAll, pageNumber, pageSize);
+            convertedResult.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.Identity.Permission.GetAll, pageNumber, pageSize, convertedResult.TotalCount);
+            return convertedResult;
         }
         catch (Exception ex)
         {

@@ -393,11 +393,26 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<HostSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        var hosts = await _hostRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-        if (!hosts.Succeeded)
-            return await Result<IEnumerable<HostSlim>>.FailAsync(hosts.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<HostSlim>>.SuccessAsync(hosts.Result?.ToSlims() ?? new List<HostSlim>());
+        var response = await _hostRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<HostSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<HostSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<HostSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetCountAsync()
@@ -527,11 +542,26 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<HostSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var foundHosts = await _hostRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!foundHosts.Succeeded)
-            return await Result<IEnumerable<HostSlim>>.FailAsync(foundHosts.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<HostSlim>>.SuccessAsync(foundHosts.Result?.ToSlims() ?? new List<HostSlim>());
+        var response = await _hostRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<HostSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<HostSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<HostSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsAsync()
@@ -545,11 +575,26 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllRegistrationsPaginatedAsync(int pageNumber, int pageSize)
     {
-        var foundRegistrations = await _hostRepository.GetAllRegistrationsPaginatedAsync(pageNumber, pageSize);
-        if (!foundRegistrations.Succeeded)
-            return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(foundRegistrations.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<HostRegistrationFull>>.SuccessAsync(foundRegistrations.Result?.ToFulls() ?? new List<HostRegistrationFull>());
+        var response = await _hostRepository.GetAllRegistrationsPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<HostRegistrationFull>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync(
+            response.Result.Data.ToFulls(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<HostRegistrationFull>>> GetAllActiveRegistrationsAsync()
@@ -666,11 +711,26 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var foundRegistrations = await _hostRepository.SearchRegistrationsPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!foundRegistrations.Succeeded)
-            return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(foundRegistrations.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<HostRegistrationFull>>.SuccessAsync(foundRegistrations.Result?.ToFulls() ?? new List<HostRegistrationFull>());
+        var response = await _hostRepository.SearchRegistrationsPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<HostRegistrationFull>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync(
+            response.Result.Data.ToFulls(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAsync()
@@ -693,11 +753,26 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize)
     {
-        var foundCheckins = await _hostRepository.GetAllCheckInsPaginatedAsync(pageNumber, pageSize);
-        if (!foundCheckins.Succeeded)
-            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckins.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckins.Result?.ToFulls() ?? new List<HostCheckInFull>());
+        var response = await _hostRepository.GetAllCheckInsPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync(
+            response.Result.Data.ToFulls(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetCheckInCountAsync()
@@ -800,11 +875,26 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<HostCheckInFull>>> SearchCheckInsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var foundCheckIns = await _hostRepository.SearchCheckInsPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!foundCheckIns.Succeeded)
-            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckIns.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckIns.Result?.ToFulls() ?? new List<HostCheckInFull>());
+        var response = await _hostRepository.SearchCheckInsPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync(
+            response.Result.Data.ToFulls(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkAsync()
@@ -818,11 +908,26 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<WeaverWorkSlim>>> GetAllWeaverWorkPaginatedAsync(int pageNumber, int pageSize)
     {
-        var hosts = await _hostRepository.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize);
-        if (!hosts.Succeeded)
-            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(hosts.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(hosts.Result?.ToSlims() ?? new List<WeaverWorkSlim>());
+        var response = await _hostRepository.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetWeaverWorkCountAsync()
@@ -1333,10 +1438,25 @@ public class HostService : IHostService
 
     public async Task<IResult<IEnumerable<WeaverWorkSlim>>> SearchWeaverWorkPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var foundHosts = await _hostRepository.SearchWeaverWorkPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!foundHosts.Succeeded)
-            return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(foundHosts.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHosts.Result?.ToSlims() ?? new List<WeaverWorkSlim>());
+        var response = await _hostRepository.SearchWeaverWorkPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 }

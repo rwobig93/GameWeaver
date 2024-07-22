@@ -3,6 +3,7 @@ using Application.Models.Integrations;
 using Application.Repositories.Integrations;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Integrations;
 using Domain.Enums.Integrations;
 using Domain.Models.Database;
@@ -41,16 +42,19 @@ public class FileStorageRecordRepositoryMsSql : IFileStorageRecordRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<FileStorageRecordDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<FileStorageRecordDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<FileStorageRecordDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var foundRecords = await _database.LoadData<FileStorageRecordDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<FileStorageRecordDb, dynamic>(
                 FileStorageRecordsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(foundRecords);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -207,17 +211,20 @@ public class FileStorageRecordRepositoryMsSql : IFileStorageRecordRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<FileStorageRecordDb>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<FileStorageRecordDb>>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<FileStorageRecordDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<FileStorageRecordDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults =
-                await _database.LoadData<FileStorageRecordDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response =
+                await _database.LoadDataPaginated<FileStorageRecordDb, dynamic>(
                     FileStorageRecordsTableMsSql.SearchPaginated, new { SearchTerm = searchTerm, Offset = offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {

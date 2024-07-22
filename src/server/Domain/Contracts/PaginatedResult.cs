@@ -2,7 +2,9 @@
 
 public class PaginatedResult<T> : Result<T>
 {
+    public int StartPage { get; set; }
     public int CurrentPage { get; set; }
+    public int EndPage { get; set; }
     public int TotalCount { get; set; }
     public int PageSize { get; set; }
     public string? Previous { get; set; }
@@ -79,9 +81,21 @@ public class PaginatedResult<T> : Result<T>
         return new PaginatedResult<T> { Succeeded = true };
     }
 
-    public static PaginatedResult<T> Success(T data, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null, string? next = null)
+    public static PaginatedResult<T> Success(T data, int startPage = 0, int currentPage = 0, int endPage = 0, int totalCount = 0,
+        int pageSize = 0, string? previous = null, string? next = null)
     {
-        return new PaginatedResult<T> { Succeeded = true, Data = data, CurrentPage = currentPage, TotalCount = totalCount, PageSize = pageSize, Previous = previous, Next = next };
+        return new PaginatedResult<T>
+        {
+            Succeeded = true,
+            Data = data,
+            StartPage = startPage,
+            CurrentPage = currentPage,
+            EndPage = endPage,
+            TotalCount = totalCount,
+            PageSize = pageSize,
+            Previous = previous,
+            Next = next
+        };
     }
 
     public static PaginatedResult<T> Success(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
@@ -103,10 +117,10 @@ public class PaginatedResult<T> : Result<T>
         return Task.FromResult(Success());
     }
 
-    public static Task<PaginatedResult<T>> SuccessAsync(T data, int currentPage = 0, int totalCount = 0, int pageSize = 0, string? previous = null,
-        string? next = null)
+    public static Task<PaginatedResult<T>> SuccessAsync(T data, int startPage = 0, int currentPage = 0, int endPage = 0, int totalCount = 0,
+        int pageSize = 0, string? previous = null, string? next = null)
     {
-        return Task.FromResult(Success(data, currentPage, totalCount, pageSize, previous, next));
+        return Task.FromResult(Success(data, startPage, currentPage, endPage, totalCount, pageSize, previous, next));
     }
 
     public static Task<PaginatedResult<T>> SuccessAsync(T data, string message, int currentPage = 0, int totalCount = 0, int pageSize = 0,

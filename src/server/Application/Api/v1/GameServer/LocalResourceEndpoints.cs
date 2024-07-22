@@ -47,19 +47,19 @@ public static class LocalResourceEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameServerService.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize) as PaginatedResult<IEnumerable<LocalResourceSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(result.Messages);
+            }
 
-            var result = await gameServerService.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(result.Messages);
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await gameServerService.GetLocalResourcesCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -210,15 +210,31 @@ public static class LocalResourceEndpoints
     /// Search local resources by properties
     /// </summary>
     /// <param name="searchText">Text to search for</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameServerService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of matching local resources</returns>
     /// <remarks>Searches by: ID, GameProfileId, GameServerId, Name, Path, Extension, Args</remarks>
     [Authorize(PermissionConstants.GameServer.LocalResource.Search)]
-    private static async Task<IResult<IEnumerable<LocalResourceSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<LocalResourceSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await gameServerService.SearchLocalResourceAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameServerService.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize) as PaginatedResult<IEnumerable<LocalResourceSlim>>;
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+            
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

@@ -75,7 +75,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT l.*
+                SELECT COUNT(*) OVER() AS TotalCount, l.*
                 FROM dbo.[{Table.TableName}] l
                 ORDER BY l.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -178,9 +178,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT l.*
+                SELECT COUNT(*) OVER() AS TotalCount, l.*
                 FROM dbo.[{Table.TableName}] l
                 WHERE l.Id LIKE '%' + @SearchTerm + '%'
                     OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
