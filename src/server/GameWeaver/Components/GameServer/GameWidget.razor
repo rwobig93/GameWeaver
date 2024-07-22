@@ -1,8 +1,7 @@
 ﻿<div class="@CssDisplay" @onclick="ViewGame">
     <MudPaper>
-        @* TODO: Add game name in the center and over the image if _imageExists is false *@
         <img @ref="_gameImage" src="@(GetUrl())" alt="Game Cover" width="@(WidthPx)px" height="@(HeightPx)px"/>
-        @if (ShowName)
+        @if (ShowName || !_imageExists)
         {
             <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2">@(Game.FriendlyName)</MudText>
         }
