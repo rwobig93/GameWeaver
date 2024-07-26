@@ -433,11 +433,13 @@ public class JobManager : IJobManager
             !x.Name.EndsWith(" test", StringComparison.InvariantCultureIgnoreCase) &&
             !x.Name.EndsWith(" demo", StringComparison.InvariantCultureIgnoreCase) &&
             !x.Name.Contains("developer build", StringComparison.InvariantCultureIgnoreCase) &&
-            x.Name.Contains(sanitizedServerAppName)).ToArray();
+            x.Name.Contains(sanitizedServerAppName))
+            .OrderBy(x => x.Name != sanitizedServerAppName)
+            .ToArray();
 
         foreach (var game in baseGameMatches)
         {
-            await Task.Delay(1500);
+            await Task.Delay(500);
             var appDetail = await _steamApiService.GetAppDetail(game.AppId);
             if (appDetail.Data is null)
             {

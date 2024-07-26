@@ -62,7 +62,8 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
-                WHERE m.IsDeleted = 0;
+                WHERE m.IsDeleted = 0
+                ORDER BY m.FriendlyName ASC;
             end"
     };
 
@@ -79,7 +80,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 SELECT COUNT(*) OVER() AS TotalCount, m.*
                 FROM dbo.[{Table.TableName}] m
                 WHERE m.IsDeleted = 0
-                ORDER BY m.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY m.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -266,7 +267,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'
                     OR m.FriendlyName LIKE '%' + @SearchTerm + '%'
-                ORDER BY m.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY m.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

@@ -76,7 +76,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.IsDeleted = 0
-                ORDER BY h.Id;
+                ORDER BY h.FriendlyName;
             end"
     };
 
@@ -93,7 +93,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.IsDeleted = 0 AND h.CurrentState != 1
-                ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY h.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -216,7 +216,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
                     OR h.PublicIp LIKE '%' + @SearchTerm + '%'
-                ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY h.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

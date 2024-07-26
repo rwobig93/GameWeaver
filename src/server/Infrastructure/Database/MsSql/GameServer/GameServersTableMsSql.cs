@@ -77,7 +77,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.Id;
+                ORDER BY g.ServerName ASC;
             end"
     };
 
@@ -94,7 +94,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.ServerName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -322,7 +322,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     OR g.PrivateIp LIKE '%' + @SearchTerm + '%'
                     OR g.ExternalHostname LIKE '%' + @SearchTerm + '%'
                     OR g.ServerName LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.ServerName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

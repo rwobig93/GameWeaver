@@ -48,7 +48,8 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT g.*
-                FROM dbo.[{Table.TableName}] g;
+                FROM dbo.[{Table.TableName}] g
+                ORDER BY g.Name ASC;
             end"
     };
 
@@ -64,7 +65,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -165,7 +166,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.Id LIKE '%' + @SearchTerm + '%'
                     OR g.Name LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 }

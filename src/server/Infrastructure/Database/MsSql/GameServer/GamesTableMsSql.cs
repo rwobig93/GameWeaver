@@ -89,7 +89,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.CreatedOn DESC;
+                ORDER BY g.FriendlyName ASC;
             end"
     };
 
@@ -106,7 +106,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -202,7 +202,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.SourceType = @SourceType AND g.IsDeleted = 0
-                ORDER BY g.CreatedOn DESC;
+                ORDER BY g.FriendlyName ASC;
             end"
     };
     
@@ -288,7 +288,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
                     OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.CreatedOn DESC;
+                ORDER BY g.FriendlyName ASC;
             end"
     };
     
@@ -316,7 +316,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
                     OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

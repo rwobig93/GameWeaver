@@ -16,7 +16,7 @@ public static class GameMappers
         {
             Id = gameDb.Id,
             FriendlyName = gameDb.FriendlyName,
-            SteamName = gameDb.FriendlyName,
+            SteamName = gameDb.SteamName,
             SteamGameId = gameDb.SteamGameId,
             SteamToolId = gameDb.SteamToolId,
             DefaultGameProfileId = gameDb.DefaultGameProfileId,

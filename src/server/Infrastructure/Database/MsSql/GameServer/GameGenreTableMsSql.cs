@@ -49,7 +49,8 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT g.*
-                FROM dbo.[{Table.TableName}] g;
+                FROM dbo.[{Table.TableName}] g
+                ORDER BY g.Name ASC;
             end"
     };
 
@@ -65,7 +66,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -169,7 +170,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 WHERE g.Id LIKE '%' + @SearchTerm + '%'
                     OR g.Name LIKE '%' + @SearchTerm + '%'
                     OR g.Description LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 }

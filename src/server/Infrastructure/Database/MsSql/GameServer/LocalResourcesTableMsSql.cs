@@ -61,7 +61,8 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT l.*
-                FROM dbo.[{Table.TableName}] l;
+                FROM dbo.[{Table.TableName}] l
+                ORDER BY l.Name ASC;
             end"
     };
 
@@ -77,7 +78,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT COUNT(*) OVER() AS TotalCount, l.*
                 FROM dbo.[{Table.TableName}] l
-                ORDER BY l.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -187,7 +188,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                     OR l.PathLinux LIKE '%' + @SearchTerm + '%'
                     OR l.PathMac LIKE '%' + @SearchTerm + '%'
                     OR l.Args LIKE '%' + @SearchTerm + '%'
-                ORDER BY l.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

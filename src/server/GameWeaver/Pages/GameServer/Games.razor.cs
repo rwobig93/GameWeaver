@@ -91,4 +91,12 @@ public partial class Games : ComponentBase
         await Task.CompletedTask;
         Snackbar.Add("Not currently implemented", Severity.Warning);
     }
+    
+    private async Task SearchKeyDown(KeyboardEventArgs keyArgs)
+    {
+        if (keyArgs.Code is "Enter" or "NumpadEnter")
+        {
+            await RefreshData();
+        }
+    }
 }
