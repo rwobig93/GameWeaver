@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Runtime;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Services.GameServer;
@@ -17,6 +18,7 @@ public partial class HostView : ComponentBase
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
 
     private bool _validIdProvided = true;
+    private Guid _loggedInUserId = Guid.Empty;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private HostSlim _host = new() { Id = Guid.Empty };
     private bool _editMode;
@@ -86,6 +88,7 @@ public partial class HostView : ComponentBase
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canEditHost = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Hosts.Update);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
     }
@@ -94,7 +97,12 @@ public partial class HostView : ComponentBase
     {
         if (!_canEditHost) return;
         
-        // TODO: Add save logic
+        var response = await HostService.UpdateAsync(_host.ToUpdateRequest(), _loggedInUserId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
         
         ToggleEditMode();
         await GetViewingHost();

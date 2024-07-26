@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Runtime;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameServer;
 using Application.Services.GameServer;
@@ -12,9 +13,11 @@ public partial class GameView : ComponentBase
     [Parameter] public Guid GameId { get; set; } = Guid.Empty;
 
     [Inject] public IGameService GameService { get; set; } = null!;
+    [Inject] public IGameServerService GameServerService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
 
     private bool _validIdProvided = true;
+    private Guid _loggedInUserId = Guid.Empty;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameSlim _game = new() { Id = Guid.Empty };
     private bool _editMode;
@@ -31,9 +34,10 @@ public partial class GameView : ComponentBase
         {
             if (firstRender)
             {
+                await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingGame();
-                await GetPermissions();
+                await GetGameServers();
                 StateHasChanged();
             }
         }
@@ -80,18 +84,45 @@ public partial class GameView : ComponentBase
         }
     }
 
+    private async Task GetGameServers()
+    {
+        if (!_canViewGameServers)
+        {
+            return;
+        }
+
+        _runningGameservers = [];
+        var response = await GameServerService.GetByGameIdAsync(_game.Id);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _runningGameservers = response.Data.ToList();
+    }
+
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canEditGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Update);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
     }
     
     private async Task Save()
     {
-        if (!_canEditGame) return;
+        if (!_canEditGame)
+        {
+            return;
+        }
         
-        // TODO: Add save logic
+        var response = await GameService.UpdateAsync(_game.ToUpdate(), _loggedInUserId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
         
         ToggleEditMode();
         await GetViewingGame();
@@ -118,5 +149,11 @@ public partial class GameView : ComponentBase
         {
             urlOpened.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
         }
+    }
+
+    private async Task ViewGameVersionFiles()
+    {
+        // TODO: Write open modal logic
+        await Task.CompletedTask;
     }
 }

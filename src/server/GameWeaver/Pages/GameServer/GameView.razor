@@ -27,16 +27,6 @@ else
             </MudButton>
         }
     </MudPaper>
-
-    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Game Info</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_game.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_game.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-        </MudItem>
-    </MudPaper>
     
     @if (_game.SourceType == GameSource.Steam)
     {
@@ -56,6 +46,51 @@ else
             </MudItem>
         </MudPaper>
     }
+
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Game Info</MudText>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_game.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_game.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_game.SourceType" Label="Source" Variant="Variant.Outlined" Disabled="true"/>
+            <MudCheckBox @bind-Value="_game.SupportsWindows" Label="Windows Support" Disabled="@(!_editMode)"/>
+            <MudCheckBox @bind-Value="_game.SupportsLinux" Label="Linux Support" Disabled="@(!_editMode)"/>
+            <MudCheckBox @bind-Value="_game.SupportsMac" Label="Mac Support" Disabled="@(!_editMode)"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-column gap-4">
+            <MudTextField @bind-Value="_game.DescriptionShort" Label="Short Description" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_game.DescriptionAbout" Label="About The Game" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_game.DescriptionLong" Label="Long Description" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+        </MudItem>
+        @if (_canEditGame)
+        {
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+                <MudTextField @bind-Value="_game.UrlWebsite" Label="Website URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudTextField @bind-Value="_game.UrlBackground" Label="Background URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+                <MudTextField @bind-Value="_game.UrlLogo" Label="Logo URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudTextField @bind-Value="_game.UrlLogoSmall" Label="Small Logo URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            </MudItem>
+        }
+        @if (_canEditGame && _game.SourceType == GameSource.Manual)
+        {
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+                <MudTextField @bind-Value="_game.ManualFileRecordId" Label="Current Game Version Id" Variant="Variant.Outlined" Disabled="true"/>
+                <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.FileOpen"
+                           OnClick="@ViewGameVersionFiles">View Game Versions
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+                <MudTextField @bind-Value="_game.ManualVersionUrlCheck" Label="Check URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudTextField @bind-Value="_game.ManualVersionUrlDownload" Label="Download URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            </MudItem>
+        }
+    </MudPaper>
     
     @if (_canViewGameServers)
     {

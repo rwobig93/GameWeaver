@@ -99,6 +99,31 @@ public static class GameMappers
         };
     }
 
+    public static GameUpdateRequest ToUpdate(this GameSlim game)
+    {
+        return new GameUpdateRequest
+        {
+            Id = game.Id,
+            DefaultGameProfileId = game.DefaultGameProfileId,
+            LatestBuildVersion = game.LatestBuildVersion,
+            UrlBackground = game.UrlBackground,
+            UrlLogo = game.UrlLogo,
+            UrlLogoSmall = game.UrlLogoSmall,
+            UrlWebsite = game.UrlWebsite,
+            ControllerSupport = game.ControllerSupport,
+            DescriptionShort = game.DescriptionShort,
+            DescriptionLong = game.DescriptionLong,
+            DescriptionAbout = game.DescriptionAbout,
+            UrlMetaCriticPage = game.UrlMetaCriticPage,
+            SupportsWindows = game.SupportsWindows,
+            SupportsLinux = game.SupportsLinux,
+            SupportsMac = game.SupportsMac,
+            ManualFileRecordId = game.ManualFileRecordId,
+            ManualVersionUrlCheck = game.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = game.ManualVersionUrlDownload
+        };
+    }
+
     public static GameFull ToFull(this GameDb gameDb)
     {
         return new GameFull
