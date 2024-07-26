@@ -19,11 +19,23 @@ else
                        OnClick="@ToggleEditMode">@_editButtonText
             </MudButton>
         }
+        @if (_host.OwnerId == _loggedInUserId)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Person"
+                       OnClick="@ChangeOwnership">Change Ownership
+            </MudButton>
+        }
         @if (_editMode)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 
                        OnClick="@Save">Save Changes
             </MudButton>
+        }
+        @if (_canDeleteHost)
+        {
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                   OnClick="@DeleteHost">Delete Host
+        </MudButton>
         }
     </MudPaper>
 
@@ -46,15 +58,17 @@ else
             <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField Value="@(CpuDisplay)" Label="Compute" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(_host.Gpus?.Count ?? 0)" Label="Graphics" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(_host.Motherboards?.Count ?? 0)" Label="Motherboards" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(_host.RamModules?.Count ?? 0)" Label="RAM" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(_host.NetworkInterfaces?.Count ?? 0)" Label="Interfaces" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
             <MudTextField @bind-Value="_host.OsName" Label="OS Name" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
             <MudTextField @bind-Value="_host.OsVersion" Label="OS Version" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
             <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField @bind-Value="_host.Storage" Label="Storage" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField Value="@(CpuDisplay)" Label="Compute" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(GpuDisplay)" Label="Graphics" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(MotherboardDisplay)" Label="Motherboards" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(RamDisplay)" Label="RAM" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(NetInterfaceDisplay)" Label="Interfaces" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(StorageDisplay)" Label="Storage" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
         </MudItem>
     </MudPaper>
     
@@ -62,7 +76,7 @@ else
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Gameservers Running This Game</MudText>
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Gameservers On This Host</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudTable Items="@_runningGameservers" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
