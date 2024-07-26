@@ -15,6 +15,7 @@ public partial class HostView : ComponentBase
     [Parameter] public Guid HostId { get; set; } = Guid.Empty;
 
     [Inject] public IHostService HostService { get; set; } = null!;
+    [Inject] public IGameServerService GameServerService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
 
     private bool _validIdProvided = true;
@@ -35,9 +36,10 @@ public partial class HostView : ComponentBase
         {
             if (firstRender)
             {
+                await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingHost();
-                await GetPermissions();
+                await GetGameServers();
                 StateHasChanged();
             }
         }
@@ -85,6 +87,24 @@ public partial class HostView : ComponentBase
         }
     }
 
+    private async Task GetGameServers()
+    {
+        if (!_canViewGameServers)
+        {
+            return;
+        }
+
+        _runningGameservers = [];
+        var response = await GameServerService.GetByHostIdAsync(_host.Id);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _runningGameservers = response.Data.ToList();
+    }
+
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
@@ -120,5 +140,15 @@ public partial class HostView : ComponentBase
     private void GoBack()
     {
         NavManager.NavigateTo(AppRouteConstants.GameServer.Hosts.HostsDashboard);
+    }
+
+    private string CpuDisplay()
+    {
+        var cpuName = _host.Cpus?.FirstOrDefault()?.Name ?? "Unknown";
+        var cpuCount = _host.Cpus?.Count ?? 0;
+        var physicalCores = _host.Cpus?.Sum(x => x.CoreCount) ?? 0;
+        var logicalCores = _host.Cpus?.Sum(x => x.LogicalProcessorCount) ?? 0;
+
+        return $"{cpuCount}x {cpuName} w/ {physicalCores}physical & {logicalCores}logical";
     }
 }

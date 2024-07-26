@@ -2,7 +2,7 @@
 @using Application.Constants.Communication
 @using Application.Helpers.Runtime
 <div class="host-card">
-    <MudPaper Elevation="6" Class="pa-2 border-solid" MaxWidth="406" MaxHeight="276" Style="position: relative;">
+    <MudPaper Elevation="6" Class="pa-2 border-solid rounded-lg" MaxWidth="406" MaxHeight="276" Style="position: relative;">
         <MudProgressLinear Min="0" Max="100" Color="StatusColor" Value="100" Rounded="true" Style="{width: 100%}"/>
         <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
             <MudPaper Outlined="true">

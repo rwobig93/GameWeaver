@@ -4,7 +4,10 @@ using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameServer;
+using Application.Models.Integrations;
 using Application.Services.GameServer;
+using Application.Services.Integrations;
+using Domain.Enums.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -14,6 +17,7 @@ public partial class GameView : ComponentBase
 
     [Inject] public IGameService GameService { get; set; } = null!;
     [Inject] public IGameServerService GameServerService { get; set; } = null!;
+    [Inject] public IFileStorageRecordService FileStorageService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
 
     private bool _validIdProvided = true;
@@ -23,9 +27,11 @@ public partial class GameView : ComponentBase
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
     private List<GameServerSlim> _runningGameservers = [];
+    private List<FileStorageRecordSlim> _manualVersionFiles = [];
 
     private bool _canEditGame;
     private bool _canViewGameServers;
+    private bool _canViewGameFiles;
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -37,6 +43,7 @@ public partial class GameView : ComponentBase
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingGame();
+                await GetGameVersionFiles();
                 await GetGameServers();
                 StateHasChanged();
             }
@@ -108,6 +115,7 @@ public partial class GameView : ComponentBase
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canEditGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Update);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
+        _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
     }
     
     private async Task Save()
@@ -155,5 +163,23 @@ public partial class GameView : ComponentBase
     {
         // TODO: Write open modal logic
         await Task.CompletedTask;
+    }
+
+    private async Task GetGameVersionFiles()
+    {
+        if (!_canViewGameFiles && _game.SourceType == GameSource.Manual)
+        {
+            return;
+        }
+
+        _manualVersionFiles = [];
+        var response = await FileStorageService.GetByLinkedIdAsync(_game.Id);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _manualVersionFiles = response.Data.ToList();
     }
 }

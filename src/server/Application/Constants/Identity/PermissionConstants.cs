@@ -217,6 +217,14 @@ public static class PermissionConstants
             public const string DownloadLatest = "Permissions.GameServer.Game.Download";
         }
 
+        public static class GameVersions
+        {
+            public const string Get = "Permissions.GameServer.Game.Get";
+            public const string Create = "Permissions.GameServer.Game.Create";
+            public const string Update = "Permissions.GameServer.Game.Update";
+            public const string Delete = "Permissions.GameServer.Game.Delete";
+        }
+
         public static class GameGenre
         {
             public const string GetAllPaginated = "Permissions.GameServer.Publisher.GetAllPaginated";

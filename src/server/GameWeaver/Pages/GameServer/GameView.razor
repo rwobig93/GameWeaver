@@ -62,9 +62,13 @@ else
             <MudCheckBox @bind-Value="_game.SupportsMac" Label="Mac Support" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-column gap-4">
-            <MudTextField @bind-Value="_game.DescriptionShort" Label="Short Description" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_game.DescriptionAbout" Label="About The Game" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_game.DescriptionLong" Label="Long Description" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_game.DescriptionShort" Label="Short Description" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="@(!_editMode)"/>
+            <MudExpansionPanel Dense="true" Text="About The Game" IsInitiallyExpanded="false">
+                <MudTextField @bind-Value="_game.DescriptionAbout" Label="About The Game" Variant="Variant.Outlined" MaxLines="5" AutoGrow="true" Disabled="@(!_editMode)"/>
+            </MudExpansionPanel>
+            <MudExpansionPanel Dense="true" Text="Long Description" IsInitiallyExpanded="false">
+                <MudTextField @bind-Value="_game.DescriptionLong" Label="Long Description" Variant="Variant.Outlined" MaxLines="10" AutoGrow="true" Disabled="@(!_editMode)"/>
+            </MudExpansionPanel>
         </MudItem>
         @if (_canEditGame)
         {
@@ -91,6 +95,33 @@ else
             </MudItem>
         }
     </MudPaper>
+    
+    @if (_canViewGameFiles && _game.SourceType == GameSource.Manual)
+    {
+        <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Game Versions</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTable Items="@_manualVersionFiles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Format</MudTh>
+                        <MudTh>Version</MudTh>
+                        <MudTh>Hash</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.InsertDriveFile"/></MudTd>
+                        <MudTd DataLabel="Name">@context.FriendlyName</MudTd>
+                        <MudTd DataLabel="Format">@(context.Format.ToString())</MudTd>
+                        <MudTd DataLabel="Version">@context.Version</MudTd>
+                        <MudTd DataLabel="Hash">@context.HashSha256</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudPaper>
+    }
     
     @if (_canViewGameServers)
     {

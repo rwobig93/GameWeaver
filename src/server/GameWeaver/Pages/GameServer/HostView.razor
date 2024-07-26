@@ -35,6 +35,27 @@ else
             <MudTextField @bind-Value="_host.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_host.Description" Label="Description" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="@(!_editMode)"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_host.Hostname" Label="Hostname" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.OwnerId" Label="Owner" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.CurrentState" Label="Status" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField Value="@(CpuDisplay)" Label="Compute" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(_host.Gpus?.Count ?? 0)" Label="Graphics" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(_host.Motherboards?.Count ?? 0)" Label="Motherboards" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(_host.RamModules?.Count ?? 0)" Label="RAM" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(_host.NetworkInterfaces?.Count ?? 0)" Label="Interfaces" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.OsName" Label="OS Name" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.OsVersion" Label="OS Version" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.Storage" Label="Storage" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+        </MudItem>
     </MudPaper>
     
     @if (_canViewGameServers)
