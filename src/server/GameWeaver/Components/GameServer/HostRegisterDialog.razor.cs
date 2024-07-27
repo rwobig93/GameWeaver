@@ -1,6 +1,7 @@
 ﻿
 using Application.Constants.Communication;
 using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Requests.GameServer.Host;
 using Application.Responses.v1.Identity;
@@ -31,6 +32,7 @@ public partial class HostRegisterDialog : ComponentBase
     private List<UserBasicResponse> _users = [];
     private UserBasicResponse _selectedOwner = new() {Username = "Unknown"};
     private readonly HostRegistrationCreateRequest _registerRequest = new();
+    private string _allowedPortsRaw = string.Empty;
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -75,9 +77,24 @@ public partial class HostRegisterDialog : ComponentBase
             x.Username.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
             x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
     }
+
+    private void RecommendPorts()
+    {
+        _allowedPortsRaw = "40000-44000";
+    }
     
     private async Task GenerateRegistration()
     {
+        var allowedPortsConverted = _allowedPortsRaw.Split(",");
+        var parsedPorts = NetworkHelpers.GetPortsFromRangeList(allowedPortsConverted);
+        if (parsedPorts.Count == 0)
+        {
+            Snackbar.Add("Allowed ports provided doesn't have a single valid port, please try again", Severity.Error);
+            return;
+        }
+
+        _registerRequest.AllowedPorts = allowedPortsConverted.ToList();
+        
         if (_loggedInUserId == Guid.Empty)
         {
             var tshootId = await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.HostRegistrations, Guid.Empty, _loggedInUserId,

@@ -124,6 +124,15 @@ else
             <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_host.AllowedPorts" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
+            @if (_editMode)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
+                           OnClick="@ChangeAllowedPorts">Change Allowed Ports
+                </MudButton>
+            }
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField Value="@(CpuDisplay)" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField Value="@(GpuDisplay)" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField Value="@(MotherboardDisplay)" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>

@@ -270,6 +270,41 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         GoBack();
     }
 
+    private async Task ChangeAllowedPorts()
+    {
+        if (!_canEditHost)
+        {
+            return;
+        }
+        
+        var dialogParameters = new DialogParameters()
+        {
+            {"Title", $"Allowed Host Ports for {_host.FriendlyName}"},
+            {"FieldLabel", "Allowed Host Ports"},
+            {"ConfirmButtonText", "Change Ports"}
+        };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+
+        var dialogResult = await DialogService.Show<ValuePromptDialog>("Change Allowed Host Ports", dialogParameters, dialogOptions).Result;
+        if (dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var allowedPortsRaw = (string) dialogResult.Data;
+        var convertedPorts = allowedPortsRaw.Split(",").ToList();
+        var parsedPorts = NetworkHelpers.GetPortsFromRangeList(convertedPorts);
+        if (parsedPorts.Count == 0)
+        {
+            Snackbar.Add("Allowed ports provided doesn't have a single valid port, please try again", Severity.Error);
+            return;
+        }
+
+        _host.AllowedPorts = convertedPorts;
+        Snackbar.Add("Provided ports are valid, please save changes to apply", Severity.Info);
+        StateHasChanged();
+    }
+
     private async Task DeleteHost()
     {
         if (!_canDeleteHost)

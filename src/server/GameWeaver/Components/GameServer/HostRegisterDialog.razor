@@ -30,7 +30,10 @@
                     <MudAlert ContentAlignment="HorizontalAlignment.Left" Severity="Severity.Info">
                         Comma separated list of ports to use for game servers, ranges are allowed: 30000-31000,33000-34999,42069,50010
                     </MudAlert>
-                    <MudTextField @bind-Value="_registerRequest.AllowedPorts" Label="Allowed Game Server Ports" Variant="Variant.Outlined" Disabled="true" />
+                    <MudTextField @bind-Value="_allowedPortsRaw" Label="Allowed Game Server Ports" Variant="Variant.Outlined" Disabled="true" />
+                    <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Recommend" OnClick="@RecommendPorts">
+                        Recommend Me Ports
+                    </MudButton>
                 </MudItem>
             </MudGrid>
         </MudContainer>
