@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using Application.Constants.Identity;
+﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Models.GameServer.ConfigurationItem;

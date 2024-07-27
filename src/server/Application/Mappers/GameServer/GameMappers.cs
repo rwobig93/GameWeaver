@@ -2,7 +2,6 @@ using Application.Models.External.Steam;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Requests.GameServer.Game;
-using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 

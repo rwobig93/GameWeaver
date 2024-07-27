@@ -3,7 +3,6 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
 using Application.Mappers.Lifecycle;
-using Application.Models.Lifecycle;
 using Application.Responses.v1.Lifecycle;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;

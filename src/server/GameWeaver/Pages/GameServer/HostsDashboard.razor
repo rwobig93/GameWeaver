@@ -1,16 +1,18 @@
 @using Application.Constants.Identity
 @using Application.Helpers.Runtime
-@using Application.Models.GameServer.Host
 @using GameWeaver.Components.GameServer
 @attribute [Route(AppRouteConstants.GameServer.Hosts.HostsDashboard)]
 @attribute [Authorize(PermissionConstants.GameServer.Hosts.Get)]
 
 <MudPaper Elevation="25" Class="pb-4 mb-6">
     <MudContainer Class="d-flex flex-row gap-3">
-        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add">
-            Add
-        </MudButton>
-        <MudSpacer />
+        @if (_canCreateRegistrations)
+        {
+            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@NewRegistration">
+                Register New Host
+            </MudButton>         
+            <MudSpacer/>   
+        }
         <MudTextField T="string" bind-Value="@_searchText" Placeholder="Find a host" Adornment="Adornment.Start" Class="py-1" OnKeyDown="@SearchKeyDown"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense"/>
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Search" OnClick="@RefreshData">

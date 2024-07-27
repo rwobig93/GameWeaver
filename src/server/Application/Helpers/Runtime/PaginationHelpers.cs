@@ -1,5 +1,4 @@
-﻿using Application.Settings.AppSettings;
-using Domain.Contracts;
+﻿using Domain.Contracts;
 
 namespace Application.Helpers.Runtime;
 

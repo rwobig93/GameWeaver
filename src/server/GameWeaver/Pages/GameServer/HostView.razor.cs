@@ -7,7 +7,6 @@ using Application.Mappers.Identity;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
-using Application.Requests.GameServer.Host;
 using Application.Responses.v1.Identity;
 using Application.Services.GameServer;
 using Domain.Contracts;

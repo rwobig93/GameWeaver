@@ -1,6 +1,5 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
-using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Services.Identity;

@@ -1,12 +1,9 @@
-﻿using System.Collections;
-using Application.Constants.Communication;
+﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
 using Application.Mappers.Identity;
-using Application.Models.Identity.Role;
-using Application.Models.Identity.User;
 using Application.Requests.Identity.User;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;

@@ -1,3 +1,4 @@
+using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Models.GameServer.Host;
 using Application.Services.GameServer;
@@ -12,6 +13,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     [Inject] private IHostService HostService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
     [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
+    [Inject] public IOptions<LifecycleConfiguration> LifecycleConfig { get; init; } = null!;
     
     private IEnumerable<HostSlim> _pagedData = new List<HostSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -28,10 +30,13 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     private int _pageSize = PaginationHelpers.GetPageSizes().First();
     private int _pageNumber;
 
+    private bool _canCreateRegistrations;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            await GetPermissions();
             await GetClientTimezone();
             await RefreshData();
             
@@ -39,6 +44,12 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             
             await Task.CompletedTask;
         }
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canCreateRegistrations = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.HostRegistration.Create);
     }
 
     private async Task TimerDataUpdate()
@@ -133,6 +144,38 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
 
         _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
+    }
+
+    private async Task NewRegistration()
+    {
+        if (!_canCreateRegistrations)
+        {
+            return;
+        }
+        
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialog = await DialogService.Show<ConfirmationDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions).Result;
+        if (dialog.Canceled)
+        {
+            return;
+        }
+
+        var newRegistrationUrl = (string) dialog.Data;
+        if (string.IsNullOrWhiteSpace(newRegistrationUrl))
+        {
+            Snackbar.Add("Failed to retrieve the new host registration, please try again or reach out to an administrator", Severity.Error);
+            return;
+        }
+        
+        Snackbar.Add("Successfully generated new host registration!", Severity.Success);
+        var copyParameters = new DialogParameters()
+        {
+            {"Title", $"Please copy this registration, if it isn't used it will expire after {LifecycleConfig.Value.HostRegistrationCleanupHours} hours"},
+            {"FieldLabel", "New Host Registration"},
+            {"TextToDisplay", newRegistrationUrl},
+            {"TextToCopy", newRegistrationUrl}
+        };
+        await DialogService.Show<CopyTextDialog>("Copy New Host Registration", copyParameters, dialogOptions).Result;
     }
     
     public async ValueTask DisposeAsync()
