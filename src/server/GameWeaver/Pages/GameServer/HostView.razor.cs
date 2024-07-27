@@ -294,9 +294,9 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         var allowedPortsRaw = (string) dialogResult.Data;
         var convertedPorts = allowedPortsRaw.Split(",").ToList();
         var parsedPorts = NetworkHelpers.GetPortsFromRangeList(convertedPorts);
-        if (parsedPorts.Count == 0)
+        if (parsedPorts.Count < 3)
         {
-            Snackbar.Add("Allowed ports provided doesn't have a single valid port, please try again", Severity.Error);
+            Snackbar.Add("Allowed ports provided doesn't have enough valid ports (3), please try again", Severity.Error);
             return;
         }
 
@@ -464,6 +464,14 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         WentOffline = _checkins.LastOrDefault()?.ReceiveTimestamp ?? DateTimeService.NowDatabaseTime;
         var offlineTime = DateTimeService.NowDatabaseTime - WentOffline;
         return $"{offlineTime.Days}d {offlineTime.Hours}h {offlineTime.Minutes}m {offlineTime.Seconds}s";
+    }
+
+    private string AllowedPortCountDisplay()
+    {
+        var portCount = NetworkHelpers.GetPortsFromRangeList(_host.AllowedPorts).Count;
+        var gameServerCount = portCount / 3;
+
+        return $"{portCount} total ports / {gameServerCount} game servers worth";
     }
 
     private void UpdateStatus()

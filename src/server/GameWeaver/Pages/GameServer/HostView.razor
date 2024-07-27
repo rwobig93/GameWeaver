@@ -125,6 +125,7 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_host.AllowedPorts" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@AllowedPortCountDisplay" Label="Port Count" Variant="Variant.Outlined" Disabled="true"/>
             @if (_editMode)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"

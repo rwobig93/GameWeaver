@@ -87,9 +87,9 @@ public partial class HostRegisterDialog : ComponentBase
     {
         var allowedPortsConverted = _allowedPortsRaw.Split(",");
         var parsedPorts = NetworkHelpers.GetPortsFromRangeList(allowedPortsConverted);
-        if (parsedPorts.Count == 0)
+        if (parsedPorts.Count < 3)
         {
-            Snackbar.Add("Allowed ports provided doesn't have a single valid port, please try again", Severity.Error);
+            Snackbar.Add("Allowed ports provided doesn't have enough valid ports (3), please try again", Severity.Error);
             return;
         }
 
