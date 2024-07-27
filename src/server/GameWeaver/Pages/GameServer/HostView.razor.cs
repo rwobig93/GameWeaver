@@ -32,6 +32,8 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private HostSlim _host = new() { Id = Guid.Empty };
     private UserBasicResponse _hostOwner = new() { Username = "Unknown" };
+    private bool IsOffline { get; set; }
+    private DateTime WentOffline { get; set; }
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
     private double _storageUsedTotal;
@@ -74,8 +76,18 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         XAxisLines = false,
         DisableLegend = true,
     };
-    private bool IsOffline { get; set; }
-    private DateTime WentOffline { get; set; }
+    private readonly List<string> _resourceHistoryChoices =
+    [
+        "2 Minutes",
+        "10 Minutes",
+        "30 Minutes",
+        "1 Hour",
+        "12 Hours",
+        "1 Day",
+        "7 Days",
+        "14 Days",
+        "30 Days"
+    ];
 
     private bool _canEditHost;
     private bool _canViewGameServers;
@@ -89,6 +101,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         {
             if (firstRender)
             {
+                _checkinsDateSelection = _resourceHistoryChoices.First();
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingHost();

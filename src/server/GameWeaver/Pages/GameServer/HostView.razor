@@ -146,16 +146,11 @@ else
         </MudOverlay>
         <MudStack Row="true">
             <MudSpacer />
-            <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string" bind-Value="_checkinsDateSelection" ValueChanged="@TimeframeChanged">
-                <MudSelectItem Value="@("2 Minutes")"/>
-                <MudSelectItem Value="@("10 Minutes")"/>
-                <MudSelectItem Value="@("30 Minutes")"/>
-                <MudSelectItem Value="@("1 Hour")"/>
-                <MudSelectItem Value="@("12 Hours")"/>
-                <MudSelectItem Value="@("1 Day")"/>
-                <MudSelectItem Value="@("7 Days")"/>
-                <MudSelectItem Value="@("14 Days")"/>
-                <MudSelectItem Value="@("30 Days")"/>
+            <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string" @bind-Value="_checkinsDateSelection" ValueChanged="@TimeframeChanged">
+                @foreach (var choice in _resourceHistoryChoices)
+                {
+                    <MudSelectItem Value="@(choice)"/>
+                }
             </MudSelect>
         </MudStack>
         <MudStack Row="true">

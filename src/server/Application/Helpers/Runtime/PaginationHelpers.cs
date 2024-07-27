@@ -1,4 +1,5 @@
-﻿using Domain.Contracts;
+﻿using Application.Settings.AppSettings;
+using Domain.Contracts;
 
 namespace Application.Helpers.Runtime;
 
@@ -25,5 +26,28 @@ public static class PaginationHelpers
         entity.PageSize = pageSize;
         entity.StartPage = 1;
         entity.EndPage = (entity.TotalCount / pageSize) + 1;
+    }
+    
+    public static List<int> GetPageSizes(bool large = false)
+    {
+        if (large)
+        {
+            return
+            [
+                25,
+                50,
+                100,
+                200,
+                500
+            ];
+        }
+        
+        return
+        [
+            10,
+            20,
+            30,
+            50
+        ];
     }
 }

@@ -1,4 +1,5 @@
 @using Application.Constants.Identity
+@using Application.Helpers.Runtime
 @using Application.Models.GameServer.Host
 @using GameWeaver.Components.GameServer
 @attribute [Route(AppRouteConstants.GameServer.Hosts.HostsDashboard)]
@@ -10,7 +11,7 @@
             Add
         </MudButton>
         <MudSpacer />
-        <MudTextField T="string" bind-Value="@_searchText" Placeholder="Find a host" Adornment="Adornment.Start" Class="py-1"
+        <MudTextField T="string" bind-Value="@_searchText" Placeholder="Find a host" Adornment="Adornment.Start" Class="py-1" OnKeyDown="@SearchKeyDown"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense"/>
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Search" OnClick="@RefreshData">
             Search
@@ -28,5 +29,11 @@
         <MudText Class="pa-2">Viewing: @GetCurrentPageViewData()</MudText>
         <MudPagination Class="pa-2" ShowFirstButton="false" ShowLastButton="false" ShowPreviousButton="true" ShowNextButton="true"
                        Count="@_totalPages" BoundaryCount="1" MiddleCount="3" SelectedChanged="PageChanged"/>
+        <MudSelect Class="pa-2" Margin="Margin.Dense" Dense="true" Label="Page Size" Variant="Variant.Outlined" T="int" @bind-Value="_pageSize" ValueChanged="@PageSizeChanged">
+            @foreach (var choice in PaginationHelpers.GetPageSizes())
+            {
+                <MudSelectItem Value="@(choice)"/>
+            }
+        </MudSelect>
     </MudStack>
 </MudPaper>

@@ -1,6 +1,9 @@
+using Application.Helpers.Runtime;
 using Application.Models.GameServer.Host;
 using Application.Services.GameServer;
+using Application.Settings.AppSettings;
 using GameWeaver.Components.GameServer;
+using Microsoft.Extensions.Options;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -8,6 +11,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
 {
     [Inject] private IHostService HostService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
+    [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
     
     private IEnumerable<HostSlim> _pagedData = new List<HostSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -21,7 +25,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     private string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
-    private int _pageSize = 25;
+    private int _pageSize = PaginationHelpers.GetPageSizes().First();
     private int _pageNumber;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -106,6 +110,20 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         _pageNumber = pageNumber;
         await RefreshData();
         await WebClientService.InvokeScrollToTop();
+    }
+
+    private async Task PageSizeChanged()
+    {
+        await RefreshData();
+        await WebClientService.InvokeScrollToTop();
+    }
+    
+    private async Task SearchKeyDown(KeyboardEventArgs keyArgs)
+    {
+        if (keyArgs.Code is "Enter" or "NumpadEnter")
+        {
+            await RefreshData();
+        }
     }
     
     private async Task GetClientTimezone()

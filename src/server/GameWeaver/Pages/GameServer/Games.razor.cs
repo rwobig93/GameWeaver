@@ -1,4 +1,5 @@
-﻿using Application.Models.GameServer.Game;
+﻿using Application.Helpers.Runtime;
+using Application.Models.GameServer.Game;
 using Application.Services.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
@@ -13,7 +14,7 @@ public partial class Games : ComponentBase
     private string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
-    private int _pageSize = 25;
+    private int _pageSize = PaginationHelpers.GetPageSizes(true).First();
     private int _currentPage;
     // private readonly string[] _orderings = null;
     // private string _searchString = "";
@@ -98,5 +99,11 @@ public partial class Games : ComponentBase
         {
             await RefreshData();
         }
+    }
+
+    private async Task PageSizeChanged()
+    {
+        await RefreshData();
+        await WebClientService.InvokeScrollToTop();
     }
 }
