@@ -29,6 +29,8 @@ public partial class ValuePromptDialog
     private void TextFieldKeyDown(KeyboardEventArgs keyArgs)
     {
         if (keyArgs.Key == "Enter")
+        {
             Confirm();
+        }
     }
 }

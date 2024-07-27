@@ -747,7 +747,9 @@ public class HostService : IHostService
     {
         var foundCheckins = await _hostRepository.GetAllCheckInsAsync();
         if (!foundCheckins.Succeeded)
+        {
             return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckins.ErrorMessage);
+        }
 
         return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckins.Result?.ToFulls() ?? new List<HostCheckInFull>());
     }
@@ -756,7 +758,20 @@ public class HostService : IHostService
     {
         var foundCheckins = await _hostRepository.GetAllCheckInsAfterAsync(afterDate);
         if (!foundCheckins.Succeeded)
+        {
             return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckins.ErrorMessage);
+        }
+
+        return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckins.Result?.ToFulls() ?? new List<HostCheckInFull>());
+    }
+
+    public async Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInsAfterHostIdAsync(Guid id, DateTime afterDate)
+    {
+        var foundCheckins = await _hostRepository.GetCheckInsAfterByHostIdAsync(id, afterDate);
+        if (!foundCheckins.Succeeded)
+        {
+            return await Result<IEnumerable<HostCheckInFull>>.FailAsync(foundCheckins.ErrorMessage);
+        }
 
         return await Result<IEnumerable<HostCheckInFull>>.SuccessAsync(foundCheckins.Result?.ToFulls() ?? new List<HostCheckInFull>());
     }

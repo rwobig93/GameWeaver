@@ -60,7 +60,10 @@ public partial class AccountSettings
 
     private async Task ChangeEmail()
     {
-        if (!_canChangeEmail) return;
+        if (!_canChangeEmail)
+        {
+            return;
+        }
         
         var dialogParameters = new DialogParameters()
         {
@@ -70,7 +73,9 @@ public partial class AccountSettings
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var newEmailPrompt = await DialogService.Show<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions).Result;
         if (newEmailPrompt.Canceled || string.IsNullOrWhiteSpace((string?)newEmailPrompt.Data))
+        {
             return;
+        }
 
         var newEmailAddress = (string)newEmailPrompt.Data;
         _processingEmailChange = true;

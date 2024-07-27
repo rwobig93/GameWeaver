@@ -3,33 +3,84 @@ using Application.Constants.Identity;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Mappers.Identity;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
+using Application.Models.GameServer.HostCheckIn;
+using Application.Requests.GameServer.Host;
+using Application.Responses.v1.Identity;
 using Application.Services.GameServer;
-using Infrastructure.Services.GameServer;
-using Microsoft.AspNetCore.Components;
+using Domain.Contracts;
+using GameWeaver.Components.GameServer;
+
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace GameWeaver.Pages.GameServer;
 
-public partial class HostView : ComponentBase
+public partial class HostView : ComponentBase, IAsyncDisposable
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [Parameter] public Guid HostId { get; set; } = Guid.Empty;
 
-    [Inject] public IHostService HostService { get; set; } = null!;
-    [Inject] public IGameServerService GameServerService { get; set; } = null!;
-    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public IHostService HostService { get; init; } = null!;
+    [Inject] public IGameServerService GameServerService { get; init; } = null!;
+    [Inject] public IAppUserService AppUserService { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private HostSlim _host = new() { Id = Guid.Empty };
+    private UserBasicResponse _hostOwner = new() { Username = "Unknown" };
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
+    private double _storageUsedTotal;
+    private DateTime _checkinsAfterDate = DateTime.Now.AddMinutes(-2);
+    private string _checkinsDateSelection = "2 Minutes";
+    private Timer? _timer;
     private List<GameServerSlim> _runningGameservers = [];
+    private List<HostCheckInFull> _checkins = [];
+    private Palette _currentPalette = new();
+    private double[] _cpuData = [0, 0];
+    private double[] _ramData = [0, 0];
+    private readonly List<ChartSeries> _netInShort = [];
+    private readonly List<ChartSeries> _netInLong = [];
+    private readonly List<ChartSeries> _netOutShort = [];
+    private readonly List<ChartSeries> _netOutLong = [];
+    private readonly List<ChartSeries> _cpu = [];
+    private readonly List<ChartSeries> _ram = [];
+    private readonly ChartOptions _chartOptionsCpu = new()
+    {
+        MaxNumYAxisTicks = 100,
+        LineStrokeWidth = 4,
+        InterpolationOption = InterpolationOption.NaturalSpline,
+        YAxisLines = false,
+        XAxisLines = false,
+        DisableLegend = true
+    };
+    private readonly ChartOptions _chartOptionsRam = new()
+    {
+        LineStrokeWidth = 4,
+        InterpolationOption = InterpolationOption.NaturalSpline,
+        YAxisLines = false,
+        XAxisLines = false,
+        DisableLegend = true
+    };
+    private readonly ChartOptions _chartOptionsNetwork = new()
+    {
+        LineStrokeWidth = 4,
+        InterpolationOption = InterpolationOption.NaturalSpline,
+        YAxisLines = false,
+        XAxisLines = false,
+        DisableLegend = true,
+    };
+    private bool IsOffline { get; set; }
+    private DateTime WentOffline { get; set; }
 
     private bool _canEditHost;
     private bool _canViewGameServers;
     private bool _canDeleteHost;
+    private bool _canChangeOwnership;
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -41,7 +92,11 @@ public partial class HostView : ComponentBase
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingHost();
+                await GetHostOwner();
                 await GetGameServers();
+            
+                _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
+                
                 StateHasChanged();
             }
         }
@@ -49,6 +104,21 @@ public partial class HostView : ComponentBase
         {
             StateHasChanged();
         }
+    }
+
+    private async Task TimerDataUpdate()
+    {
+        await UpdateCheckins();
+        UpdateThemeColors();
+        UpdateStatus();
+
+        if (!IsOffline)
+        {
+            UpdateNetwork();
+            UpdateCompute();
+        }
+        
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task GetClientTimezone()
@@ -89,6 +159,18 @@ public partial class HostView : ComponentBase
         }
     }
 
+    private async Task GetHostOwner()
+    {
+        var response = await AppUserService.GetByIdAsync(_host.OwnerId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _hostOwner = response.Data?.ToResponse() ?? new UserBasicResponse { Username = "Unknown" };
+    }
+
     private async Task GetGameServers()
     {
         if (!_canViewGameServers)
@@ -114,6 +196,7 @@ public partial class HostView : ComponentBase
         _canEditHost = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Hosts.Update);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
         _canDeleteHost = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Hosts.Delete) || _host.OwnerId == _loggedInUserId;
+        _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Hosts.ChangeOwnership) || _host.OwnerId == _loggedInUserId;
     }
     
     private async Task Save()
@@ -135,13 +218,44 @@ public partial class HostView : ComponentBase
 
     private async Task ChangeOwnership()
     {
-        if (_host.OwnerId != _loggedInUserId)
+        if (!_canChangeOwnership)
         {
             return;
         }
         
-        // TODO: Implement ownership dialog
-        await Task.CompletedTask;
+        var dialogParameters = new DialogParameters()
+        {
+            {"ConfirmButtonText", "Change Host Owner"},
+            {"Title", "Transfer Host Ownership"},
+            {"OwnerId", _host.OwnerId}
+        };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+
+        var dialogResult = await DialogService.Show<ChangeOwnershipDialog>("Transfer Host Ownership", dialogParameters, dialogOptions).Result;
+        if (dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var responseOwnerId = (Guid) dialogResult.Data;
+        if (_host.OwnerId == responseOwnerId)
+        {
+            Snackbar.Add("Selected owner is already the owner, everything is as it was", Severity.Info);
+            return;
+        }
+
+        var updateRequest = _host.ToUpdateRequest();
+        updateRequest.OwnerId = responseOwnerId;
+
+        var response = await HostService.UpdateAsync(updateRequest, _loggedInUserId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully transferred ownership!", Severity.Success);
+        GoBack();
     }
 
     private async Task DeleteHost()
@@ -151,8 +265,28 @@ public partial class HostView : ComponentBase
             return;
         }
         
-        // TODO: Implement host delete
-        await Task.CompletedTask;
+        var dialogParameters = new DialogParameters()
+        {
+            {"Title", "Are you sure you want to delete this host?"},
+            {"Content", $"Host Name: {_host.FriendlyName}"}
+        };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+
+        var dialog = await DialogService.Show<ConfirmationDialog>("Delete Host", dialogParameters, dialogOptions).Result;
+        if (dialog.Canceled)
+        {
+            return;
+        }
+
+        var response = await HostService.DeleteAsync(_host.Id, _loggedInUserId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully deleted host!", Severity.Success);
+        GoBack();
     }
 
     private void ToggleEditMode()
@@ -224,8 +358,163 @@ public partial class HostView : ComponentBase
         var storageCount = _host.Storage?.Count ?? 0;
         var freeSpace = _host.Storage?.Sum(x => (double) x.FreeSpace) ?? 0;
         var totalSpace = _host.Storage?.Sum(x => (double) x.TotalSpace) ?? 0;
-        var usedStoragePercent = 100 - Math.Round(freeSpace / totalSpace * 100);
+        _storageUsedTotal = 100 - Math.Round(freeSpace / totalSpace * 100);
 
-        return $"{storageCount}x @ {usedStoragePercent}% Used";
+        return $"{storageCount}x @ {_storageUsedTotal}% Used";
+    }
+
+    private string UptimeDisplay()
+    {
+        if (_checkins.Count == 0)
+        {
+            return "0d 0h 0m 0s";
+        }
+
+        var hostUptime = TimeSpan.FromMilliseconds(_checkins.LastOrDefault()?.Uptime ?? 0);
+        return $"{hostUptime.Days}d {hostUptime.Hours}h {hostUptime.Minutes}m {hostUptime.Seconds}s";
+    }
+
+    private async Task UpdateCheckins()
+    {
+        IResult<IEnumerable<HostCheckInFull>> response;
+        switch (_checkins.Count)
+        {
+            case var count when count != 0:
+                response = await HostService.GetCheckInsLatestByHostIdAsync(_host.Id, 1);
+                if (!response.Succeeded)
+                {
+                    response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return;
+                }
+                
+                _checkins.Add(response.Data.First());
+                if (_checkins.Count != 0)
+                {
+                    _checkins.Remove(_checkins.First());   
+                }
+                break;
+            default:
+                response = await HostService.GetCheckInsAfterHostIdAsync(_host.Id, _checkinsAfterDate);
+                if (!response.Succeeded)
+                {
+                    response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return;
+                }
+                
+                _checkins = response.Data.ToList();
+                _checkins.Reverse();
+                break;
+        }
+    }
+
+    private string DowntimeDisplay()
+    {
+        if (_checkins.Count == 0)
+        {
+            return "0d 0h 0m 0s";
+        }
+
+        WentOffline = _checkins.LastOrDefault()?.ReceiveTimestamp ?? DateTimeService.NowDatabaseTime;
+        var offlineTime = DateTimeService.NowDatabaseTime - WentOffline;
+        return $"{offlineTime.Days}d {offlineTime.Hours}h {offlineTime.Minutes}m {offlineTime.Seconds}s";
+    }
+
+    private void UpdateStatus()
+    {
+        if (_checkins.Count == 0)
+        {
+            IsOffline = false;
+            return;
+        }
+        
+        var lastCheckinTime = _checkins.Last().ReceiveTimestamp;
+        var currentTime = DateTimeService.NowDatabaseTime;
+        if ((currentTime - lastCheckinTime).TotalSeconds > 3)
+        {
+            IsOffline = true;
+            return;
+        }
+        
+        IsOffline = false;
+    }
+
+    private void UpdateThemeColors()
+    {
+        if (_currentPalette == ParentLayout._selectedTheme.Palette)
+        {
+            return;
+        }
+        
+        _currentPalette = ParentLayout._selectedTheme.Palette;
+        
+        _chartOptionsCpu.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Primary.Value];
+        _chartOptionsRam.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Secondary.Value];
+        _chartOptionsNetwork.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
+    }
+
+    private void UpdateCompute()
+    {
+        if (_checkins.Count == 0)
+        {
+            return;
+        }
+
+        var currentCpu = (double) (_checkins.LastOrDefault()?.CpuUsage ?? 0);
+        var cpuLeftOver = 100 - currentCpu;
+
+        _cpuData = [cpuLeftOver, currentCpu];
+        _cpu.Clear();
+        _cpu.Add(new ChartSeries { Data = _checkins.Select(x => Math.Round(x.CpuUsage, 0)).Reverse().ToArray() });
+
+        var currentRam = (int) (_checkins.LastOrDefault()?.RamUsage ?? 0);
+        var ramLeftOver = 100 - currentRam;
+
+        _ramData = [ramLeftOver, currentRam];
+        _ram.Clear();
+        _ram.Add(new ChartSeries { Data = _checkins.Select(x => Math.Round(x.RamUsage, 0)).Reverse().ToArray() });
+    }
+    
+    private void UpdateNetwork()
+    {
+        if (_checkins.Count == 0)
+        {
+            return;
+        }
+        
+        _netInShort.Clear();
+        _netInLong.Clear();
+        _netOutShort.Clear();
+        _netOutLong.Clear();
+        
+        _netInShort.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkInBytes / 8_000).Take(100).Reverse().ToArray() });
+        _netInLong.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkInBytes / 8_000).Reverse().ToArray() });
+        _netOutShort.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkOutBytes / 8_000).Take(100).Reverse().ToArray() });
+        _netOutLong.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkOutBytes / 8_000).Reverse().ToArray() });
+    }
+
+    private async Task TimeframeChanged()
+    {
+        _checkinsAfterDate = _checkinsDateSelection switch
+        {
+            "10 Minutes" => DateTimeService.NowDatabaseTime.AddMinutes(-10),
+            "30 Minutes" => DateTimeService.NowDatabaseTime.AddMinutes(-30),
+            "1 Hour" => DateTimeService.NowDatabaseTime.AddHours(-1),
+            "12 Hours" => DateTimeService.NowDatabaseTime.AddHours(-12),
+            "1 Day" => DateTimeService.NowDatabaseTime.AddDays(-1),
+            "7 Days" => DateTimeService.NowDatabaseTime.AddDays(-7),
+            "14 Days" => DateTimeService.NowDatabaseTime.AddDays(-14),
+            "30 Days" => DateTimeService.NowDatabaseTime.AddDays(-30),
+            _ => DateTimeService.NowDatabaseTime.AddMinutes(-2)
+        };
+
+        _checkins = [];
+        await UpdateCheckins();
+        StateHasChanged();
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        _timer?.Dispose();
+        await Task.CompletedTask;
     }
 }

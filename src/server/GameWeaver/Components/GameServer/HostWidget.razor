@@ -23,7 +23,7 @@
             <MudItem Class="d-flex flex-column justify-center">
                 <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu">
                     <CustomGraphics>
-                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@PrimaryColor">
+                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Primary.Value">
                             @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
                         </text>
                     </CustomGraphics>
@@ -33,7 +33,7 @@
             <MudItem Class="d-flex flex-column justify-center">
                 <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsRam">
                     <CustomGraphics>
-                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@SecondaryColor">
+                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Secondary.Value">
                             @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
                         </text>
                     </CustomGraphics>
@@ -62,9 +62,6 @@
             </MudItem>
         </MudStack>
         <MudStack Row="true" Spacing="2" Class="justify-center pa-2">
-            <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Primary" OnClick="@(UpdateCompute)" StartIcon="@Icons.Material.Filled.Refresh" FullWidth="true">
-                Refresh
-            </MudButton>
             <MudButton Variant="Variant.Outlined" DisableElevation="true" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.RemoveRedEye" FullWidth="true"
                        OnClick="@ViewHost">
                 View

@@ -1,4 +1,7 @@
-﻿@using Application.Constants.Identity
+﻿@using System.Globalization
+@using Application.Constants.Communication
+@using Application.Constants.Identity
+@using Application.Helpers.Runtime
 
 @attribute [Route(AppRouteConstants.GameServer.Hosts.View)]
 @attribute [Authorize(PermissionConstants.GameServer.Hosts.Get)]
@@ -19,7 +22,7 @@ else
                        OnClick="@ToggleEditMode">@_editButtonText
             </MudButton>
         }
-        @if (_host.OwnerId == _loggedInUserId)
+        @if (_canChangeOwnership)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Person"
                        OnClick="@ChangeOwnership">Change Ownership
@@ -33,10 +36,68 @@ else
         }
         @if (_canDeleteHost)
         {
-        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
-                   OnClick="@DeleteHost">Delete Host
-        </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="@DeleteHost">Delete Host
+            </MudButton>
         }
+    </MudPaper>
+    
+    <MudPaper Elevation="8" Style="position: relative;">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Realtime</MudText>
+        </MudItem>
+        <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
+            <MudPaper Outlined="true">
+                <MudStack Row="false" Spacing="2" Class="justify-center pa-2">
+                    <MudText Typo="Typo.body2" Align="Align.Center">
+                        Went Offline @@ @(WentOffline.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.UserFriendlyFormat))
+                    </MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center">Downtime: @DowntimeDisplay()</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudOverlay>
+        <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2">
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu">
+                    <CustomGraphics>
+                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Primary.Value">
+                            @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                        </text>
+                    </CustomGraphics>
+                </MudChart>
+                <MudText Typo="Typo.body2" Align="Align.Center">CPU</MudText>
+            </MudItem>
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsRam">
+                    <CustomGraphics>
+                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Secondary.Value">
+                            @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                        </text>
+                    </CustomGraphics>
+                </MudChart>
+                <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText>
+            </MudItem>
+            <MudStack Spacing="2" Row="true">
+                <MudItem Class="d-flex flex-column justify-center">
+                    <MudChart ChartType="ChartType.Line" ChartSeries="@_netInShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                    <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
+                </MudItem>
+                <MudItem Class="d-flex flex-column justify-center">
+                    <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                    <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
+                </MudItem>
+            </MudStack>
+        </MudStack>
+        <MudStack Row="true" Spacing="2" Class="justify-center pa-2" AlignItems="AlignItems.Stretch" Justify="Justify.SpaceEvenly">
+            <MudItem Class="d-flex flex-column">
+                <MudText Class="pb-2" Typo="Typo.body2" Align="Align.Center">Storage Used: @_storageUsedTotal%</MudText>
+                <MudProgressLinear Min="0" Max="100" Color="Color.Primary" Value="@_storageUsedTotal"/>
+            </MudItem>
+            <MudItem Class="d-flex flex-column">
+                <MudText Typo="Typo.body2" Align="Align.Center">Uptime:</MudText>
+                <MudText Typo="Typo.body2" Align="Align.Left">@UptimeDisplay()</MudText>
+            </MudItem>
+        </MudStack>
     </MudPaper>
 
     <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
@@ -52,7 +113,7 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_host.Hostname" Label="Hostname" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_host.OwnerId" Label="Owner" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_hostOwner.Username" Label="Owner" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.CurrentState" Label="Status" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
@@ -72,30 +133,56 @@ else
         </MudItem>
     </MudPaper>
     
-    @if (_canViewGameServers)
-    {
-        <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Gameservers On This Host</MudText>
+    <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Resource History" Style="position: relative;">
+        <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
+            <MudPaper Outlined="true">
+                <MudStack Row="false" Spacing="2" Class="justify-center pa-2">
+                    <MudText Typo="Typo.body2" Align="Align.Center">
+                        Went Offline @@ @(WentOffline.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.UserFriendlyFormat))
+                    </MudText>
+                    <MudText Typo="Typo.body2" Align="Align.Center">Downtime: @DowntimeDisplay()</MudText>
+                </MudStack>
+            </MudPaper>
+        </MudOverlay>
+        <MudStack Row="true">
+            <MudSpacer />
+            <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string" bind-Value="_checkinsDateSelection" ValueChanged="@TimeframeChanged">
+                <MudSelectItem Value="@("2 Minutes")"/>
+                <MudSelectItem Value="@("10 Minutes")"/>
+                <MudSelectItem Value="@("30 Minutes")"/>
+                <MudSelectItem Value="@("1 Hour")"/>
+                <MudSelectItem Value="@("12 Hours")"/>
+                <MudSelectItem Value="@("1 Day")"/>
+                <MudSelectItem Value="@("7 Days")"/>
+                <MudSelectItem Value="@("14 Days")"/>
+                <MudSelectItem Value="@("30 Days")"/>
+            </MudSelect>
+        </MudStack>
+        <MudStack Row="true">
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_cpu" ChartOptions="@_chartOptionsCpu" Width="98%" />
+                <MudText Typo="Typo.body2" Align="Align.Center">(CPU) Central Processing Unit</MudText>
             </MudItem>
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                <MudTable Items="@_runningGameservers" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
-                    <HeaderContent>
-                        <MudTh></MudTh>
-                        <MudTh>Name</MudTh>
-                        <MudTh>Modded</MudTh>
-                        <MudTh>State</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
-                        <MudTd DataLabel="Name">@context.ServerName</MudTd>
-                        <MudTd DataLabel="Modded">@context.Modded</MudTd>
-                        <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
-                    </RowTemplate>
-                </MudTable>
+        </MudStack>
+        <MudStack Row="true">
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_ram" ChartOptions="@_chartOptionsRam" Width="98%" />
+                <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText>
             </MudItem>
-        </MudPaper>
-    }
+        </MudStack>
+        <MudStack Row="true">
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netInLong" ChartOptions="@_chartOptionsNetwork" Width="98%" />
+                <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText>
+            </MudItem>
+        </MudStack>
+        <MudStack Row="true">
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutLong" ChartOptions="@_chartOptionsNetwork" Width="98%" />
+                <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText>
+            </MudItem>
+        </MudStack>
+    </MudExpansionPanel>
     
     <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Host Detail">
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
@@ -180,4 +267,29 @@ else
             </MudPaper>
         </MudItem>
     </MudExpansionPanel>
+    
+    @if (_canViewGameServers)
+    {
+        <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Gameservers On This Host</MudText>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTable Items="@_runningGameservers" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Modded</MudTh>
+                        <MudTh>State</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
+                        <MudTd DataLabel="Name">@context.ServerName</MudTd>
+                        <MudTd DataLabel="Modded">@context.Modded</MudTd>
+                        <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudPaper>
+    }
 }

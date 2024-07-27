@@ -9,7 +9,6 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     [Inject] private IHostService HostService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
     
-    private MudTable<HostSlim> _table = new();
     private IEnumerable<HostSlim> _pagedData = new List<HostSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private Timer? _timer;
@@ -24,9 +23,6 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     private int _totalPages = 1;
     private int _pageSize = 25;
     private int _pageNumber;
-    // private readonly string[] _orderings = null;
-    // private string _searchString = "";
-    // private List<string> _autocompleteList;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -74,17 +70,17 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     
     private async Task RefreshData()
     {
-        var hosts = await HostService.GetAllPaginatedAsync(_pageNumber, _pageSize);
-        if (!hosts.Succeeded)
+        var response = await HostService.SearchPaginatedAsync(_searchText, _pageNumber, _pageSize);
+        if (!response.Succeeded)
         {
-            hosts.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
         _hostWidgets.Clear();
-        _pagedData = hosts.Data;
-        _totalItems = (await HostService.GetCountAsync()).Data;
-        _totalPages = _totalItems / _pageSize;
+        _pagedData = response.Data;
+        _totalItems = response.TotalCount;
+        _totalPages = response.EndPage;
         
         StateHasChanged();
     }

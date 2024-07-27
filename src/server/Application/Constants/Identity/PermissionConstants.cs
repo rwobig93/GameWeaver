@@ -102,6 +102,7 @@ public static class PermissionConstants
             public const string Update = "Permissions.GameServer.Host.Update";
             public const string Delete = "Permissions.GameServer.Host.Delete";
             public const string Search = "Permissions.GameServer.Host.Search";
+            public const string ChangeOwnership = "Permissions.GameServer.Host.ChangeOwnership";
             public const string SearchPaginated = "Permissions.GameServer.Host.SearchPaginated";
         }
 

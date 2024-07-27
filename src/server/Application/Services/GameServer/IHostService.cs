@@ -39,6 +39,7 @@ public interface IHostService
     Task<PaginatedResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAsync();
     Task<IResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsAfterAsync(DateTime afterDate);
+    Task<IResult<IEnumerable<HostCheckInFull>>> GetCheckInsAfterHostIdAsync(Guid id, DateTime afterDate);
     Task<PaginatedResult<IEnumerable<HostCheckInFull>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCheckInCountAsync();
     Task<IResult<HostCheckInFull>> GetCheckInByIdAsync(int id);

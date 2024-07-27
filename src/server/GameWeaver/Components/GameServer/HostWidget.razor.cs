@@ -1,7 +1,7 @@
 
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
-using Domain.Enums.GameServer;
+#pragma warning disable CS0618 // Type or member is obsolete
 
 namespace GameWeaver.Components.GameServer;
 
@@ -11,10 +11,9 @@ public partial class HostWidget : ComponentBase
     [Parameter] public HostSlim Host { get; set; } = null!;
     [Parameter] public TimeZoneInfo LocalTimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     
-    [Inject] public IDateTimeService DateTime { get; set; } = null!;
     
-    private double[] _cpuData = [0, Random.Shared.Next(20, 80)];
-    private double[] _ramData = [0, Random.Shared.Next(30, 80)];
+    private double[] _cpuData = [0, 0];
+    private double[] _ramData = [0, 0];
     private readonly List<ChartSeries> _netIn = [];
     private readonly List<ChartSeries> _netOut = [];
     private readonly ChartOptions _chartOptionsCpu = new()
@@ -43,14 +42,7 @@ public partial class HostWidget : ComponentBase
     };
 
     private List<HostCheckInFull> _checkins = [];
-    private MudTheme _currentTheme = new();
-    private string PrimaryColor { get; set; } = "";
-    private string SecondaryColor { get; set; } = "";
-    private string TertiaryColor { get; set; } = "";
-    private string SurfaceColor { get; set; } = "";
-    private string ActiveColor { get; set; } = "";
-    private string OfflineColor { get; set; } = "";
-    private string WarningColor { get; set; } = "";
+    private Palette _currentPalette = new();
     private Color StatusColor { get; set; } = Color.Success;
     private bool IsOffline { get; set; }
     private DateTime WentOffline { get; set; }
@@ -60,13 +52,7 @@ public partial class HostWidget : ComponentBase
     {
         if (firstRender)
         {
-            UpdateThemeColors();
             UpdateStorage();
-            
-            await Task.Delay(100); // Delay for checkin status, *feels* better to view the widget this way on the page
-            UpdateStatus();
-            StateHasChanged();
-
             await UpdateState();
         }
     }
@@ -124,8 +110,8 @@ public partial class HostWidget : ComponentBase
             return "0d 0h 0m 0s";
         }
 
-        WentOffline = _checkins.LastOrDefault()?.ReceiveTimestamp ?? DateTime.NowDatabaseTime;
-        var offlineTime = DateTime.NowDatabaseTime - WentOffline;
+        WentOffline = _checkins.LastOrDefault()?.ReceiveTimestamp ?? DateTimeService.NowDatabaseTime;
+        var offlineTime = DateTimeService.NowDatabaseTime - WentOffline;
         return $"{offlineTime.Days}d {offlineTime.Hours}h {offlineTime.Minutes}m {offlineTime.Seconds}s";
     }
 
@@ -133,13 +119,13 @@ public partial class HostWidget : ComponentBase
     {
         if (_checkins.Count == 0)
         {
-            IsOffline = true;
-            StatusColor = Color.Error;
+            IsOffline = false;
+            StatusColor = Color.Warning;
             return;
         }
         
         var lastCheckinTime = _checkins.Last().ReceiveTimestamp;
-        var currentTime = DateTime.NowDatabaseTime;
+        var currentTime = DateTimeService.NowDatabaseTime;
         if ((currentTime - lastCheckinTime).TotalSeconds > 3)
         {
             IsOffline = true;
@@ -155,23 +141,16 @@ public partial class HostWidget : ComponentBase
 
     private void UpdateThemeColors()
     {
-        if (_currentTheme == ParentLayout._selectedTheme)
+        if (_currentPalette == ParentLayout._selectedTheme.Palette)
         {
             return;
         }
         
-        _currentTheme = ParentLayout._selectedTheme;
-        PrimaryColor = _currentTheme.Palette.Primary.Value;
-        SecondaryColor = _currentTheme.Palette.Secondary.Value;
-        SurfaceColor = _currentTheme.Palette.Surface.Value;
-        TertiaryColor = _currentTheme.Palette.Tertiary.Value;
-        ActiveColor = _currentTheme.Palette.Success.Value;
-        OfflineColor = _currentTheme.Palette.Error.Value;
-        WarningColor = _currentTheme.Palette.Warning.Value;
+        _currentPalette = ParentLayout._selectedTheme.Palette;
         
-        _chartOptionsCpu.ChartPalette = [SurfaceColor, PrimaryColor];
-        _chartOptionsRam.ChartPalette = [SurfaceColor, SecondaryColor];
-        _chartOptionsNetwork.ChartPalette = [TertiaryColor, SurfaceColor];
+        _chartOptionsCpu.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Primary.Value];
+        _chartOptionsRam.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Secondary.Value];
+        _chartOptionsNetwork.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
     }
 
     private async Task UpdateCompute()
@@ -214,6 +193,7 @@ public partial class HostWidget : ComponentBase
         var totalSpace = Host.Storage?.Sum(x => (double) x.TotalSpace) ?? 0;
         
         StorageUsed = 100 - Math.Round(freeSpace / totalSpace * 100);
+        StateHasChanged();
     }
 
     private void ViewHost()

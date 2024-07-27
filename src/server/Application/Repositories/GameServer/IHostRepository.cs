@@ -37,6 +37,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostRegistrationDb>>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAsync();
     Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetAllCheckInsAfterAsync(DateTime afterDate);
+    Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsAfterByHostIdAsync(Guid id, DateTime afterDate);
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostCheckInDb>>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCheckInCountAsync();
     Task<DatabaseActionResult<HostCheckInDb?>> GetCheckInByIdAsync(int id);

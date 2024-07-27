@@ -510,6 +510,26 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsAfterByHostIdAsync(Guid id, DateTime afterDate)
+    {
+        
+        DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
+
+        try
+        {
+            var foundCheckIns = await _database.LoadData<HostCheckInDb, dynamic>(
+                HostCheckInTableMsSql.GetAfterByHostId, new {Id = id, AfterDate = afterDate});
+
+            actionReturn.Succeed(foundCheckIns);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostCheckInTableMsSql.GetAfterByHostId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostCheckInDb>>>> GetAllCheckInsPaginatedAsync(int pageNumber, int pageSize)
     {
         DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostCheckInDb>>> actionReturn = new();
