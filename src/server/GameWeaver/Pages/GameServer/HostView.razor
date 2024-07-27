@@ -51,24 +51,24 @@ else
             <MudTextField @bind-Value="_host.Description" Label="Description" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_host.Hostname" Label="Hostname" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField @bind-Value="_host.OwnerId" Label="Owner" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField @bind-Value="_host.CurrentState" Label="Status" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.Hostname" Label="Hostname" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_host.OwnerId" Label="Owner" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_host.CurrentState" Label="Status" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_host.OsName" Label="OS Name" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField @bind-Value="_host.OsVersion" Label="OS Version" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_host.OsName" Label="OS Name" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_host.OsVersion" Label="OS Version" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField Value="@(CpuDisplay)" Label="Compute" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(GpuDisplay)" Label="Graphics" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(MotherboardDisplay)" Label="Motherboards" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(RamDisplay)" Label="RAM" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(NetInterfaceDisplay)" Label="Interfaces" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
-            <MudTextField Value="@(StorageDisplay)" Label="Storage" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField Value="@(CpuDisplay)" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@(GpuDisplay)" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@(MotherboardDisplay)" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@(RamDisplay)" Label="RAM" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@(NetInterfaceDisplay)" Label="Interfaces" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@(StorageDisplay)" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
     
@@ -96,4 +96,88 @@ else
             </MudItem>
         </MudPaper>
     }
+    
+    <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Host Detail">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
+            <MudPaper Elevation="5" Outlined="true" Class="pa-1 justify-center">
+                <MudTreeView T="string" Hover="true" ExpandOnClick="true" Class="justify-center">
+                    <MudTreeViewItem Value="@($"ID: {_host.Id.ToString()}")"/>
+                    <MudTreeViewItem Value="@($"Hostname: {_host.Hostname}")"/>
+                    <MudTreeViewItem Value="@($"FriendlyName: {_host.FriendlyName}")"/>
+                    <MudTreeViewItem Value="@($"Description: {_host.Description}")"/>
+                    <MudTreeViewItem Value="@("Os Details")">
+                        <MudTreeViewItem Value="@($"OS: {_host.Os}")"/>
+                        <MudTreeViewItem Value="@($"OsName: {_host.OsName}")"/>
+                        <MudTreeViewItem Value="@($"OsVersion: {_host.OsVersion}")"/>
+                    </MudTreeViewItem>
+                    <MudTreeViewItem Value="@("Compute")">
+                        @if (_host.Motherboards != null)
+                        {
+                            foreach (var motherboard in _host.Motherboards)
+                            {
+                                <MudTreeViewItem Value="@($"Motherboard: {motherboard.Manufacturer} | {motherboard.Product}")"/>
+                            }
+                        }
+                        @if (_host.Cpus != null)
+                        {
+                            foreach (var cpu in _host.Cpus)
+                            {
+                                <MudTreeViewItem Value="@($"CPU: {cpu.Name} {cpu.CoreCount}/{cpu.LogicalProcessorCount} using {cpu.SocketDesignation}")"/>
+                            }
+                        }
+                    </MudTreeViewItem>
+                    <MudTreeViewItem Value="@("RAM")">
+                        @if (_host.RamModules != null)
+                        {
+                            foreach (var ram in _host.RamModules)
+                            {
+                                <MudTreeViewItem Value="@($"{ram.Manufacturer} {ram.Capacity} @ {ram.Speed}")"/>
+                            }
+                        }
+                    </MudTreeViewItem>
+                    <MudTreeViewItem Value="@("Storage")">
+                        @if (_host.Storage != null)
+                        {
+                            foreach (var device in _host.Storage)
+                            {
+                                <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model} | {device.MountPoint} {device.FreeSpace}/{device.TotalSpace}")"/>
+                            }
+                        }
+                    </MudTreeViewItem>
+                    <MudTreeViewItem Value="@("Graphics")">
+                        @if (_host.Gpus != null)
+                        {
+                            foreach (var gpu in _host.Gpus)
+                            {
+                                <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {gpu.AdapterRam} | MODE: {gpu.VideoMode}")"/>
+                            }
+                        }
+                    </MudTreeViewItem>
+                    <MudTreeViewItem Value="@("Network")">
+                        @if (_host.NetworkInterfaces != null)
+                        {
+                            foreach (var netIf in _host.NetworkInterfaces)
+                            {
+                                <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {netIf.Speed} | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
+                                    <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")"/>
+                                    @foreach (var address in netIf.DefaultGateways)
+                                    {
+                                        <MudTreeViewItem Value="@($"GATEWAY: {address}")"/>
+                                    }
+                                    @foreach (var address in netIf.IpAddresses)
+                                    {
+                                        <MudTreeViewItem Value="@($"ADDRESS: {address}")"/>
+                                    }
+                                    @foreach (var server in netIf.DnsServers)
+                                    {
+                                        <MudTreeViewItem Value="@($"DNS: {server}")"/>
+                                    }
+                                </MudTreeViewItem>
+                            }
+                        }
+                    </MudTreeViewItem>
+                </MudTreeView>
+            </MudPaper>
+        </MudItem>
+    </MudExpansionPanel>
 }
