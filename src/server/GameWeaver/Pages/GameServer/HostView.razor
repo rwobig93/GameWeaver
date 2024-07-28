@@ -56,7 +56,7 @@ else
                 </MudStack>
             </MudPaper>
         </MudOverlay>
-        <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2">
+        <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2" Wrap="Wrap.Wrap" Justify="Justify.SpaceEvenly">
             <MudItem Class="d-flex flex-column justify-center">
                 <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu">
                     <CustomGraphics>
@@ -77,18 +77,14 @@ else
                 </MudChart>
                 <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText>
             </MudItem>
-            <MudStack Spacing="2" Row="true">
-                <MudItem Class="d-flex flex-column justify-center">
-                    <MudChart ChartType="ChartType.Line" ChartSeries="@_netInShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
-                    <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
-                </MudItem>
-                <MudItem Class="d-flex flex-column justify-center">
-                    <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
-                    <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
-                </MudItem>
-            </MudStack>
-        </MudStack>
-        <MudStack Row="true" Spacing="2" Class="justify-center pa-2" AlignItems="AlignItems.Stretch" Justify="Justify.SpaceEvenly">
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netInShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
+            </MudItem>
+            <MudItem Class="d-flex flex-column justify-center">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
+            </MudItem>
             <MudItem Class="d-flex flex-column">
                 <MudText Class="pb-2" Typo="Typo.body2" Align="Align.Center">Storage Used: @_storageUsedTotal%</MudText>
                 <MudProgressLinear Min="0" Max="100" Color="Color.Primary" Value="@_storageUsedTotal"/>
@@ -130,27 +126,31 @@ else
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_host.AllowedPorts" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @Value="@AllowedPortCountDisplay" Label="Port Count" Variant="Variant.Outlined" Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField Value="@(string.Join(",", _host.AllowedPorts ?? []))" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="string" Value="@AllowedPortCountDisplay()" Label="Port Count" Variant="Variant.Outlined" Disabled="true"/>
             @if (_editMode)
             {
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
-                           OnClick="@ChangeAllowedPorts">Change Allowed Ports
-                </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
+                       OnClick="@ChangeAllowedPorts">Change Allowed Ports
+            </MudButton>
             }
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Hardware</MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField Value="@CpuDisplay" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@GpuDisplay" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@MotherboardDisplay" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="string" Value="@CpuDisplay()" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="string" Value="@GpuDisplay()" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField Value="@RamDisplay" Label="RAM" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@NetInterfaceDisplay" Label="Interfaces" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@StorageDisplay" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="string" Value="@MotherboardDisplay()" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="string" Value="@RamDisplay()" Label="RAM" Variant="Variant.Outlined" Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField T="string" Value="@NetInterfaceDisplay()" Label="Interfaces" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="string" Value="@StorageDisplay()" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
     

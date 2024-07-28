@@ -403,11 +403,12 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private string StorageDisplay()
     {
         var storageCount = _host.Storage?.Count ?? 0;
+        var firstStorage = _host.Storage?.FirstOrDefault()?.Model ?? "Unknown";
         var freeSpace = _host.Storage?.Sum(x => (double) x.FreeSpace) ?? 0;
         var totalSpace = _host.Storage?.Sum(x => (double) x.TotalSpace) ?? 0;
         _storageUsedTotal = 100 - Math.Round(freeSpace / totalSpace * 100);
 
-        return $"{storageCount}x @ {_storageUsedTotal}% Used";
+        return $"{storageCount}x {firstStorage} @ {_storageUsedTotal}% Used";
     }
 
     private string UptimeDisplay()
