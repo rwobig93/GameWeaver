@@ -4,23 +4,27 @@
 <MudDialog>
     <DialogContent>
         <MudContainer MaxWidth="MaxWidth.Large" Style="min-width: 250px;" Class="d-flex flex-column">
-            <MudGrid>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36"  Class="d-flex justify-center pa-4">
+            <MudStack Justify="Justify.Center" Row="false" Spacing="3">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-4">
                     <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
                     <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
-                    <MudTextField @bind-Value="_currentOwner.Username" Label="Current Owner" Variant="Variant.Outlined" Disabled="true" />
-                    <MudAutocomplete T="UserBasicResponse" Label="Available Users" @bind-Value="_selectedUser"
-                                     SearchFunc="@FilterUsers" ToStringFunc="@(x=> $"{x.Username}")" ValueChanged="@SelectedUserChanged" />
+                    <MudTextField @bind-Value="_currentOwner.Username" Label="Current Owner" Variant="Variant.Outlined" Disabled="true"/>
                 </MudItem>
-            </MudGrid>
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                    <MudAutocomplete T="UserBasicResponse" Label="Available Users" @bind-Value="_selectedUser" CoerceText="true" Required="true"
+                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x.Username}")"/>
+                </MudItem>
+            </MudStack>
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Primary" OnClick="@Confirm">@ConfirmButtonText</MudButton>
-        <MudButton Color="Color.Primary" OnClick="@Cancel">Cancel</MudButton>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Stretch" Spacing="3">
+            <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@Confirm">@ConfirmButtonText</MudButton>
+            <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+        </MudStack>
     </DialogActions>
 </MudDialog>

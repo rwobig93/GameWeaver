@@ -82,7 +82,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
         Action = "GetAfterByHostId",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAfterByHostId]
-                @Id int,
+                @Id UNIQUEIDENTIFIER,
                 @AfterDate DATETIME2
             AS
             begin

@@ -38,7 +38,7 @@
         <MudText Class="pa-2">Viewing: @GetCurrentPageViewData()</MudText>
         <MudPagination Class="pa-2" ShowFirstButton="false" ShowLastButton="false" ShowPreviousButton="true" ShowNextButton="true"
                        Count="@_totalPages" BoundaryCount="1" MiddleCount="3" SelectedChanged="PageChanged"/>
-        <MudSelect Class="pa-2" Margin="Margin.Dense" Dense="true" Label="Page Size" Variant="Variant.Outlined" T="int" @bind-Value="_pageSize" ValueChanged="@PageSizeChanged">
+        <MudSelect Class="pa-2" Margin="Margin.Dense" Dense="true" Label="Page Size" Variant="Variant.Outlined" T="int" @bind-Value="_pageSize" SelectedValuesChanged="@PageSizeChanged">
             @foreach (var choice in PaginationHelpers.GetPageSizes(true))
             {
                 <MudSelectItem Value="@(choice)"/>

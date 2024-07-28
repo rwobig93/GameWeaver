@@ -42,7 +42,7 @@ else
         }
     </MudPaper>
     
-    <MudPaper Elevation="8" Style="position: relative;">
+    <MudPaper Elevation="8" Style="position: relative;" Class="ma-4 pa-4 gap-4" MaxWidth="406" MaxHeight="276" >
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Realtime</MudText>
         </MudItem>
@@ -105,27 +105,33 @@ else
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Info</MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_host.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_host.Description" Label="Description" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="@(!_editMode)"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_host.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.Hostname" Label="Hostname" Variant="Variant.Outlined" Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_hostOwner.Username" Label="Owner" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.CurrentState" Label="Status" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Operating System</MudText>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_host.OsName" Label="OS Name" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.OsVersion" Label="OS Version" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Network</MudText>
+        </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
             <MudTextField @bind-Value="_host.AllowedPorts" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@AllowedPortCountDisplay" Label="Port Count" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @Value="@AllowedPortCountDisplay" Label="Port Count" Variant="Variant.Outlined" Disabled="true"/>
             @if (_editMode)
             {
                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
@@ -133,13 +139,18 @@ else
                 </MudButton>
             }
         </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Hardware</MudText>
+        </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField Value="@(CpuDisplay)" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@(GpuDisplay)" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@(MotherboardDisplay)" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@(RamDisplay)" Label="RAM" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@(NetInterfaceDisplay)" Label="Interfaces" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField Value="@(StorageDisplay)" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@CpuDisplay" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@GpuDisplay" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@MotherboardDisplay" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField Value="@RamDisplay" Label="RAM" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@NetInterfaceDisplay" Label="Interfaces" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField Value="@StorageDisplay" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
     
@@ -156,37 +167,37 @@ else
         </MudOverlay>
         <MudStack Row="true">
             <MudSpacer />
-            <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string" @bind-Value="_checkinsDateSelection" ValueChanged="@TimeframeChanged">
+            <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string" @bind-Value="_checkinsDateSelection" SelectedValuesChanged="@TimeframeChanged">
                 @foreach (var choice in _resourceHistoryChoices)
                 {
                     <MudSelectItem Value="@(choice)"/>
                 }
             </MudSelect>
         </MudStack>
-        <MudStack Row="true">
-            <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_cpu" ChartOptions="@_chartOptionsCpu" Width="98%" />
-                <MudText Typo="Typo.body2" Align="Align.Center">(CPU) Central Processing Unit</MudText>
-            </MudItem>
-        </MudStack>
-        <MudStack Row="true">
-            <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_ram" ChartOptions="@_chartOptionsRam" Width="98%" />
-                <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText>
-            </MudItem>
-        </MudStack>
-        <MudStack Row="true">
-            <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_netInLong" ChartOptions="@_chartOptionsNetwork" Width="98%" />
-                <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText>
-            </MudItem>
-        </MudStack>
-        <MudStack Row="true">
-            <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutLong" ChartOptions="@_chartOptionsNetwork" Width="98%" />
-                <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText>
-            </MudItem>
-        </MudStack>
+        @* <MudStack Row="true"> *@
+        @*     <MudItem Class="d-flex flex-column justify-center"> *@
+        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_cpu" ChartOptions="@_chartOptionsCpu" Width="98%" /> *@
+        @*         <MudText Typo="Typo.body2" Align="Align.Center">(CPU) Central Processing Unit</MudText> *@
+        @*     </MudItem> *@
+        @* </MudStack> *@
+        @* <MudStack Row="true"> *@
+        @*     <MudItem Class="d-flex flex-column justify-center"> *@
+        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_ram" ChartOptions="@_chartOptionsRam" Width="98%" /> *@
+        @*         <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText> *@
+        @*     </MudItem> *@
+        @* </MudStack> *@
+        @* <MudStack Row="true"> *@
+        @*     <MudItem Class="d-flex flex-column justify-center"> *@
+        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_netInLong" ChartOptions="@_chartOptionsNetwork" Width="98%" /> *@
+        @*         <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText> *@
+        @*     </MudItem> *@
+        @* </MudStack> *@
+        @* <MudStack Row="true"> *@
+        @*     <MudItem Class="d-flex flex-column justify-center"> *@
+        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutLong" ChartOptions="@_chartOptionsNetwork" Width="98%" /> *@
+        @*         <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText> *@
+        @*     </MudItem> *@
+        @* </MudStack> *@
     </MudExpansionPanel>
     
     <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Host Detail">

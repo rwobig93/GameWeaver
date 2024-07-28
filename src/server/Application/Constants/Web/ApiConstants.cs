@@ -41,6 +41,6 @@ public static class ApiConstants
 
     public static class GeneralExternal
     {
-        public const string UrlGetPublicIp = "https://canihazip.com";
+        public const string UrlGetPublicIp = "https://icanhazip.com";
     }
 }
