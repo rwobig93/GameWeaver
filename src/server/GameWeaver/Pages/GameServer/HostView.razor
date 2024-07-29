@@ -129,13 +129,19 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField Value="@(string.Join(",", _host.AllowedPorts ?? []))" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField T="string" Value="@AllowedPortCountDisplay()" Label="Port Count" Variant="Variant.Outlined" Disabled="true"/>
             @if (_editMode)
             {
-            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
-                       OnClick="@ChangeAllowedPorts">Change Allowed Ports
-            </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
+                           OnClick="@ChangeAllowedPorts">Change Allowed Ports
+                </MudButton>
             }
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+            <MudTextField T="int" @bind-Value="_hostPortStats.TotalPorts" Label="Total Ports" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="int" @bind-Value="_hostPortStats.AvailablePorts" Label="Available Ports" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="int" @bind-Value="_hostPortStats.UsedPorts" Label="Used Ports" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="int" @bind-Value="_hostPortStats.UsedGameserversWorth" Label="Used Gameservers Worth" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField T="int" @bind-Value="_hostPortStats.AvailableGameserversWorth" Label="Available Gameservers Worth" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Hardware</MudText>
@@ -154,7 +160,7 @@ else
         </MudItem>
     </MudPaper>
     
-    <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Resource History" Style="position: relative;">
+    <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center" Style="position: relative;">
         <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
             <MudPaper Outlined="true">
                 <MudStack Row="false" Spacing="2" Class="justify-center pa-2">
@@ -165,50 +171,48 @@ else
                 </MudStack>
             </MudPaper>
         </MudOverlay>
-        <MudStack Row="true">
-            <MudSpacer />
-            <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string" @bind-Value="_checkinsDateSelection" SelectedValuesChanged="@TimeframeChanged">
-                @foreach (var choice in _resourceHistoryChoices)
-                {
-                    <MudSelectItem Value="@(choice)"/>
-                }
-            </MudSelect>
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Resource Usage History</MudText>
+        </MudItem>
+        <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="py-3">
+            <MudItem Class="justify-center align-center">
+                <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string"
+                           @bind-Value="_checkinsDateSelection" SelectedValuesChanged="@TimeframeChanged" Style="max-width: 300px;">
+                    @foreach (var choice in _resourceHistoryChoices)
+                    {
+                        <MudSelectItem Value="@(choice)"/>
+                    }
+                </MudSelect>
+            </MudItem>
         </MudStack>
-        @* <MudStack Row="true"> *@
-        @*     <MudItem Class="d-flex flex-column justify-center"> *@
-        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_cpu" ChartOptions="@_chartOptionsCpu" Width="98%" /> *@
-        @*         <MudText Typo="Typo.body2" Align="Align.Center">(CPU) Central Processing Unit</MudText> *@
-        @*     </MudItem> *@
-        @* </MudStack> *@
-        @* <MudStack Row="true"> *@
-        @*     <MudItem Class="d-flex flex-column justify-center"> *@
-        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_ram" ChartOptions="@_chartOptionsRam" Width="98%" /> *@
-        @*         <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText> *@
-        @*     </MudItem> *@
-        @* </MudStack> *@
-        @* <MudStack Row="true"> *@
-        @*     <MudItem Class="d-flex flex-column justify-center"> *@
-        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_netInLong" ChartOptions="@_chartOptionsNetwork" Width="98%" /> *@
-        @*         <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText> *@
-        @*     </MudItem> *@
-        @* </MudStack> *@
-        @* <MudStack Row="true"> *@
-        @*     <MudItem Class="d-flex flex-column justify-center"> *@
-        @*         <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutLong" ChartOptions="@_chartOptionsNetwork" Width="98%" /> *@
-        @*         <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText> *@
-        @*     </MudItem> *@
-        @* </MudStack> *@
-    </MudExpansionPanel>
+        <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center">
+            <MudItem Class="justify-center py-2">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_cpu" ChartOptions="@_chartOptionsCpuLong" Width="98%" Style="min-width: 370px;" />
+                <MudText Typo="Typo.body2" Align="Align.Center">(CPU) Central Processing Unit</MudText>
+            </MudItem>
+            <MudItem Class="justify-center py-2">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_ram" ChartOptions="@_chartOptionsRamLong" Width="98%" Style="min-width: 370px;" />
+                <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText>
+            </MudItem>
+            <MudItem Class="justify-center py-2">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netInLong" ChartOptions="@_chartOptionsNetworkLong" Width="98%" Style="min-width: 370px;" />
+                <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText>
+            </MudItem>
+            <MudItem Class="justify-center py-2">
+                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutLong" ChartOptions="@_chartOptionsNetworkLong" Width="98%" Style="min-width: 370px;" />
+                <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText>
+            </MudItem>
+        </MudStack>
+    </MudPaper>
     
-    <MudExpansionPanel Class="mud-theme-appbar-background d-flex flex-column pa-4 mb-3" Text="Host Detail">
+    <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Detail</MudText>
+        </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
             <MudPaper Elevation="5" Outlined="true" Class="pa-1 justify-center">
                 <MudTreeView T="string" Hover="true" ExpandOnClick="true" Class="justify-center">
-                    <MudTreeViewItem Value="@($"ID: {_host.Id.ToString()}")"/>
-                    <MudTreeViewItem Value="@($"Hostname: {_host.Hostname}")"/>
-                    <MudTreeViewItem Value="@($"FriendlyName: {_host.FriendlyName}")"/>
-                    <MudTreeViewItem Value="@($"Description: {_host.Description}")"/>
-                    <MudTreeViewItem Value="@("Os Details")">
+                    <MudTreeViewItem Value="@("Operating System")">
                         <MudTreeViewItem Value="@($"OS: {_host.Os}")"/>
                         <MudTreeViewItem Value="@($"OsName: {_host.OsName}")"/>
                         <MudTreeViewItem Value="@($"OsVersion: {_host.OsVersion}")"/>
@@ -234,16 +238,17 @@ else
                         {
                             foreach (var ram in _host.RamModules)
                             {
-                                <MudTreeViewItem Value="@($"{ram.Manufacturer} {ram.Capacity} @ {ram.Speed}")"/>
+                                <MudTreeViewItem Value="@($"{ram.Manufacturer} {MathHelpers.ConvertToGigabytes(ram.Capacity)}GB @ {ram.Speed}")"/>
                             }
                         }
                     </MudTreeViewItem>
                     <MudTreeViewItem Value="@("Storage")">
                         @if (_host.Storage != null)
                         {
-                            foreach (var device in _host.Storage)
+                            foreach (var device in _host.Storage.OrderBy(x => x.Index))
                             {
-                                <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model} | {device.MountPoint} {device.FreeSpace}/{device.TotalSpace}")"/>
+                                <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model}" +
+                                    $" | {device.MountPoint} {MathHelpers.ConvertToGigabytes(device.FreeSpace)} / {MathHelpers.ConvertToGigabytes(device.TotalSpace)}GB")"/>
                             }
                         }
                     </MudTreeViewItem>
@@ -252,7 +257,7 @@ else
                         {
                             foreach (var gpu in _host.Gpus)
                             {
-                                <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {gpu.AdapterRam} | MODE: {gpu.VideoMode}")"/>
+                                <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {MathHelpers.ConvertToGigabytes(gpu.AdapterRam)}GB | MODE: {gpu.VideoMode}")"/>
                             }
                         }
                     </MudTreeViewItem>
@@ -261,7 +266,7 @@ else
                         {
                             foreach (var netIf in _host.NetworkInterfaces)
                             {
-                                <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {netIf.Speed} | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
+                                <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {MathHelpers.ConvertToMbps(netIf.Speed)}Mbps | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
                                     <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")"/>
                                     @foreach (var address in netIf.DefaultGateways)
                                     {
@@ -282,7 +287,7 @@ else
                 </MudTreeView>
             </MudPaper>
         </MudItem>
-    </MudExpansionPanel>
+    </MudPaper>
     
     @if (_canViewGameServers)
     {

@@ -16,6 +16,16 @@ public static class GameServerHelpers
         return gameServers.SelectMany(x => x.GetUsedPorts()).ToList();
     }
     
+    public static List<int> GetUsedPorts(this GameServerSlim gameServer)
+    {
+        return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];
+    }
+
+    public static List<int> GetUsedPorts(this IEnumerable<GameServerSlim> gameServers)
+    {
+        return gameServers.SelectMany(x => x.GetUsedPorts()).ToList();
+    }
+    
     public static List<int> GetUsedPorts(this GameServerCreate gameServer)
     {
         return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];

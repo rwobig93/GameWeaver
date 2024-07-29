@@ -41,6 +41,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private Timer? _timer;
     private List<GameServerSlim> _runningGameservers = [];
     private List<HostCheckInFull> _checkins = [];
+    private readonly HostPortStats _hostPortStats = new();
     private Palette _currentPalette = new();
     private double[] _cpuData = [0, 0];
     private double[] _ramData = [0, 0];
@@ -59,10 +60,30 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         XAxisLines = false,
         DisableLegend = true
     };
+    private readonly ChartOptions _chartOptionsCpuLong = new()
+    {
+        MaxNumYAxisTicks = 100,
+        YAxisTicks = 100,
+        LineStrokeWidth = 1,
+        InterpolationOption = InterpolationOption.Straight,
+        YAxisLines = false,
+        XAxisLines = false,
+        DisableLegend = true
+    };
     private readonly ChartOptions _chartOptionsRam = new()
     {
         LineStrokeWidth = 4,
         InterpolationOption = InterpolationOption.NaturalSpline,
+        YAxisLines = false,
+        XAxisLines = false,
+        DisableLegend = true
+    };
+    private readonly ChartOptions _chartOptionsRamLong = new()
+    {
+        MaxNumYAxisTicks = 100,
+        YAxisTicks = 100,
+        LineStrokeWidth = 1,
+        InterpolationOption = InterpolationOption.Straight,
         YAxisLines = false,
         XAxisLines = false,
         DisableLegend = true
@@ -75,6 +96,14 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         XAxisLines = false,
         DisableLegend = true,
     };
+    private readonly ChartOptions _chartOptionsNetworkLong = new()
+    {
+        LineStrokeWidth = 1,
+        InterpolationOption = InterpolationOption.Straight,
+        YAxisLines = false,
+        XAxisLines = false,
+        DisableLegend = true,
+    };
     private readonly List<string> _resourceHistoryChoices =
     [
         "2 Minutes",
@@ -82,10 +111,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         "30 Minutes",
         "1 Hour",
         "12 Hours",
-        "1 Day",
-        "7 Days",
-        "14 Days",
-        "30 Days"
+        "1 Day"
     ];
 
     private bool _canEditHost;
@@ -101,11 +127,15 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             if (firstRender)
             {
                 _checkinsDateSelection = _resourceHistoryChoices.First();
+                _checkinsAfterDate = DateTimeService.NowDatabaseTime.AddMinutes(-2);
+                
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingHost();
                 await GetHostOwner();
                 await GetGameServers();
+                UpdateHostNetworkDetails();
+                UpdateHostPortCounts();
             
                 _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
                 
@@ -364,9 +394,9 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         var gpuCount = _host.Gpus?.Count ?? 0;
         var firstGpu = _host.Gpus?.FirstOrDefault();
         var gpuName = firstGpu?.Name ?? "Unknown";
-        var gpuRam = firstGpu?.AdapterRam ?? 0;
+        var gpuRam = MathHelpers.ConvertToGigabytes(firstGpu?.AdapterRam ?? 0);
 
-        return $"{gpuCount}x {gpuName} @ {gpuRam} VRAM";
+        return $"{gpuCount}x {gpuName} w/ {gpuRam}GB VRAM";
     }
 
     private string MotherboardDisplay()
@@ -383,10 +413,10 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     {
         var ramStickCount = _host.RamModules?.Count ?? 0;
         var firstStick = _host.RamModules?.FirstOrDefault();
-        var ramTotal = _host.RamModules?.Sum(x => (double)x.Capacity) ?? 0;
+        var ramTotal = MathHelpers.ConvertToGigabytes(_host.RamModules?.Sum(x => (double) x.Capacity) ?? 0);
         var firstStickSpeed = firstStick?.Speed ?? 0;
 
-        return $"{ramStickCount}x {ramTotal} @ {firstStickSpeed}Mhz";
+        return $"{ramStickCount}x {ramTotal}GB Total @ {firstStickSpeed}Mhz";
     }
 
     private string NetInterfaceDisplay()
@@ -467,12 +497,28 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         return $"{offlineTime.Days}d {offlineTime.Hours}h {offlineTime.Minutes}m {offlineTime.Seconds}s";
     }
 
-    private string AllowedPortCountDisplay()
+    private void UpdateHostPortCounts()
     {
-        var portCount = NetworkHelpers.GetPortsFromRangeList(_host.AllowedPorts).Count;
-        var gameServerCount = portCount / 3;
+        var totalPortCount = NetworkHelpers.GetPortsFromRangeList(_host.AllowedPorts).Count;
+        var usedPortCount = _runningGameservers.GetUsedPorts().Count;
 
-        return $"{portCount} total ports / {gameServerCount} game servers worth";
+        _hostPortStats.TotalPorts = totalPortCount;
+        _hostPortStats.AvailablePorts = totalPortCount - usedPortCount;
+        _hostPortStats.UsedPorts = usedPortCount;
+        _hostPortStats.UsedGameserversWorth = usedPortCount / 3;
+        _hostPortStats.AvailableGameserversWorth = (totalPortCount - usedPortCount) / 3;
+    }
+
+    private void UpdateHostNetworkDetails()
+    {
+        var primaryInterface = _host.NetworkInterfaces.GetPrimaryInterface();
+
+        if (primaryInterface is null) return;
+
+        var interfaceSpeed = (int) primaryInterface.Speed / 8_000;
+        
+        _chartOptionsNetworkLong.MaxNumYAxisTicks = interfaceSpeed;
+        _chartOptionsNetworkLong.YAxisTicks = interfaceSpeed / 4;
     }
 
     private void UpdateStatus()
@@ -504,8 +550,11 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         _currentPalette = ParentLayout._selectedTheme.Palette;
         
         _chartOptionsCpu.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Primary.Value];
+        _chartOptionsCpuLong.ChartPalette = [_currentPalette.Primary.Value, _currentPalette.Surface.Value];
         _chartOptionsRam.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Secondary.Value];
+        _chartOptionsRamLong.ChartPalette = [_currentPalette.Secondary.Value, _currentPalette.Surface.Value];
         _chartOptionsNetwork.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
+        _chartOptionsNetworkLong.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
     }
 
     private void UpdateCompute()
@@ -557,9 +606,6 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             "1 Hour" => DateTimeService.NowDatabaseTime.AddHours(-1),
             "12 Hours" => DateTimeService.NowDatabaseTime.AddHours(-12),
             "1 Day" => DateTimeService.NowDatabaseTime.AddDays(-1),
-            "7 Days" => DateTimeService.NowDatabaseTime.AddDays(-7),
-            "14 Days" => DateTimeService.NowDatabaseTime.AddDays(-14),
-            "30 Days" => DateTimeService.NowDatabaseTime.AddDays(-30),
             _ => DateTimeService.NowDatabaseTime.AddMinutes(-2)
         };
 
