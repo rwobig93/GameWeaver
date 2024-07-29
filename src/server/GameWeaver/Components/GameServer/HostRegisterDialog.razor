@@ -2,41 +2,51 @@
 @using Application.Responses.v1.Identity
 @attribute [Authorize(PermissionConstants.GameServer.HostRegistration.Create)]
 
-<MudDialog>
+<MudDialog Class="rounded-lg">
     <DialogContent>
-        <MudContainer MaxWidth="MaxWidth.Large" Style="min-width: 250px;" Class="d-flex flex-column">
-            <MudGrid>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36"  Class="d-flex justify-center pa-4">
-                    <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
-                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
-                    <MudTextField @bind-Value="_selectedOwner.Username" Label="Host Owner" Variant="Variant.Outlined" Disabled="true" />
+        <MudStack Row="false" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Stretch">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+            </MudItem>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                    <MudTextField @bind-Value="_selectedOwner.Username" Label="Host Owner" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="UserBasicResponse" Label="Available Owners" @bind-Value="_selectedOwner"
-                                     SearchFunc="@FilterUsers" ToStringFunc="@(x=> $"{x.Username}")" />
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x.Username}")"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5 pb-1">
                     <MudAlert ContentAlignment="HorizontalAlignment.Left" Severity="Severity.Info">
                         This is separate from the computer / machine name, if one isn't provided the machine name will be used instead
                     </MudAlert>
-                    <MudTextField @bind-Value="_registerRequest.Name" Label="Host Friendly Name" Variant="Variant.Outlined" Disabled="false" />
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
-                    <MudTextField @bind-Value="_registerRequest.Description" Label="Host Description" Variant="Variant.Outlined" Disabled="false" Required="true" />
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                </MudStack>
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_registerRequest.Name" Label="Host Friendly Name" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_registerRequest.Description" Label="Host Description" Variant="Variant.Outlined" Disabled="false" Required="true"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5 pb-1">
                     <MudAlert ContentAlignment="HorizontalAlignment.Left" Severity="Severity.Info">
-                        Comma separated list of ports to use for game servers, ranges are allowed: 30000-31000,33000-34999,42069,50010
+                        Comma separated list of ports to use for game servers, ranges are allowed: 33000-34999,42069,50010
                     </MudAlert>
-                    <MudTextField @bind-Value="_allowedPortsRaw" Label="Allowed Game Server Ports" Variant="Variant.Outlined" Disabled="true" />
+                </MudStack>
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_allowedPortsRaw" Label="Allowed Game Server Ports" Variant="Variant.Outlined" Disabled="false"/>
                     <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Recommend" OnClick="@RecommendPorts">
                         Recommend Me Ports
                     </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudContainer>
+                </MudStack>
+            </MudPaper>
+        </MudStack>
     </DialogContent>
     <DialogActions>
         <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@GenerateRegistration">@ConfirmButtonText</MudButton>

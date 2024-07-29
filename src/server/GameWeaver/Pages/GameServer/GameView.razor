@@ -63,12 +63,8 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-column gap-4">
             <MudTextField @bind-Value="_game.DescriptionShort" Label="Short Description" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="@(!_editMode)"/>
-            <MudExpansionPanel Dense="true" Text="About The Game" IsInitiallyExpanded="false">
-                <MudTextField @bind-Value="_game.DescriptionAbout" Label="About The Game" Variant="Variant.Outlined" MaxLines="5" AutoGrow="true" Disabled="@(!_editMode)"/>
-            </MudExpansionPanel>
-            <MudExpansionPanel Dense="true" Text="Long Description" IsInitiallyExpanded="false">
-                <MudTextField @bind-Value="_game.DescriptionLong" Label="Long Description" Variant="Variant.Outlined" MaxLines="10" AutoGrow="true" Disabled="@(!_editMode)"/>
-            </MudExpansionPanel>
+            <MudTextField @bind-Value="_game.DescriptionAbout" Label="About The Game" Variant="Variant.Outlined" MaxLines="5" AutoGrow="true" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_game.DescriptionLong" Label="Long Description" Variant="Variant.Outlined" MaxLines="10" AutoGrow="true" Disabled="@(!_editMode)"/>
         </MudItem>
         @if (_canEditGame)
         {

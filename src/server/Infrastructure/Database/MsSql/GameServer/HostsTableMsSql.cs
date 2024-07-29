@@ -185,7 +185,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0
+                WHERE h.IsDeleted = 0 AND h.CurrentState != 1
                     AND h.Id LIKE '%' + @SearchTerm + '%'
                     OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
@@ -209,7 +209,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0
+                WHERE h.IsDeleted = 0 AND h.CurrentState != 1
                     AND h.Id LIKE '%' + @SearchTerm + '%'
                     OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
@@ -265,6 +265,22 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure DeleteUnregisteredOlderThan = new()
+    {
+        Table = Table,
+        Action = "DeleteUnregisteredOlderThan",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteUnregisteredOlderThan]
+                @OlderThan DATETIME2
+            AS
+            begin
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE CurrentState = 1
+                    AND CreatedOn < @OlderThan;
             end"
     };
 }

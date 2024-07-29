@@ -85,6 +85,12 @@ public partial class HostRegisterDialog : ComponentBase
     
     private async Task GenerateRegistration()
     {
+        if (string.IsNullOrWhiteSpace(_registerRequest.Description))
+        {
+            Snackbar.Add("Description is empty and must have a unique value", Severity.Error);
+            return;
+        }
+        
         var allowedPortsConverted = _allowedPortsRaw.Split(",");
         var parsedPorts = NetworkHelpers.GetPortsFromRangeList(allowedPortsConverted);
         if (parsedPorts.Count < 3)

@@ -173,6 +173,24 @@ public class HostRepositoryMsSql : IHostRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<int>> DeleteUnregisteredOlderThanAsync(int olderThanHours = 24)
+    {
+        DatabaseActionResult<int> actionReturn = new();
+
+        try
+        {
+            var cleanupTimestamp = _dateTime.NowDatabaseTime.AddHours(-olderThanHours).ToString(CultureInfo.CurrentCulture);
+            var rowsDeleted = await _database.SaveData(HostsTableMsSql.DeleteUnregisteredOlderThan, new { OlderThan = cleanupTimestamp });
+            actionReturn.Succeed(rowsDeleted);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostsTableMsSql.DeleteUnregisteredOlderThan.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchAsync(string searchText)
     {
         DatabaseActionResult<IEnumerable<HostDb>> actionReturn = new();

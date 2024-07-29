@@ -478,6 +478,12 @@ public partial class HostView : ComponentBase, IAsyncDisposable
                     response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                     return;
                 }
+
+                if (!response.Data.Any())
+                {
+                    // Host is offline longer than the timespan we are getting checkins for, so we will get the latest checkins to get the offline time
+                    response = await HostService.GetCheckInsLatestByHostIdAsync(_host.Id, 100);
+                }
                 
                 _checkins = response.Data.ToList();
                 _checkins.Reverse();

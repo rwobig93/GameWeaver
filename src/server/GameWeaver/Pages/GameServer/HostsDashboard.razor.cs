@@ -18,13 +18,13 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     private IEnumerable<HostSlim> _pagedData = new List<HostSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private Timer? _timer;
-    private List<HostWidget> _hostWidgets = [];
+    private readonly List<HostWidget> _hostWidgets = [];
     public HostWidget WidgetReference
     {
         set => _hostWidgets.Add(value);
     }
 
-    private string _searchText = "";
+    private readonly string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
     private int _pageSize = PaginationHelpers.GetPageSizes().First();
@@ -154,7 +154,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         }
         
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialog = await DialogService.Show<ConfirmationDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions).Result;
+        var dialog = await DialogService.Show<HostRegisterDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions).Result;
         if (dialog.Canceled)
         {
             return;

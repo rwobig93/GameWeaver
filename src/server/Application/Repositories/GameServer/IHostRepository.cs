@@ -19,6 +19,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<Guid>> CreateAsync(HostCreateDb createObject);
     Task<DatabaseActionResult> UpdateAsync(HostUpdateDb updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId);
+    Task<DatabaseActionResult<int>> DeleteUnregisteredOlderThanAsync(int olderThanHours = 24);
     Task<DatabaseActionResult<IEnumerable<HostDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<HostRegistrationDb>>> GetAllRegistrationsAsync();

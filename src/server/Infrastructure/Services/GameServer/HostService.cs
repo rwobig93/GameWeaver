@@ -696,18 +696,28 @@ public class HostService : IHostService
     public async Task<IResult<int>> DeleteRegistrationsOlderThanAsync(Guid requestUserId, int olderThanHours = 24)
     {
         var registrationsDelete = await _hostRepository.DeleteRegistrationsOlderThanAsync(olderThanHours);
-        if (registrationsDelete.Succeeded)
+        if (!registrationsDelete.Succeeded)
         {
-            return await Result<int>.SuccessAsync(registrationsDelete.Result);
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, Guid.Empty,
+                requestUserId, "Failed to delete old host registrations", new Dictionary<string, string>
+                {
+                    {"ProvidedHoursToDelete", olderThanHours.ToString()},
+                    {"Error", registrationsDelete.ErrorMessage}
+                });
+            return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        
-        var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, Guid.Empty,
-            requestUserId, "Failed to delete old host registrations", new Dictionary<string, string>
-            {
-                {"ProvidedHoursToDelete", olderThanHours.ToString()},
-                {"Error", registrationsDelete.ErrorMessage}
-            });
-        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+
+        var unregisteredHostsDelete = await _hostRepository.DeleteUnregisteredOlderThanAsync(olderThanHours);
+        if (unregisteredHostsDelete.Succeeded) return await Result<int>.SuccessAsync(registrationsDelete.Result);
+        {
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, Guid.Empty,
+                requestUserId, "Failed to delete old unregistered hosts", new Dictionary<string, string>
+                {
+                    {"ProvidedHoursToDelete", olderThanHours.ToString()},
+                    {"Error", unregisteredHostsDelete.ErrorMessage}
+                });
+            return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+        }
     }
 
     public async Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsAsync(string searchText)
