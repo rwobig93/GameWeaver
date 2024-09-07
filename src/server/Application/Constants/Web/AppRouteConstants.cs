@@ -73,6 +73,8 @@ public static class AppRouteConstants
         public static class GameServers
         {
             public const string ViewAll = "/gameservers";
+            public const string View = "/gameservers/{GameServerId:guid}";
+            public static string ViewId (Guid id) => $"/gameservers/{id}";
         }
     }
 }

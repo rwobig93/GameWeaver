@@ -1,0 +1,8 @@
+﻿<div @onclick="ViewServer">
+    <MudPaper>
+        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(GameServer.ServerName)</MudText>
+        <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">@(GameServer.Modded)</MudText>
+        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(GameServer.PublicIp):@(GameServer.PortGame)</MudText>
+        <MudText Align="Align.Center" Color="Color.Tertiary" Typo="Typo.body2" Style="position: relative">@(GameServer.ServerState)</MudText>
+    </MudPaper>
+</div>

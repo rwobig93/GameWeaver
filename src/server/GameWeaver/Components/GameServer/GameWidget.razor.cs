@@ -22,9 +22,8 @@ public partial class GameWidget : ComponentBase
         if (firstRender)
         {
             await Task.CompletedTask;
+            await UpdateImage();
         }
-        
-        await UpdateImage();
     }
 
     private string GetUrl()
@@ -51,6 +50,7 @@ public partial class GameWidget : ComponentBase
 
     private async Task UpdateImage()
     {
+        // TODO: When orientation or style changes are desired trigger UpdateImage from parent page
         if (Vertical)
         {
             WidthPx = 176;
@@ -64,7 +64,8 @@ public partial class GameWidget : ComponentBase
 
         var fallbackUrl = Vertical ? "/images/gameserver/game-default-vertical.jpg" : "/images/gameserver/game-default-horizontal.jpg";
 
-        _imageExists = (await WebClientService.GetImageUrlEnsured(_gameImage, fallbackUrl)).Data;
+        var imageSource = (await WebClientService.GetImageUrlEnsured(_gameImage, fallbackUrl)).Data;
+        _imageExists = !imageSource.EndsWith(fallbackUrl);
         
         StateHasChanged();
     }

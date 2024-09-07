@@ -1,15 +1,15 @@
 ﻿using Application.Helpers.Runtime;
-using Application.Models.GameServer.Game;
+using Application.Models.GameServer.GameServer;
 using Application.Services.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
-public partial class Games : ComponentBase
+public partial class GameServers : ComponentBase
 {
-    [Inject] private IGameService GameService { get; set; } = null!;
+    [Inject] private IGameServerService GameServerService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
     
-    private IEnumerable<GameSlim> _pagedData = [];
+    private IEnumerable<GameServerSlim> _pagedData = [];
     
     private string _searchText = "";
     private int _totalItems = 10;
@@ -19,9 +19,6 @@ public partial class Games : ComponentBase
     // private readonly string[] _orderings = null;
     // private string _searchString = "";
     // private List<string> _autocompleteList;
-    private bool _displayVertical;
-    private bool _showNames = true;
-    private string _cssDisplay = "game-card-lift";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -33,7 +30,7 @@ public partial class Games : ComponentBase
     
     private async Task RefreshData()
     {
-        var response = await GameService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize);
+        var response = await GameServerService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -74,25 +71,7 @@ public partial class Games : ComponentBase
         await RefreshData();
     }
 
-    private void ChangeOrientation()
-    {
-        _displayVertical = !_displayVertical;
-        StateHasChanged();
-    }
-
-    private void ChangeStyle()
-    {
-        _cssDisplay = _cssDisplay == "game-card-lift" ? "game-card-slide" : "game-card-lift";
-        StateHasChanged();
-    }
-
-    private void ToggleNames()
-    {
-        _showNames = !_showNames;
-        StateHasChanged();
-    }
-
-    private async Task CreateGame()
+    private async Task CreateServer()
     {
         await Task.CompletedTask;
         Snackbar.Add("Not currently implemented", Severity.Warning);

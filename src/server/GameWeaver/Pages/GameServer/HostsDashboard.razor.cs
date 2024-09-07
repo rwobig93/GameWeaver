@@ -105,6 +105,11 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         var currentStart = 1;
         var currentEnd = _pageSize * _pageNumber;
 
+        if (_totalItems == 0)
+        {
+            currentStart = 0;
+        }
+
         if (_pageNumber > 1)
         {
             currentStart += (_pageNumber - 1) * _pageSize;

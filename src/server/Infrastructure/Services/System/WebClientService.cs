@@ -128,21 +128,21 @@ public class WebClientService : IWebClientService
         }
     }
 
-    public async Task<IResult<bool>> GetImageUrlEnsured(ElementReference image, string fallbackUrl)
+    public async Task<IResult<string>> GetImageUrlEnsured(ElementReference image, string fallbackUrl)
     {
         try
         {
-            var imageExists = await _jsRuntime.InvokeAsync<bool>("ensureImageExists", new
+            var imageSource = await _jsRuntime.InvokeAsync<string>("ensureImageExists", new
             {
                 img = image,
                 fallback = fallbackUrl
             });
 
-            return await Result<bool>.SuccessAsync(imageExists);
+            return await Result<string>.SuccessAsync(imageSource);
         }
         catch (Exception ex)
         {
-            return await Result<bool>.FailAsync(false, $"Failed to invoke image existence insurance: {ex.Message}");
+            return await Result<string>.FailAsync(fallbackUrl, $"Failed to invoke image existence insurance: {ex.Message}");
         }
     }
 

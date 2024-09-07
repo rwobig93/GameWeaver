@@ -12,6 +12,6 @@ public interface IWebClientService
     Task<IResult> InvokeScrollToBottom(string elementName);
     Task<IResult> InvokePlayAudio(string elementName);
     Task<IResult> InvokeClipboardCopy(string content);
-    Task<IResult<bool>> GetImageUrlEnsured(ElementReference image, string fallbackUrl);
+    Task<IResult<string>> GetImageUrlEnsured(ElementReference image, string fallbackUrl);
     Task<IResult> OpenExternalUrl(string url);
 }

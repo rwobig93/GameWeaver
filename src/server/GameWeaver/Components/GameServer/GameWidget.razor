@@ -1,9 +1,17 @@
 ﻿<div class="@CssDisplay" @onclick="ViewGame">
-    <MudPaper>
-        <img @ref="_gameImage" src="@(GetUrl())" alt="Game Cover" width="@(WidthPx)px" height="@(HeightPx)px"/>
-        @if (ShowName || !_imageExists)
+    <MudPaper Style="position: relative">
+        @if (_imageExists)
         {
-            <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2">@(Game.FriendlyName)</MudText>
+            <img @ref="_gameImage" src="@(GetUrl())" alt="Game Cover" width="@(WidthPx)px" height="@(HeightPx)px"/>
+            @if (ShowName)
+            {
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(Game.FriendlyName)</MudText>
+            }
+        }
+        else
+        {
+            <img @ref="_gameImage" src="@(GetUrl())" alt="Game Cover" width="@(WidthPx)px" height="@(HeightPx - 20)px"/>
+            <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(Game.FriendlyName)</MudText>
         }
     </MudPaper>
 </div>
