@@ -94,9 +94,9 @@
         <MudSpacer/>
         <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit"/>
     </MudAppBar>
-    <MudContainer Class="pb-4">
+    <MudContainer Class="pb-3" Style="position: inherit">
         <MudDrawerContainer Class="d-flex">
-            <MudDrawer Class="d-flex mx-4" @bind-Open="@_demoOpen" Fixed="false" Elevation="1" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true"
+            <MudDrawer Class="d-flex mx-0" @bind-Open="@_demoOpen" Fixed="false" Elevation="1" Variant="@DrawerVariant.Mini" OpenMiniOnHover="true"
                        Style="@($"background-color: {_editingTheme.ColorNavBar};")">
                 <MudNavMenu>
                     <MudItem Class="ml-4">
@@ -123,7 +123,7 @@
                 </MudNavMenu>
             </MudDrawer>
         </MudDrawerContainer>
-        <MudGrid Class="d-flex mx-4 pl-4" Style="@($"background-color: {_editingTheme.ColorBackground};")">
+        <MudGrid Class="d-flex mx-0 pl-8" Style="@($"background-color: {_editingTheme.ColorBackground};")">
             <MudItem sm="12" md="12" xs="12" lg="12">
                 <MudAlert Severity="Severity.Normal" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorPrimary};")">Normal Message</MudAlert>
                 <MudAlert Severity="Severity.Info" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorSecondary};")">Info Message</MudAlert>
@@ -154,7 +154,7 @@
                 </MudButton>
             </MudItem>
             <MudItem sm="12" md="12" xs="12" lg="12">
-                <MudCheckBox Label="Checkbox. Gon. Give. It. To. Ya." Checked="true" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
+                <MudCheckBox Label="Checkbox. Gon. Give. It. To. Ya." Value="true" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
                 <MudChip Text="We're no strangers to love" Style="@($"background-color: {_editingTheme.ColorPrimary};")"/>
                 <MudChip Text="You know the rules" Style="@($"background-color: {_editingTheme.ColorSecondary};")"/>
                 <MudChip Text="And so. do. I." Style="@($"background-color: {_editingTheme.ColorTertiary};")"/>

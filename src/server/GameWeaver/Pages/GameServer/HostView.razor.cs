@@ -90,7 +90,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     };
     private readonly ChartOptions _chartOptionsNetwork = new()
     {
-        LineStrokeWidth = 4,
+        LineStrokeWidth = 1,
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
@@ -99,7 +99,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private readonly ChartOptions _chartOptionsNetworkLong = new()
     {
         LineStrokeWidth = 1,
-        InterpolationOption = InterpolationOption.Straight,
+        InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
         DisableLegend = true,
@@ -136,10 +136,10 @@ public partial class HostView : ComponentBase, IAsyncDisposable
                 await GetGameServers();
                 UpdateHostNetworkDetails();
                 UpdateHostPortCounts();
-            
-                _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
                 
                 StateHasChanged();
+            
+                _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
             }
         }
         catch
@@ -153,7 +153,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         await UpdateCheckins();
         UpdateThemeColors();
         UpdateStatus();
-
+        
         if (!IsOffline)
         {
             UpdateNetwork();
@@ -521,10 +521,10 @@ public partial class HostView : ComponentBase, IAsyncDisposable
 
         if (primaryInterface is null) return;
 
-        var interfaceSpeed = (int) primaryInterface.Speed / 8_000;
+        var interfaceSpeed = (int)(primaryInterface.Speed / 8_000);
         
         _chartOptionsNetworkLong.MaxNumYAxisTicks = interfaceSpeed;
-        _chartOptionsNetworkLong.YAxisTicks = interfaceSpeed / 4;
+        _chartOptionsNetworkLong.YAxisTicks = interfaceSpeed;
     }
 
     private void UpdateStatus()

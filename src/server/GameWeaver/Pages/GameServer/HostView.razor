@@ -257,7 +257,7 @@ else
                         {
                             foreach (var gpu in _host.Gpus)
                             {
-                                <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | RAM: {MathHelpers.ConvertToGigabytes(gpu.AdapterRam)}GB | MODE: {gpu.VideoMode}")"/>
+                                <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | VRAM: {MathHelpers.ConvertToGigabytes(gpu.AdapterRam)}GB | MODE: {gpu.VideoMode}")"/>
                             }
                         }
                     </MudTreeViewItem>
