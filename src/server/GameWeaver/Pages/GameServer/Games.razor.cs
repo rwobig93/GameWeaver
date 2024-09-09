@@ -20,7 +20,7 @@ public partial class Games : ComponentBase
     // private string _searchString = "";
     // private List<string> _autocompleteList;
     private bool _displayVertical;
-    private bool _showNames = true;
+    private bool _showNames = false;
     private string _cssDisplay = "game-card-lift";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

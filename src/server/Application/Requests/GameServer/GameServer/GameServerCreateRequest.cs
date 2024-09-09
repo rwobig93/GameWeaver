@@ -16,5 +16,5 @@ public class GameServerCreateRequest
     public int PortQuery { get; set; } = 0;
     public int PortRcon { get; set; } = 0;
     public bool Modded { get; set; } = false;
-    public bool Private { get; set; } = true;
+    public bool Private { get; set; } = false;
 }

@@ -19,7 +19,7 @@
                     Entering an invalid URL for your profile image will result in an empty avatar / circle
                 </MudAlert>
             </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="pa-2">
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Value="CurrentUser.ProfilePictureDataUrl" Label="Profile Image 
                 Url"/>
                 @if (GeneralConfig.Value.UseCurrency)

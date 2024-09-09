@@ -1,6 +1,8 @@
-﻿using Application.Helpers.Runtime;
+﻿using Application.Constants.Identity;
+using Application.Helpers.Runtime;
 using Application.Models.GameServer.GameServer;
 using Application.Services.GameServer;
+using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -19,13 +21,22 @@ public partial class GameServers : ComponentBase
     // private readonly string[] _orderings = null;
     // private string _searchString = "";
     // private List<string> _autocompleteList;
+    
+    private bool _canCreateGameServers = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
+            await GetPermissions();
             await RefreshData();
         }
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        _canCreateGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Create);
     }
     
     private async Task RefreshData()
@@ -73,8 +84,21 @@ public partial class GameServers : ComponentBase
 
     private async Task CreateServer()
     {
-        await Task.CompletedTask;
-        Snackbar.Add("Not currently implemented", Severity.Warning);
+        if (!_canCreateGameServers)
+        {
+            return;
+        }
+        
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialog = await DialogService.Show<GameServerCreateDialog>("Create Gameserver", new DialogParameters(), dialogOptions).Result;
+        if (dialog.Canceled)
+        {
+            return;
+        }
+
+        var createdGameServerId = (Guid) dialog.Data;
+        Snackbar.Add("Successfully created new gameserver!", Severity.Success);
+        NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(createdGameServerId));
     }
     
     private async Task SearchKeyDown(KeyboardEventArgs keyArgs)
