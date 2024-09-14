@@ -24,7 +24,7 @@
 <MudGrid Class="d-flex flex-row gap-4 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var game in _pagedData)
     {
-        <GameWidget @ref="@WidgetReference" Game="@game" Vertical="@_displayVertical" CssDisplay="@_cssDisplay" ShowName="@_showNames" />
+        <GameWidget @ref="@WidgetReference" Game="@game" CssDisplay="@_cssDisplay" ShowName="@_showNames" />
     }
 </MudGrid>
 <MudPaper Elevation="25" Class="pt-4 mt-6">
