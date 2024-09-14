@@ -1,28 +1,38 @@
 ﻿<MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="true">
-    <MudNavLink Href="@AppRouteConstants.Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House">
-        Home
-    </MudNavLink>
+    <MudTooltip Text="Home" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+        <MudNavLink Href="@AppRouteConstants.Index" Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.House" Style="width: 100%">
+            Home
+        </MudNavLink>
+    </MudTooltip>
     @if (_canViewHosts || _canViewGames || _canViewGameServers)
     {
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
         @if (_canViewHosts)
         {
-            // Alternative Icon could be @Icons.Material.Filled.Storage which looks like servers
-            <MudNavLink Href="@AppRouteConstants.GameServer.Hosts.HostsDashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Memory">
-                Hosts Dashboard
-            </MudNavLink>
+            <MudTooltip Text="Hosts Dashboard" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.GameServer.Hosts.HostsDashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Memory">
+                    Hosts Dashboard
+                </MudNavLink>
+            </MudTooltip>
         }
+
         @if (_canViewGames)
         {
-            <MudNavLink Href="@AppRouteConstants.GameServer.Games.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Gamepad">
-                Games
-            </MudNavLink>
+            <MudTooltip Text="Games" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.GameServer.Games.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SportsEsports">
+                    Games
+                </MudNavLink>
+            </MudTooltip>
         }
+
         @if (_canViewGameServers)
         {
-            <MudNavLink Href="@AppRouteConstants.GameServer.GameServers.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SportsEsports">
-                Game Servers
-            </MudNavLink>
+            <MudTooltip Text="Game Servers" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.GameServer.GameServers.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Storage">
+                    Game Servers
+                </MudNavLink>
+            </MudTooltip>
+            // @Icons.Material.Filled.SportsEsports, @Icons.Material.Filled.Storage
         }
     }
     @if (_canViewUsers || _canViewRoles || _canViewAuditTrails || _canViewTshootRecords)
@@ -30,27 +40,38 @@
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
         @if (_canViewUsers)
         {
-            <MudNavLink Href="@AppRouteConstants.Admin.Users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisorAccount">
-                User Admin
-            </MudNavLink>
+            <MudTooltip Text="User Admin" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.Admin.Users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisorAccount">
+                    User Admin
+                </MudNavLink>
+            </MudTooltip>
         }
+
         @if (_canViewRoles)
         {
-            <MudNavLink Href="@AppRouteConstants.Admin.Roles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PermContactCalendar">
-                Role Admin
-            </MudNavLink>
+            <MudTooltip Text="Role Admin" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.Admin.Roles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.PermContactCalendar">
+                    Role Admin
+                </MudNavLink>
+            </MudTooltip>
         }
+
         @if (_canViewAuditTrails)
         {
-            <MudNavLink Href="@AppRouteConstants.Admin.AuditTrails" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FormatListNumbered">
-                Audit Trails
-            </MudNavLink>
+            <MudTooltip Text="Audit Trails" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.Admin.AuditTrails" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FormatListNumbered">
+                    Audit Trails
+                </MudNavLink>
+            </MudTooltip>
         }
+
         @if (_canViewTshootRecords)
         {
-            <MudNavLink Href="@AppRouteConstants.Admin.TroubleshootRecords" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Troubleshoot">
-                Troubleshooting
-            </MudNavLink>
+            <MudTooltip Text="Troubleshooting" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.Admin.TroubleshootRecords" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Troubleshoot">
+                    Troubleshooting
+                </MudNavLink>
+            </MudTooltip>
         }
     }
     @if (_canViewApi || _canViewJobs)
@@ -58,15 +79,20 @@
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
         @if (_canViewApi)
         {
-            <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
-                API
-            </MudNavLink>
+            <MudTooltip Text="API" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.Api.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Api">
+                    API
+                </MudNavLink>
+            </MudTooltip>
         }
+
         @if (_canViewJobs)
         {
-            <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WorkOutline">
-                Jobs Dashboard
-            </MudNavLink>
+            <MudTooltip Text="Jobs Dashboard" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.Jobs.Root" Target="_blank" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Outlined.WorkOutline">
+                    Jobs Dashboard
+                </MudNavLink>
+            </MudTooltip>
         }
     }
     @if (_isDeveloper)
@@ -74,9 +100,11 @@
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
         @if (_isDeveloper)
         {
-            <MudNavLink Href="@AppRouteConstants.Developer.Testing" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DeveloperMode">
-                Dev Testing
-            </MudNavLink>
+            <MudTooltip Text="Dev Testing" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.Developer.Testing" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DeveloperMode">
+                    Dev Testing
+                </MudNavLink>
+            </MudTooltip>
         }
     }
 </MudNavMenu>

@@ -77,7 +77,9 @@ public partial class MainLayout
         _userPreferences.DrawerDefaultOpen = !_userPreferences.DrawerDefaultOpen;
 
         if (IsUserAuthenticated(CurrentUser))
+        {
             await AccountService.UpdatePreferences(CurrentUserService.GetIdFromPrincipal(CurrentUser), _userPreferences.ToUpdate());
+        }
     }
 
     private void SettingsToggle()

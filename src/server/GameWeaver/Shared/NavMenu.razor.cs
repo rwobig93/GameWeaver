@@ -5,6 +5,9 @@ namespace GameWeaver.Shared;
 
 public partial class NavMenu
 {
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+
+    private int _tooltipDelay = 500;
     private bool _canViewApi;
     private bool _canViewJobs;
     private bool _canViewUsers;

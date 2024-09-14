@@ -1,8 +1,8 @@
-﻿<div @onclick="ViewServer">
-    <MudPaper>
-        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(GameServer.ServerName)</MudText>
-        <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">@(GameServer.Modded)</MudText>
-        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(GameServer.PublicIp):@(GameServer.PortGame)</MudText>
-        <MudText Align="Align.Center" Color="Color.Tertiary" Typo="Typo.body2" Style="position: relative">@(GameServer.ServerState)</MudText>
-    </MudPaper>
-</div>
+﻿<MudPaper Class="pa-2" Width="@Width" Height="@Height" Style="background-color: var(--mud-palette-surface); cursor: pointer;" @onclick="ViewServer">
+    <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Start">
+        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">Name: @(GameServer.ServerName)</MudText>
+        <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">Modded: @(GameServer.Modded)</MudText>
+        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">Socket: @(GameServer.PublicIp):@(GameServer.PortGame)</MudText>
+        <MudText Align="Align.Center" Color="Color.Tertiary" Typo="Typo.body2" Style="position: relative">State: @(GameServer.ServerState)</MudText>
+    </MudStack>
+</MudPaper>
