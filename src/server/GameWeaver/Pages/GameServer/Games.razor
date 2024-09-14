@@ -9,14 +9,8 @@
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@CreateGame">
             Create
         </MudButton>
-        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Outlined.Flip" OnClick="@ChangeOrientation">
-            Orientation
-        </MudButton>
-        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Style" OnClick="@ChangeStyle">
-            Style
-        </MudButton>
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Outlined.Subtitles" OnClick="@ToggleNames">
-            Names
+            Toggle Names
         </MudButton>
         <MudSpacer />
         <MudDivider Vertical="true"/>
@@ -27,10 +21,10 @@
         </MudButton>
     </MudContainer>
 </MudPaper>
-<MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
+<MudGrid Class="d-flex flex-row gap-4 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var game in _pagedData)
     {
-        <GameWidget Game="@game" Vertical="@_displayVertical" CssDisplay="@_cssDisplay" ShowName="@_showNames" />
+        <GameWidget @ref="@WidgetReference" Game="@game" Vertical="@_displayVertical" CssDisplay="@_cssDisplay" ShowName="@_showNames" />
     }
 </MudGrid>
 <MudPaper Elevation="25" Class="pt-4 mt-6">

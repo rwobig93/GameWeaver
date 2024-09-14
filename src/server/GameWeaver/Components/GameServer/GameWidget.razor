@@ -1,17 +1,30 @@
 ﻿<div class="@CssDisplay" @onclick="ViewGame">
-    <MudPaper Style="position: relative">
+    <MudPaper Style="position: relative;">
         @if (_imageExists)
         {
-            <img @ref="_gameImage" src="@(GetUrl())" alt="Game Cover" width="@(WidthPx)px" height="@(HeightPx)px"/>
+            <img src="@(_imageUrl)" width="@CardWidth" height="@CardHeight" alt="Game Cover"/>
             @if (ShowName)
             {
-                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(Game.FriendlyName)</MudText>
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">
+                    @(Game.FriendlyName)
+                </MudText>
             }
         }
         else
         {
-            <img @ref="_gameImage" src="@(GetUrl())" alt="Game Cover" width="@(WidthPx)px" height="@(HeightPx - 20)px"/>
-            <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(Game.FriendlyName)</MudText>
+            <img src="@(_imageUrl)" width="@CardWidth" height="@CardHeight" alt="Game Cover"/>
+            @if (ShowName)
+            {
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">
+                    @(Game.FriendlyName)
+                </MudText>
+            }
+            else
+            {
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    @(Game.FriendlyName)
+                </MudText>
+            }
         }
     </MudPaper>
 </div>

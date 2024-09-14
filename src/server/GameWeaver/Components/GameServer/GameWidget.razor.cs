@@ -12,35 +12,46 @@ public partial class GameWidget : ComponentBase
     [Parameter] public int HeightPx { get; set; } = 125;  // 180
 
     [Inject] public IWebClientService WebClientService { get; set; } = null!;
+    [Inject] public HttpClient HttpClient { get; set; } = null!;
 
-    private ElementReference _gameImage;
+    private string _imageUrl = string.Empty;
     private bool _imageExists = true;
+    private string CardWidth => $"{WidthPx}px";
+    private string CardHeight => $"{HeightPx}px";
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            await Task.CompletedTask;
             await UpdateImage();
         }
     }
 
-    private string GetUrl()
+    private async Task UpdateImageUrl()
     {
-        // Could look at converting app id to vertical card:
-        // https://steamcdn-a.akamaihd.net/steam/apps/<app_id>/library_600x900.jpg
         if (!Vertical && !string.IsNullOrWhiteSpace(Game.UrlLogo))
         {
-            return Game.UrlLogo;
+            if (await UrlExists(Game.UrlLogo))
+            {
+                _imageExists = true;
+                _imageUrl = Game.UrlLogo;
+                return;
+            }
         }
 
         if (Vertical && Game.SteamGameId != 0)
         {
-            return $"https://steamcdn-a.akamaihd.net/steam/apps/{Game.SteamGameId}/library_600x900.jpg";
+            if (await UrlExists($"https://steamcdn-a.akamaihd.net/steam/apps/{Game.SteamGameId}/library_600x900.jpg"))
+            {
+                _imageExists = true;
+                _imageUrl = $"https://steamcdn-a.akamaihd.net/steam/apps/{Game.SteamGameId}/library_600x900.jpg";
+                return;
+            }
         }
         
-        return Vertical ? "/images/gameserver/game-default-vertical.jpg" : "/images/gameserver/game-default-horizontal.jpg";
+        _imageExists = false;
+        _imageUrl = Vertical ? "/images/gameserver/game-default-vertical.jpg" : "/images/gameserver/game-default-horizontal.jpg";
     }
 
     private void ViewGame()
@@ -48,7 +59,13 @@ public partial class GameWidget : ComponentBase
         NavManager.NavigateTo(AppRouteConstants.GameServer.Games.ViewId(Game.Id));
     }
 
-    private async Task UpdateImage()
+    private async Task<bool> UrlExists(string url)
+    {
+        var response = await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
+        return response.IsSuccessStatusCode;
+    }
+    
+    public async Task UpdateImage()
     {
         // TODO: When orientation or style changes are desired trigger UpdateImage from parent page
         if (Vertical)
@@ -62,11 +79,7 @@ public partial class GameWidget : ComponentBase
             HeightPx = 137;
         }
 
-        var fallbackUrl = Vertical ? "/images/gameserver/game-default-vertical.jpg" : "/images/gameserver/game-default-horizontal.jpg";
-
-        var imageSource = (await WebClientService.GetImageUrlEnsured(_gameImage, fallbackUrl)).Data;
-        _imageExists = !imageSource.EndsWith(fallbackUrl);
-        
+        await UpdateImageUrl();
         StateHasChanged();
     }
 }
