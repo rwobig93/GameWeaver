@@ -6,7 +6,7 @@
 
 
 <MudItem xs="16" sm="20" md="28" lg="36">
-    <MudTable ServerData="@(new Func<TableState, Task<TableData<AppUserSlim>>>(ServerReload))" MultiSelection="@_allowUserSelection"
+    <MudTable ServerData="ServerReload" MultiSelection="@_allowUserSelection"
               @bind-SelectedItems="_selectedItems" Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table" >
         <ToolBarContent>
             <MudContainer Class="d-flex flex-row gap-3">

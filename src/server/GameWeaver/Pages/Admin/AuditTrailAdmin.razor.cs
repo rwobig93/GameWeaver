@@ -44,7 +44,7 @@ public partial class AuditTrailAdmin
         _canExportTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Audit.Export);
     }
     
-    private async Task<TableData<AuditTrailSlim>> ServerReload(TableState state)
+    private async Task<TableData<AuditTrailSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var trailResult = await AuditService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!trailResult.Succeeded)

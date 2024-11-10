@@ -8,8 +8,8 @@ public partial class GameWidget : ComponentBase
     [Parameter] public bool ShowName { get; set; }
     [Parameter] public string CssDisplay { get; set; } = "game-card-lift";
     [Parameter] public bool Vertical { get; set; }
-    [Parameter] public int WidthPx { get; set; } = 264;  // 385
-    [Parameter] public int HeightPx { get; set; } = 125;  // 180
+    [Parameter] public int WidthPx { get; set; } = 390;  // 385
+    [Parameter] public int HeightPx { get; set; } = 137;  // 180
 
     [Inject] public IWebClientService WebClientService { get; set; } = null!;
     [Inject] public HttpClient HttpClient { get; set; } = null!;
@@ -67,18 +67,6 @@ public partial class GameWidget : ComponentBase
     
     public async Task UpdateImage()
     {
-        // TODO: When orientation or style changes are desired trigger UpdateImage from parent page
-        if (Vertical)
-        {
-            WidthPx = 176;
-            HeightPx = 264;
-        }
-        else
-        {
-            WidthPx = 390;
-            HeightPx = 137;
-        }
-
         await UpdateImageUrl();
         StateHasChanged();
     }

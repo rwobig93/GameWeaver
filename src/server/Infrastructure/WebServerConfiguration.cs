@@ -127,7 +127,7 @@ public static class WebServerConfiguration
     {
         using var scope = app.Services.CreateAsyncScope();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
-        
+
         app.UseSwagger();
         app.UseSwaggerUI(options =>
         {

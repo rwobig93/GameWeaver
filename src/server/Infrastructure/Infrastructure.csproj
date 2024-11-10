@@ -25,31 +25,31 @@
       <PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
       <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="8.0.1" />
       <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-      <PackageReference Include="EPPlus" Version="7.1.1" />
+      <PackageReference Include="EPPlus" Version="7.4.2" />
       <PackageReference Include="FluentEmail.Razor" Version="3.0.2" />
       <PackageReference Include="FluentEmail.Smtp" Version="3.0.2" />
-      <PackageReference Include="Hangfire" Version="1.8.12" />
-      <PackageReference Include="Hangfire.Core" Version="1.8.12" />
-      <PackageReference Include="Hangfire.PostgreSql" Version="1.20.8" />
-      <PackageReference Include="MemoryPack" Version="1.21.1" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
+      <PackageReference Include="Hangfire" Version="1.8.15" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.15" />
+      <PackageReference Include="Hangfire.PostgreSql" Version="1.20.10" />
+      <PackageReference Include="MemoryPack" Version="1.21.3" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.10" />
       <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-      <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="7.5.1" />
-      <PackageReference Include="MudBlazor" Version="6.19.1" />
+      <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.2.0" />
+      <PackageReference Include="MudBlazor" Version="7.15.0" />
       <PackageReference Include="OAuth2" Version="0.10.3" />
       <PackageReference Include="Otp.NET" Version="1.4.0" />
-      <PackageReference Include="QRCoder" Version="1.4.3" />
+      <PackageReference Include="QRCoder" Version="1.6.0" />
       <PackageReference Include="QueryMaster" Version="1.1.2" />
       <PackageReference Include="RandomNameGeneratorNG" Version="2.0.2" />
-      <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
-      <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
-      <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
-      <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-      <PackageReference Include="Serilog.Sinks.Seq" Version="7.0.0" />
-      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.5.0" />
-      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
-      <PackageReference Include="System.Text.Json" Version="8.0.4" />
+      <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+      <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+      <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+      <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+      <PackageReference Include="Serilog.Sinks.Seq" Version="8.0.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="6.9.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.9.0" />
+      <PackageReference Include="System.Text.Json" Version="8.0.5" />
     </ItemGroup>
 
     <ItemGroup>

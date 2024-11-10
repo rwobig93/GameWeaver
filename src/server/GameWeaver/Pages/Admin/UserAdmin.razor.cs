@@ -69,7 +69,7 @@ public partial class UserAdmin
         _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers || _canForceLogin;
     }
     
-    private async Task<TableData<AppUserSlim>> ServerReload(TableState state)
+    private async Task<TableData<AppUserSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var usersResult = await UserService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!usersResult.Succeeded)
@@ -238,8 +238,10 @@ public partial class UserAdmin
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var createAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>(
             "Create Service Account", createParameters, dialogOptions).Result;
-        if (createAccountDialog.Canceled)
+        if (createAccountDialog?.Data is null || createAccountDialog.Canceled)
+        {
             return;
+        }
 
         var createdPassword = (string?) createAccountDialog.Data;
         if (string.IsNullOrWhiteSpace(createdPassword))

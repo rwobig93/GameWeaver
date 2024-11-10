@@ -45,7 +45,7 @@ public partial class RoleAdmin
         _canExportRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Export);
     }
     
-    private async Task<TableData<AppRoleSlim>> ServerReload(TableState state)
+    private async Task<TableData<AppRoleSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var rolesResult = await RoleService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!rolesResult.Succeeded)
@@ -85,7 +85,7 @@ public partial class RoleAdmin
         
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var createRoleDialog = await DialogService.Show<RoleCreateDialog>("Create New Role", dialogOptions).Result;
-        if (createRoleDialog.Canceled)
+        if (createRoleDialog?.Data is null || createRoleDialog.Canceled)
             return;
 
         var createdRoleId = (Guid) createRoleDialog.Data;

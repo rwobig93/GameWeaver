@@ -160,7 +160,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var dialog = await DialogService.Show<HostRegisterDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions).Result;
-        if (dialog.Canceled)
+        if (dialog?.Data is null || dialog.Canceled)
         {
             return;
         }

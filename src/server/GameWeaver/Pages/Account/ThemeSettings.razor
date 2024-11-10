@@ -32,42 +32,42 @@
         </MudItem>
         <MudPaper Width="97.5%" Class="d-flex pa-4 flex-wrap">
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-column align-center">
-                <MudChip Color="Color.Primary">Currently Editing Theme: @_editingTheme.ThemeName</MudChip>
+                <MudChip T="string" Color="Color.Primary">Currently Editing Theme: @_editingTheme.ThemeName</MudChip>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-2">
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Text="_editingTheme.ThemeName" Label="Theme Name"/>
                 <MudTextField Variant="Variant.Outlined" T="string" @bind-Text="_editingTheme.ThemeDescription" Label="Theme Description"/>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-2">
-                <MudColorPicker Label="Primary Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true" Class="d-inline-flex"
+                <MudColorPicker Label="Primary Color" Elevation="12"   Class="d-inline-flex"
                                 @bind-Text="_editingTheme.ColorPrimary" Variant="Variant.Outlined" @bind-Value="_editThemePrimaryColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorPrimary}; height: 50px; width: 50px;")"
                          Class="d-inline-flex align-self-center" />
-                <MudColorPicker Label="Secondary Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true" Class="d-inline-flex"
+                <MudColorPicker Label="Secondary Color" Elevation="12"   Class="d-inline-flex"
                                 @bind-Text="_editingTheme.ColorSecondary" Variant="Variant.Outlined" @bind-Value="_editThemeSecondaryColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorSecondary}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-2">
-                <MudColorPicker Label="Tertiary Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true" Class="d-inline-flex"
+                <MudColorPicker Label="Tertiary Color" Elevation="12"   Class="d-inline-flex"
                                 @bind-Text="_editingTheme.ColorTertiary" Variant="Variant.Outlined" @bind-Value="_editThemeTertiaryColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorTertiary}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
-                <MudColorPicker Label="Background Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
+                <MudColorPicker Label="Background Color" Elevation="12"  
                                 @bind-Text="_editingTheme.ColorBackground" Variant="Variant.Outlined" @bind-Value="_editThemeBackgroundColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorBackground}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-2">
-                <MudColorPicker Label="TitleBar Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
+                <MudColorPicker Label="TitleBar Color" Elevation="12"  
                                 @bind-Text="_editingTheme.ColorTitleBar" Variant="Variant.Outlined" @bind-Value="_editThemeTitleBarColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorTitleBar}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
-                <MudColorPicker Label="Navigation Bar Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
+                <MudColorPicker Label="Navigation Bar Color" Elevation="12"  
                                 @bind-Text="_editingTheme.ColorNavBar" Variant="Variant.Outlined" @bind-Value="_editThemeNavBarColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorNavBar}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-2">
-                <MudColorPicker Label="Success Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
+                <MudColorPicker Label="Success Color" Elevation="12"  
                                 @bind-Text="_editingTheme.ColorSuccess" Variant="Variant.Outlined" @bind-Value="_editThemeSuccessColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorSuccess}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
-                <MudColorPicker Label="Error Color" Elevation="12" DisableToolbar="false" DisableDragEffect="true"
+                <MudColorPicker Label="Error Color" Elevation="12"  
                                 @bind-Text="_editingTheme.ColorError" Variant="Variant.Outlined" @bind-Value="_editThemeErrorColor" />
                 <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorError}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
             </MudItem>
@@ -87,7 +87,7 @@
 
 <MudContainer Fixed="false" Class="pa-4 z-0" MaxWidth="MaxWidth.Medium" Style="position: relative; max-height: 850px;">
     <MudItem xs="12" sm="12" md="12" Class="d-flex flex-column align-center pa-2">
-        <MudChip Color="Color.Primary">Editing Theme Preview</MudChip>
+        <MudChip T="string" Color="Color.Primary">Editing Theme Preview</MudChip>
     </MudItem>
     <MudAppBar Class="z-0" Fixed="false" Style="@($"color: {_editingTheme.ColorPrimary}; background-color: {_editingTheme.ColorTitleBar};")">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DemoToggleDrawer"/>
@@ -155,14 +155,14 @@
             </MudItem>
             <MudItem sm="12" md="12" xs="12" lg="12">
                 <MudCheckBox Label="Checkbox. Gon. Give. It. To. Ya." Value="true" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
-                <MudChip Text="We're no strangers to love" Style="@($"background-color: {_editingTheme.ColorPrimary};")"/>
-                <MudChip Text="You know the rules" Style="@($"background-color: {_editingTheme.ColorSecondary};")"/>
-                <MudChip Text="And so. do. I." Style="@($"background-color: {_editingTheme.ColorTertiary};")"/>
+                <MudChip T="string" Text="We're no strangers to love" Style="@($"background-color: {_editingTheme.ColorPrimary};")"/>
+                <MudChip T="string" Text="You know the rules" Style="@($"background-color: {_editingTheme.ColorSecondary};")"/>
+                <MudChip T="string" Text="And so. do. I." Style="@($"background-color: {_editingTheme.ColorTertiary};")"/>
             </MudItem>
             <MudItem sm="12" md="12" xs="12" lg="12">
                 <MudExpansionPanel Text="Expand!" MaxHeight="150" Style="@($"background-color: {_editingTheme.ColorBackground};")">
                     Expanding is
-                    <MudButton Variant="Variant.Text" DisableElevation="true" Style="@($"color: {_editingTheme.ColorPrimary};")">
+                    <MudButton Variant="Variant.Text" Style="@($"color: {_editingTheme.ColorPrimary};")">
                         Growing!
                     </MudButton>
                 </MudExpansionPanel>

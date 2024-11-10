@@ -57,7 +57,7 @@ public partial class ChangeOwnershipDialog : ComponentBase
         _currentOwner = _users.FirstOrDefault(x => x.Id == OwnerId) ?? new UserBasicResponse { Username = "Unknown" };
     }
 
-    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText)
+    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
         {

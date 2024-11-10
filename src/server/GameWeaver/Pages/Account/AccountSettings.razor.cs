@@ -72,7 +72,7 @@ public partial class AccountSettings
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var newEmailPrompt = await DialogService.Show<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions).Result;
-        if (newEmailPrompt.Canceled || string.IsNullOrWhiteSpace((string?)newEmailPrompt.Data))
+        if (string.IsNullOrWhiteSpace((string?)newEmailPrompt?.Data) || newEmailPrompt.Canceled)
         {
             return;
         }

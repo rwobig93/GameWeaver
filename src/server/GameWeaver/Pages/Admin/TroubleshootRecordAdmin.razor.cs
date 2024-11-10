@@ -44,7 +44,7 @@ public partial class TroubleshootRecordAdmin
         _canExportRecords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Troubleshooting.Export);
     }
     
-    private async Task<TableData<TroubleshootingRecordSlim>> ServerReload(TableState state)
+    private async Task<TableData<TroubleshootingRecordSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var trailResult = await TshootService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!trailResult.Succeeded)

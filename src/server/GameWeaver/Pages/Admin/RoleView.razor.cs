@@ -137,7 +137,7 @@ public partial class RoleView
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.Show<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        if (dialog?.Data is not null && !dialog.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -152,7 +152,7 @@ public partial class RoleView
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.Show<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        if (dialog?.Data is not null && !dialog.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -180,7 +180,10 @@ public partial class RoleView
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.Show<ConfirmationDialog>("Delete Role", dialogParameters, dialogOptions).Result;
-        if (dialog.Canceled) return;
+        if (dialog?.Data is null || dialog.Canceled)
+        {
+            return;
+        }
 
         var deleteRequest = await RoleService.DeleteAsync(_viewingRole.Id, _currentUserId);
         if (!deleteRequest.Succeeded)

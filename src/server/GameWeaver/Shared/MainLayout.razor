@@ -1,9 +1,11 @@
-﻿@using GameWeaver.Components.Account
+﻿@using Domain.Enums.Identity
+@using GameWeaver.Components.Account
 @inherits LayoutComponentBase
 
 <PageTitle>@ServerState.ApplicationName</PageTitle>
 
-<MudThemeProvider Theme="@_selectedTheme" DefaultScrollbar="false"/>
+<MudThemeProvider Theme="@_selectedTheme" DefaultScrollbar="false" IsDarkMode="@(_userPreferences.ThemePreference != AppThemeId.Bright)"/>
+<MudPopoverProvider />
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 

@@ -64,7 +64,7 @@ public partial class HostRegisterDialog : ComponentBase
         _users = response.Data.ToResponses();
     }
 
-    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText)
+    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
         {

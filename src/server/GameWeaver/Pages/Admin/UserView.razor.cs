@@ -175,7 +175,7 @@ public partial class UserView
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        if (dialog?.Data is not null && !dialog.Canceled)
         {
             await GetViewingUser();
             StateHasChanged();
@@ -188,7 +188,7 @@ public partial class UserView
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        if (dialog?.Data is not null && !dialog.Canceled)
         {
             await GetViewingUser();
             StateHasChanged();
@@ -216,10 +216,11 @@ public partial class UserView
         
         var updateParameters = new DialogParameters() { {"ServiceAccountId", _viewingUser.Id} };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var updateAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>(
-            "Update Service Account", updateParameters, dialogOptions).Result;
-        if (updateAccountDialog.Canceled)
+        var updateAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>("Update Service Account", updateParameters, dialogOptions).Result;
+        if (updateAccountDialog?.Data is null || updateAccountDialog.Canceled)
+        {
             return;
+        }
 
         var createdPassword = (string?) updateAccountDialog.Data;
         if (string.IsNullOrWhiteSpace(createdPassword))
@@ -252,8 +253,10 @@ public partial class UserView
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var newEmailPrompt = await DialogService.Show<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions).Result;
-        if (newEmailPrompt.Canceled || string.IsNullOrWhiteSpace((string?)newEmailPrompt.Data))
+        if (string.IsNullOrWhiteSpace((string?)newEmailPrompt?.Data) || newEmailPrompt.Canceled)
+        {
             return;
+        }
 
         var newEmailAddress = (string)newEmailPrompt.Data;
         _processingEmailChange = true;

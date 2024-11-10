@@ -137,7 +137,7 @@ public partial class MainLayout
             
             matchingTheme.FriendlyName = preferenceTheme.ThemeName;
             matchingTheme.Description = preferenceTheme.ThemeDescription;
-            matchingTheme.Theme.Palette = new PaletteDark()
+            matchingTheme.Theme.PaletteDark = new PaletteDark()
             {
                 Primary = preferenceTheme.ColorPrimary,
                 Secondary = preferenceTheme.ColorSecondary,
@@ -145,7 +145,7 @@ public partial class MainLayout
                 Background = preferenceTheme.ColorBackground,
                 Success = preferenceTheme.ColorSuccess,
                 Error = preferenceTheme.ColorError,
-                BackgroundGrey = preferenceTheme.ColorNavBar,
+                BackgroundGray = preferenceTheme.ColorNavBar,
                 TextDisabled = "rgba(255,255,255, 0.26)",
                 Surface = preferenceTheme.ColorBackground,
                 DrawerBackground = preferenceTheme.ColorNavBar,

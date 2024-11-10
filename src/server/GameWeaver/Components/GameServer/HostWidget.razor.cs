@@ -22,7 +22,7 @@ public partial class HostWidget : ComponentBase
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true
+        ShowLegend = false
     };
     private readonly ChartOptions _chartOptionsRam = new()
     {
@@ -30,7 +30,7 @@ public partial class HostWidget : ComponentBase
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true
+        ShowLegend = false
     };
     private readonly ChartOptions _chartOptionsNetwork = new()
     {
@@ -38,11 +38,11 @@ public partial class HostWidget : ComponentBase
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true,
+        ShowLegend = false
     };
 
     private List<HostCheckInFull> _checkins = [];
-    private Palette _currentPalette = new();
+    private PaletteDark _currentPalette = new();
     private Color StatusColor { get; set; } = Color.Success;
     private bool IsOffline { get; set; }
     private DateTime WentOffline { get; set; }
@@ -141,12 +141,12 @@ public partial class HostWidget : ComponentBase
 
     private void UpdateThemeColors()
     {
-        if (_currentPalette == ParentLayout._selectedTheme.Palette)
+        if (_currentPalette == ParentLayout._selectedTheme.PaletteDark)
         {
             return;
         }
         
-        _currentPalette = ParentLayout._selectedTheme.Palette;
+        _currentPalette = ParentLayout._selectedTheme.PaletteDark;
         
         _chartOptionsCpu.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Primary.Value];
         _chartOptionsRam.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Secondary.Value];

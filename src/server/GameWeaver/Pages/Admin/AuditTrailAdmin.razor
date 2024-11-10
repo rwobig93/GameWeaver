@@ -8,8 +8,7 @@
 
 
 <MudItem xs="16" sm="20" md="28" lg="36">
-    <MudTable ServerData="@(new Func<TableState, Task<TableData<AuditTrailSlim>>>(ServerReload))"
-               Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table">
+    <MudTable ServerData="ServerReload" Dense="@_dense" Hover="@_hover" Bordered="@_bordered" Striped="@_striped" @ref="_table">
         <ToolBarContent>
             <MudContainer Class="d-flex flex-row gap-3">
                 <MudText Typo="Typo.h6" Class="pr-2 my-2">Audit Trails</MudText>  

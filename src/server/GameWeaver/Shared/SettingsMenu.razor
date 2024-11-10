@@ -18,7 +18,7 @@
         <MudPaper Elevation="5" Class="d-flex mb-4">
             <MudExpansionPanel Text="Themes" Class="d-flex flex-column pa-1">
                 <MudItem>
-                    <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
+                    <MudChip T="string" Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
                 </MudItem>
                 <MudItem Class="d-flex flex-column align-center">
                     @foreach (var theme in AvailableThemes)
@@ -37,13 +37,13 @@
     <MudPaper Elevation="5" Class="d-flex mb-4">
         <MudExpansionPanel Text="Client Information" Class="d-flex flex-column pa-1 my-1">
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
-                <MudChip Color="Color.Primary">Application Version</MudChip>
+                <MudChip T="string" Color="Color.Primary">Application Version</MudChip>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                 <MudText Typo="Typo.caption" Class="pl-2">@($"v{ServerState.ApplicationVersion.ToString()}")</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
-                <MudChip Color="Color.Tertiary">Current Timezone</MudChip>
+                <MudChip T="string" Color="Color.Tertiary">Current Timezone</MudChip>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                 <MudText Typo="Typo.caption" Class="pl-2">@_clientTimeZone</MudText>

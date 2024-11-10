@@ -809,7 +809,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     }
 
     
-    private async Task<TableData<FileStorageRecordSlim>> FileRecordReload(TableState state)
+    private async Task<TableData<FileStorageRecordSlim>> FileRecordReload(TableState state, CancellationToken token)
     {
         var foundFiles = await FileService.GetAllAsync();
         if (!foundFiles.Succeeded)

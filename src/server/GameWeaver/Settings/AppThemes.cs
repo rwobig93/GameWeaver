@@ -29,14 +29,15 @@ public static class AppThemes
         Icon = Icons.Material.Filled.DarkMode,
         Theme = new MudTheme()
         {
-            Palette = new PaletteDark()
+            
+            PaletteDark = new PaletteDark()
             {
                 Primary = "#BB86FC",
                 Secondary = "#03DAC6",
                 Success = "#007E33",
                 Black = "#27272f",
                 Background = "#32333d",
-                BackgroundGrey = "#27272f",
+                BackgroundGray = "#27272f",
                 TextDisabled = "rgba(255,255,255, 0.26)",
                 Surface = "#202020",
                 DrawerBackground = "#27272f",
@@ -63,14 +64,14 @@ public static class AppThemes
         Icon = Icons.Material.Outlined.Lightbulb,
         Theme = new MudTheme()
         {
-            Palette = new PaletteDark()
+            PaletteDark = new PaletteDark()
             {
                 Primary = "#BB86FC",
                 Secondary = "#03DAC6",
                 Success = "#007E33",
                 Black = "#202324",
                 Background = "#2A2D2F",
-                BackgroundGrey = "#202324",
+                BackgroundGray = "#202324",
                 TextDisabled = "rgba(255,255,255, 0.26)",
                 Surface = "#202020",
                 DrawerBackground = "#181A1B",
@@ -97,14 +98,14 @@ public static class AppThemes
         Icon = Icons.Material.Filled.Code,
         Theme = new MudTheme()
         {
-            Palette = new PaletteDark()
+            PaletteDark = new PaletteDark()
             {
                 Primary = "#00bf00",
                 Secondary = "#800080",
                 Success = "#800080",
                 Black = "#191919",
                 Background = "#000000",
-                BackgroundGrey = "#000000",
+                BackgroundGray = "#000000",
                 TextDisabled = "rgba(255,255,255, 0.26)",
                 Surface = "#000000",
                 DrawerBackground = "#000000",
@@ -131,11 +132,11 @@ public static class AppThemes
         Icon = Icons.Material.Filled.WbSunny,
         Theme = new MudTheme()
         {
-            Palette = new PaletteLight()
+            PaletteDark = new PaletteDark()
             {
                 Primary = "#1E88E5",
                 AppbarBackground = "#1E88E5",
-                Background = Colors.Grey.Lighten5,
+                Background = Colors.Gray.Lighten5,
                 DrawerBackground = "#FFF",
                 DrawerText = "rgba(0,0,0, 0.7)",
                 Success = "#007E33"

@@ -91,7 +91,7 @@ public partial class GameServers : ComponentBase
         
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var dialog = await DialogService.Show<GameServerCreateDialog>("Create Gameserver", new DialogParameters(), dialogOptions).Result;
-        if (dialog.Canceled)
+        if (dialog?.Data is null || dialog.Canceled)
         {
             return;
         }

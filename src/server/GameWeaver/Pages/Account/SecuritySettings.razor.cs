@@ -394,8 +394,10 @@ public partial class SecuritySettings
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var confirmation = await DialogService.Show<ConfirmationDialog>("Confirm Deletion", dialogParameters, dialogOptions).Result;
-        if (confirmation.Canceled)
+        if (confirmation?.Data is null || confirmation.Canceled)
+        {
             return;
+        }
 
         var messages = new List<string>();
         

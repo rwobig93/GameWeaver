@@ -42,7 +42,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private List<GameServerSlim> _runningGameservers = [];
     private List<HostCheckInFull> _checkins = [];
     private readonly HostPortStats _hostPortStats = new();
-    private Palette _currentPalette = new();
+    private PaletteDark _currentPalette = new();
     private double[] _cpuData = [0, 0];
     private double[] _ramData = [0, 0];
     private readonly List<ChartSeries> _netInShort = [];
@@ -58,7 +58,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true
+        ShowLegend = false
     };
     private readonly ChartOptions _chartOptionsCpuLong = new()
     {
@@ -68,7 +68,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.Straight,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true
+        ShowLegend = false
     };
     private readonly ChartOptions _chartOptionsRam = new()
     {
@@ -76,7 +76,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true
+        ShowLegend = false
     };
     private readonly ChartOptions _chartOptionsRamLong = new()
     {
@@ -86,7 +86,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.Straight,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true
+        ShowLegend = false
     };
     private readonly ChartOptions _chartOptionsNetwork = new()
     {
@@ -94,7 +94,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true,
+        ShowLegend = false
     };
     private readonly ChartOptions _chartOptionsNetworkLong = new()
     {
@@ -102,7 +102,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        DisableLegend = true,
+        ShowLegend = false
     };
     private readonly List<string> _resourceHistoryChoices =
     [
@@ -274,7 +274,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialogResult = await DialogService.Show<ChangeOwnershipDialog>("Transfer Host Ownership", dialogParameters, dialogOptions).Result;
-        if (dialogResult.Canceled)
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }
@@ -316,7 +316,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialogResult = await DialogService.Show<ValuePromptDialog>("Change Allowed Host Ports", dialogParameters, dialogOptions).Result;
-        if (dialogResult.Canceled)
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }
@@ -349,8 +349,8 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<ConfirmationDialog>("Delete Host", dialogParameters, dialogOptions).Result;
-        if (dialog.Canceled)
+        var dialogResult = await DialogService.Show<ConfirmationDialog>("Delete Host", dialogParameters, dialogOptions).Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }
@@ -548,12 +548,12 @@ public partial class HostView : ComponentBase, IAsyncDisposable
 
     private void UpdateThemeColors()
     {
-        if (_currentPalette == ParentLayout._selectedTheme.Palette)
+        if (_currentPalette == ParentLayout._selectedTheme.PaletteDark)
         {
             return;
         }
         
-        _currentPalette = ParentLayout._selectedTheme.Palette;
+        _currentPalette = ParentLayout._selectedTheme.PaletteDark;
         
         _chartOptionsCpu.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Primary.Value];
         _chartOptionsCpuLong.ChartPalette = [_currentPalette.Primary.Value, _currentPalette.Surface.Value];

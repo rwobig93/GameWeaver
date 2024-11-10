@@ -9,7 +9,6 @@ using Application.Responses.v1.Identity;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Domain.Enums.Lifecycle;
-using Infrastructure.Services.Lifecycle;
 
 namespace GameWeaver.Components.GameServer;
 
@@ -129,7 +128,7 @@ public partial class GameServerCreateDialog : ComponentBase
         _gameProfiles = response.Data.ToList();
     }
 
-    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText)
+    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
         {
@@ -143,7 +142,7 @@ public partial class GameServerCreateDialog : ComponentBase
             x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
     }
 
-    private async Task<IEnumerable<GameSlim>> FilterGames(string filterText)
+    private async Task<IEnumerable<GameSlim>> FilterGames(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
         {
@@ -160,7 +159,7 @@ public partial class GameServerCreateDialog : ComponentBase
             x.SteamToolId.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
     }
 
-    private async Task<IEnumerable<HostSlim>> FilterHosts(string filterText)
+    private async Task<IEnumerable<HostSlim>> FilterHosts(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
         {
@@ -176,7 +175,7 @@ public partial class GameServerCreateDialog : ComponentBase
             x.Description.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
     }
 
-    private async Task<IEnumerable<GameProfileSlim>> FilterProfiles(string filterText)
+    private async Task<IEnumerable<GameProfileSlim>> FilterProfiles(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
         {

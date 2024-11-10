@@ -226,6 +226,11 @@ public partial class Login
         };
 
         var mfaResponse = await DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions).Result;
+        if (mfaResponse is null)
+        {
+            return false;
+        }
+
         return !mfaResponse.Canceled;
     }
 
