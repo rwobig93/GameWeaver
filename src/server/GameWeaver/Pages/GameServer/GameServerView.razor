@@ -1,0 +1,39 @@
+﻿@using Application.Constants.Identity
+
+@attribute [Route(AppRouteConstants.GameServer.GameServers.View)]
+@attribute [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
+
+@if (!_validIdProvided)
+{
+    <IconWithMessageDisplay Icon="@Icons.Material.Filled.ErrorOutline" Text="Invalid Gameserver Id provided"/>
+}
+else
+{
+    <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
+        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
+                   OnClick="@GoBack">Go Back
+        </MudButton>
+        @if (_canEditGameServer)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
+                       OnClick="@ToggleEditMode">@_editButtonText
+            </MudButton>
+        }
+        @if (_editMode)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 
+                       OnClick="@Save">Save Changes
+            </MudButton>
+        }
+        @if (_canDeleteGameServer)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="@DeleteGameServer">Delete
+            </MudButton>
+        }
+    </MudPaper>
+    
+    <MudTabs ApplyEffectsToContainer="true" Centered="true">
+        
+    </MudTabs>
+}

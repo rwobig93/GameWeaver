@@ -211,4 +211,25 @@ public static class GameServerMappers
             Private = request.Private
         };
     }
+
+    public static GameServerUpdateRequest ToUpdate(this GameServerSlim gameServer)
+    {
+        return new GameServerUpdateRequest
+        {
+            Id = gameServer.Id,
+            OwnerId = gameServer.OwnerId,
+            ParentGameProfileId = gameServer.ParentGameProfileId,
+            ServerBuildVersion = gameServer.ServerBuildVersion,
+            ServerName = gameServer.ServerName,
+            Password = gameServer.Password,
+            PasswordRcon = gameServer.PasswordRcon,
+            PasswordAdmin = gameServer.PasswordAdmin,
+            PortGame = gameServer.PortGame,
+            PortPeer = gameServer.PortPeer,
+            PortQuery = gameServer.PortQuery,
+            PortRcon = gameServer.PortRcon,
+            Modded = gameServer.Modded,
+            Private = gameServer.Private
+        };
+    }
 }

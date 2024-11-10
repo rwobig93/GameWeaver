@@ -96,26 +96,26 @@ public class GameServerService : IGameServerService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<GameServerSlim>> GetByIdAsync(Guid id)
+    public async Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<GameServerSlim?>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<GameServerSlim?>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameServerSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByServerNameAsync(string serverName)
+    public async Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName)
     {
         var request = await _gameServerRepository.GetByServerNameAsync(serverName);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<GameServerSlim?>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<GameServerSlim?>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameServerSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id)
@@ -151,15 +151,15 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByOwnerIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByOwnerIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
     public async Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId)

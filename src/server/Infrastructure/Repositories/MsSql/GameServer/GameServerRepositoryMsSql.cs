@@ -178,15 +178,15 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<GameServerDb?>> GetByOwnerIdAsync(Guid id)
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByOwnerIdAsync(Guid id)
     {
-        DatabaseActionResult<GameServerDb?> actionReturn = new();
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
-            var foundGameServer = (await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByOwnerId, new {OwnerId = id})).FirstOrDefault();
-            actionReturn.Succeed(foundGameServer!);
+            var foundGameServers = await _database.LoadData<GameServerDb, dynamic>(
+                GameServersTableMsSql.GetByOwnerId, new {OwnerId = id});
+            actionReturn.Succeed(foundGameServers);
         }
         catch (Exception ex)
         {

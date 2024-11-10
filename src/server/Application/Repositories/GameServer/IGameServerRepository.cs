@@ -19,7 +19,7 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameProfileIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByHostIdAsync(Guid id);
-    Task<DatabaseActionResult<GameServerDb?>> GetByOwnerIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateAsync(GameServerCreate createObject);
     Task<DatabaseActionResult> UpdateAsync(GameServerUpdate updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId);
