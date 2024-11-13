@@ -483,8 +483,7 @@ public partial class SecuritySettings
 
             var provider = ExternalAuthHelpers.StringToProvider(OauthCode);
 
-            var addExternalAuthRequest =
-                await AccountService.SetExternalAuthProvider(CurrentUser.Id, provider, OauthState);
+            var addExternalAuthRequest = await AccountService.SetExternalAuthProvider(CurrentUser.Id, provider, OauthState);
             if (!addExternalAuthRequest.Succeeded)
             {
                 addExternalAuthRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

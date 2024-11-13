@@ -11,7 +11,7 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameServerView : ComponentBase
 {
-    [Parameter] public Guid GameId { get; set; } = Guid.Empty;
+    [Parameter] public Guid GameServerId { get; set; } = Guid.Empty;
 
     [Inject] public IGameServerService GameServerService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
@@ -59,7 +59,7 @@ public partial class GameServerView : ComponentBase
 
     private async Task GetViewingGameServer()
     {
-        var response = await GameServerService.GetByIdAsync(GameId);
+        var response = await GameServerService.GetByIdAsync(GameServerId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
