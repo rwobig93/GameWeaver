@@ -503,7 +503,7 @@
             <summary>
             Get a game server by id
             </summary>
-            <param name="id">Id of the game server</param>
+            <param name="id">ID of the game server</param>
             <param name="gameServerService"></param>
             <returns>Game server object</returns>
         </member>
@@ -519,7 +519,7 @@
             <summary>
             Get game servers by game id
             </summary>
-            <param name="id">Id of a game</param>
+            <param name="id">ID of a game</param>
             <param name="gameServerService"></param>
             <returns>List of game servers</returns>
         </member>
@@ -543,7 +543,7 @@
             <summary>
             Get game servers by the owner id
             </summary>
-            <param name="id">Id of the owner</param>
+            <param name="id">ID of the owner</param>
             <param name="gameServerService"></param>
             <returns>List of game servers</returns>
         </member>
@@ -554,7 +554,7 @@
             <param name="request">Required properties to create a game server</param>
             <param name="gameServerService"></param>
             <param name="currentUserService"></param>
-            <returns>Id of the created game server</returns>
+            <returns>ID of the created game server</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Update(Application.Requests.GameServer.GameServer.GameServerUpdateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
@@ -569,7 +569,7 @@
             <summary>
             Delete a game server
             </summary>
-            <param name="id">Id of the game server</param>
+            <param name="id">ID of the game server</param>
             <param name="gameServerService"></param>
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>

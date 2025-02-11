@@ -60,7 +60,7 @@ public static class GameServerEndpoints
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
             var result = await gameServerService.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!result!.Succeeded)
+            if (!result.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
             }
@@ -98,11 +98,11 @@ public static class GameServerEndpoints
     /// <summary>
     /// Get a game server by id
     /// </summary>
-    /// <param name="id">Id of the game server</param>
+    /// <param name="id">ID of the game server</param>
     /// <param name="gameServerService"></param>
     /// <returns>Game server object</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<GameServerSlim>> GetById([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<GameServerSlim?>> GetById([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
         {
@@ -121,7 +121,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>Game server object</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<GameServerSlim>> GetByServerName([FromQuery]string serverName, IGameServerService gameServerService)
+    private static async Task<IResult<GameServerSlim?>> GetByServerName([FromQuery]string serverName, IGameServerService gameServerService)
     {
         try
         {
@@ -136,7 +136,7 @@ public static class GameServerEndpoints
     /// <summary>
     /// Get game servers by game id
     /// </summary>
-    /// <param name="id">Id of a game</param>
+    /// <param name="id">ID of a game</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
@@ -193,7 +193,7 @@ public static class GameServerEndpoints
     /// <summary>
     /// Get game servers by the owner id
     /// </summary>
-    /// <param name="id">Id of the owner</param>
+    /// <param name="id">ID of the owner</param>
     /// <param name="gameServerService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
@@ -215,7 +215,7 @@ public static class GameServerEndpoints
     /// <param name="request">Required properties to create a game server</param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
-    /// <returns>Id of the created game server</returns>
+    /// <returns>ID of the created game server</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Create)]
     private static async Task<IResult<Guid>> Create([FromBody]GameServerCreateRequest request, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
@@ -254,7 +254,7 @@ public static class GameServerEndpoints
     /// <summary>
     /// Delete a game server
     /// </summary>
-    /// <param name="id">Id of the game server</param>
+    /// <param name="id">ID of the game server</param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
     /// <returns>Success or failure with context messages</returns>
@@ -291,7 +291,7 @@ public static class GameServerEndpoints
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
             var result = await gameServerService.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-            if (!result!.Succeeded)
+            if (!result.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
             }
