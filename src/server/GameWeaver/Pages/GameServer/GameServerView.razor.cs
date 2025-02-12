@@ -3,6 +3,8 @@ using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.GameServer;
+using Application.Models.GameServer.GameServerConfigResourceTreeItem;
+using Application.Models.GameServer.LocalResource;
 using Application.Services.GameServer;
 using Domain.Enums.GameServer;
 using Infrastructure.Services.GameServer;
@@ -20,6 +22,8 @@ public partial class GameServerView : ComponentBase
     private Guid _loggedInUserId = Guid.Empty;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameServerSlim _gameServer = new() { Id = Guid.Empty };
+    private List<LocalResourceSlim> _localResources = [];
+    private List<TreeItemData<GameServerConfigResourceTreeItem>> _localResourceTreeData = [];
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
 
@@ -36,6 +40,7 @@ public partial class GameServerView : ComponentBase
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingGameServer();
+                await GetGameServerResources();
                 StateHasChanged();
             }
         }
@@ -79,6 +84,42 @@ public partial class GameServerView : ComponentBase
         {
             _validIdProvided = false;
             StateHasChanged();
+        }
+    }
+
+    private async Task GetGameServerResources()
+    {
+        if (!_validIdProvided)
+        {
+            return;
+        }
+        
+        var response = await GameServerService.GetLocalResourcesForGameServerIdAsync(_gameServer.Id);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        _localResources = response.Data.ToList();
+        foreach (var resource in _localResources)
+        {
+            var resourceTreeItem = new TreeItemData<GameServerConfigResourceTreeItem>
+            {
+                Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.Anchor, Text = resource.Name,
+                Visible = true, Selected = false, Value = resource.ToTreeItem()
+            };
+
+            foreach (var config in resource.ConfigSets)
+            {
+                resourceTreeItem.Children.Add(new TreeItemData<GameServerConfigResourceTreeItem>()
+                {
+                    Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.DirectionsBoat, Text = resource.Name,
+                    Visible = true, Selected = false, Value = config.ToTreeItem()
+                });
+            }
+            
+            _localResourceTreeData.Add(resourceTreeItem);
         }
     }
 

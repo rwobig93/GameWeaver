@@ -1,4 +1,5 @@
 using Application.Models.GameServer.ConfigurationItem;
+using Application.Models.GameServer.GameServerConfigResourceTreeItem;
 using Application.Models.GameServer.LocalResource;
 using Application.Requests.GameServer.LocalResource;
 using Domain.Contracts;
@@ -196,6 +197,15 @@ public static class LocalResourceMappers
             ContentType = resource.ContentType,
             Args = resource.Args,
             LoadExisting = resource.LoadExisting
+        };
+    }
+
+    public static GameServerConfigResourceTreeItem ToTreeItem(this LocalResourceSlim resource)
+    {
+        return new GameServerConfigResourceTreeItem
+        {
+            Id = resource.Id,
+            Name = resource.Name
         };
     }
 }

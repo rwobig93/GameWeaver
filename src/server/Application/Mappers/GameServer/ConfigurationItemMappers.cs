@@ -1,4 +1,5 @@
 using Application.Models.GameServer.ConfigurationItem;
+using Application.Models.GameServer.GameServerConfigResourceTreeItem;
 using Application.Models.GameServer.LocalResource;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
@@ -115,6 +116,22 @@ public static class ConfigurationItemMappers
             Key = configItem.Key,
             Value = configItem.Value,
             FriendlyName = configItem.FriendlyName
+        };
+    }
+
+    public static GameServerConfigResourceTreeItem ToTreeItem(this ConfigurationItemSlim configItem)
+    {
+        return new GameServerConfigResourceTreeItem
+        {
+            Id = configItem.Id,
+            IsConfig = true,
+            Name = configItem.FriendlyName,
+            DuplicateKey = configItem.DuplicateKey,
+            Ignore = configItem.Ignore,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value
         };
     }
 }

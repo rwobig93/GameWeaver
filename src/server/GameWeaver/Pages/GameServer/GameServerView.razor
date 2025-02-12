@@ -1,4 +1,5 @@
 ﻿@using Application.Constants.Identity
+@using Application.Models.GameServer.LocalResource
 
 @attribute [Route(AppRouteConstants.GameServer.GameServers.View)]
 @attribute [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
@@ -48,7 +49,23 @@ else
             
         </MudTabPanel>
         <MudTabPanel Text="Config">
-            
+            <MudPaper Width="98%" Elevation="5">
+                <MudTreeView Items="@_localResourceTreeData" Hover="true">
+                    <ItemTemplate Context="item">
+                        <MudTreeViewItem Items="@item.Children" Icon="@item.Icon">
+                            <BodyContent>
+                                <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                    <MudText Style="justify-self: start;">@(item.Value?.Name)</MudText>
+                                    <div style="justify-self: end;">
+                                        <MudTextField T="string" bind-Text="@item.Value?.Value" />
+                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit" />
+                                    </div>
+                                </div>
+                            </BodyContent>
+                        </MudTreeViewItem>
+                    </ItemTemplate>
+                </MudTreeView>
+            </MudPaper>
         </MudTabPanel>
         <MudTabPanel Text="Advanced">
             
