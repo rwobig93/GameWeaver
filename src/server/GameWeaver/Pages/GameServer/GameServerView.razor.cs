@@ -6,8 +6,6 @@ using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.GameServerConfigResourceTreeItem;
 using Application.Models.GameServer.LocalResource;
 using Application.Services.GameServer;
-using Domain.Enums.GameServer;
-using Infrastructure.Services.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -26,6 +24,12 @@ public partial class GameServerView : ComponentBase
     private List<TreeItemData<GameServerConfigResourceTreeItem>> _localResourceTreeData = [];
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
+    private string _searchText = string.Empty;
+    private readonly List<MudTreeView<GameServerConfigResourceTreeItem>> _resourceTreeViews = [];
+    public MudTreeView<GameServerConfigResourceTreeItem> ResourceTreeView
+    {
+        set => _resourceTreeViews.Add(value);
+    }
 
     private bool _canEditGameServer;
     private bool _canDeleteGameServer;
@@ -193,5 +197,34 @@ public partial class GameServerView : ComponentBase
         
         Snackbar.Add("Gameserver successfully deleted!", Severity.Success);
         GoBack();
+    }
+
+    private async Task SearchChanged()
+    {
+        await Task.CompletedTask;
+        // TODO: Filter configuration results across all files
+        // foreach (var treeView in _resourceTreeViews)
+        // {
+        //     await treeView.FilterAsync();
+        // }
+    }
+
+    private Task<bool> ConfigurationFilter(TreeItemData<GameServerConfigResourceTreeItem> item)
+    {
+        if (item.Value is null)
+        {
+            return Task.FromResult(false);
+        }
+        
+        if (string.IsNullOrEmpty(item.Value?.Name) && string.IsNullOrEmpty(item.Value?.Value))
+        {
+            return Task.FromResult(false);
+        }
+
+        return Task.FromResult(
+            item.Value!.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+            item.Value!.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+            item.Value!.Value.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+            );
     }
 }
