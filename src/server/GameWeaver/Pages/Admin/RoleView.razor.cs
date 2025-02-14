@@ -9,7 +9,7 @@ namespace GameWeaver.Pages.Admin;
 public partial class RoleView
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;

@@ -7,7 +7,7 @@ namespace GameWeaver.Components.Identity;
 
 public partial class ForgotPasswordDialog
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;

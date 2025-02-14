@@ -5,7 +5,7 @@ namespace GameWeaver.Components.GameServer;
 
 public partial class ChangeOwnershipDialog : ComponentBase
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Guid OwnerId { get; set; } = Guid.Empty;
     [Parameter] public string Icon { get; set; } = Icons.Material.Filled.PersonSearch;
     [Parameter] public Color IconColor { get; set; } = Color.Warning;

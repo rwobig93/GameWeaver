@@ -11,7 +11,7 @@ namespace GameWeaver.Components.Identity;
 
 public partial class ServiceAccountAdminDialog
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; init; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; init; } = null!;
     [Parameter] public Guid ServiceAccountId { get; set; } = Guid.Empty;
     
     [Inject] private IAppUserService UserService { get; init; } = null!;

@@ -16,7 +16,8 @@ public class HostService : IHostService
         _dateTimeService = dateTimeService;
     }
 
-    private static readonly IHardwareInfo HardwareInfo = new HardwareInfo(useAsteriskInWMI: false);
+    // TODO: Add timespan for hardware enumeration timeout, is infinity by default
+    private static readonly HardwareInfo HardwareInfo = new();
 
     public void PollHostDetail()
     {

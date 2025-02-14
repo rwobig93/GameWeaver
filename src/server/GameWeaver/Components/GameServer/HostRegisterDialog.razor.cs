@@ -13,7 +13,7 @@ namespace GameWeaver.Components.GameServer;
 
 public partial class HostRegisterDialog : ComponentBase
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string Icon { get; set; } = Icons.Material.Filled.PowerSettingsNew;
     [Parameter] public Color IconColor { get; set; } = Color.Success;
     [Parameter] public Color TextColor { get; set; } = Color.Default;

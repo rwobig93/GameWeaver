@@ -7,7 +7,7 @@ public partial class AuditTrailView
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
 
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private IAuditTrailService AuditService { get; init; } = null!;
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
