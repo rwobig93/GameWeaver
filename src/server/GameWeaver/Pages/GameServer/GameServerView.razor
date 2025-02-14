@@ -57,7 +57,7 @@ else
                     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                         <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Value?.Name</MudText>
                     </MudItem>
-                    <MudTreeView Items="@localResource.Children" Hover="true" @ref="ResourceTreeView">
+                    <MudTreeView Items="@localResource.Children" Hover="true" @ref="ResourceTreeView" FilterFunc="ConfigurationFilter">
                         <ItemTemplate Context="item">
                             <MudTreeViewItem Items="@item.Children" Icon="@item.Icon">
                                 <BodyContent>

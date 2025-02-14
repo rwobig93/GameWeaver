@@ -80,6 +80,7 @@
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
                 <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5 pb-1">
+                    @* TODO: Don't show port configuration by default since we auto-select, checkbox to show for 'advanced/manual' configuration *@
                     <MudAlert ContentAlignment="HorizontalAlignment.Left" Severity="Severity.Info">
                         If ports are 0 or unchanged they will be auto-selected from the available pool
                     </MudAlert>

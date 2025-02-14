@@ -201,12 +201,10 @@ public partial class GameServerView : ComponentBase
 
     private async Task SearchChanged()
     {
-        await Task.CompletedTask;
-        // TODO: Filter configuration results across all files
-        // foreach (var treeView in _resourceTreeViews)
-        // {
-        //     await treeView.FilterAsync();
-        // }
+        foreach (var treeView in _resourceTreeViews)
+        {
+            await treeView.FilterAsync();
+        }
     }
 
     private Task<bool> ConfigurationFilter(TreeItemData<GameServerConfigResourceTreeItem> item)
