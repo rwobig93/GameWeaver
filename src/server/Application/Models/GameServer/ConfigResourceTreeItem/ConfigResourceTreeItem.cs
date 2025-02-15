@@ -1,6 +1,6 @@
-namespace Application.Models.GameServer.GameServerConfigResourceTreeItem;
+namespace Application.Models.GameServer.ConfigResourceTreeItem;
 
-public class GameServerConfigResourceTreeItem
+public class ConfigResourceTreeItem
 {
     public Guid Id { get; set; }
     public bool IsConfig { get; set; }
@@ -11,4 +11,5 @@ public class GameServerConfigResourceTreeItem
     public string Category { get; set; } = "";
     public string Key { get; set; } = "";
     public string Value { get; set; } = "";
+    public string OriginalValue { get; set; } = "";
 }

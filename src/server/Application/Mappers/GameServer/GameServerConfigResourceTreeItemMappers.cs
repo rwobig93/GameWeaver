@@ -1,12 +1,12 @@
+using Application.Models.GameServer.ConfigResourceTreeItem;
 using Application.Models.GameServer.ConfigurationItem;
-using Application.Models.GameServer.GameServerConfigResourceTreeItem;
 using Application.Models.GameServer.LocalResource;
 
 namespace Application.Mappers.GameServer;
 
 public static class GameServerConfigResourceTreeItemMappers
 {
-    public static LocalResourceSlim ToLocalResource(this GameServerConfigResourceTreeItem item)
+    public static LocalResourceSlim ToLocalResource(this ConfigResourceTreeItem item)
     {
         return new LocalResourceSlim
         {
@@ -15,7 +15,7 @@ public static class GameServerConfigResourceTreeItemMappers
         };
     }
 
-    public static ConfigurationItemSlim ToConfigurationItem(this GameServerConfigResourceTreeItem item)
+    public static ConfigurationItemSlim ToConfigurationItem(this ConfigResourceTreeItem item)
     {
         return new ConfigurationItemSlim
         {

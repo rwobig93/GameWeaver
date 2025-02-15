@@ -44,9 +44,6 @@ else
     </MudPaper>
     
     <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary">
-        <MudTabPanel Text="General">
-            
-        </MudTabPanel>
         <MudTabPanel Text="Config">
             <MudTextField T="string" @bind-Value="_searchText" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" TextChanged="@SearchChanged"
                           AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" Clearable="true"/>
@@ -63,6 +60,42 @@ else
                                 <BodyContent>
                                     <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
                                         <MudText Style="justify-self: start;">@(item.Value?.Name)</MudText>
+                                        <MudTextField T="string" bind-Value="@item.Value?.Value" />
+                                        <div style="justify-self: end;">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit"/>
+                                        </div>
+                                    </div>
+                                </BodyContent>
+                            </MudTreeViewItem>
+                        </ItemTemplate>
+                    </MudTreeView>
+                </MudPaper>
+            }
+        </MudTabPanel>
+        <MudTabPanel Text="Advanced">
+            <MudTextField T="string" @bind-Value="_searchText" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" TextChanged="@SearchChanged"
+                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" Clearable="true"/>
+            <MudDivider Vertical="false"/>
+            @foreach (var localResource in _localResourceTreeData)
+            {
+                <MudPaper Width="98%" Elevation="5" Class="pa-2">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Value?.Name</MudText>
+                        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" Color="Color.Success"/>
+                    </MudItem>
+                    <MudTreeView Items="@localResource.Children" Hover="true" @ref="ResourceTreeView" FilterFunc="ConfigurationFilter">
+                        <ItemTemplate Context="item">
+                            <MudTreeViewItem Items="@item.Children" Icon="@item.Icon">
+                                <BodyContent>
+                                    <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
+                                        <div Style="justify-self: start;">
+                                            <MudText>Friendly Name: </MudText>
+                                            <MudText>@(item.Value?.Name)</MudText>
+                                        </div>
+                                        <div>
+                                            <MudText>Key: </MudText>
+                                            <MudText>@(item.Value?.Key)</MudText>
+                                        </div>
                                         <div style="justify-self: end;">
                                             <MudTextField T="string" bind-Text="@item.Value?.Value"/>
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit"/>
@@ -75,11 +108,8 @@ else
                 </MudPaper>
             }
         </MudTabPanel>
-        <MudTabPanel Text="Advanced">
-            
-        </MudTabPanel>
         <MudTabPanel Text="Raw">
-
+            @* TODO: Insert code editor panel here *@
         </MudTabPanel>
     </MudTabs>
 }

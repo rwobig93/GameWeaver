@@ -2,8 +2,8 @@
 using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Models.GameServer.ConfigResourceTreeItem;
 using Application.Models.GameServer.GameServer;
-using Application.Models.GameServer.GameServerConfigResourceTreeItem;
 using Application.Models.GameServer.LocalResource;
 using Application.Services.GameServer;
 
@@ -21,12 +21,12 @@ public partial class GameServerView : ComponentBase
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameServerSlim _gameServer = new() { Id = Guid.Empty };
     private List<LocalResourceSlim> _localResources = [];
-    private List<TreeItemData<GameServerConfigResourceTreeItem>> _localResourceTreeData = [];
+    private List<TreeItemData<ConfigResourceTreeItem>> _localResourceTreeData = [];
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
     private string _searchText = string.Empty;
-    private readonly List<MudTreeView<GameServerConfigResourceTreeItem>> _resourceTreeViews = [];
-    public MudTreeView<GameServerConfigResourceTreeItem> ResourceTreeView
+    private readonly List<MudTreeView<ConfigResourceTreeItem>> _resourceTreeViews = [];
+    public MudTreeView<ConfigResourceTreeItem> ResourceTreeView
     {
         set => _resourceTreeViews.Add(value);
     }
@@ -108,17 +108,17 @@ public partial class GameServerView : ComponentBase
         _localResources = response.Data.ToList();
         foreach (var resource in _localResources)
         {
-            var resourceTreeItem = new TreeItemData<GameServerConfigResourceTreeItem>
+            var resourceTreeItem = new TreeItemData<ConfigResourceTreeItem>
             {
-                Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.Anchor, Text = resource.Name,
+                Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.InsertDriveFile, Text = resource.Name,
                 Visible = true, Selected = false, Value = resource.ToTreeItem()
             };
 
             foreach (var config in resource.ConfigSets)
             {
-                resourceTreeItem.Children.Add(new TreeItemData<GameServerConfigResourceTreeItem>()
+                resourceTreeItem.Children.Add(new TreeItemData<ConfigResourceTreeItem>()
                 {
-                    Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.DirectionsBoat, Text = resource.Name,
+                    Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.DriveFileRenameOutline, Text = config.FriendlyName,
                     Visible = true, Selected = false, Value = config.ToTreeItem()
                 });
             }
@@ -208,7 +208,7 @@ public partial class GameServerView : ComponentBase
         }
     }
 
-    private Task<bool> ConfigurationFilter(TreeItemData<GameServerConfigResourceTreeItem> item)
+    private Task<bool> ConfigurationFilter(TreeItemData<ConfigResourceTreeItem> item)
     {
         if (item.Value is null)
         {
