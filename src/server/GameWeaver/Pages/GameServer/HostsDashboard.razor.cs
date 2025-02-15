@@ -159,13 +159,14 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         }
         
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialog = await DialogService.Show<HostRegisterDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions).Result;
-        if (dialog?.Data is null || dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<HostRegisterDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }
 
-        var newRegistrationUrl = (string) dialog.Data;
+        var newRegistrationUrl = (string) dialogResult.Data;
         if (string.IsNullOrWhiteSpace(newRegistrationUrl))
         {
             Snackbar.Add("Failed to retrieve the new host registration, please try again or reach out to an administrator", Severity.Error);
@@ -180,7 +181,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             {"TextToDisplay", newRegistrationUrl},
             {"TextToCopy", newRegistrationUrl}
         };
-        await DialogService.Show<CopyTextDialog>("Copy New Host Registration", copyParameters, dialogOptions).Result;
+        await DialogService.ShowAsync<CopyTextDialog>("Copy New Host Registration", copyParameters, dialogOptions);
     }
     
     public async ValueTask DisposeAsync()

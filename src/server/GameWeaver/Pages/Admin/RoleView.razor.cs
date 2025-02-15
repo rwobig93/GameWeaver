@@ -136,8 +136,9 @@ public partial class RoleView
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions).Result;
-        if (dialog?.Data is not null && !dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -151,8 +152,9 @@ public partial class RoleView
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions).Result;
-        if (dialog?.Data is not null && !dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -179,8 +181,9 @@ public partial class RoleView
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<ConfirmationDialog>("Delete Role", dialogParameters, dialogOptions).Result;
-        if (dialog?.Data is null || dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Role", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }

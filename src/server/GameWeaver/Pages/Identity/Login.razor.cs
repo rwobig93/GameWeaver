@@ -138,11 +138,11 @@ public partial class Login
         }
     }
 
-    private void ForgotPassword()
+    private async Task ForgotPassword()
     {
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        DialogService.Show<ForgotPasswordDialog>("Forgot Password", dialogOptions);
+        await DialogService.ShowAsync<ForgotPasswordDialog>("Forgot Password", dialogOptions);
     }
 
     private bool IsRequiredInformationPresent()
@@ -225,13 +225,14 @@ public partial class Login
             {"MfaKey", foundUser.Data.TwoFactorKey}
         };
 
-        var mfaResponse = await DialogService.Show<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions).Result;
-        if (mfaResponse is null)
+        var mfaResponse = await DialogService.ShowAsync<MfaCodeValidationDialog>("MFA Token Validation", dialogParameters, dialogOptions);
+        var dialogResult = await mfaResponse.Result;
+        if (dialogResult?.Data is null)
         {
             return false;
         }
 
-        return !mfaResponse.Canceled;
+        return !dialogResult.Canceled;
     }
 
     private async Task InitiateExternalLogin(ExternalAuthProvider provider)

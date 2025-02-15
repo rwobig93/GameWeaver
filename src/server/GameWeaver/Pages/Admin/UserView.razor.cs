@@ -174,8 +174,9 @@ public partial class UserView
         var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions).Result;
-        if (dialog?.Data is not null && !dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingUser();
             StateHasChanged();
@@ -187,8 +188,9 @@ public partial class UserView
         var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions).Result;
-        if (dialog?.Data is not null && !dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingUser();
             StateHasChanged();
@@ -216,13 +218,14 @@ public partial class UserView
         
         var updateParameters = new DialogParameters() { {"ServiceAccountId", _viewingUser.Id} };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var updateAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>("Update Service Account", updateParameters, dialogOptions).Result;
-        if (updateAccountDialog?.Data is null || updateAccountDialog.Canceled)
+        var updateAccountDialog = await DialogService.ShowAsync<ServiceAccountAdminDialog>("Update Service Account", updateParameters, dialogOptions);
+        var dialogResult = await updateAccountDialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }
 
-        var createdPassword = (string?) updateAccountDialog.Data;
+        var createdPassword = (string?) dialogResult.Data;
         if (string.IsNullOrWhiteSpace(createdPassword))
         {
             StateHasChanged();
@@ -236,7 +239,7 @@ public partial class UserView
             {"TextToDisplay", new string('*', createdPassword.Length)},
             {"TextToCopy", createdPassword}
         };
-        await DialogService.Show<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions).Result;
+        await DialogService.ShowAsync<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions);
         await GetViewingUser();
         Snackbar.Add("Account successfully updated!", Severity.Success);
         StateHasChanged();
@@ -252,13 +255,14 @@ public partial class UserView
             {"FieldLabel", "New Email Address"}
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-        var newEmailPrompt = await DialogService.Show<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions).Result;
-        if (string.IsNullOrWhiteSpace((string?)newEmailPrompt?.Data) || newEmailPrompt.Canceled)
+        var newEmailPrompt = await DialogService.ShowAsync<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions);
+        var dialogResult = await newEmailPrompt.Result;
+        if (string.IsNullOrWhiteSpace((string?)dialogResult?.Data) || dialogResult.Canceled)
         {
             return;
         }
 
-        var newEmailAddress = (string)newEmailPrompt.Data;
+        var newEmailAddress = (string)dialogResult.Data;
         _processingEmailChange = true;
         StateHasChanged();
         var emailChangeRequest = await AccountService.InitiateEmailChange(_viewingUser.Id, newEmailAddress);

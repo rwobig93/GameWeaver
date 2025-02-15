@@ -90,13 +90,14 @@ public partial class GameServers : ComponentBase
         }
         
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialog = await DialogService.Show<GameServerCreateDialog>("Create Gameserver", new DialogParameters(), dialogOptions).Result;
-        if (dialog?.Data is null || dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<GameServerCreateDialog>("Create Gameserver", new DialogParameters(), dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }
 
-        var createdGameServerId = (Guid) dialog.Data;
+        var createdGameServerId = (Guid) dialogResult.Data;
         Snackbar.Add("Successfully created new gameserver!", Severity.Success);
         NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(createdGameServerId));
     }

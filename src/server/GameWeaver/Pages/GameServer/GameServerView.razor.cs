@@ -182,8 +182,9 @@ public partial class GameServerView : ComponentBase
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialogResponse = await DialogService.Show<ConfirmationDialog>("Delete Gameserver", dialogParameters, dialogOptions).Result;
-        if (dialogResponse?.Data is null || dialogResponse.Canceled)
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Gameserver", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }

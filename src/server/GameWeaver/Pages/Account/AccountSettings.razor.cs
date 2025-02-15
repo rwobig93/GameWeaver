@@ -71,13 +71,14 @@ public partial class AccountSettings
             {"FieldLabel", "New Email Address"}
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-        var newEmailPrompt = await DialogService.Show<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions).Result;
-        if (string.IsNullOrWhiteSpace((string?)newEmailPrompt?.Data) || newEmailPrompt.Canceled)
+        var newEmailPrompt = await DialogService.ShowAsync<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions);
+        var dialogResult = await newEmailPrompt.Result;
+        if (string.IsNullOrWhiteSpace((string?)dialogResult?.Data) || dialogResult.Canceled)
         {
             return;
         }
 
-        var newEmailAddress = (string)newEmailPrompt.Data;
+        var newEmailAddress = (string)dialogResult.Data;
         _processingEmailChange = true;
         StateHasChanged();
         var emailChangeRequest = await AccountService.InitiateEmailChange(CurrentUser.Id, newEmailAddress);
