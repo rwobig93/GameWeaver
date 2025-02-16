@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Scalar.AspNetCore;
 
 namespace Infrastructure;
 
@@ -127,17 +128,15 @@ public static class WebServerConfiguration
     {
         using var scope = app.Services.CreateAsyncScope();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
+        var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
 
-        app.UseSwagger();
-        app.UseSwaggerUI(options =>
+        app.MapOpenApi();
+        app.MapScalarApiReference("/api", options =>
         {
-            options.SwaggerEndpoint("/swagger/v1/swagger.json", $"{serverState.ApplicationName} v1");
-            options.RoutePrefix = "api";
-            options.InjectStylesheet("/css/swagger-dark.css");
-            options.DisplayRequestDuration();
-            options.EnableFilter();
-            // options.EnablePersistAuthorization();  // Had to disable, was causing cookie / cache corruption for the swagger service
-            options.EnableTryItOutByDefault();
+            options.Title = $"{appConfig.Value.ApplicationName} API";
+            options.Layout = ScalarLayout.Modern;
+            options.DarkMode = true;
+            options.WithPreferredScheme("Bearer");
         });
         
         app.MapControllers();
@@ -191,7 +190,7 @@ public static class WebServerConfiguration
         app.MapEndpointsNetwork();
     }
 
-    private static void AddScheduledJobs(this IHost app)
+    private static void AddScheduledJobs(this WebApplication app)
     {
         using var scope = app.Services.CreateAsyncScope();
         var hangfireJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();

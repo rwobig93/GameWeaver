@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
-using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
@@ -263,51 +262,8 @@ public static class DependencyInjection
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
 
+        services.AddOpenApi();
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(x =>
-        {
-            // Gather swagger XML generated documentation from every assembly
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                if (assembly.IsDynamic) continue;
-            
-                var xmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{assembly.GetName().Name}.xml");
-                if (File.Exists(xmlPath))
-                    x.IncludeXmlComments(xmlPath);
-            }
-            
-            x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                },
-                In = ParameterLocation.Header,
-                Description = "JSON Web Token Header Authorization Using Bearer Scheme",
-
-            });
-            x.AddSecurityRequirement(new OpenApiSecurityRequirement()
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
-            x.UseInlineDefinitionsForEnums();
-            x.SchemaFilter<EnumSchemaFilter>();
-        });
         
         services.AddApiVersioning(c =>
         {
