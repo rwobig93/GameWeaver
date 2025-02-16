@@ -3,8 +3,10 @@ using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigResourceTreeItem;
+using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
+using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
@@ -21,15 +23,10 @@ public partial class GameServerView : ComponentBase
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameServerSlim _gameServer = new() { Id = Guid.Empty };
     private List<LocalResourceSlim> _localResources = [];
-    private List<TreeItemData<ConfigResourceTreeItem>> _localResourceTreeData = [];
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
     private string _searchText = string.Empty;
-    private readonly List<MudTreeView<ConfigResourceTreeItem>> _resourceTreeViews = [];
-    public MudTreeView<ConfigResourceTreeItem> ResourceTreeView
-    {
-        set => _resourceTreeViews.Add(value);
-    }
+    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
 
     private bool _canEditGameServer;
     private bool _canDeleteGameServer;
@@ -106,25 +103,6 @@ public partial class GameServerView : ComponentBase
         }
         
         _localResources = response.Data.ToList();
-        foreach (var resource in _localResources)
-        {
-            var resourceTreeItem = new TreeItemData<ConfigResourceTreeItem>
-            {
-                Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.InsertDriveFile, Text = resource.Name,
-                Visible = true, Selected = false, Value = resource.ToTreeItem()
-            };
-
-            foreach (var config in resource.ConfigSets)
-            {
-                resourceTreeItem.Children.Add(new TreeItemData<ConfigResourceTreeItem>()
-                {
-                    Children = [], Expanded = false, Expandable = true, Icon = Icons.Material.Outlined.DriveFileRenameOutline, Text = config.FriendlyName,
-                    Visible = true, Selected = false, Value = config.ToTreeItem()
-                });
-            }
-            
-            _localResourceTreeData.Add(resourceTreeItem);
-        }
     }
 
     private async Task GetPermissions()
@@ -148,9 +126,30 @@ public partial class GameServerView : ComponentBase
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
+        foreach (var configItem in _updatedConfigItems)
+        {
+            var configResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(_loggedInUserId), _loggedInUserId);
+            if (configResponse.Succeeded) continue;
+            
+            configResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        if (_updatedConfigItems.Count > 0)
+        {
+            var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
+            if (!hostUpdateResponse.Succeeded)
+            {
+                hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+        }
         
         ToggleEditMode();
         await GetViewingGameServer();
+        await GetGameServerResources();
+        
         Snackbar.Add("Gameserver successfully updated!", Severity.Success);
         StateHasChanged();
     }
@@ -199,31 +198,25 @@ public partial class GameServerView : ComponentBase
         Snackbar.Add("Gameserver successfully deleted!", Severity.Success);
         GoBack();
     }
-
-    private async Task SearchChanged()
+    
+    private bool ConfigShouldBeShown(ConfigurationItemSlim item)
     {
-        foreach (var treeView in _resourceTreeViews)
-        {
-            await treeView.FilterAsync();
-        }
+        var shouldBeShown = item.FriendlyName.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                            item.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                            item.Value.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
+        
+        return shouldBeShown;
     }
 
-    private Task<bool> ConfigurationFilter(TreeItemData<ConfigResourceTreeItem> item)
+    private void ConfigUpdated(ConfigurationItemSlim item)
     {
-        if (item.Value is null)
+        var matchingConfigItem = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
+        if (matchingConfigItem is null)
         {
-            return Task.FromResult(false);
+            _updatedConfigItems.Add(item);
+            return;
         }
         
-        if (string.IsNullOrEmpty(item.Value?.Name) && string.IsNullOrEmpty(item.Value?.Value))
-        {
-            return Task.FromResult(false);
-        }
-
-        return Task.FromResult(
-            item.Value!.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-            item.Value!.Name.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-            item.Value!.Value.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
-            );
+        matchingConfigItem.Value = item.Value;
     }
-}
+}   

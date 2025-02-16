@@ -1,4 +1,5 @@
 ﻿@using Application.Constants.Identity
+@using Domain.Enums.GameServer
 
 @attribute [Route(AppRouteConstants.GameServer.GameServers.View)]
 @attribute [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
@@ -39,74 +40,50 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_gameServer.ServerName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            @* TODO: Implement a 'config waiting on server reboot' state in some form after config is updated *@
             <MudTextField @bind-Value="_gameServer.ServerState" Label="Current state" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
         </MudItem>
     </MudPaper>
     
-    <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary">
+    <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center">
         <MudTabPanel Text="Config">
-            <MudTextField T="string" @bind-Value="_searchText" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" TextChanged="@SearchChanged"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" Clearable="true"/>
-            <MudDivider Vertical="false"/>
-            @foreach (var localResource in _localResourceTreeData)
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" Immediate="true" @bind-Text="_searchText"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
+            </MudItem>
+            @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile))
             {
-                <MudPaper Width="98%" Elevation="5" Class="pa-2">
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
                     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Value?.Name</MudText>
+                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
                     </MudItem>
-                    <MudTreeView Items="@localResource.Children" Hover="true" @ref="ResourceTreeView" FilterFunc="ConfigurationFilter">
-                        <ItemTemplate Context="item">
-                            <MudTreeViewItem Items="@item.Children" Icon="@item.Icon">
-                                <BodyContent>
-                                    <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                        <MudText Style="justify-self: start;">@(item.Value?.Name)</MudText>
-                                        <MudTextField T="string" bind-Value="@item.Value?.Value" />
-                                        <div style="justify-self: end;">
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit"/>
-                                        </div>
-                                    </div>
-                                </BodyContent>
-                            </MudTreeViewItem>
-                        </ItemTemplate>
-                    </MudTreeView>
+                    @foreach (var configItem in localResource.ConfigSets)
+                    {
+                        @if (!ConfigShouldBeShown(configItem))
+                        {
+                            continue;
+                        }
+
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap">
+                            <MudText Color="Color.Primary">@configItem.FriendlyName</MudText>
+                            <MudSpacer />
+                            <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" TextChanged="@(() => ConfigUpdated(configItem))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error"/>
+                        </MudStack>
+                    }
+                </MudPaper>
+            }
+            @if (!_localResources.Any(x => x.Type == ResourceType.ConfigFile))
+            {   
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Configuration Files Found</MudText>
+                    </MudItem>
                 </MudPaper>
             }
         </MudTabPanel>
         <MudTabPanel Text="Advanced">
-            <MudTextField T="string" @bind-Value="_searchText" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" TextChanged="@SearchChanged"
-                          AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Immediate="true" Clearable="true"/>
-            <MudDivider Vertical="false"/>
-            @foreach (var localResource in _localResourceTreeData)
-            {
-                <MudPaper Width="98%" Elevation="5" Class="pa-2">
-                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Value?.Name</MudText>
-                        <MudIconButton Icon="@Icons.Material.Filled.Add" Size="Size.Medium" Color="Color.Success"/>
-                    </MudItem>
-                    <MudTreeView Items="@localResource.Children" Hover="true" @ref="ResourceTreeView" FilterFunc="ConfigurationFilter">
-                        <ItemTemplate Context="item">
-                            <MudTreeViewItem Items="@item.Children" Icon="@item.Icon">
-                                <BodyContent>
-                                    <div style="display: grid; grid-template-columns: 1fr auto; align-items: center; width: 100%">
-                                        <div Style="justify-self: start;">
-                                            <MudText>Friendly Name: </MudText>
-                                            <MudText>@(item.Value?.Name)</MudText>
-                                        </div>
-                                        <div>
-                                            <MudText>Key: </MudText>
-                                            <MudText>@(item.Value?.Key)</MudText>
-                                        </div>
-                                        <div style="justify-self: end;">
-                                            <MudTextField T="string" bind-Text="@item.Value?.Value"/>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Inherit"/>
-                                        </div>
-                                    </div>
-                                </BodyContent>
-                            </MudTreeViewItem>
-                        </ItemTemplate>
-                    </MudTreeView>
-                </MudPaper>
-            }
+            @* TODO: Insert Advanced configuration panel here *@
         </MudTabPanel>
         <MudTabPanel Text="Raw">
             @* TODO: Insert code editor panel here *@

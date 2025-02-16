@@ -135,4 +135,20 @@ public static class ConfigurationItemMappers
             OriginalValue = configItem.Value
         };
     }
+
+    public static ConfigurationItemUpdate ToUpdate(this ConfigurationItemSlim configItem, Guid requestUserId)
+    {
+        return new ConfigurationItemUpdate
+        {
+            ModifyingUserId = requestUserId,
+            Id = configItem.Id,
+            LocalResourceId = configItem.LocalResourceId,
+            DuplicateKey = configItem.DuplicateKey,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
+        };
+    }
 }
