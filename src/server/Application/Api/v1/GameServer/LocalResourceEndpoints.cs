@@ -128,6 +128,10 @@ public static class LocalResourceEndpoints
     /// </summary>
     /// <param name="id">Game server id</param>
     /// <param name="gameServerService"></param>
+    /// <remarks>
+    /// NOTE: Inherited resources and config items will have an empty ID, if intending to update a resource or config item new ones will need
+    /// to be created on the server profile rather than the parent or default game profile
+    /// </remarks>
     /// <returns>List of local resources</returns>
     [Authorize(PermissionConstants.GameServer.LocalResource.GetForGameServerId)]
     private static async Task<IResult<IEnumerable<LocalResourceSlim>>> GetForGameServerId([FromQuery]Guid id, IGameServerService gameServerService)

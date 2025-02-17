@@ -149,6 +149,10 @@ public static class ConfigItemEndpoints
     /// <param name="updateObject">Required properties to update a configuration item</param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
+    /// <remarks>
+    /// NOTE: Inherited resources and config items will have an empty ID, if intending to update a resource or config item new ones will need
+    /// to be created on the server profile rather than the parent or default game profile
+    /// </remarks>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.ConfigItem.Update)]
     private static async Task<IResult> Update([FromBody]ConfigurationItemUpdate updateObject, IGameServerService gameServerService,
