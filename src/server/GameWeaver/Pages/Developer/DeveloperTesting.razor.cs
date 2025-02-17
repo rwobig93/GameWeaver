@@ -542,7 +542,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 
                 if (matchingItem is not null)
                 {
-                    var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value, ModifyingUserId = _loggedInUser.Id};
+                    var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value};
                     var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate, _loggedInUser.Id);
                     if (!updateRequest.Succeeded)
                     {

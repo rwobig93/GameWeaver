@@ -17,7 +17,8 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<GameServerDb?>> GetByIdAsync(Guid id);
     Task<DatabaseActionResult<GameServerDb?>> GetByServerNameAsync(string serverName);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameIdAsync(Guid id);
-    Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameProfileIdAsync(Guid id);
+    Task<DatabaseActionResult<GameServerDb?>> GetByGameProfileIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByParentGameProfileIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByHostIdAsync(Guid id);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateAsync(GameServerCreate createObject);

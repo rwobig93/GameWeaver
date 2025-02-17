@@ -18,7 +18,7 @@ public interface IGameServerService
     Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id);
     Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName);
     Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id);
-    Task<IResult<IEnumerable<GameServerSlim>>> GetByGameProfileIdAsync(Guid id);
+    Task<IResult<GameServerSlim>> GetByGameProfileIdAsync(Guid id);
     Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id);
     Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id);
     Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId);

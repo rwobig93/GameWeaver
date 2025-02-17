@@ -142,19 +142,37 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameProfileIdAsync(Guid id)
+    public async Task<DatabaseActionResult<GameServerDb?>> GetByGameProfileIdAsync(Guid id)
+    {
+        DatabaseActionResult<GameServerDb?> actionReturn = new();
+
+        try
+        {
+            var foundGameServers = await _database.LoadData<GameServerDb, dynamic>(
+                GameServersTableMsSql.GetByGameProfileId, new {GameProfileId = id});
+            actionReturn.Succeed(foundGameServers.FirstOrDefault());
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameServersTableMsSql.GetByGameProfileId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByParentGameProfileIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
 
         try
         {
             var foundGameServers = await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetByGameProfileId, new {GameProfileId = id});
+                GameServersTableMsSql.GetByParentGameProfileId, new {ParentGameProfileId = id});
             actionReturn.Succeed(foundGameServers);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, GameServersTableMsSql.GetByGameProfileId.Path, ex.Message);
+            actionReturn.FailLog(_logger, GameServersTableMsSql.GetByParentGameProfileId.Path, ex.Message);
         }
 
         return actionReturn;

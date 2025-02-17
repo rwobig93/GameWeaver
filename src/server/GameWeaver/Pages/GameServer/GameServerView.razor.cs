@@ -26,7 +26,9 @@ public partial class GameServerView : ComponentBase
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
     private string _searchText = string.Empty;
+    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
+    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
 
     private bool _canEditGameServer;
     private bool _canDeleteGameServer;
@@ -127,12 +129,66 @@ public partial class GameServerView : ComponentBase
             return;
         }
 
+        foreach (var configItem in _createdConfigItems)
+        {
+            var createConfigResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
+            if (createConfigResponse.Succeeded) continue;
+            
+            createConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
         foreach (var configItem in _updatedConfigItems)
         {
-            var configResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(_loggedInUserId), _loggedInUserId);
-            if (configResponse.Succeeded) continue;
+            // Config item comes from inherited profile resource, create server profile resource for the config item
+            if (configItem.LocalResourceId == Guid.Empty)
+            {
+                var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
+                if (!createResourceResponse.Succeeded)
+                {
+                    createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return;
+                }
+                
+                configItem.LocalResourceId = createResourceResponse.Data;
+            }
             
-            configResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            var updateConfigResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(), _loggedInUserId);
+            if (updateConfigResponse.Succeeded) continue;
+            
+            updateConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        foreach (var configItem in _deletedConfigItems)
+        {
+            // Config item comes from inherited profile resource, create server profile resource for the config item to be ignored
+            if (configItem.LocalResourceId == Guid.Empty)
+            {
+                var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
+                if (!createResourceResponse.Succeeded)
+                {
+                    createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return;
+                }
+                
+                configItem.LocalResourceId = createResourceResponse.Data;
+                configItem.Ignore = true;
+                
+                var ignoreCreateResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
+                if (!ignoreCreateResponse.Succeeded)
+                {
+                    ignoreCreateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return;
+                }
+            }
+
+            var deleteConfigResponse = await GameServerService.DeleteConfigurationItemAsync(configItem.Id, _loggedInUserId);
+            if (deleteConfigResponse.Succeeded) continue;
+            
+            deleteConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
@@ -208,15 +264,76 @@ public partial class GameServerView : ComponentBase
         return shouldBeShown;
     }
 
+    private void ConfigAdd(LocalResourceSlim localResource)
+    {
+        // TODO: Use dialog for creation since config item key is not editable
+        
+        var newConfigItem = new ConfigurationItemSlim
+        {
+            Id = Guid.Empty,
+            LocalResourceId = localResource.Id,
+            DuplicateKey = false,
+            Ignore = false,
+            Path = string.Empty,
+            Category = string.Empty,
+            Key = string.Empty,
+            Value = "NewValue",
+            FriendlyName = "NewItem"
+        };
+        
+        _createdConfigItems.Add(newConfigItem);
+        localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
+    }
+    
     private void ConfigUpdated(ConfigurationItemSlim item)
     {
-        var matchingConfigItem = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
-        if (matchingConfigItem is null)
+        var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
+        if (matchingNewConfig is not null)
+        {
+            matchingNewConfig.Value = item.Value;
+            return;
+        }
+        
+        var matchingUpdateConfig = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
+        if (matchingUpdateConfig is null)
         {
             _updatedConfigItems.Add(item);
             return;
         }
         
-        matchingConfigItem.Value = item.Value;
+        matchingUpdateConfig.Value = item.Value;
+    }
+
+    private void ConfigDeleted(ConfigurationItemSlim item)
+    {
+        if (_createdConfigItems.Contains(item))
+        {
+            _createdConfigItems.Remove(item);
+            return;
+        }
+        
+        // Go through each resource config set and remove the targeted config item
+        foreach (var resource in _localResources)
+        {
+            // TODO: Only remove from resource if it is not a parent profile, add as an ignore if it is a parent profile
+            var matchingActiveConfig = resource.ConfigSets.FirstOrDefault(x => x.Id == item.Id);
+            if (matchingActiveConfig is null) continue;
+            
+            resource.ConfigSets = resource.ConfigSets.Where(x => x.Id != item.Id).ToList();
+        }
+        
+        // Remove this config item from updated if it was updated and is now being deleted
+        var matchingUpdateConfig = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
+        if (matchingUpdateConfig is not null)
+        {
+            _updatedConfigItems.Remove(item);
+        }
+        
+        // Add the config item to the update list to delete when saved
+        var matchingDeleteConfig = _deletedConfigItems.FirstOrDefault(x => x.Id == item.Id);
+        if (matchingDeleteConfig is null)
+        {
+            _deletedConfigItems.Add(item);
+        }
     }
 }   

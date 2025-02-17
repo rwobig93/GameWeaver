@@ -57,6 +57,10 @@ else
                     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                         <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
                     </MudItem>
+                    <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                               OnClick="@(() => ConfigAdd(localResource))" FullWidth="true" Disabled="@(!_editMode)">
+                        Add Config
+                    </MudButton>
                     @foreach (var configItem in localResource.ConfigSets)
                     {
                         @if (!ConfigShouldBeShown(configItem))
@@ -67,13 +71,14 @@ else
                         <MudStack Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap">
                             <MudText Color="Color.Primary">@configItem.FriendlyName</MudText>
                             <MudSpacer />
-                            <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" TextChanged="@(() => ConfigUpdated(configItem))" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error"/>
+                            <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" OnKeyDown="@(() => ConfigUpdated(configItem))" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
+                                           OnClick="@(() => ConfigDeleted(configItem))" />
                         </MudStack>
                     }
                 </MudPaper>
             }
-            @if (!_localResources.Any(x => x.Type == ResourceType.ConfigFile))
+            @if (_localResources.All(x => x.Type != ResourceType.ConfigFile))
             {   
                 <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
                     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">

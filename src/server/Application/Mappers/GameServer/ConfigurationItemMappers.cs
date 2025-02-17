@@ -136,11 +136,10 @@ public static class ConfigurationItemMappers
         };
     }
 
-    public static ConfigurationItemUpdate ToUpdate(this ConfigurationItemSlim configItem, Guid requestUserId)
+    public static ConfigurationItemUpdate ToUpdate(this ConfigurationItemSlim configItem)
     {
         return new ConfigurationItemUpdate
         {
-            ModifyingUserId = requestUserId,
             Id = configItem.Id,
             LocalResourceId = configItem.LocalResourceId,
             DuplicateKey = configItem.DuplicateKey,

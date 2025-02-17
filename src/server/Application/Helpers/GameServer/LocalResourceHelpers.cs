@@ -28,6 +28,7 @@ public static class LocalResourceHelpers
                 continue;
             }
 
+            matchingResource.Id = resource.Id;
             matchingResource.Startup = resource.Startup;
             matchingResource.StartupPriority = resource.StartupPriority;
             matchingResource.ContentType = resource.ContentType;
@@ -72,6 +73,7 @@ public static class LocalResourceHelpers
 
                 if (matchingConfig is not null)
                 {
+                    matchingConfig.Id = config.Id;
                     matchingConfig.Value = config.Value;
                     continue;
                 }

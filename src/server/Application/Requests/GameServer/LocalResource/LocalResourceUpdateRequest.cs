@@ -4,6 +4,7 @@ namespace Application.Requests.GameServer.LocalResource;
 
 public class LocalResourceUpdateRequest
 {
+    public Guid GameProfileId { get; set; }
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public string? PathWindows { get; set; }

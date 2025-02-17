@@ -182,6 +182,24 @@ public static class LocalResourceMappers
         };
     }
 
+    public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceUpdateRequest resource)
+    {
+        return new LocalResourceCreateRequest
+        {
+            GameProfileId = resource.GameProfileId,
+            Name = resource.Name ?? string.Empty,
+            PathWindows = resource.PathWindows ?? string.Empty,
+            PathLinux = resource.PathLinux ?? string.Empty,
+            PathMac = resource.PathMac ?? string.Empty,
+            Startup = resource.Startup ?? false,
+            StartupPriority = resource.StartupPriority ?? 0,
+            Type = resource.Type ?? ResourceType.ConfigFile,
+            ContentType = resource.ContentType ?? ContentType.Ignore,
+            Args = resource.Args ?? string.Empty,
+            LoadExisting = resource.LoadExisting ?? false
+        };
+    }
+
     public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceSlim resource)
     {
         return new LocalResourceCreateRequest

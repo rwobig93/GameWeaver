@@ -129,15 +129,15 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameProfileIdAsync(Guid id)
+    public async Task<IResult<GameServerSlim>> GetByGameProfileIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByGameProfileIdAsync(id);
         if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
+            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
+        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id)
@@ -414,17 +414,14 @@ public class GameServerService : IGameServerService
             });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        // Delete the assigned game profile if the only assignment is this game server
-        if (profileServers.Result.ToList().Count == 1)
+        
+        var profileDeleteRequest = await DeleteGameProfileAsync(foundServer.Result.GameProfileId, requestUserId);
+        if (!profileDeleteRequest.Succeeded)
         {
-            var profileDeleteRequest = await DeleteGameProfileAsync(foundServer.Result.GameProfileId, requestUserId);
-            if (!profileDeleteRequest.Succeeded)
-            {
-                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
-                    "Failed to delete server profile before game server deletion", new Dictionary<string, string> {{"Error", profileDeleteRequest.Messages.ToString() ?? ""}
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
+                "Failed to delete server profile before game server deletion", new Dictionary<string, string> {{"Error", profileDeleteRequest.Messages.ToString() ?? ""}
                 });
-                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
-            }
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
         var updateStatusRequest = await _gameServerRepository.UpdateAsync(new GameServerUpdate
@@ -651,7 +648,7 @@ public class GameServerService : IGameServerService
         {
             return await Result.FailAsync(ErrorMessageConstants.ConfigItems.NotFound);
         }
-
+        
         var configUpdate = await _gameServerRepository.UpdateConfigurationItemAsync(updateObject);
         if (!configUpdate.Succeeded)
         {
@@ -858,6 +855,18 @@ public class GameServerService : IGameServerService
                 finalResourceList.MergeResources(convertedResources);
             }
         }
+        
+        // Set resource id's to empty so any resource or config changes will require a newly created resource as an override on the server profile
+        foreach (var resource in finalResourceList)
+        {
+            resource.Id = Guid.Empty;
+            resource.GameProfileId = gameServerRequest.Result.GameProfileId;
+
+            foreach (var configSet in resource.ConfigSets)
+            {
+                configSet.LocalResourceId = Guid.Empty;
+            }
+        }
 
         var serverProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(gameServerRequest.Result.GameProfileId);
         if (serverProfileResourcesRequest.Result is not null)
@@ -922,6 +931,11 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdateRequest request, Guid requestUserId)
     {
+        if (request.Id == Guid.Empty)
+        {
+            return await CreateLocalResourceAsync(request.ToCreateRequest(), requestUserId);
+        }
+        
         var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.Id);
         if (foundResource.Result is null)
         {
@@ -933,7 +947,7 @@ public class GameServerService : IGameServerService
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
         }
-
+        
         var profileCurrentResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(foundProfile.Result.Id);
         profileCurrentResources.Result ??= new List<LocalResourceDb>();
         
@@ -980,7 +994,7 @@ public class GameServerService : IGameServerService
         {
             return await Result.FailAsync(ErrorMessageConstants.LocalResources.NotFound);
         }
-
+        
         var resourceDelete = await _gameServerRepository.DeleteLocalResourceAsync(id);
         if (!resourceDelete.Succeeded)
         {
@@ -1338,11 +1352,14 @@ public class GameServerService : IGameServerService
         }
 
         // Don't allow deletion if assigned to multiple game servers
-        var assignedGameServers = await _gameServerRepository.GetByGameProfileIdAsync(foundProfile.Result.Id);
-        if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Count() > 1)
+        var assignedGameServer = await _gameServerRepository.GetByGameProfileIdAsync(foundProfile.Result.Id);
+        if (assignedGameServer is {Succeeded: true, Result: not null})
         {
-            List<string> errorMessages = [ErrorMessageConstants.GameProfiles.AssignedGameServers];
-            errorMessages.AddRange((assignedGameServers.Result ?? Array.Empty<GameServerDb>()).ToList().Select(assignment => $"Assigned GameServer: [id]{assignment.Id} [name]{assignment.ServerName}"));
+            List<string> errorMessages =
+            [
+                ErrorMessageConstants.GameProfiles.AssignedGameServers,
+                $"Assigned GameServer: [id]{assignedGameServer.Result.Id} [name]{assignedGameServer.Result.ServerName}"
+            ];
             return await Result.FailAsync(errorMessages);
         }
 

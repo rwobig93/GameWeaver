@@ -128,12 +128,11 @@ public static class WebServerConfiguration
     {
         using var scope = app.Services.CreateAsyncScope();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
-        var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
 
         app.MapOpenApi();
         app.MapScalarApiReference("/api", options =>
         {
-            options.Title = $"{appConfig.Value.ApplicationName} API";
+            options.Title = $"{serverState.ApplicationName} API";
             options.Layout = ScalarLayout.Modern;
             options.DarkMode = true;
             options.WithPreferredScheme("Bearer");

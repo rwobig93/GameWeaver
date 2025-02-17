@@ -159,7 +159,7 @@ public static class GameServerEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameProfileId([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<GameServerSlim?>> GetByGameProfileId([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
         {
@@ -167,7 +167,7 @@ public static class GameServerEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
+            return await Result<GameServerSlim?>.FailAsync(ex.Message);
         }
     }
     
