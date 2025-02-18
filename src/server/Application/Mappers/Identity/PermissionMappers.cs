@@ -159,7 +159,7 @@ public static class PermissionMappers
             RoleId = GuidHelpers.GetMax(),
             UserId = GuidHelpers.GetMax(),
             ClaimType = ClaimConstants.Permission,
-            ClaimValue = PermissionHelpers.GetClaimValueFromServiceAccount(serviceAccount.Id, DynamicPermissionGroup.ServiceAccounts, permissionLevel),
+            ClaimValue = PermissionConstants.Identity.ServiceAccounts.Dynamic(serviceAccount.Id, permissionLevel),
             Group = DynamicPermissionGroup.ServiceAccounts.ToString(),
             Name = serviceAccount.Username,
             Access = permissionLevel.ToString(),

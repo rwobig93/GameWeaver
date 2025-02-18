@@ -18,11 +18,6 @@ public static class PermissionHelpers
         return $"Permissions.{permissionGroup}.{permissionName}.{permissionAccess}";
     }
 
-    public static string GetClaimValueFromServiceAccount(Guid accountId, DynamicPermissionGroup permissionGroup, DynamicPermissionLevel permissionLevel)
-    {
-        return $"Dynamic.{permissionGroup.ToString()}.{accountId.ToString()}.{permissionLevel.ToString()}";
-    }
-
     public static string GetGroupFromValue(string permissionValue) => permissionValue.Split('.')[1];
     public static string GetNameFromValue(string permissionValue) => permissionValue.Split('.')[2];
     public static string GetAccessFromValue(string permissionValue) => permissionValue.Split('.')[3];

@@ -42,6 +42,7 @@ public partial class GameServerCreateDialog : ComponentBase
     private GameSlim _selectedGame = new() {Id = Guid.Empty, FriendlyName = "Unknown"};
     private GameProfileSlim _selectedParentProfile = new() {Id = Guid.Empty, FriendlyName = "None"};
     private readonly GameServerCreateRequest _createRequest = new();
+    private bool _showPortConfig;
     
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;

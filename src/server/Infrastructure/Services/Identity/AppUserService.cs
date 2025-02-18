@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Helpers.Identity;
 using Application.Helpers.Lifecycle;
 using Application.Mappers.Identity;
@@ -278,8 +279,7 @@ public class AppUserService : IAppUserService
             if (updateObject.Username is not null && foundUser.Data.Username == updateObject.Username) return await Result.SuccessAsync();
             
             // Service Accounts have dynamic permissions, so we need to update assigned permissions if the account name changed
-            var claimValue = PermissionHelpers.GetClaimValueFromServiceAccount(
-                foundUser.Data.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin);
+            var claimValue = PermissionConstants.Identity.ServiceAccounts.Dynamic(foundUser.Data.Id, DynamicPermissionLevel.Admin);
             var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
             if (!serviceAccountPermissions.Succeeded || serviceAccountPermissions.Result is null)
             {

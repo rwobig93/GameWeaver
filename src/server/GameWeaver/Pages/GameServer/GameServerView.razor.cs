@@ -8,6 +8,8 @@ using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
+using Domain.Enums.Identity;
+using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -112,6 +114,11 @@ public partial class GameServerView : ComponentBase
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update);
+        if (!_canEditGameServer)
+        {
+            _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, 
+                PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Configure));
+        }
         _canDeleteGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
     }
     
@@ -264,22 +271,17 @@ public partial class GameServerView : ComponentBase
         return shouldBeShown;
     }
 
-    private void ConfigAdd(LocalResourceSlim localResource)
+    private async Task ConfigAdd(LocalResourceSlim localResource)
     {
-        // TODO: Use dialog for creation since config item key is not editable
-        
-        var newConfigItem = new ConfigurationItemSlim
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", new DialogParameters(), dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
         {
-            Id = Guid.Empty,
-            LocalResourceId = localResource.Id,
-            DuplicateKey = false,
-            Ignore = false,
-            Path = string.Empty,
-            Category = string.Empty,
-            Key = string.Empty,
-            Value = "NewValue",
-            FriendlyName = "NewItem"
-        };
+            return;
+        }
+
+        var newConfigItem = (ConfigurationItemSlim) dialogResult.Data;
         
         _createdConfigItems.Add(newConfigItem);
         localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);

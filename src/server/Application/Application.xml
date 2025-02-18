@@ -88,6 +88,10 @@
             <param name="updateObject">Required properties to update a configuration item</param>
             <param name="gameServerService"></param>
             <param name="currentUserService"></param>
+            <remarks>
+            NOTE: Inherited resources and config items will have an empty ID, if intending to update a resource or config item new ones will need
+            to be created on the server profile rather than the parent or default game profile
+            </remarks>
             <returns>Success or failure with context messages</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.ConfigItemEndpoints.Delete(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
@@ -912,6 +916,10 @@
             </summary>
             <param name="id">Game server id</param>
             <param name="gameServerService"></param>
+            <remarks>
+            NOTE: Inherited resources and config items will have an empty ID, if intending to update a resource or config item new ones will need
+            to be created on the server profile rather than the parent or default game profile
+            </remarks>
             <returns>List of local resources</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.LocalResourceEndpoints.Create(Application.Requests.GameServer.LocalResource.LocalResourceCreateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">

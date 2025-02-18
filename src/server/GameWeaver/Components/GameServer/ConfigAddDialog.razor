@@ -1,0 +1,53 @@
+@using Domain.Enums.GameServer
+<MudDialog Class="rounded-lg">
+    <DialogContent>
+        <MudStack Row="false" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Stretch">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+            </MudItem>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudCheckBox @bind-Value="_newConfigItem.DuplicateKey" Label="Duplicate Key?" />
+                    <MudAlert ContentAlignment="HorizontalAlignment.Left" Severity="Severity.Info">
+                        Whether there are multiple of this key (most keys are unique)
+                    </MudAlert>
+                </MudStack>
+            </MudPaper>
+            @if (ReferenceResource.ContentType != ContentType.Json)
+            {
+                <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                    <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                        <MudTextField @bind-Value="_newConfigItem.Category" Label="Category" Variant="Variant.Outlined" Disabled="false"/>
+                    </MudStack>
+                </MudPaper>
+            }
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_newConfigItem.Key" Label="Key" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_newConfigItem.Value" Label="Value" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_newConfigItem.Path" Label="Path" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3 pb-1">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_newConfigItem.FriendlyName" Label="Friendly Name" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@Submit">@ConfirmButtonText</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>

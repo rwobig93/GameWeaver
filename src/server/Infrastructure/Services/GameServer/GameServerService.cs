@@ -897,10 +897,10 @@ public class GameServerService : IGameServerService
         // Ensure we aren't creating a duplicate resource
         var duplicateResources = profileCurrentResources.Result.Where(x =>
             x.Type == request.Type &&
-            (x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) &&
-            (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) &&
-            (x.PathMac.Length > 0 && x.PathMac == request.PathMac) &&
-            x.Args == request.Args);
+            x.Args == request.Args &&
+            ((x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) ||
+             (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) ||
+             (x.PathMac.Length > 0 && x.PathMac == request.PathMac)));
         if (duplicateResources.Any())
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
@@ -955,10 +955,10 @@ public class GameServerService : IGameServerService
         var duplicateResources = profileCurrentResources.Result.Where(x =>
             x.Id != request.Id &&
             x.Type == request.Type &&
-            (x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) &&
-            (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) &&
-            (x.PathMac.Length > 0 && x.PathMac == request.PathMac) &&
-            x.Args == request.Args);
+            x.Args == request.Args &&
+            ((x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) ||
+             (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) ||
+             (x.PathMac.Length > 0 && x.PathMac == request.PathMac)));
         if (duplicateResources.Any())
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);

@@ -1,4 +1,6 @@
-﻿namespace Application.Constants.Identity;
+﻿using Domain.Enums.Identity;
+
+namespace Application.Constants.Identity;
 
 public static class PermissionConstants
 {
@@ -27,6 +29,8 @@ public static class PermissionConstants
         {
             public const string View = "Permissions.Identity.Service.View";
             public const string Admin = "Permissions.Identity.Service.Admin";
+
+            public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"Dynamic.{DynamicPermissionGroup.ServiceAccounts}.{id}.{permission}";
         }
 
         public static class Roles
@@ -159,6 +163,8 @@ public static class PermissionConstants
             public const string RestartServer = "Permissions.GameServer.Gameserver.RestartServer";
             public const string UpdateLocalResource = "Permissions.GameServer.Gameserver.UpdateLocalResource";
             public const string UpdateAllLocalResources = "Permissions.GameServer.Gameserver.UpdateAllLocalResources";
+
+            public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"Dynamic.{DynamicPermissionGroup.GameServers}.{id}.{permission}";
         }
 
         public static class ConfigItem

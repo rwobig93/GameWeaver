@@ -118,8 +118,8 @@ public partial class UserView
         if (_canAdminServiceAccount) return;
 
         // If not a service account admin check if the user has a dynamic permission to administrate this service account
-        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionHelpers.GetClaimValueFromServiceAccount(
-            _viewingUser.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin));
+        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, 
+            PermissionConstants.Identity.ServiceAccounts.Dynamic(_viewingUser.Id, DynamicPermissionLevel.Admin));
     }
     
     private async Task Save()

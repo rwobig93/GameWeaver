@@ -10,11 +10,11 @@ public static class LocalResourceHelpers
         foreach (var resource in priority)
         {
             var matchingResource = existing.FirstOrDefault(x =>
-                (x.PathWindows.Length > 0 && x.PathWindows == resource.PathWindows) &&
-                (x.PathLinux.Length > 0 && x.PathLinux == resource.PathLinux) &&
-                (x.PathMac.Length > 0 && x.PathMac == resource.PathMac) &&
                 x.Type == resource.Type &&
-                x.Args == resource.Args);
+                x.Args == resource.Args &&
+                ((x.PathWindows.Length > 0 && x.PathWindows == resource.PathWindows) ||
+                 (x.PathLinux.Length > 0 && x.PathLinux == resource.PathLinux) ||
+                 (x.PathMac.Length > 0 && x.PathMac == resource.PathMac)));
             
             if (matchingResource is null)
             {
