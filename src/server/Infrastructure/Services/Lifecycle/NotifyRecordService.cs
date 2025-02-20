@@ -1,7 +1,9 @@
 using Application.Mappers.Lifecycle;
+using Application.Models.Events;
 using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Lifecycle;
+using Application.Services.System;
 using Domain.Contracts;
 
 namespace Infrastructure.Services.Lifecycle;
@@ -9,10 +11,14 @@ namespace Infrastructure.Services.Lifecycle;
 public class NotifyRecordService : INotifyRecordService
 {
     private readonly INotifyRecordRepository _notifyRepository;
+    private readonly IEventService _eventService;
+    private readonly IDateTimeService _dateTimeService;
 
-    public NotifyRecordService(INotifyRecordRepository notifyRepository)
+    public NotifyRecordService(INotifyRecordRepository notifyRepository, IEventService eventService, IDateTimeService dateTimeService)
     {
         _notifyRepository = notifyRepository;
+        _eventService = eventService;
+        _dateTimeService = dateTimeService;
     }
 
     public async Task<IResult<IEnumerable<NotifyRecordSlim>>> GetAllAsync()
@@ -127,6 +133,14 @@ public class NotifyRecordService : INotifyRecordService
             {
                 return await Result<int>.FailAsync(response.ErrorMessage);
             }
+            
+            _eventService.TriggerNotify("NotifyServiceCreate", new NotifyTriggeredEvent
+            {
+                EntityId = createObject.EntityId,
+                Timestamp = _dateTimeService.NowDatabaseTime,
+                Message = createObject.Message,
+                Detail = createObject.Detail
+            });
 
             return await Result<int>.SuccessAsync(response.Result);
         }

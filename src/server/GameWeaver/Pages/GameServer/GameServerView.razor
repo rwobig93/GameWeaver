@@ -41,6 +41,13 @@ else
             </MudButton>
         }
     </MudPaper>
+    
+    @if (_updateIsAvailable)
+    {
+        <MudAlert Dense="true" Elevation="8" Square="false" Severity="Severity.Warning">
+            An update is available for this game server
+        </MudAlert>
+    }
 
     <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -77,7 +84,8 @@ else
     <MudTable ServerData="@ServerReload" Dense="true" Hover="true" Bordered="false" Striped="true" Height="200px" FixedFooter="true" FixedHeader="true"
               @ref="_notifyTable" Class="ma-4 pa-4" >
         <ColGroup>
-            <col style="width: 40px;" />
+            <col style="width: auto;" />
+            <col style="width: auto;" />
             <col style="width: max-content;" />
         </ColGroup>
         <ToolBarContent>
@@ -87,7 +95,7 @@ else
             <MudSpacer/>
             <MudContainer Class="d-flex flex-row gap-3">
                 <MudTextField T="string" @bind-Value="_notifySearchText" OnDebounceIntervalElapsed="@(NotifySearchChanged)" Placeholder="Search" Adornment="Adornment.Start"
-                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" DebounceInterval="250"/>
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" DebounceInterval="250" Clearable="true"/>
             </MudContainer>
         </ToolBarContent>
         <HeaderContent>
@@ -98,7 +106,8 @@ else
         <RowTemplate>
             <MudTd>
                 <MudTooltip Text="View">
-                    <MudButton Color="Color.Warning" OnClick="@(() => SelectNotifyDetailView(context))" Variant="Variant.Outlined">
+                    <MudButton Color="Color.Warning" OnClick="@(() => SelectNotifyDetailView(context))" Variant="Variant.Outlined" Class="ma-0 pa-0"
+                               Disabled="@(context.Detail is null)">
                         <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"/>
                     </MudButton>
                 </MudTooltip>
@@ -109,7 +118,13 @@ else
         <ChildRowContent>
             @if (context.Id == _selectedNotifyViewDetail)
             {
-                <MudText Align="Align.Left" Typo="Typo.body1" Class="pa-3 ma-2">@context.Detail</MudText>
+                <MudTr>
+                    <td colspan="4">
+                        <MudPaper Elevation="4">
+                            <MudText Align="Align.Left" Typo="Typo.body1" Class="pa-3 ma-2">@context.Detail</MudText>
+                        </MudPaper>
+                    </td>
+                </MudTr>
             }
         </ChildRowContent>
         <NoRecordsContent>

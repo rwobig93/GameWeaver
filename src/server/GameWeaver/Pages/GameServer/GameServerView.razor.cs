@@ -40,12 +40,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
     private bool _updateIsAvailable;
-    // private WeaverWorkState _latestWorkState = WeaverWorkState.Completed;
     private MudTable<NotifyRecordSlim> _notifyTable = new();
     private IEnumerable<NotifyRecordSlim> _notifyPagedData = new List<NotifyRecordSlim>();
     private string _notifySearchText = string.Empty;
     private int _totalNotifyRecords;
-    private int _selectedNotifyViewDetail = 0;
+    private int _selectedNotifyViewDetail;
 
     private bool _canViewGameServer;
     private bool _canPermissionGameServer;
@@ -564,7 +563,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private async Task<TableData<NotifyRecordSlim>> ServerReload(TableState state, CancellationToken token)
     {
-        var recordResponse = await NotifyRecordService.SearchPaginatedAsync(_notifySearchText, state.Page, state.PageSize);
+        var recordResponse = await NotifyRecordService.SearchPaginatedAsync(_notifySearchText, state.Page, 20);
         if (!recordResponse.Succeeded)
         {
             recordResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

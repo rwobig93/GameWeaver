@@ -594,8 +594,8 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate request, Guid requestUserId)
     {
-        // Default friendly name to category/key if a short or empty friendly name is provided
-        request.FriendlyName = request.FriendlyName.Length <= 3 ? $"{request.Category}/{request.Key}" : request.FriendlyName;
+        // Default friendly name to key if a short or empty friendly name is provided
+        request.FriendlyName = request.FriendlyName.Length <= 3 ? request.Key : request.FriendlyName;
         
         var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.LocalResourceId);
         if (foundResource.Result is null)

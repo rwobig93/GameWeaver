@@ -1125,13 +1125,14 @@ public class HostService : IHostService
                     var messages = request.WorkData is null? [] : _serializerService.DeserializeMemory<List<string>>(request.WorkData);
                     foreach (var message in messages ?? [])
                     {
-                        var createdNotify = await _recordRepository.CreateAsync(new NotifyRecordCreate
+                        await _recordRepository.CreateAsync(new NotifyRecordCreate
                         {
                             EntityId = recordId,
                             Timestamp = _dateTime.NowDatabaseTime,
                             Message = message,
                             Detail = null
                         });
+            
                         _eventService.TriggerNotify("HostServiceStatusUpdate", new NotifyTriggeredEvent
                         {
                             EntityId = recordId,
@@ -1351,6 +1352,14 @@ public class HostService : IHostService
                             {"Error", versionRecordCreate.ErrorMessage}
                         });
                 }
+            
+                _eventService.TriggerNotify("HostServiceGameServerStateChange", new NotifyTriggeredEvent
+                {
+                    EntityId = foundServer.Result.Id,
+                    Timestamp = _dateTime.NowDatabaseTime,
+                    Message = "Server Version Updated",
+                    Detail = $"Build Version Updated To: {gameServerUpdate.ServerBuildVersion}"
+                });
             }
 
             if (gameServerUpdate.ServerState != foundServer.Result.ServerState)
@@ -1371,6 +1380,14 @@ public class HostService : IHostService
                             {"Error", updateGameServer.ErrorMessage}
                         });
                 }
+            
+                _eventService.TriggerNotify("HostServiceGameServerStateChange", new NotifyTriggeredEvent
+                {
+                    EntityId = foundServer.Result.Id,
+                    Timestamp = _dateTime.NowDatabaseTime,
+                    Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+                    Detail = $"Server State Change: {foundServer.Result.ServerState} => {gameServerUpdate.ServerState}"
+                });
             }
 
             var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundServer.Result.Id);
