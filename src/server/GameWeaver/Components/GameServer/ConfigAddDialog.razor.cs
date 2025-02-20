@@ -21,7 +21,7 @@ public partial class ConfigAddDialog : ComponentBase
 
     private void Submit()
     {
-        _newConfigItem.Id = Guid.Empty;
+        _newConfigItem.Id = Guid.NewGuid();
         _newConfigItem.LocalResourceId = ReferenceResource.Id;
         MudDialog.Close(DialogResult.Ok(_newConfigItem));
     }

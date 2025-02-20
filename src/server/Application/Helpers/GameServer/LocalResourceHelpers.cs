@@ -29,6 +29,7 @@ public static class LocalResourceHelpers
             }
 
             matchingResource.Id = resource.Id;
+            matchingResource.GameProfileId = resource.GameProfileId;
             matchingResource.Startup = resource.Startup;
             matchingResource.StartupPriority = resource.StartupPriority;
             matchingResource.ContentType = resource.ContentType;
@@ -74,6 +75,7 @@ public static class LocalResourceHelpers
                 if (matchingConfig is not null)
                 {
                     matchingConfig.Id = config.Id;
+                    matchingConfig.LocalResourceId = config.LocalResourceId;
                     matchingConfig.Value = config.Value;
                     continue;
                 }

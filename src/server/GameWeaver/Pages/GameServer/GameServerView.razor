@@ -74,63 +74,62 @@ else
         }
     </MudPaper>
 
-    <MudPaper Elevation="8" Class="ma-4 pa-4">
-        <MudTable ServerData="@ServerReload" Dense="true" Hover="true" Bordered="false" Striped="true" @ref="_notifyTable">
-            <ColGroup>
-                <col style="width: auto;" />
-                <col />
-            </ColGroup>
-            <ToolBarContent>
-                <MudContainer Class="d-flex flex-row gap-3">
-                    <MudText Typo="Typo.h6" Class="pr-2 my-2">Game Server Status Changes</MudText>
-                </MudContainer>
-                <MudSpacer/>
-                <MudContainer Class="d-flex flex-row gap-3">
-                    <MudTextField T="string" @bind-Value="_notifySearchText" OnDebounceIntervalElapsed="@(NotifySearchChanged)" Placeholder="Search" Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" DebounceInterval="250"/>
-                </MudContainer>
-            </ToolBarContent>
-            <HeaderContent>
-                <MudTh></MudTh>
-                <MudTh><MudTableSortLabel SortLabel="Timestamp" T="NotifyRecordSlim">Timestamp</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortLabel="Message" T="NotifyRecordSlim">Message</MudTableSortLabel></MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>
-                    <MudTooltip Text="View">
-                        <MudButton Color="Color.Warning" OnClick="@(() => SelectNotifyDetailView(context))" Variant="Variant.Outlined">
-                            <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"/>
-                        </MudButton>
-                    </MudTooltip>
-                </MudTd>
-                <MudTd DataLabel="Timestamp">@context.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)</MudTd>
-                <MudTd DataLabel="Message">@context.Message</MudTd>
-            </RowTemplate>
-            <ChildRowContent>
-                @if (context.Id == _selectedNotifyViewDetail)
-                {
-                    <MudText Align="Align.Left" Typo="Typo.body1" Class="pa-3 ma-2">@context.Detail</MudText>
-                }
-            </ChildRowContent>
-            <NoRecordsContent>
-                <MudText>No state changes found</MudText>
-            </NoRecordsContent>
-            <LoadingContent>
-                <MudContainer Class="d-flex flex-column gap-3">
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                    <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
-                </MudContainer>
-            </LoadingContent>
-        </MudTable>
-    </MudPaper>
+    <MudTable ServerData="@ServerReload" Dense="true" Hover="true" Bordered="false" Striped="true" Height="200px" FixedFooter="true" FixedHeader="true"
+              @ref="_notifyTable" Class="ma-4 pa-4" >
+        <ColGroup>
+            <col style="width: 40px;" />
+            <col style="width: max-content;" />
+        </ColGroup>
+        <ToolBarContent>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudText Typo="Typo.h6" Class="pr-2 my-2">Game Server Events</MudText>
+            </MudContainer>
+            <MudSpacer/>
+            <MudContainer Class="d-flex flex-row gap-3">
+                <MudTextField T="string" @bind-Value="_notifySearchText" OnDebounceIntervalElapsed="@(NotifySearchChanged)" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" DebounceInterval="250"/>
+            </MudContainer>
+        </ToolBarContent>
+        <HeaderContent>
+            <MudTh></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Timestamp" T="NotifyRecordSlim">Timestamp</MudTableSortLabel></MudTh>
+            <MudTh><MudTableSortLabel SortLabel="Message" T="NotifyRecordSlim">Message</MudTableSortLabel></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>
+                <MudTooltip Text="View">
+                    <MudButton Color="Color.Warning" OnClick="@(() => SelectNotifyDetailView(context))" Variant="Variant.Outlined">
+                        <MudIcon Icon="@Icons.Material.Filled.RemoveRedEye"/>
+                    </MudButton>
+                </MudTooltip>
+            </MudTd>
+            <MudTd DataLabel="Timestamp">@context.Timestamp.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.DisplayFormat)</MudTd>
+            <MudTd DataLabel="Message">@context.Message</MudTd>
+        </RowTemplate>
+        <ChildRowContent>
+            @if (context.Id == _selectedNotifyViewDetail)
+            {
+                <MudText Align="Align.Left" Typo="Typo.body1" Class="pa-3 ma-2">@context.Detail</MudText>
+            }
+        </ChildRowContent>
+        <NoRecordsContent>
+            <MudText>No state changes found</MudText>
+        </NoRecordsContent>
+        <LoadingContent>
+            <MudContainer Class="d-flex flex-column gap-3">
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+                <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
+            </MudContainer>
+        </LoadingContent>
+    </MudTable>
     
     @if (!_canConfigureGameServer && !_canEditGameServer && !_canPermissionGameServer)
     {
@@ -145,14 +144,14 @@ else
                     <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" Immediate="true" @bind-Text="_configSearchText"
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
                 </MudItem>
-                @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile))
+                @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
                 {
                     <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
                         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                            <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
+                            <MudText Color="Color.Secondary" Align="Align.Center" Inline="true" Typo="Typo.h6">@localResource.Name</MudText>
                         </MudItem>
                         <MudContainer Class="d-flex flex-column gap-1">
-                            @foreach (var configItem in localResource.ConfigSets)
+                            @foreach (var configItem in localResource.ConfigSets.OrderBy(x => x.FriendlyName))
                             {
                                 @if (!ConfigShouldBeShown(configItem))
                                 {
@@ -188,7 +187,7 @@ else
                     <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" Immediate="true" @bind-Text="_configSearchText"
                                   AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
                 </MudItem>
-                @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile))
+                @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
                 {
                     <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4" Outlined="true" Square="false">
                         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -198,37 +197,39 @@ else
                                    OnClick="@(() => ConfigAdd(localResource))" FullWidth="true" Disabled="@(!_editMode)">
                             Add Config
                         </MudButton>
-                        @foreach (var configItem in localResource.ConfigSets)
-                        {
-                            @if (!ConfigShouldBeShown(configItem))
+                        <MudContainer Class="d-flex flex-column gap-1">
+                            @foreach (var configItem in localResource.ConfigSets.OrderBy(x => x.FriendlyName))
                             {
-                                continue;
-                            }
+                                @if (!ConfigShouldBeShown(configItem))
+                                {
+                                    continue;
+                                }
 
-                            <div class="border-solid rounded-pill border-2">
-                                <MudStack Row="false" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap">
-                                    <MudStack Row="true" Justify="Justify.SpaceEvenly">
-                                        <MudTextField T="string" Label="Friendly Name" @bind-Value="configItem.FriendlyName" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
-                                        <MudTextField T="string" Label="Key" @bind-Value="configItem.Key" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                <div class="border-solid border rounded pa-1 ma-1">
+                                    <MudStack Row="false" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Class="ma-0 pa-1">
+                                        <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
+                                            <MudTextField T="string" Label="Friendly Name" @bind-Value="configItem.FriendlyName" FullWidth="true" Disabled="@(!_editMode)"
+                                                          OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                            <MudTextField T="string" Label="Key" @bind-Value="configItem.Key" FullWidth="true" Disabled="@(!_editMode)"
+                                                          OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                        </MudStack>
+                                        <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
+                                            <MudTextField T="string" Label="Path" @bind-Value="configItem.Path" FullWidth="true" Disabled="@(!_editMode)"
+                                                          OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                            <MudTextField T="string" Label="Category" @bind-Value="configItem.Category" FullWidth="true" Disabled="@(!_editMode)"
+                                                          OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                            <MudCheckBox @bind-Value="configItem.DuplicateKey" Label="Is Duplicate Key" Dense="true" />
+                                        </MudStack>
+                                        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 pa-0">
+                                            <MudTextField T="string" Label="Value" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)"
+                                                          OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
+                                                           OnClick="@(() => ConfigDeleted(configItem))"/>
+                                        </MudStack>
                                     </MudStack>
-                                    <MudStack Row="true" Justify="Justify.SpaceEvenly">
-                                        <MudTextField T="string" Label="Path" @bind-Value="configItem.Path" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
-                                        <MudTextField T="string" Label="Category" @bind-Value="configItem.Category" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
-                                        <MudCheckBox @bind-Value="configItem.DuplicateKey" Label="Is Duplicate Key" Dense="true" />
-                                    </MudStack>
-                                    <MudStack Row="true" Justify="Justify.SpaceBetween">
-                                        <MudTextField T="string" Label="Value" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
-                                                       OnClick="@(() => ConfigDeleted(configItem))"/>
-                                    </MudStack>
-                                </MudStack>
-                            </div>
-                        }
+                                </div>
+                            }
+                        </MudContainer>
                     </MudPaper>
                 }
                 @if (_localResources.All(x => x.Type != ResourceType.ConfigFile))

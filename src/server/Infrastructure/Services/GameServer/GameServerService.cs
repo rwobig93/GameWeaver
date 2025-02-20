@@ -855,12 +855,12 @@ public class GameServerService : IGameServerService
                 finalResourceList.MergeResources(convertedResources);
             }
         }
-        
+
         // Set resource id's to empty so any resource or config changes will require a newly created resource as an override on the server profile
         foreach (var resource in finalResourceList)
         {
             resource.Id = Guid.Empty;
-            resource.GameProfileId = gameServerRequest.Result.GameProfileId;
+            resource.GameProfileId = Guid.Empty;
 
             foreach (var configSet in resource.ConfigSets)
             {

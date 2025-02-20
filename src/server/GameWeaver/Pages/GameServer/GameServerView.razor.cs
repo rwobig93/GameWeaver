@@ -70,7 +70,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 
                 EventService.GameVersionUpdated += GameVersionUpdated;
                 EventService.GameServerStatusChanged += GameServerStatusChanged;
-                EventService.WeaverWorkStatusChanged += WorkStatusChanged;
                 EventService.NotifyTriggered += NotifyTriggered;
                 
                 StateHasChanged();
@@ -226,7 +225,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             // Check if there is a matching-ignored item (meaning deleted and to ignore from inherited config), if there is update it instead of creating a new item
             var matchingIgnoreItem = _localResources
                 .Where(x => x.Id == configItem.LocalResourceId)
-                .Select(x => x.ConfigSets.FirstOrDefault(c => c.Key == configItem.Key)).FirstOrDefault();
+                .Select(x => x.ConfigSets.FirstOrDefault(c => c.Ignore && c.Key == configItem.Key)).FirstOrDefault();
             if (matchingIgnoreItem is not null)
             {
                 matchingIgnoreItem.Ignore = false;
@@ -244,6 +243,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             createConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        _createdConfigItems.Clear();
 
         foreach (var configItem in _updatedConfigItems)
         {
@@ -251,14 +251,28 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             if (configItem.LocalResourceId == Guid.Empty)
             {
                 var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
-                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
-                if (!createResourceResponse.Succeeded)
+                var existingLocalResource = _localResources.FirstOrDefault(x => x.GameProfileId == _gameServer.GameProfileId &&
+                    (x.PathWindows.Length != 0 && x.PathWindows == matchingLocalResource.PathWindows) ||
+                    (x.PathLinux.Length != 0 && x.PathLinux == matchingLocalResource.PathLinux) ||
+                    (x.PathMac.Length != 0 && x.PathMac == matchingLocalResource.PathMac));
+
+                if (existingLocalResource is null)
                 {
-                    createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                    return;
-                }
+                    var resourceCreateRequest = matchingLocalResource.ToCreateRequest();
+                    resourceCreateRequest.GameProfileId = _gameServer.GameProfileId;
+                    var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
+                    if (!createResourceResponse.Succeeded)
+                    {
+                        createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                        return;
+                    }
                 
-                configItem.LocalResourceId = createResourceResponse.Data;
+                    configItem.LocalResourceId = createResourceResponse.Data;
+                }
+                else
+                {
+                    configItem.LocalResourceId = existingLocalResource.Id;
+                }
             }
             
             var updateConfigResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(), _loggedInUserId);
@@ -267,6 +281,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             updateConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        _updatedConfigItems.Clear();
 
         foreach (var configItem in _deletedConfigItems)
         {
@@ -298,6 +313,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             deleteConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        _deletedConfigItems.Clear();
 
         if (_updatedConfigItems.Count > 0)
         {
@@ -374,7 +390,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", new DialogParameters(), dialogOptions);
+        var dialogParameters = new DialogParameters() {{"ReferenceResource", localResource}};
+        var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
         {
@@ -566,17 +583,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         return new TableData<NotifyRecordSlim>() {TotalItems = _totalNotifyRecords, Items = _notifyPagedData};
     }
-    
-    private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
-    {
-        // TODO: Look into adding game server id to work so we know when the work is relevant to our game server
-        if (!e.Status.IsWorkInProgress())
-        {
-            Snackbar.Add($"Work started/completed: {e.TargetType}", Severity.Info);
-        }
-        
-        InvokeAsync(StateHasChanged);
-    }
 
     private void NotifyTriggered(object? sender, NotifyTriggeredEvent e)
     {
@@ -585,7 +591,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
-        // TODO: Sync notify events list for this game server
+        _notifyTable.ReloadServerData();
     }
 
     private void GameServerStatusChanged(object? sender, GameServerStatusEvent args)
@@ -641,7 +647,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         EventService.GameVersionUpdated -= GameVersionUpdated;
         EventService.GameServerStatusChanged -= GameServerStatusChanged;
-        EventService.WeaverWorkStatusChanged -= WorkStatusChanged;
         EventService.NotifyTriggered -= NotifyTriggered;
         
         await Task.CompletedTask;
