@@ -4,14 +4,13 @@ using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.Events;
-using Application.Models.GameServer.ConfigResourceTreeItem;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
-using Application.Requests.GameServer.LocalResource;
+using Application.Models.Lifecycle;
 using Application.Services.GameServer;
-using Domain.Enums.GameServer;
+using Application.Services.Lifecycle;
 using Domain.Enums.Identity;
 using GameWeaver.Components.GameServer;
 
@@ -26,6 +25,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     [Inject] public IGameService GameService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
+    [Inject] private INotifyRecordService NotifyRecordService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
@@ -35,12 +35,17 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private List<LocalResourceSlim> _localResources = [];
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
-    private string _searchText = string.Empty;
+    private string _configSearchText = string.Empty;
     private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
     private bool _updateIsAvailable;
-    private WeaverWorkState _latestWorkState = WeaverWorkState.Completed;
+    // private WeaverWorkState _latestWorkState = WeaverWorkState.Completed;
+    private MudTable<NotifyRecordSlim> _notifyTable = new();
+    private IEnumerable<NotifyRecordSlim> _notifyPagedData = new List<NotifyRecordSlim>();
+    private string _notifySearchText = string.Empty;
+    private int _totalNotifyRecords;
+    private int _selectedNotifyViewDetail = 0;
 
     private bool _canViewGameServer;
     private bool _canPermissionGameServer;
@@ -359,9 +364,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private bool ConfigShouldBeShown(ConfigurationItemSlim item)
     {
-        var shouldBeShown = item.FriendlyName.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Key.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Value.Contains(_searchText, StringComparison.OrdinalIgnoreCase);
+        var shouldBeShown = item.FriendlyName.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
+                            item.Key.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
+                            item.Value.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase);
         
         return shouldBeShown;
     }
@@ -539,7 +544,29 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         Snackbar.Add($"Updating the server now!", Severity.Success);
     }
+    
+    private async Task<TableData<NotifyRecordSlim>> ServerReload(TableState state, CancellationToken token)
+    {
+        var recordResponse = await NotifyRecordService.SearchPaginatedAsync(_notifySearchText, state.Page, state.PageSize);
+        if (!recordResponse.Succeeded)
+        {
+            recordResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return new TableData<NotifyRecordSlim>();
+        }
 
+        _notifyPagedData = recordResponse.Data.ToArray();
+        _totalNotifyRecords = recordResponse.TotalCount;
+
+        _notifyPagedData = state.SortLabel switch
+        {
+            "Timestamp" => _notifyPagedData.OrderByDirection(state.SortDirection, o => o.Timestamp),
+            "Message" => _notifyPagedData.OrderByDirection(state.SortDirection, o => o.Message),
+            _ => _notifyPagedData
+        };
+
+        return new TableData<NotifyRecordSlim>() {TotalItems = _totalNotifyRecords, Items = _notifyPagedData};
+    }
+    
     private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
     {
         // TODO: Look into adding game server id to work so we know when the work is relevant to our game server
@@ -553,7 +580,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private void NotifyTriggered(object? sender, NotifyTriggeredEvent e)
     {
-        if (_gameServer.Id != e.RecordId)
+        if (_gameServer.Id != e.EntityId)
         {
             return;
         }
@@ -590,6 +617,24 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
         
         InvokeAsync(StateHasChanged);
+    }
+
+    private void SelectNotifyDetailView(NotifyRecordSlim record)
+    {
+        if (_selectedNotifyViewDetail == record.Id)
+        {
+            _selectedNotifyViewDetail = 0;
+            return;
+        }
+        
+        _selectedNotifyViewDetail = record.Id;
+        
+        StateHasChanged();
+    }
+
+    private void NotifySearchChanged()
+    {
+        _notifyTable.ReloadServerData();
     }
     
     public async ValueTask DisposeAsync()

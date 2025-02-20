@@ -9,6 +9,7 @@ using Application.Helpers.Identity;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
+using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
@@ -1124,9 +1125,16 @@ public class HostService : IHostService
                     var messages = request.WorkData is null? [] : _serializerService.DeserializeMemory<List<string>>(request.WorkData);
                     foreach (var message in messages ?? [])
                     {
-                        await _recordRepository.CreateAsync(new NotifyRecordCreate
+                        var createdNotify = await _recordRepository.CreateAsync(new NotifyRecordCreate
                         {
-                            RecordId = recordId,
+                            EntityId = recordId,
+                            Timestamp = _dateTime.NowDatabaseTime,
+                            Message = message,
+                            Detail = null
+                        });
+                        _eventService.TriggerNotify("HostServiceStatusUpdate", new NotifyTriggeredEvent
+                        {
+                            EntityId = recordId,
                             Timestamp = _dateTime.NowDatabaseTime,
                             Message = message,
                             Detail = null
@@ -1329,7 +1337,7 @@ public class HostService : IHostService
             {
                 var versionRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
                 {
-                    RecordId = foundServer.Result.Id,
+                    EntityId = foundServer.Result.Id,
                     Timestamp = _dateTime.NowDatabaseTime,
                     Message = "Server Version Updated",
                     Detail = $"Build Version Updated To: {gameServerUpdate.ServerBuildVersion}"
@@ -1349,7 +1357,7 @@ public class HostService : IHostService
             {
                 var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
                 {
-                    RecordId = foundServer.Result.Id,
+                    EntityId = foundServer.Result.Id,
                     Timestamp = _dateTime.NowDatabaseTime,
                     Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
                     Detail = $"Server State Change: {foundServer.Result.ServerState} => {gameServerUpdate.ServerState}"

@@ -80,36 +80,36 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<NotifyRecordDb>>> GetByRecordIdAsync(Guid recordId, int recordCount)
+    public async Task<DatabaseActionResult<IEnumerable<NotifyRecordDb>>> GetByEntityIdAsync(Guid id, int recordCount)
     {
         DatabaseActionResult<IEnumerable<NotifyRecordDb>> actionReturn = new();
 
         try
         {
             var foundRecords = await _database.LoadData<NotifyRecordDb, dynamic>(
-                NotifyRecordsTableMsSql.GetByRecordId, new {RecordId = recordId, RecordCount = recordCount});
+                NotifyRecordsTableMsSql.GetByEntityId, new {EntityId = id, RecordCount = recordCount});
             actionReturn.Succeed(foundRecords);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, NotifyRecordsTableMsSql.GetByRecordId.Path, ex.Message);
+            actionReturn.FailLog(_logger, NotifyRecordsTableMsSql.GetByEntityId.Path, ex.Message);
         }
 
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<NotifyRecordDb>>> GetAllByRecordIdAsync(Guid recordId)
+    public async Task<DatabaseActionResult<IEnumerable<NotifyRecordDb>>> GetAllByEntityIdAsync(Guid id)
     {
         DatabaseActionResult<IEnumerable<NotifyRecordDb>> actionReturn = new();
 
         try
         {
-            var foundRecords = await _database.LoadData<NotifyRecordDb, dynamic>(NotifyRecordsTableMsSql.GetAllByRecordId, new {RecordId = recordId});
+            var foundRecords = await _database.LoadData<NotifyRecordDb, dynamic>(NotifyRecordsTableMsSql.GetAllByEntityId, new {EntityId = id});
             actionReturn.Succeed(foundRecords);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, NotifyRecordsTableMsSql.GetAllByRecordId.Path, ex.Message);
+            actionReturn.FailLog(_logger, NotifyRecordsTableMsSql.GetAllByEntityId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -192,18 +192,18 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<int>> DeleteAllForRecordId(Guid recordId)
+    public async Task<DatabaseActionResult<int>> DeleteAllForEntityId(Guid id)
     {
         DatabaseActionResult<int> actionReturn = new();
 
         try
         {
-            var rowsDeleted = await _database.SaveData(NotifyRecordsTableMsSql.DeleteAllForRecordId, new {RecordId = recordId});
+            var rowsDeleted = await _database.SaveData(NotifyRecordsTableMsSql.DeleteAllForEntityId, new {EntityId = id});
             actionReturn.Succeed(rowsDeleted);
         }
         catch (Exception ex)
         {
-            actionReturn.FailLog(_logger, NotifyRecordsTableMsSql.DeleteAllForRecordId.Path, ex.Message);
+            actionReturn.FailLog(_logger, NotifyRecordsTableMsSql.DeleteAllForEntityId.Path, ex.Message);
         }
 
         return actionReturn;

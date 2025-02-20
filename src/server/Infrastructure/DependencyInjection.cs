@@ -46,7 +46,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using MudBlazor;
 using MudBlazor.Services;
 using Newtonsoft.Json;
@@ -231,6 +230,7 @@ public static class DependencyInjection
         // Lifecycle Services
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
         services.AddSingleton<ITroubleshootingRecordService, TroubleshootingRecordService>();
+        services.AddSingleton<INotifyRecordService, NotifyRecordService>();
 
         // Integration Services
         services.AddSingleton<IExcelService, ExcelService>();
