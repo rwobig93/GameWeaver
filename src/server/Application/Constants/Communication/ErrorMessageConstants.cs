@@ -56,6 +56,7 @@ public static class ErrorMessageConstants
         public const string AdminSelfPowerRemovalError =
             "You can't remove admin access from yourself, another admin will have to revoke your access";
         public const string DefaultAdminPowerRemovalError = "Default admin cannot have admin access revoked";
+        public const string RoleUsersAreStatic = "This role cannot have members added or removed manually";
     }
 
     public static class Hosts

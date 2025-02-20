@@ -90,7 +90,7 @@ public class AppRoleService : IAppRoleService
         // We are assuming permission to edit roles is already verified, so we let all other actions be allowed
         return true;
     }
-
+    
     public async Task<IResult<IEnumerable<AppRoleSlim>>> GetAllAsync()
     {
         try
@@ -342,7 +342,7 @@ public class AppRoleService : IAppRoleService
             if (roleToChange.Data!.Name != updateObject.Name)
             {
                 // We don't allow default role names to change to keep our sanity and enforce Admin, Moderator & Default role intent
-                if (RoleConstants.GetRequiredRoleNames().Contains(roleToChange.Data.Name))
+                if (RoleConstants.NoTouchRoles.Contains(roleToChange.Data.Name))
                 {
                     return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
                 }
@@ -391,7 +391,7 @@ public class AppRoleService : IAppRoleService
             if (roleUserCount.Data.Any())
                 return await Result.FailAsync("Roles that contain users cannot be deleted, please remove all users first");
 
-            if (RoleConstants.GetRequiredRoleNames().Contains(foundRole.Data.Name))
+            if (RoleConstants.NoTouchRoles.Contains(foundRole.Data.Name))
                 return await Result.FailAsync("The role you are attempting to delete is a built-in role and cannot be deleted");
             
             var deleteRequest = await _roleRepository.DeleteAsync(id, modifyingUserId);
@@ -497,9 +497,22 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
+            var foundRole = await _roleRepository.GetByIdAsync(roleId);
+            if (!foundRole.Succeeded || foundRole.Result is null)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.Roles.NotFound);
+            }
+
+            if (RoleConstants.StaticUserRoleNames.Contains(foundRole.Result.Name))
+            {
+                return await Result.FailAsync(ErrorMessageConstants.Roles.RoleUsersAreStatic);
+            }
+            
             var userAdd = await _roleRepository.AddUserToRoleAsync(userId, roleId, modifyingUserId);
             if (!userAdd.Succeeded)
+            {
                 return await Result.FailAsync(userAdd.ErrorMessage);
+            }
 
             return await Result.SuccessAsync();
         }
@@ -513,9 +526,22 @@ public class AppRoleService : IAppRoleService
     {
         try
         {
+            var foundRole = await _roleRepository.GetByIdAsync(roleId);
+            if (!foundRole.Succeeded || foundRole.Result is null)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.Roles.NotFound);
+            }
+
+            if (RoleConstants.StaticUserRoleNames.Contains(foundRole.Result.Name))
+            {
+                return await Result.FailAsync(ErrorMessageConstants.Roles.RoleUsersAreStatic);
+            }
+            
             var userRemove = await _roleRepository.RemoveUserFromRoleAsync(userId, roleId, modifyingUserId);
             if (!userRemove.Succeeded)
+            {
                 return await Result.FailAsync(userRemove.ErrorMessage);
+            }
 
             return await Result.SuccessAsync();
         }
