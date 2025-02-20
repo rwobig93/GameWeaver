@@ -18,11 +18,11 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameServerView : ComponentBase, IAsyncDisposable
 {
-    [Parameter] public Guid GameServerId { get; set; } = Guid.Empty;
+    [Parameter] public Guid GameServerId { get; init; } = Guid.Empty;
 
-    [Inject] public IAppRoleService AppRoleService { get; set; } = null!;
-    [Inject] public IGameServerService GameServerService { get; set; } = null!;
-    [Inject] public IGameService GameService { get; set; } = null!;
+    [Inject] public IAppRoleService AppRoleService { get; init; } = null!;
+    [Inject] public IGameServerService GameServerService { get; init; } = null!;
+    [Inject] public IGameService GameService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
     [Inject] private INotifyRecordService NotifyRecordService { get; init; } = null!;
