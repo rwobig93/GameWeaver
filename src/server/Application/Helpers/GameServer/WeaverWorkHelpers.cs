@@ -30,4 +30,18 @@ public static class WeaverWorkHelpers
     {
         return repository.SendWeaverWork(WeaverWorkTarget.GameServerStateUpdate, hostId, gameServer, modifyingUserId, createdOn);
     }
+
+    public static bool IsWorkInProgress(this WeaverWorkState state)
+    {
+        return state switch
+        {
+            WeaverWorkState.WaitingToBePickedUp => true,
+            WeaverWorkState.PickedUp => true,
+            WeaverWorkState.InProgress => true,
+            WeaverWorkState.Completed => false,
+            WeaverWorkState.Cancelled => false,
+            WeaverWorkState.Failed => false,
+            _ => false
+        };
+    }
 }

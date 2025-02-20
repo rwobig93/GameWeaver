@@ -1,29 +1,37 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Models.Events;
 using Application.Models.GameServer.ConfigResourceTreeItem;
 using Application.Models.GameServer.ConfigurationItem;
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
+using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
-public partial class GameServerView : ComponentBase
+public partial class GameServerView : ComponentBase, IAsyncDisposable
 {
     [Parameter] public Guid GameServerId { get; set; } = Guid.Empty;
 
+    [Inject] public IAppRoleService AppRoleService { get; set; } = null!;
     [Inject] public IGameServerService GameServerService { get; set; } = null!;
+    [Inject] public IGameService GameService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] private IEventService EventService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameServerSlim _gameServer = new() { Id = Guid.Empty };
+    private GameSlim _game = new() { Id = Guid.Empty };
     private List<LocalResourceSlim> _localResources = [];
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
@@ -31,8 +39,15 @@ public partial class GameServerView : ComponentBase
     private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
+    private bool _updateIsAvailable;
+    private WeaverWorkState _latestWorkState = WeaverWorkState.Completed;
 
+    private bool _canViewGameServer;
+    private bool _canPermissionGameServer;
     private bool _canEditGameServer;
+    private bool _canConfigureGameServer;
+    private bool _canStartGameServer;
+    private bool _canStopGameServer;
     private bool _canDeleteGameServer;
     
     
@@ -42,10 +57,17 @@ public partial class GameServerView : ComponentBase
         {
             if (firstRender)
             {
+                await GetViewingGameServer();
+                await GetServerGame();
                 await GetPermissions();
                 await GetClientTimezone();
-                await GetViewingGameServer();
                 await GetGameServerResources();
+                
+                EventService.GameVersionUpdated += GameVersionUpdated;
+                EventService.GameServerStatusChanged += GameServerStatusChanged;
+                EventService.WeaverWorkStatusChanged += WorkStatusChanged;
+                EventService.NotifyTriggered += NotifyTriggered;
+                
                 StateHasChanged();
             }
         }
@@ -92,6 +114,19 @@ public partial class GameServerView : ComponentBase
         }
     }
 
+    private async Task GetServerGame()
+    {
+        var gameResponse = await GameService.GetByIdAsync(_gameServer.GameId);
+        if (!gameResponse.Succeeded || gameResponse.Data is null)
+        {
+            Snackbar.Add("Failed to find game for server, please reach out to an administrator", Severity.Error);
+            return;
+        }
+        
+        _game = gameResponse.Data;
+        _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
+    }
+    
     private async Task GetGameServerResources()
     {
         if (!_validIdProvided)
@@ -113,12 +148,57 @@ public partial class GameServerView : ComponentBase
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
-        _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update);
-        if (!_canEditGameServer)
+
+        var isServerAdmin = (await AppRoleService.IsUserAdminAsync(_loggedInUserId)).Data;
+        
+        // Game server owner and admin gets full permissions
+        if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
         {
-            _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, 
-                PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Configure));
+            _canViewGameServer = true;
+            _canPermissionGameServer = true;
+            _canEditGameServer = true;
+            _canConfigureGameServer = true;
+            _canStartGameServer = true;
+            _canStopGameServer = true;
+            _canDeleteGameServer = true;
+            return;
         }
+        
+        // Moderator gets most permissions other than delete
+        var isServerModerator = (await AppRoleService.IsUserModeratorAsync(_loggedInUserId)).Data;
+        if (!isServerModerator)
+        {
+            isServerModerator = await AuthorizationService.UserHasPermission(currentUser, 
+                PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Moderator));
+        }
+
+        if (isServerModerator)
+        {
+            _canViewGameServer = true;
+            _canPermissionGameServer = true;
+            _canEditGameServer = true;
+            _canConfigureGameServer = true;
+            _canStartGameServer = true;
+            _canStopGameServer = true;
+            _canDeleteGameServer = false;
+        }
+        
+        
+        _canViewGameServer = !_gameServer.Private ||
+                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get) ||
+                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.View));
+        _canPermissionGameServer =  await AuthorizationService.UserHasPermission(currentUser,
+                                        PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
+        _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update);
+        _canConfigureGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
+                             await AuthorizationService.UserHasPermission(currentUser,
+                                 PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Configure));
+        _canStartGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StartServer) ||
+                                  await AuthorizationService.UserHasPermission(currentUser,
+                                      PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Start));
+        _canStopGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StopServer) ||
+                              await AuthorizationService.UserHasPermission(currentUser,
+                                  PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Stop));
         _canDeleteGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
     }
     
@@ -138,6 +218,21 @@ public partial class GameServerView : ComponentBase
 
         foreach (var configItem in _createdConfigItems)
         {
+            // Check if there is a matching-ignored item (meaning deleted and to ignore from inherited config), if there is update it instead of creating a new item
+            var matchingIgnoreItem = _localResources
+                .Where(x => x.Id == configItem.LocalResourceId)
+                .Select(x => x.ConfigSets.FirstOrDefault(c => c.Key == configItem.Key)).FirstOrDefault();
+            if (matchingIgnoreItem is not null)
+            {
+                matchingIgnoreItem.Ignore = false;
+                matchingIgnoreItem.FriendlyName = configItem.FriendlyName;
+                matchingIgnoreItem.Value = configItem.Value;
+                matchingIgnoreItem.Category = configItem.Category;
+                matchingIgnoreItem.Path = configItem.Path;
+                _updatedConfigItems.Add(matchingIgnoreItem);
+                continue;
+            }
+            
             var createConfigResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
             if (createConfigResponse.Succeeded) continue;
             
@@ -292,7 +387,12 @@ public partial class GameServerView : ComponentBase
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingNewConfig is not null)
         {
+            matchingNewConfig.FriendlyName = item.FriendlyName;
+            matchingNewConfig.Key = item.Key;
             matchingNewConfig.Value = item.Value;
+            matchingNewConfig.Category = item.Category;
+            matchingNewConfig.Path = item.Path;
+            matchingNewConfig.DuplicateKey = item.DuplicateKey;
             return;
         }
         
@@ -303,7 +403,12 @@ public partial class GameServerView : ComponentBase
             return;
         }
         
+        matchingUpdateConfig.FriendlyName = item.FriendlyName;
+        matchingUpdateConfig.Key = item.Key;
         matchingUpdateConfig.Value = item.Value;
+        matchingUpdateConfig.Category = item.Category;
+        matchingUpdateConfig.Path = item.Path;
+        matchingUpdateConfig.DuplicateKey = item.DuplicateKey;
     }
 
     private void ConfigDeleted(ConfigurationItemSlim item)
@@ -337,5 +442,163 @@ public partial class GameServerView : ComponentBase
         {
             _deletedConfigItems.Add(item);
         }
+    }
+
+    private async Task StartGameServer()
+    {
+        if (_gameServer.ServerState.IsRunning())
+        {
+            Snackbar.Add("Unable to start an already running game server", Severity.Error);
+            return;
+        }
+
+        if (_gameServer.ServerState.IsDoingSomething())
+        {
+            Snackbar.Add($"The server is currently {_gameServer.ServerState}", Severity.Error);
+            return;
+        }
+        
+        var startRequest = await GameServerService.StartServerAsync(_gameServer.Id, _loggedInUserId);
+        if (!startRequest.Succeeded)
+        {
+            foreach (var message in startRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+
+        Snackbar.Add($"Starting the server now!", Severity.Success);
+    }
+
+    private async Task StopGameServer()
+    {
+        if (!_gameServer.ServerState.IsRunning())
+        {
+            Snackbar.Add("Unable to stop an already stopped game server", Severity.Error);
+            return;
+        }
+
+        if (_gameServer.ServerState.IsDoingSomething())
+        {
+            Snackbar.Add($"The server is currently {_gameServer.ServerState}", Severity.Error);
+            return;
+        }
+
+        var stopRequest = await GameServerService.StopServerAsync(_gameServer.Id, _loggedInUserId);
+        if (!stopRequest.Succeeded)
+        {
+            foreach (var message in stopRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+
+        Snackbar.Add($"Stopping the server now!", Severity.Success);
+    }
+
+    private async Task RestartGameServer()
+    {
+        if (_gameServer.ServerState.IsDoingSomething())
+        {
+            Snackbar.Add($"The server is currently {_gameServer.ServerState}", Severity.Error);
+            return;
+        }
+        
+        var restartRequest = await GameServerService.RestartServerAsync(_gameServer.Id, _loggedInUserId);
+        if (!restartRequest.Succeeded)
+        {
+            foreach (var message in restartRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+
+        Snackbar.Add($"Restarting the server now!", Severity.Success);
+    }
+
+    private async Task UpdateGameServer()
+    {
+        if (_gameServer.ServerState.IsDoingSomething())
+        {
+            Snackbar.Add($"The server is currently {_gameServer.ServerState}, unable to deploy an update", Severity.Error);
+            return;
+        }
+
+        var updateRequest = await GameServerService.UpdateServerAsync(_gameServer.Id, _loggedInUserId);
+        if (!updateRequest.Succeeded)
+        {
+            foreach (var message in updateRequest.Messages)
+            {
+                Snackbar.Add(message, Severity.Error);
+            }
+            return;
+        }
+
+        Snackbar.Add($"Updating the server now!", Severity.Success);
+    }
+
+    private void WorkStatusChanged(object? sender, WeaverWorkStatusEvent e)
+    {
+        // TODO: Look into adding game server id to work so we know when the work is relevant to our game server
+        if (!e.Status.IsWorkInProgress())
+        {
+            Snackbar.Add($"Work started/completed: {e.TargetType}", Severity.Info);
+        }
+        
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void NotifyTriggered(object? sender, NotifyTriggeredEvent e)
+    {
+        if (_gameServer.Id != e.RecordId)
+        {
+            return;
+        }
+        
+        // TODO: Sync notify events list for this game server
+    }
+
+    private void GameServerStatusChanged(object? sender, GameServerStatusEvent args)
+    {
+        if (_gameServer.Id != args.Id)
+        {
+            return;
+        }
+        
+        _gameServer.ServerState = args.ServerState;
+
+        if (args.BuildVersionUpdated)
+        {
+            _gameServer.ServerBuildVersion = _game.LatestBuildVersion;
+            _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
+        }
+        
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void GameVersionUpdated(object? sender, GameVersionUpdatedEvent args)
+    {
+        if (_game.Id != args.GameId)
+        {
+            return;
+        }
+
+        _game.LatestBuildVersion = args.VersionBuild;
+        _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
+        
+        InvokeAsync(StateHasChanged);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        EventService.GameVersionUpdated -= GameVersionUpdated;
+        EventService.GameServerStatusChanged -= GameServerStatusChanged;
+        EventService.WeaverWorkStatusChanged -= WorkStatusChanged;
+        EventService.NotifyTriggered -= NotifyTriggered;
+        
+        await Task.CompletedTask;
     }
 }   

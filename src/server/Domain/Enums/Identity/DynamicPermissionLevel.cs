@@ -6,7 +6,7 @@ public enum DynamicPermissionLevel
     View = 1,
     Moderator = 2,
     Configure = 3,
-    Restart = 4,
+    Permission = 4,
     Start = 5,
     Stop = 6
 }

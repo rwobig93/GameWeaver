@@ -282,22 +282,24 @@ public partial class DeveloperTesting : IAsyncDisposable
     {
         Snackbar.Add($"Game server state change: {args.ServerState}", Severity.Info);
         var matchingServer = _gameServers.FirstOrDefault(x => x.Id == args.Id);
-        if (matchingServer is not null)
+        if (matchingServer is null)
         {
-            matchingServer.ServerState = args.ServerState;
-
-            if (args.BuildVersionUpdated)
-            {
-                var matchingGame = _games.FirstOrDefault(x => x.Id == matchingServer.GameId);
-                matchingServer.ServerBuildVersion = matchingGame?.LatestBuildVersion ?? matchingServer.ServerBuildVersion;
-                
-                if (_selectedGameServer != null && matchingServer.Id == _selectedGameServer.Id)
-                {
-                    _gameServerUpToDate = matchingGame?.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
-                }
-            }
-
+            return;
         }
+        
+        matchingServer.ServerState = args.ServerState;
+
+        if (args.BuildVersionUpdated)
+        {
+            var matchingGame = _games.FirstOrDefault(x => x.Id == matchingServer.GameId);
+            matchingServer.ServerBuildVersion = matchingGame?.LatestBuildVersion ?? matchingServer.ServerBuildVersion;
+                
+            if (_selectedGameServer != null && matchingServer.Id == _selectedGameServer.Id)
+            {
+                _gameServerUpToDate = matchingGame?.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
+            }
+        }
+        
         InvokeAsync(StateHasChanged);
     }
     
