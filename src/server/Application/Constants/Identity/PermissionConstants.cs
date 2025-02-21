@@ -27,8 +27,8 @@ public static class PermissionConstants
 
         public static class ServiceAccounts
         {
-            public const string View = "Permissions.Identity.Service.View";
-            public const string Admin = "Permissions.Identity.Service.Admin";
+            public const string View = "Permissions.Identity.ServiceAccounts.View";
+            public const string Admin = "Permissions.Identity.ServiceAccounts.Admin";
 
             public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"Dynamic.{DynamicPermissionGroup.ServiceAccounts}.{id}.{permission}";
         }
@@ -151,18 +151,18 @@ public static class PermissionConstants
 
         public static class Gameserver
         {
-            public const string GetAllPaginated = "Permissions.GameServer.Gameserver.GetAllPaginated";
-            public const string GetCount = "Permissions.GameServer.Gameserver.GetCount";
-            public const string Get = "Permissions.GameServer.Gameserver.Get";
-            public const string Create = "Permissions.GameServer.Gameserver.Create";
-            public const string Update = "Permissions.GameServer.Gameserver.Update";
-            public const string Delete = "Permissions.GameServer.Gameserver.Delete";
-            public const string Search = "Permissions.GameServer.Gameserver.Search";
-            public const string StartServer = "Permissions.GameServer.Gameserver.StartServer";
-            public const string StopServer = "Permissions.GameServer.Gameserver.StopServer";
-            public const string RestartServer = "Permissions.GameServer.Gameserver.RestartServer";
-            public const string UpdateLocalResource = "Permissions.GameServer.Gameserver.UpdateLocalResource";
-            public const string UpdateAllLocalResources = "Permissions.GameServer.Gameserver.UpdateAllLocalResources";
+            public const string GetAllPaginated = "Permissions.GameServer.Gameservers.GetAllPaginated";
+            public const string GetCount = "Permissions.GameServer.Gameservers.GetCount";
+            public const string Get = "Permissions.GameServer.Gameservers.Get";
+            public const string Create = "Permissions.GameServer.Gameservers.Create";
+            public const string Update = "Permissions.GameServer.Gameservers.Update";
+            public const string Delete = "Permissions.GameServer.Gameservers.Delete";
+            public const string Search = "Permissions.GameServer.Gameservers.Search";
+            public const string StartServer = "Permissions.GameServer.Gameservers.StartServer";
+            public const string StopServer = "Permissions.GameServer.Gameservers.StopServer";
+            public const string RestartServer = "Permissions.GameServer.Gameservers.RestartServer";
+            public const string UpdateLocalResource = "Permissions.GameServer.Gameservers.UpdateLocalResource";
+            public const string UpdateAllLocalResources = "Permissions.GameServer.Gameservers.UpdateAllLocalResources";
 
             public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"Dynamic.{DynamicPermissionGroup.GameServers}.{id}.{permission}";
         }

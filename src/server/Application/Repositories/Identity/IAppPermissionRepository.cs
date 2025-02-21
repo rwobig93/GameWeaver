@@ -1,6 +1,7 @@
 ﻿using Application.Models.Identity.Permission;
 using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 
@@ -31,4 +32,5 @@ public interface IAppPermissionRepository
     Task<DatabaseActionResult<bool>> UserHasDirectPermission(Guid userId, string permissionValue);
     Task<DatabaseActionResult<bool>> UserIncludingRolesHasPermission(Guid userId, string permissionValue);
     Task<DatabaseActionResult<bool>> RoleHasPermission(Guid roleId, string permissionValue);
+    Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetDynamicByTypeAndNameAsync(DynamicPermissionGroup type, Guid name);
 }

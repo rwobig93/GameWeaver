@@ -4,6 +4,7 @@ public static class ClaimConstants
 {
     public const string Permission = "Permission";
     public const string AuthenticationType = "AuthenticationType";
+    public const string DynamicPermission = "DynamicPermission";
 
     public static class AuthType
     {

@@ -2,12 +2,15 @@
 using Application.Models.Identity.Role;
 using Application.Models.Identity.User;
 using Domain.Contracts;
+using Domain.Enums.Identity;
 
 namespace Application.Services.Identity;
 
 public interface IAppPermissionService
 {
     Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailablePermissionsAsync();
+    Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicServiceAccountPermissionsAsync(Guid id);
+    Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicGameServerPermissionsAsync(Guid id);
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedAsync();
     Task<PaginatedResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<IEnumerable<AppPermissionSlim>>> SearchAsync(string searchTerm);
@@ -31,4 +34,5 @@ public interface IAppPermissionService
     Task<IResult<bool>> UserHasDirectPermission(Guid userId, string permissionValue);
     Task<IResult<bool>> UserIncludingRolesHasPermission(Guid userId, string permissionValue);
     Task<IResult<bool>> RoleHasPermission(Guid roleId, string permissionValue);
+    Task<IResult<IEnumerable<AppPermissionSlim>>> GetDynamicByTypeAndNameAsync(DynamicPermissionGroup type, Guid name);
 }

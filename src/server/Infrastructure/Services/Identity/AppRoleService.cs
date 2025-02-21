@@ -503,7 +503,7 @@ public class AppRoleService : IAppRoleService
                 return await Result.FailAsync(ErrorMessageConstants.Roles.NotFound);
             }
 
-            if (RoleConstants.StaticUserRoleNames.Contains(foundRole.Result.Name))
+            if (RoleConstants.StaticUserRoleNames.Contains(foundRole.Result.Name) && modifyingUserId != _serverState.SystemUserId)
             {
                 return await Result.FailAsync(ErrorMessageConstants.Roles.RoleUsersAreStatic);
             }

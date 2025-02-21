@@ -378,4 +378,22 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = COALESCE(@Id, Id);
             end"
     };
+    
+    public static readonly SqlStoredProcedure GetDynamicByTypeAndName = new()
+    {
+        Table = Table,
+        Action = "GetDynamicByTypeAndName",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetDynamicByTypeAndName]
+                @Group NVARCHAR(256),
+                @Name NVARCHAR(256)
+            AS
+            begin
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.[ClaimType] = 'DynamicPermission'
+                    AND p.[Group] = @Group
+                    AND p.[Name] = @Name;
+            end"
+    };
 }

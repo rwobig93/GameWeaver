@@ -8,6 +8,7 @@ using Application.Services.Database;
 using Application.Services.System;
 using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
@@ -487,6 +488,24 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByRoleIdAndValue.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetDynamicByTypeAndNameAsync(DynamicPermissionGroup type, Guid name)
+    {
+        DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
+
+        try
+        {
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissionsTableMsSql.GetDynamicByTypeAndName, new {Group = type.ToString(), Name = name.ToString()});
+            actionReturn.Succeed(foundPermissions);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetDynamicByTypeAndName.Path, ex.Message);
         }
 
         return actionReturn;

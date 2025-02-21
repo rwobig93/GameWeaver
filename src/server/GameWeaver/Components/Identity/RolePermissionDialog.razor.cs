@@ -42,7 +42,9 @@ public partial class RolePermissionDialog
     private async Task GetPermissionLists()
     {
         if (!_canRemovePermissions && !_canAddPermissions)
+        {
             return;
+        }
 
         var rolePermissions = await PermissionService.GetAllForRoleAsync(RoleId);
         if (!rolePermissions.Succeeded)

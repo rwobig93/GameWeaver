@@ -20,12 +20,13 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 {
     [Parameter] public Guid GameServerId { get; init; } = Guid.Empty;
 
-    [Inject] public IAppRoleService AppRoleService { get; init; } = null!;
+    [Inject] public IAppRoleService RoleService { get; init; } = null!;
     [Inject] public IGameServerService GameServerService { get; init; } = null!;
     [Inject] public IGameService GameService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
     [Inject] private INotifyRecordService NotifyRecordService { get; init; } = null!;
+    [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
@@ -151,8 +152,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
+        
+        _canViewGameServer = !_gameServer.Private ||
+                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get) ||
+                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.View));
 
-        var isServerAdmin = (await AppRoleService.IsUserAdminAsync(_loggedInUserId)).Data;
+        var isServerAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data;
         
         // Game server owner and admin gets full permissions
         if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
@@ -168,7 +173,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
         
         // Moderator gets most permissions other than delete
-        var isServerModerator = (await AppRoleService.IsUserModeratorAsync(_loggedInUserId)).Data;
+        var isServerModerator = (await RoleService.IsUserModeratorAsync(_loggedInUserId)).Data;
         if (!isServerModerator)
         {
             isServerModerator = await AuthorizationService.UserHasPermission(currentUser, 
@@ -186,10 +191,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canDeleteGameServer = false;
         }
         
-        
-        _canViewGameServer = !_gameServer.Private ||
-                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get) ||
-                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.View));
         _canPermissionGameServer =  await AuthorizationService.UserHasPermission(currentUser,
                                         PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
         _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update);
@@ -203,6 +204,17 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                               await AuthorizationService.UserHasPermission(currentUser,
                                   PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Stop));
         _canDeleteGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
+    }
+
+    private async Task GetGameServerPermissions()
+    {
+        var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, _gameServer.Id);
+        
+        var availableServerPermissions = await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(_gameServer.Id);
+        
+        // TODO: Add table showing assigned permissions
+        // TODO: Add delete button to assigned permissions table to remove access
+        // TODO: Add button that opens dialog to assign permissions to a specific user or role
     }
     
     private async Task Save()

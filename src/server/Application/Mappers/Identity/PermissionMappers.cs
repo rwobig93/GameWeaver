@@ -4,6 +4,7 @@ using Application.Helpers.Runtime;
 using Application.Models.Identity.Permission;
 using Application.Requests.Identity.Permission;
 using Application.Responses.v1.Identity;
+using Domain.DatabaseEntities.GameServer;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
@@ -129,7 +130,9 @@ public static class PermissionMappers
     public static AppPermissionCreate ToAppPermissionCreate(this string permissionValue)
     {
         if (permissionValue.Split('.').Length != 4)
+        {
             throw new Exception("Permission value provided doesn't match the correct syntax of Permissions.Group.Name.Access");
+        }
 
         var permissionName = PermissionHelpers.GetNameFromValue(permissionValue);
         var permissionGroup = PermissionHelpers.GetGroupFromValue(permissionValue);
@@ -152,18 +155,46 @@ public static class PermissionMappers
         };
     }
 
+    public static AppPermissionCreate ToDynamicPermissionCreate(this string permissionValue)
+    {
+        if (permissionValue.Split('.').Length != 4)
+        {
+            throw new Exception("Permission value provided doesn't match the correct syntax of Dynamic.Group.Id.AccessLevel");
+        }
+
+        var permissionName = PermissionHelpers.GetNameFromValue(permissionValue);
+        var permissionGroup = PermissionHelpers.GetGroupFromValue(permissionValue);
+        var permissionAccess = PermissionHelpers.GetAccessFromValue(permissionValue);
+        
+        return new AppPermissionCreate
+        {
+            RoleId = GuidHelpers.GetMax(),
+            UserId = GuidHelpers.GetMax(),
+            ClaimType = ClaimConstants.DynamicPermission,
+            ClaimValue = permissionValue,
+            Group = permissionGroup,
+            Name = permissionName,
+            Access = permissionAccess,
+            Description = $"{permissionAccess} access to {permissionName}",
+            CreatedBy = Guid.Empty,
+            CreatedOn = DateTime.Now,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        };
+    }
+
     public static AppPermissionCreate ToDynamicPermissionCreate(this AppUserServicePermissionDb serviceAccount, DynamicPermissionLevel permissionLevel)
     {
         return new AppPermissionCreate
         {
             RoleId = GuidHelpers.GetMax(),
             UserId = GuidHelpers.GetMax(),
-            ClaimType = ClaimConstants.Permission,
+            ClaimType = ClaimConstants.DynamicPermission,
             ClaimValue = PermissionConstants.Identity.ServiceAccounts.Dynamic(serviceAccount.Id, permissionLevel),
-            Group = DynamicPermissionGroup.ServiceAccounts.ToString(),
-            Name = serviceAccount.Username,
+            Group = serviceAccount.Username,
+            Name = $"{DynamicPermissionGroup.ServiceAccounts} - Individual",
             Access = permissionLevel.ToString(),
-            Description = $"{permissionLevel.ToString()} access to {DynamicPermissionGroup.ServiceAccounts.ToString()} {serviceAccount.Id}",
+            Description = $"{permissionLevel.ToString()} access to {DynamicPermissionGroup.ServiceAccounts.ToString()} {serviceAccount.Username}",
             CreatedBy = Guid.Empty,
             CreatedOn = DateTime.Now,
             LastModifiedBy = null,
@@ -177,11 +208,41 @@ public static class PermissionMappers
         return serviceAccounts.Select(x => x.ToDynamicPermissionCreate(permissionLevel)).ToList();
     }
 
+    public static AppPermissionCreate ToDynamicPermissionCreate(this GameServerDb gameServer, DynamicPermissionLevel permissionLevel)
+    {
+        return new AppPermissionCreate
+        {
+            RoleId = GuidHelpers.GetMax(),
+            UserId = GuidHelpers.GetMax(),
+            ClaimType = ClaimConstants.DynamicPermission,
+            ClaimValue = PermissionConstants.GameServer.Gameserver.Dynamic(gameServer.Id, permissionLevel),
+            Group = gameServer.ServerName,
+            Name = $"{DynamicPermissionGroup.ServiceAccounts} - Individual",
+            Access = permissionLevel.ToString(),
+            Description = $"{permissionLevel.ToString()} access to {DynamicPermissionGroup.ServiceAccounts.ToString()} {gameServer.ServerName}",
+            CreatedBy = Guid.Empty,
+            CreatedOn = DateTime.Now,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        };
+    }
+
+    public static IEnumerable<AppPermissionCreate> ToAppPermissionCreates(this IEnumerable<GameServerDb> gameServers,
+        DynamicPermissionLevel permissionLevel)
+    {
+        return gameServers.Select(x => x.ToDynamicPermissionCreate(permissionLevel)).ToList();
+    }
+    
     public static IEnumerable<AppPermissionCreate> ToAppPermissionCreates(this IEnumerable<string> permissionValues)
     {
         return permissionValues.Select(x => x.ToAppPermissionCreate()).ToList();
     }
     
+    public static IEnumerable<AppPermissionCreate> ToDynamicPermissionCreates(this IEnumerable<string> permissionValues)
+    {
+        return permissionValues.Select(x => x.ToDynamicPermissionCreate()).ToList();
+    }
+
     public static AppPermissionSlim ToSlim(this AppPermissionDb appPermissionDb)
     {
         return new AppPermissionSlim

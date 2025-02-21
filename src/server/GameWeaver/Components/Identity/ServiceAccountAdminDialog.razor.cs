@@ -5,6 +5,7 @@ using Application.Helpers.Web;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Responses.v1.Identity;
+using Application.Services.Lifecycle;
 using Domain.Enums.Identity;
 
 namespace GameWeaver.Components.Identity;
@@ -17,6 +18,7 @@ public partial class ServiceAccountAdminDialog
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
+    [Inject] private IRunningServerState ServerState { get; init; } = null!;
 
     private UserBasicResponse _currentUser = new();
     private AppUserSecurityFull _serviceUser = new() { Id = Guid.Empty };
@@ -184,7 +186,7 @@ public partial class ServiceAccountAdminDialog
             }
             
             var addRoleRequest = await RoleService.AddUserToRoleAsync(
-                _serviceUser.Id, getServiceAccountRoleRequest.Data.Id, _currentUser.Id);
+                _serviceUser.Id, getServiceAccountRoleRequest.Data.Id, ServerState.SystemUserId);
             if (!addRoleRequest.Succeeded)
             {
                 addRoleRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

@@ -2,6 +2,7 @@
 using Application.Constants.Identity;
 using Application.Helpers.Runtime;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 
 namespace Application.Helpers.Identity;
 
@@ -43,6 +44,26 @@ public static class PermissionHelpers
     public static List<string> GetAllBuiltInPermissions()
     {
         return ReflectionHelpers.GetConstantsRecursively(typeof(PermissionConstants));
+    }
+
+    public static List<string> GetAllServiceAccountDynamicPermissions(Guid id)
+    {
+        return [
+            PermissionConstants.Identity.ServiceAccounts.Dynamic(id, DynamicPermissionLevel.Admin)
+        ];
+    }
+
+    public static List<string> GetAllGameServerDynamicPermissions(Guid id)
+    {
+        return [
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Admin),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Moderator),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.View),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Permission),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Configure),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Start),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Stop),
+        ];
     }
 
     public static List<string> GetModeratorRolePermissions()
