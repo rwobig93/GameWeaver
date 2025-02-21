@@ -3,12 +3,15 @@ using Application.Helpers.GameServer;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Mappers.Lifecycle;
+using Application.Models.Events;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
 using Application.Models.Identity.User;
+using Application.Models.Lifecycle;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
@@ -38,10 +41,12 @@ public class GameServerService : IGameServerService
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
     private readonly IOptions<AppConfiguration> _generalConfig;
     private readonly IAppUserRepository _userRepository;
+    private readonly IEventService _eventService;
+    private readonly INotifyRecordRepository _notifyRecordRepository;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository, IGameRepository gameRepository,
         IAuditTrailsRepository auditRepository, IRunningServerState serverState, ITroubleshootingRecordsRepository tshootRepository, IOptions<AppConfiguration> generalConfig,
-        IAppUserRepository userRepository)
+        IAppUserRepository userRepository, IEventService eventService, INotifyRecordRepository notifyRecordRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
@@ -52,6 +57,8 @@ public class GameServerService : IGameServerService
         _tshootRepository = tshootRepository;
         _generalConfig = generalConfig;
         _userRepository = userRepository;
+        _eventService = eventService;
+        _notifyRecordRepository = notifyRecordRepository;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -1052,6 +1059,17 @@ public class GameServerService : IGameServerService
                 });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = serverId,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Configuration change requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server reconfiguration change for file {foundResource.Data.Name}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceLocalResourceUpdate", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1106,6 +1124,17 @@ public class GameServerService : IGameServerService
                 });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = serverId,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Configuration change requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server reconfiguration change for all files"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceAllLocalResourceUpdate", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1662,6 +1691,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server start work", new Dictionary<string, string> {{"Error", startRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Server start requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server start from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceStartServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1690,6 +1730,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server stop work", new Dictionary<string, string> {{"Error", stopRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Stop server requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server stop from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceStopServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1717,6 +1768,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server restart work", new Dictionary<string, string> {{"Error", restartRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Restart server requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server restart from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceRestartServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1744,6 +1806,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server version update work", new Dictionary<string, string> {{"Error", updateRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Update server requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server update from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceUpdateServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>

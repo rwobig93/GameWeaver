@@ -18,6 +18,11 @@ public partial class ConfigAddDialog : ComponentBase
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private readonly ConfigurationItemSlim _newConfigItem = new();
     
+    
+    private void InjectDynamicValue(string value)
+    {
+        _newConfigItem.Value = value;
+    }
 
     private void Submit()
     {

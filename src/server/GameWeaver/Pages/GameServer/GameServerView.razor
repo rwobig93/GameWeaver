@@ -60,7 +60,7 @@ else
         </MudItem>
         @if (_canStartGameServer || _canStopGameServer)
         {
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-1 justify-center">
                 <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" Disabled="@(_gameServer.ServerState.IsRunning())"
                            StartIcon="@Icons.Material.Outlined.Start" OnClick="@StartGameServer">
                     Start Server
@@ -144,57 +144,68 @@ else
                 <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="95%" Class="align-self-center my-2"/>
             </MudContainer>
         </LoadingContent>
+        <PagerContent>
+            <MudContainer Class="d-flex flex-wrap gap-4 align-content justify-center">
+                <MudTablePager />
+            </MudContainer>
+        </PagerContent>
     </MudTable>
     
-    @if (!_canConfigureGameServer && !_canEditGameServer && !_canPermissionGameServer)
-    {
-        return;
-    }
-
     <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center">
-        @if (_canConfigureGameServer)
-        {
-            <MudTabPanel Text="Config">
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                    <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" Immediate="true" @bind-Text="_configSearchText"
-                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
-                </MudItem>
-                @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
-                {
-                    <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
-                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                            <MudText Color="Color.Secondary" Align="Align.Center" Inline="true" Typo="Typo.h6">@localResource.Name</MudText>
-                        </MudItem>
-                        <MudContainer Class="d-flex flex-column gap-1">
-                            @foreach (var configItem in localResource.ConfigSets.OrderBy(x => x.FriendlyName))
+        <MudTabPanel Text="Config">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" Immediate="true" @bind-Text="_configSearchText"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
+            </MudItem>
+            @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
+            {
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Secondary" Align="Align.Center" Inline="true" Typo="Typo.h6">@localResource.Name</MudText>
+                    </MudItem>
+                    <MudContainer Class="d-flex flex-column gap-1">
+                        @foreach (var configItem in localResource.ConfigSets.OrderBy(x => x.FriendlyName))
+                        {
+                            @if (!ConfigShouldBeShown(configItem))
                             {
-                                @if (!ConfigShouldBeShown(configItem))
-                                {
-                                    continue;
-                                }
-
-                                <div class="border-solid rounded-pill border pa-0 ma-1">
-                                    <MudStack Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
-                                        <MudText Color="Color.Primary" Align="Align.Center" Class="ms-4 justify-center">@configItem.FriendlyName</MudText>
-                                        <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" OnKeyDown="@(() => ConfigUpdated(configItem))" />
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
-                                                       OnClick="@(() => ConfigDeleted(configItem))" />
-                                    </MudStack>
-                                </div>
+                                continue;
                             }
-                        </MudContainer>
-                    </MudPaper>
-                }
-                @if (_localResources.All(x => x.Type != ResourceType.ConfigFile))
-                {   
-                    <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
-                        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                            <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Configuration Files Found</MudText>
-                        </MudItem>
-                    </MudPaper>
-                }
-            </MudTabPanel>
-        }
+
+                            <div class="border-solid rounded-pill border pa-0 ma-1">
+                                <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                                    <MudText Color="Color.Primary" Align="Align.Center" Class="ms-4 justify-center">@configItem.FriendlyName</MudText>
+                                    <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" OnKeyDown="@(() => ConfigUpdated(configItem))" />
+                                    @if (_canConfigureGameServer || _canEditGameServer)
+                                    {
+                                        <MudButtonGroup Variant="Variant.Text">
+                                            <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD%%%"))">Server Password</MudMenuItem>
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%QUERY_PORT%%%"))">Query Port</MudMenuItem>
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT%%%"))">Game Port</MudMenuItem>
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT_PEER%%%"))">Game Peer Port</MudMenuItem>
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
+                                            </MudMenu>
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
+                                                           OnClick="@(() => ConfigDeleted(configItem))" />
+                                        </MudButtonGroup>
+                                    }
+                                </MudStack>
+                            </div>
+                        }
+                    </MudContainer>
+                </MudPaper>
+            }
+            @if (_localResources.All(x => x.Type != ResourceType.ConfigFile))
+            {
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Configuration Files Found</MudText>
+                    </MudItem>
+                </MudPaper>
+            }
+        </MudTabPanel>
         @if (_canEditGameServer)
         {
             <MudTabPanel Text="Advanced">
@@ -238,8 +249,19 @@ else
                                         <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 pa-0">
                                             <MudTextField T="string" Label="Value" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)"
                                                           OnKeyDown="@(() => ConfigUpdated(configItem))"/>
-                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
-                                                           OnClick="@(() => ConfigDeleted(configItem))"/>
+                                            <MudButtonGroup Variant="Variant.Text">
+                                                <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD%%%"))">Server Password</MudMenuItem>
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%QUERY_PORT%%%"))">Query Port</MudMenuItem>
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT%%%"))">Game Port</MudMenuItem>
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT_PEER%%%"))">Game Peer Port</MudMenuItem>
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
+                                                </MudMenu>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
+                                                               OnClick="@(() => ConfigDeleted(configItem))" />
+                                            </MudButtonGroup>
                                         </MudStack>
                                     </MudStack>
                                 </div>
@@ -255,9 +277,6 @@ else
                         </MudItem>
                     </MudPaper>
                 }
-            </MudTabPanel>
-            <MudTabPanel Text="Raw">
-                @* TODO: Insert code editor panel here *@
             </MudTabPanel>
         }
         @if (_canPermissionGameServer)

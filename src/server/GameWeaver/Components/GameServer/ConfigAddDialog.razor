@@ -32,6 +32,15 @@
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
                 <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
                     <MudTextField @bind-Value="_newConfigItem.Value" Label="Value" Variant="Variant.Outlined" Disabled="false"/>
+                    <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Medium" IconColor="Color.Info">
+                        <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%PASSWORD%%%"))">Server Password</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%QUERY_PORT%%%"))">Query Port</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%GAME_PORT%%%"))">Game Port</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%GAME_PORT_PEER%%%"))">Game Peer Port</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
+                        <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
+                    </MudMenu>
                 </MudStack>
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">

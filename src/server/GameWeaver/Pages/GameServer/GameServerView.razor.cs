@@ -207,7 +207,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private async Task Save()
     {
-        if (!_canEditGameServer)
+        if (!_canConfigureGameServer && !_canEditGameServer)
         {
             return;
         }
@@ -219,6 +219,119 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
+        if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
+        {
+            if (await SaveNewConfigItems())
+            {
+                return;
+            }
+            if (await SaveUpdatedConfigItems())
+            {
+                return;
+            }
+            if (await SaveDeletedConfigItems())
+            {
+                return;
+            }
+
+            var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
+            if (!hostUpdateResponse.Succeeded)
+            {
+                hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+        }
+        
+        ToggleEditMode();
+        await GetViewingGameServer();
+        await GetGameServerResources();
+        
+        Snackbar.Add("Gameserver successfully updated!", Severity.Success);
+        StateHasChanged();
+    }
+
+    private async Task<bool> SaveDeletedConfigItems()
+    {
+        foreach (var configItem in _deletedConfigItems)
+        {
+            // Config item comes from inherited profile resource, create server profile resource for the config item to be ignored
+            if (configItem.LocalResourceId == Guid.Empty)
+            {
+                var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
+                if (!createResourceResponse.Succeeded)
+                {
+                    createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return true;
+                }
+                
+                configItem.LocalResourceId = createResourceResponse.Data;
+                configItem.Ignore = true;
+                
+                var ignoreCreateResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
+                if (!ignoreCreateResponse.Succeeded)
+                {
+                    ignoreCreateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return true;
+                }
+            }
+
+            var deleteConfigResponse = await GameServerService.DeleteConfigurationItemAsync(configItem.Id, _loggedInUserId);
+            if (deleteConfigResponse.Succeeded) continue;
+            
+            deleteConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return true;
+        }
+
+        _deletedConfigItems.Clear();
+        return false;
+    }
+
+    private async Task<bool> SaveUpdatedConfigItems()
+    {
+        foreach (var configItem in _updatedConfigItems)
+        {
+            // Config item comes from inherited profile resource, create server profile resource for the config item
+            if (configItem.LocalResourceId == Guid.Empty)
+            {
+                var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
+                var existingLocalResource = _localResources.FirstOrDefault(x => x.GameProfileId == _gameServer.GameProfileId &&
+                                                                                (x.PathWindows.Length != 0 && x.PathWindows == matchingLocalResource.PathWindows) ||
+                                                                                (x.PathLinux.Length != 0 && x.PathLinux == matchingLocalResource.PathLinux) ||
+                                                                                (x.PathMac.Length != 0 && x.PathMac == matchingLocalResource.PathMac));
+
+                if (existingLocalResource is null)
+                {
+                    var resourceCreateRequest = matchingLocalResource.ToCreateRequest();
+                    resourceCreateRequest.GameProfileId = _gameServer.GameProfileId;
+                    var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
+                    if (!createResourceResponse.Succeeded)
+                    {
+                        createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                        return true;
+                    }
+                
+                    configItem.LocalResourceId = createResourceResponse.Data;
+                }
+                else
+                {
+                    configItem.LocalResourceId = existingLocalResource.Id;
+                }
+            }
+            
+            var updateConfigResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(), _loggedInUserId);
+            if (updateConfigResponse.Succeeded) continue;
+            
+            updateConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return true;
+        }
+
+        _updatedConfigItems.Clear();
+        return false;
+    }
+
+    private async Task<bool> SaveNewConfigItems()
+    {
         foreach (var configItem in _createdConfigItems)
         {
             // Check if there is a matching-ignored item (meaning deleted and to ignore from inherited config), if there is update it instead of creating a new item
@@ -240,96 +353,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             if (createConfigResponse.Succeeded) continue;
             
             createConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
+            return true;
         }
+
         _createdConfigItems.Clear();
-
-        foreach (var configItem in _updatedConfigItems)
-        {
-            // Config item comes from inherited profile resource, create server profile resource for the config item
-            if (configItem.LocalResourceId == Guid.Empty)
-            {
-                var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
-                var existingLocalResource = _localResources.FirstOrDefault(x => x.GameProfileId == _gameServer.GameProfileId &&
-                    (x.PathWindows.Length != 0 && x.PathWindows == matchingLocalResource.PathWindows) ||
-                    (x.PathLinux.Length != 0 && x.PathLinux == matchingLocalResource.PathLinux) ||
-                    (x.PathMac.Length != 0 && x.PathMac == matchingLocalResource.PathMac));
-
-                if (existingLocalResource is null)
-                {
-                    var resourceCreateRequest = matchingLocalResource.ToCreateRequest();
-                    resourceCreateRequest.GameProfileId = _gameServer.GameProfileId;
-                    var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
-                    if (!createResourceResponse.Succeeded)
-                    {
-                        createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                        return;
-                    }
-                
-                    configItem.LocalResourceId = createResourceResponse.Data;
-                }
-                else
-                {
-                    configItem.LocalResourceId = existingLocalResource.Id;
-                }
-            }
-            
-            var updateConfigResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(), _loggedInUserId);
-            if (updateConfigResponse.Succeeded) continue;
-            
-            updateConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-        _updatedConfigItems.Clear();
-
-        foreach (var configItem in _deletedConfigItems)
-        {
-            // Config item comes from inherited profile resource, create server profile resource for the config item to be ignored
-            if (configItem.LocalResourceId == Guid.Empty)
-            {
-                var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
-                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
-                if (!createResourceResponse.Succeeded)
-                {
-                    createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                    return;
-                }
-                
-                configItem.LocalResourceId = createResourceResponse.Data;
-                configItem.Ignore = true;
-                
-                var ignoreCreateResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
-                if (!ignoreCreateResponse.Succeeded)
-                {
-                    ignoreCreateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                    return;
-                }
-            }
-
-            var deleteConfigResponse = await GameServerService.DeleteConfigurationItemAsync(configItem.Id, _loggedInUserId);
-            if (deleteConfigResponse.Succeeded) continue;
-            
-            deleteConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-        _deletedConfigItems.Clear();
-
-        if (_updatedConfigItems.Count > 0)
-        {
-            var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
-            if (!hostUpdateResponse.Succeeded)
-            {
-                hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                return;
-            }
-        }
-        
-        ToggleEditMode();
-        await GetViewingGameServer();
-        await GetGameServerResources();
-        
-        Snackbar.Add("Gameserver successfully updated!", Severity.Success);
-        StateHasChanged();
+        return false;
     }
 
     private void ToggleEditMode()
@@ -563,7 +591,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private async Task<TableData<NotifyRecordSlim>> ServerReload(TableState state, CancellationToken token)
     {
-        var recordResponse = await NotifyRecordService.SearchPaginatedAsync(_notifySearchText, state.Page, 20);
+        var recordResponse = await NotifyRecordService.SearchPaginatedAsync(_notifySearchText, state.Page + 1, state.PageSize);
         if (!recordResponse.Succeeded)
         {
             recordResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -581,6 +609,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         };
 
         return new TableData<NotifyRecordSlim>() {TotalItems = _totalNotifyRecords, Items = _notifyPagedData};
+    }
+
+    private void InjectDynamicValue(ConfigurationItemSlim item, string value)
+    {
+        item.Value = value;
     }
 
     private void NotifyTriggered(object? sender, NotifyTriggeredEvent e)
