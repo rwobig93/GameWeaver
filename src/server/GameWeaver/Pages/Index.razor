@@ -19,7 +19,7 @@
                 <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
                     You have access to view our API!
                     <MudLink Target="_blank" Href="@AppRouteConstants.Api.Root">
-                        Check out the API documentation using Swagger/OpenApi!
+                        Check out the API documentation!
                     </MudLink>
                 </MudAlert>
             </MudItem>
@@ -38,12 +38,14 @@
                 @ServerState.ApplicationName is a work in progress, more to come!
             </MudAlert>
         </MudItem>
-        <MudExpansionPanel Class="mud-theme-appbar-background" Text="Documentation" MaxHeight="150">
-            Documentation will be coming soon!
-            <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/info/getting-started">
-                I'll link to the documentation page!
-            </MudButton>
-        </MudExpansionPanel>
+        <MudItem xs="12" sm="12" md="12">
+            <MudExpansionPanel Class="mud-theme-appbar-background" Text="Documentation" MaxHeight="150">
+                Documentation will be coming soon!
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/info/getting-started">
+                    I'll link to the documentation page!
+                </MudButton>
+            </MudExpansionPanel>
+        </MudItem>
         @* TODO: Add owned gameservers and hosts *@
     </MudGrid>
 </MudContainer>

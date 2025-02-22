@@ -342,4 +342,31 @@ public static class PermissionMappers
             LastModifiedOn = permissionDb.LastModifiedOn
         };
     }
+
+    public static AppPermissionDisplay ToDisplay(this AppPermissionSlim permission)
+    {
+        return new AppPermissionDisplay
+        {
+            Id = permission.Id,
+            UserId = permission.UserId,
+            UserName = string.Empty,
+            RoleId = permission.RoleId,
+            RoleName = string.Empty,
+            ClaimType = permission.ClaimType,
+            ClaimValue = permission.ClaimValue,
+            Name = permission.Name,
+            Description = permission.Description,
+            CreatedBy = permission.CreatedBy,
+            CreatedOn = permission.CreatedOn,
+            Group = permission.Group,
+            Access = permission.Access,
+            LastModifiedBy = permission.LastModifiedBy,
+            LastModifiedOn = permission.LastModifiedOn
+        };
+    }
+
+    public static IEnumerable<AppPermissionDisplay> ToDisplays(this IEnumerable<AppPermissionSlim> permissions)
+    {
+        return permissions.Select(ToDisplay);
+    }
 }

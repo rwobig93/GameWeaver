@@ -3,11 +3,13 @@ using Application.Constants.Identity;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Mappers.Identity;
 using Application.Models.Events;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
+using Application.Models.Identity.Permission;
 using Application.Models.Lifecycle;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
@@ -27,6 +29,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     [Inject] private IEventService EventService { get; init; } = null!;
     [Inject] private INotifyRecordService NotifyRecordService { get; init; } = null!;
     [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
+    [Inject] private IAppUserService UserService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
@@ -46,6 +49,10 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private string _notifySearchText = string.Empty;
     private int _totalNotifyRecords;
     private int _selectedNotifyViewDetail;
+    private List<AppPermissionDisplay> _assignedUserPermissions = [];
+    private List<AppPermissionDisplay> _assignedRolePermissions = [];
+    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
+    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
 
     private bool _canViewGameServer;
     private bool _canPermissionGameServer;
@@ -67,6 +74,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetGameServerResources();
+                await GetGameServerPermissions();
                 
                 EventService.GameVersionUpdated += GameVersionUpdated;
                 EventService.GameServerStatusChanged += GameServerStatusChanged;
@@ -209,12 +217,24 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private async Task GetGameServerPermissions()
     {
         var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, _gameServer.Id);
+        _assignedUserPermissions.Clear();
+        _assignedRolePermissions.Clear();
         
-        var availableServerPermissions = await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(_gameServer.Id);
+        var filteredUserPermissions = assignedServerPermissions.Data.Where(x => x.UserId != Guid.AllBitsSet).ToDisplays();
+        foreach (var permission in filteredUserPermissions.OrderBy(x => x.UserId))
+        {
+            var matchingUser = await UserService.GetByIdAsync(permission.UserId);
+            permission.UserName = matchingUser.Data?.Username ?? "Unknown";
+            _assignedUserPermissions.Add(permission);
+        }
         
-        // TODO: Add table showing assigned permissions
-        // TODO: Add delete button to assigned permissions table to remove access
-        // TODO: Add button that opens dialog to assign permissions to a specific user or role
+        var filteredRolePermissions = assignedServerPermissions.Data.Where(x => x.RoleId != Guid.AllBitsSet).ToDisplays();
+        foreach (var permission in filteredRolePermissions.OrderBy(x => x.RoleId))
+        {
+            var matchingRole = await RoleService.GetByIdAsync(permission.RoleId);
+            permission.RoleName = matchingRole.Data?.Name ?? "Unknown";
+            _assignedRolePermissions.Add(permission);
+        }
     }
     
     private async Task Save()
@@ -503,6 +523,53 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             _deletedConfigItems.Add(item);
         }
+    }
+
+    private async Task AddPermissions(bool isForRolesNotUsers)
+    {
+        // TODO: Look at solutions for granting permissions with users, roles and permission access needed in the current state
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters() {{"GameServerId", _gameServer.Id}, {"IsForRolesNotUsers", isForRolesNotUsers}};
+        var dialog = await DialogService.ShowAsync<GameServerPermissionAddDialog>("Add Gameserver Permissions", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        Snackbar.Add("Successfully updated permissions to the game server!", Severity.Success);
+        await GetGameServerPermissions();
+    }
+
+    private async Task DeletePermissions()
+    {
+        if (_deleteRolePermissions.Count == 0 && _deleteUserPermissions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var permission in _deleteRolePermissions)
+        {
+            var deleteRolePermResponse = await PermissionService.DeleteAsync(permission.Id, _loggedInUserId);
+            if (!deleteRolePermResponse.Succeeded)
+            {
+                deleteRolePermResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+        }
+
+        foreach (var permission in _deleteUserPermissions)
+        {
+            var deleteUserPermResponse = await PermissionService.DeleteAsync(permission.Id, _loggedInUserId);
+            if (!deleteUserPermResponse.Succeeded)
+            {
+                deleteUserPermResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+        }
+        
+        Snackbar.Add("Successfully deleted permissions to the game server!", Severity.Success);
+        await GetGameServerPermissions();
     }
 
     private async Task StartGameServer()

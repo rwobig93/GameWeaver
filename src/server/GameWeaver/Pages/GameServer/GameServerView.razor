@@ -282,7 +282,69 @@ else
         @if (_canPermissionGameServer)
         {
             <MudTabPanel Text="Permissions">
-                @* TODO: Insert dynamic role assignment panel here *@
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4" Square="false">
+                    <MudTable Items="@_assignedRolePermissions" @bind-SelectedItems="_deleteRolePermissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap" 
+                              MultiSelection="true">
+                        <ToolBarContent>
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                                <MudText>Roles with direct access to this server</MudText>
+                                <MudSpacer/>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                           OnClick="@(() => AddPermissions(true))">
+                                    Add Access
+                                </MudButton>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                                           OnClick="@DeletePermissions" Disabled="@(_deleteRolePermissions.Count < 1)">
+                                    Remove Access
+                                </MudButton>
+                            </MudStack>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Access Level</MudTh>
+                            <MudTh>Added</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
+                            <MudTd DataLabel="Name">@context.RoleName</MudTd>
+                            <MudTd DataLabel="Access Level">@context.Access</MudTd>
+                            <MudTd DataLabel="Added">@(context.CreatedOn.ConvertToLocal(_localTimeZone))</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+                
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4" Square="false">
+                    <MudTable Items="@_assignedUserPermissions" @bind-SelectedItems="_deleteUserPermissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap"
+                              MultiSelection="true">
+                        <ToolBarContent>
+                            <MudStack Row="true" Justify="Justify.SpaceBetween" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                                <MudText>Users with direct access to this server</MudText>
+                                <MudSpacer/>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                           OnClick="@(() => AddPermissions(false))">
+                                    Add Access
+                                </MudButton>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                                           OnClick="@DeletePermissions" Disabled="@(_deleteUserPermissions.Count < 1)">
+                                    Remove Access
+                                </MudButton>
+                            </MudStack>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh></MudTh>
+                            <MudTh>Name</MudTh>
+                            <MudTh>Access Level</MudTh>
+                            <MudTh>Added</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.VerifiedUser"/></MudTd>
+                            <MudTd DataLabel="Name">@context.UserName</MudTd>
+                            <MudTd DataLabel="Access Level">@context.Access</MudTd>
+                            <MudTd DataLabel="Added">@(context.CreatedOn.ConvertToLocal(_localTimeZone))</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
             </MudTabPanel>
         }
     </MudTabs>

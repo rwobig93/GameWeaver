@@ -22,7 +22,7 @@ public partial class GameServers : ComponentBase
     // private string _searchString = "";
     // private List<string> _autocompleteList;
     
-    private bool _canCreateGameServers = false;
+    private bool _canCreateGameServers;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

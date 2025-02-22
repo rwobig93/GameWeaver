@@ -493,7 +493,7 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    private async Task UpdateUserForPermissionChange(Guid userId)
+    public async Task UpdateUserForPermissionChange(Guid userId)
     {
         _logger.Debug("Updating clientId's for {UserId} to re-auth for updated permissions", userId);
 
@@ -507,7 +507,7 @@ public class AppPermissionService : IAppPermissionService
         _logger.Debug("Updated clientId's for User to force refresh token re-auth: {UserId}", userId);
     }
 
-    private async Task UpdateRoleUsersForPermissionChange(Guid roleId)
+    public async Task UpdateRoleUsersForPermissionChange(Guid roleId)
     {
         var roleUsers = await _roleRepository.GetUsersForRole(roleId);
         if (!roleUsers.Succeeded)

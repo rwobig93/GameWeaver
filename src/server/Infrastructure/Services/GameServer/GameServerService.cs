@@ -4,7 +4,6 @@ using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Mappers.Lifecycle;
-using Application.Models.Events;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
@@ -1677,6 +1676,7 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> StartServerAsync(Guid id, Guid requestUserId)
     {
+        // TODO: Add missing dynamic permissions for all game server methods
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
         if (foundServer.Result is null)
         {
