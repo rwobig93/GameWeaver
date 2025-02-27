@@ -239,6 +239,8 @@ public partial class GameServerCreateDialog : ComponentBase
         _createRequest.GameId = _selectedGame.Id;
         _createRequest.ParentGameProfileId = _selectedParentProfile.Id == Guid.Empty ? null : _selectedParentProfile.Id;
         
+        // TODO: After server is finished w/ discovery and installation we need to apply / deploy configuration to the server
+        
         // TODO: Validate checks done w/ the CreateAsync method, we need to validate ports, game default profile exists and host availability
         var response = await GameServerService.CreateAsync(_createRequest, _loggedInUserId);
         if (!response.Succeeded)

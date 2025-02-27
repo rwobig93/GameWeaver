@@ -15,7 +15,7 @@
                 <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
                     <MudTextField @bind-Value="_selectedOwner.Username" Label="Host Owner" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="UserBasicResponse" Label="Available Owners" @bind-Value="_selectedOwner"
-                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x.Username}")"/>
+                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")"/>
                 </MudStack>
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">

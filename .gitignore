@@ -4,6 +4,7 @@ appsettings.Development.json
 **/.idea/discord.xml
 **/_dev-WeaverApp
 **/_local_storage/
+**/GameWeaverService/
 
 # User-specific files
 *.rsuser

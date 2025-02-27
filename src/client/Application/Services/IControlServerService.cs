@@ -13,7 +13,7 @@ public interface IControlServerService
     public HostAuthorization Authorization { get; }
     
     Task<bool> CheckIfServerIsUp();
-    Task<IResult<HostRegisterResponse>> RegistrationConfirm();
+    Task<IResult<HostRegisterResponse?>> RegistrationConfirm();
     Task<IResult<HostAuthResponse>> GetToken();
     Task<IResult> EnsureAuthTokenIsUpdated();
     Task<IResult<IEnumerable<WeaverWork>?>> Checkin(HostCheckInRequest request);

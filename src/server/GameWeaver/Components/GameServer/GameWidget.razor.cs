@@ -7,8 +7,8 @@ public partial class GameWidget : ComponentBase
     [Parameter] public GameSlim Game { get; set; } = new();
     [Parameter] public bool ShowName { get; set; }
     [Parameter] public string CssDisplay { get; set; } = "game-card-lift";
-    [Parameter] public bool Vertical { get; set; }
-    [Parameter] public int WidthPx { get; set; } = 390;  // 385
+    [Parameter] public bool Vertical { get; set; } = false;
+    [Parameter] public int WidthPx { get; set; } = 293;  // 385
     [Parameter] public int HeightPx { get; set; } = 137;  // 180
 
     [Inject] public IWebClientService WebClientService { get; set; } = null!;
@@ -16,6 +16,7 @@ public partial class GameWidget : ComponentBase
 
     private string _imageUrl = string.Empty;
     private bool _imageExists = true;
+    private bool _imageLoaded = false;
     private string CardWidth => $"{WidthPx}px";
     private string CardHeight => $"{HeightPx}px";
     
@@ -68,6 +69,7 @@ public partial class GameWidget : ComponentBase
     public async Task UpdateImage()
     {
         await UpdateImageUrl();
+        _imageLoaded = true;
         StateHasChanged();
     }
 }

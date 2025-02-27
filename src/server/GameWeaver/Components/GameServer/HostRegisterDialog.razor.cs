@@ -30,7 +30,7 @@ public partial class HostRegisterDialog : ComponentBase
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private Guid _loggedInUserId = Guid.Empty;
     private List<UserBasicResponse> _users = [];
-    private UserBasicResponse _selectedOwner = new() {Username = "Unknown"};
+    private UserBasicResponse _selectedOwner = new() {Username = ""};
     private readonly HostRegistrationCreateRequest _registerRequest = new();
     private string _allowedPortsRaw = string.Empty;
     

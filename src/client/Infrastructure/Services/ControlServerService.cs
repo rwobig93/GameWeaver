@@ -84,7 +84,7 @@ public class ControlServerService : IControlServerService
     ///   - Will attempt to get a token if register url is empty
     /// </remarks>
     /// <returns>Host and key pair used to authenticate with the control server</returns>
-    public async Task<IResult<HostRegisterResponse>> RegistrationConfirm()
+    public async Task<IResult<HostRegisterResponse?>> RegistrationConfirm()
     {
         // Client should already be registered if there is no register URL, and we have a valid id and Key pair, so we'll attempt to get a token
         if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl))
@@ -113,9 +113,10 @@ public class ControlServerService : IControlServerService
         }
 
         // Update the server URL in the general configuration to the newly registered control server
+        var parsedServerUrl = new Uri(_authConfig.CurrentValue.RegisterUrl);
         var updatedGeneralConfig = new GeneralConfiguration
         {
-            ServerUrl = _authConfig.CurrentValue.RegisterUrl.Split("/")[0],
+            ServerUrl = parsedServerUrl.GetLeftPart(UriPartial.Authority),
             CommunicationQueueMaxPerRun = _generalConfig.CommunicationQueueMaxPerRun,
             MaxQueueAttempts = _generalConfig.MaxQueueAttempts,
             ControlServerWorkIntervalMs = _generalConfig.ControlServerWorkIntervalMs,
@@ -147,7 +148,7 @@ public class ControlServerService : IControlServerService
         {
             return await Result<HostRegisterResponse>.FailAsync(authSaveResponse.Messages);
         }
-
+        
         return await Result<HostRegisterResponse>.SuccessAsync(convertedResponse);
     }
 

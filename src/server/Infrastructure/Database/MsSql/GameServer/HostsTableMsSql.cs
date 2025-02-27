@@ -172,6 +172,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
+    // TODO: Add parenthesis to remaining procedures to group and/or logic for desired outcome
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -186,12 +187,12 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.IsDeleted = 0 AND h.CurrentState != 1
-                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                    AND (h.Id LIKE '%' + @SearchTerm + '%'
                     OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
-                    OR h.PublicIp LIKE '%' + @SearchTerm + '%'
+                    OR h.PublicIp LIKE '%' + @SearchTerm + '%')
                 ORDER BY h.Id;
             end"
     };
@@ -210,12 +211,12 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.IsDeleted = 0 AND h.CurrentState != 1
-                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                    AND (h.Id LIKE '%' + @SearchTerm + '%'
                     OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
-                    OR h.PublicIp LIKE '%' + @SearchTerm + '%'
+                    OR h.PublicIp LIKE '%' + @SearchTerm + '%')
                 ORDER BY h.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

@@ -44,9 +44,11 @@ else
     
     @if (_updateIsAvailable)
     {
-        <MudAlert Dense="true" Elevation="8" Square="false" Severity="Severity.Warning">
-            An update is available for this game server
-        </MudAlert>
+        <MudPaper Elevation="10" Class="d-flex flex-wrap ma-4 pa-2 gap-5 justify-center align-center mud-text-align-center">
+            <MudAlert Dense="true" Elevation="8" Square="false" Severity="Severity.Warning" Class="border-pulse-warning">
+                An update is available for this game server
+            </MudAlert>
+        </MudPaper>
     }
 
     <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">

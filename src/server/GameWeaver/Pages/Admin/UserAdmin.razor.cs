@@ -79,7 +79,7 @@ public partial class UserAdmin
         }
 
         _pagedData = usersResult.Data.ToArray();
-        _totalUsers = (await UserService.GetCountAsync()).Data;
+        _totalUsers = usersResult.TotalCount;
 
         if (_filterDisabled)
             _pagedData = _pagedData.Where(x => x.AuthState == AuthState.Disabled);

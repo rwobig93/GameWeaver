@@ -1,5 +1,10 @@
 ﻿<div class="@CssDisplay" @onclick="ViewGame">
     <MudPaper Style="position: relative;">
+        @if (!_imageLoaded)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="@CardHeight" Width="@CardWidth" />
+            return;
+        }
         @if (_imageExists)
         {
             <img src="@(_imageUrl)" width="@CardWidth" height="@CardHeight" alt="Game Cover"/>

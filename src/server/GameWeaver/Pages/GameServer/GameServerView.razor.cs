@@ -394,6 +394,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private void ToggleEditMode()
     {
+        // TODO: Add file / resource creation in the advanced section (also rename to expert) along w/ showing file path, also allow resource delete
         _editMode = !_editMode;
 
         _editButtonText = _editMode ? "Disable Edit Mode" : "Enable Edit Mode";
@@ -425,7 +426,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-
+        
+        // TODO: Delete is failing w/: Failed to delete server profile before game server deletion
+        // TODO: Error detail for tshoot log is also showing: "Error": "System.Collections.Generic.List\u00601[System.String]"
         var response = await GameServerService.DeleteAsync(_gameServer.Id, _loggedInUserId);
         if (!response.Succeeded)
         {

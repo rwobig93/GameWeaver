@@ -514,7 +514,7 @@ public class HostService : IHostService
         }
 
         var assignedServers = await _gameServerRepository.GetByHostIdAsync(foundHost.Result.Id);
-        if (assignedServers.Succeeded)
+        if (assignedServers.Result!.Any())
         {
             List<string> errorMessages = [ErrorMessageConstants.Hosts.AssignedGameServers];
             errorMessages.AddRange(from server in assignedServers.Result?.ToList() ?? [] select $"Assigned Game Server: [id]{server.Id} [name]{server.ServerName}");
