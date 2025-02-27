@@ -59,4 +59,78 @@
 }
 
 /*#endregion Warning Borders */
+/*#region Info Borders */
+
+@-webkit-keyframes border-pulse-info {
+    0% { -webkit-box-shadow: 0 0 0 0 rgba(var(--mud-palette-info-rgb), 0.4); }
+    70% { -webkit-box-shadow: 0 0 0 6px rgba(var(--mud-palette-info-rgb), 0); }
+    100% {  -webkit-box-shadow: 0 0 0 0 rgba(var(--mud-palette-info-rgb), 0); }
+}
+@keyframes border-pulse-info {
+    0% { -moz-box-shadow: 0 0 0 0 rgba(var(--mud-palette-info-rgb), 0.4); box-shadow: 0 0 0 0 rgba(var(--mud-palette-info-rgb), 0.4); }
+    70% { -moz-box-shadow: 0 0 0 6px rgba(var(--mud-palette-info-rgb), 0); box-shadow: 0 0 0 6px rgba(var(--mud-palette-info-rgb), 0); }
+    100% { -moz-box-shadow: 0 0 0 0 rgba(var(--mud-palette-info-rgb), 0); box-shadow: 0 0 0 0 rgba(var(--mud-palette-info-rgb), 0); }
+}
+.border-pulse-info {
+    border-radius: 30%;
+    box-shadow: 0 0 0 rgba(var(--mud-palette-info-rgb), 0.4);
+    animation: border-pulse-info 2s infinite;
+}
+.border-pulse-info:hover {
+    animation: none;
+}
+
+/*#endregion Info Borders */
+/*#region Test Borders */
+
+@-webkit-keyframes border-pulse-shadow {
+    0% { -webkit-box-shadow: 0 0 0 0 rgba(var(--mud-palette-dark-rgb), 0.4); }
+    70% { -webkit-box-shadow: 0 0 0 6px rgba(var(--mud-palette-dark-rgb), 0); }
+    100% {  -webkit-box-shadow: 0 0 0 0 rgba(var(--mud-palette-dark-rgb), 0); }
+}
+@keyframes border-pulse-shadow {
+    0% { -moz-box-shadow: 0 0 0 0 rgba(var(--mud-palette-dark-rgb), 0.4); box-shadow: 0 0 0 0 rgba(var(--mud-palette-dark-rgb), 0.4); }
+    70% { -moz-box-shadow: 0 0 0 6px rgba(var(--mud-palette-dark-rgb), 0); box-shadow: 0 0 0 6px rgba(var(--mud-palette-dark-rgb), 0); }
+    100% { -moz-box-shadow: 0 0 0 0 rgba(var(--mud-palette-dark-rgb-rgb), 0); box-shadow: 0 0 0 0 rgba(var(--mud-palette-dark-rgb), 0); }
+}
+.border-pulse-shadow {
+    border-radius: 30%;
+    box-shadow: 0 0 0 rgba(var(--mud-palette-dark-rgb), 0.4);
+    animation: border-pulse-shadow 2s infinite;
+}
+.border-pulse-shadow:hover {
+    animation: none;
+}
+
+
+@property --rainbow-angle {
+    syntax: '<angle>';
+    initial-value: 0deg;
+    inherits: false;
+}
+@keyframes rainbow-rotate {
+    to { --rainbow-angle: 360deg; }
+}
+.border-rainbow {
+    --rainbow-angle: 0deg;
+    border: 1px solid;
+    border-radius: 10px;
+    border-image: conic-gradient(from var(--rainbow-angle), red, yellow, lime, aqua, blue, magenta, red) 1;
+    animation: 2s rainbow-rotate linear infinite;
+}
+
+@keyframes rainbow-text {
+    0%,100% {background-position: 0 0;}
+    50% {background-position: 100% 0;}
+}
+.rainbow-text {
+    background: linear-gradient(to right, #6666ff, #0099ff , #00ff00, #ff3399, #6666ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: rainbow-text 6s ease-in-out infinite;
+    background-size: 400% 100%;
+}
+
+/*#endregion Test Borders */
 
