@@ -172,7 +172,6 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
     
-    // TODO: Add parenthesis to remaining procedures to group and/or logic for desired outcome
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,

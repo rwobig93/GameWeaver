@@ -420,15 +420,6 @@ public class GameServerService : IGameServerService
             });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        
-        var profileDeleteRequest = await DeleteGameProfileAsync(foundServer.Result.GameProfileId, requestUserId);
-        if (!profileDeleteRequest.Succeeded)
-        {
-            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
-                "Failed to delete server profile before game server deletion", new Dictionary<string, string> {{"Error", profileDeleteRequest.Messages.ToString() ?? ""}
-                });
-            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
-        }
 
         var updateStatusRequest = await _gameServerRepository.UpdateAsync(new GameServerUpdate
         {

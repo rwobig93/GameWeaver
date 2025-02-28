@@ -238,12 +238,12 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 SELECT m.*
                 FROM dbo.[{Table.TableName}] m
                 WHERE m.IsDeleted = 0
-                    AND m.Id LIKE '%' + @SearchTerm + '%'
+                    AND (m.Id LIKE '%' + @SearchTerm + '%'
                     OR m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'
-                    OR m.FriendlyName LIKE '%' + @SearchTerm + '%';
+                    OR m.FriendlyName LIKE '%' + @SearchTerm + '%');
             end"
     };
     
@@ -261,12 +261,12 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 SELECT COUNT(*) OVER() AS TotalCount, m.*
                 FROM dbo.[{Table.TableName}] m
                 WHERE m.IsDeleted = 0
-                    AND m.Id LIKE '%' + @SearchTerm + '%'
+                    AND (m.Id LIKE '%' + @SearchTerm + '%'
                     OR m.GameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR m.SteamId LIKE '%' + @SearchTerm + '%'
-                    OR m.FriendlyName LIKE '%' + @SearchTerm + '%'
+                    OR m.FriendlyName LIKE '%' + @SearchTerm + '%')
                 ORDER BY m.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };

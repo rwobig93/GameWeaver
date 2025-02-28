@@ -182,10 +182,10 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    AND (g.Id LIKE '%' + @SearchTerm + '%'
                     OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.OwnerId LIKE '%' + @SearchTerm + '%'
-                    OR g.GameId LIKE '%' + @SearchTerm + '%'
+                    OR g.GameId LIKE '%' + @SearchTerm + '%')
                 ORDER BY g.Id;
             end"
     };
@@ -204,10 +204,10 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    AND (g.Id LIKE '%' + @SearchTerm + '%'
                     OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.OwnerId LIKE '%' + @SearchTerm + '%'
-                    OR g.GameId LIKE '%' + @SearchTerm + '%'
+                    OR g.GameId LIKE '%' + @SearchTerm + '%')
                 ORDER BY g.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
