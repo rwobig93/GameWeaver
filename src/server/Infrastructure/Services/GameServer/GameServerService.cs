@@ -399,7 +399,7 @@ public class GameServerService : IGameServerService
     /// Delete a game server
     /// </summary>
     /// <param name="id">Game server Id</param>
-    /// <param name="requestUserId">User Id making the request</param>
+    /// <param name="requestUserId">User ID making the request</param>
     /// <param name="sendHostUninstall">Whether to send an uninstallation request to the game server host</param>
     /// <returns>Success or failure with context messages</returns>
     public async Task<IResult> DeleteAsync(Guid id, Guid requestUserId, bool sendHostUninstall = true)

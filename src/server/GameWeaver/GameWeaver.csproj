@@ -76,6 +76,10 @@
       <EmbeddedResource Include="wwwroot\images\gameserver\game-default-vertical.jpg">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
+      <Content Remove="wwwroot\images\general\perlin-noise-mask.png" />
+      <EmbeddedResource Include="wwwroot\images\general\perlin-noise-mask.png">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
     </ItemGroup>
 
 </Project>
