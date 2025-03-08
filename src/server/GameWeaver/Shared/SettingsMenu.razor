@@ -17,14 +17,11 @@
     {
         <MudPaper Elevation="5" Class="d-flex mb-4">
             <MudExpansionPanel Text="Themes" Class="d-flex flex-column pa-1">
-                <MudItem>
-                    <MudChip T="string" Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
-                </MudItem>
                 <MudItem Class="d-flex flex-column align-center">
                     @foreach (var theme in AvailableThemes)
                     {
                         <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
+                            <MudButton Variant="Variant.Text" Color="@(UserPreferences.ThemePreference == theme.Id ? Color.Primary : Color.Secondary)" StartIcon="@theme.Icon"
                                        OnClick="@(() => ChangeThemeOnLayout(theme))">
                                 @theme.FriendlyName
                             </MudButton>

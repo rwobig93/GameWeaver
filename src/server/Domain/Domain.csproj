@@ -9,8 +9,8 @@
 
     <ItemGroup>
       <PackageReference Include="Dapper" Version="2.1.66" />
-      <PackageReference Include="Hangfire" Version="1.8.17" />
-      <PackageReference Include="Hangfire.Core" Version="1.8.17" />
+      <PackageReference Include="Hangfire" Version="1.8.18" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.18" />
       <PackageReference Include="MemoryPack" Version="1.21.4" />
       <PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.1" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.2" />
