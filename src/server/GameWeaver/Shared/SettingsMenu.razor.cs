@@ -30,6 +30,7 @@ public partial class SettingsMenu
         {
             await GetPermissions();
             await GetClientTimezone();
+            GetAvailableThemes();
             StateHasChanged();
         }
     }
@@ -43,6 +44,11 @@ public partial class SettingsMenu
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canEditTheme = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Preferences.ChangeTheme);
+    }
+
+    private void GetAvailableThemes()
+    {
+        AvailableThemes = AppThemes.GetAvailableThemes();
     }
 
     private string GetCurrentThemeName()
@@ -69,6 +75,7 @@ public partial class SettingsMenu
         if (!_canEditTheme) return;
         
         await ThemeChanged.InvokeAsync(theme);
+        GetAvailableThemes();
         StateHasChanged();
     }
 

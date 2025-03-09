@@ -54,43 +54,45 @@
                 <MudText Color="Color.Info" Align="Align.Center" Typo="Typo.h6">Processing Email Change...</MudText>
             }
         </MudPaper>
-        <MudItem xs="12" sm="12" md="12">
-            <MudTable Items="@CurrentUser.Roles" Hover="true" Dense="true" Striped="true">
-                <ToolBarContent>
-                    <MudSpacer/>
-                    <MudText Typo="Typo.h6">Assigned Roles</MudText>
-                    <MudSpacer/>
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh></MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Description</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Description">@context.Description</MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12">
-            <MudTable Items="@CurrentUser.Permissions" Hover="true" Dense="true" Striped="true">
-                <ToolBarContent>
-                    <MudSpacer/>
-                    <MudText Typo="Typo.h6">Assigned Permissions</MudText>
-                    <MudSpacer/>
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh></MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Description</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
-                    <MudTd DataLabel="Name">@context.Name</MudTd>
-                    <MudTd DataLabel="Description">@context.Description</MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudItem>
+        <MudTable Items="@CurrentUser.Roles" Hover="true" Dense="true" Striped="true" Class="px-4 mb-3" Style="width: 98%;">
+            <ToolBarContent>
+                <MudSpacer/>
+                <MudText Typo="Typo.h6">Assigned Roles</MudText>
+                <MudSpacer/>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh></MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Description</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No roles were found, this should be impossible, how'd you do this?</MudText>
+            </NoRecordsContent>
+        </MudTable>
+        <MudTable Items="@CurrentUser.Permissions" Hover="true" Dense="true" Striped="true" Class="px-4 mb-3" Style="width: 98%;">
+            <ToolBarContent>
+                <MudSpacer/>
+                <MudText Typo="Typo.h6">Assigned Permissions</MudText>
+                <MudSpacer/>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh></MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Description</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
+                <MudTd DataLabel="Name">@context.Name</MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>No directly assigned permissions were found</MudText>
+            </NoRecordsContent>
+        </MudTable>
     </MudGrid>
 </MudContainer>

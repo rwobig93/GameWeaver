@@ -101,7 +101,9 @@ public partial class MainLayout
                 var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
                 var result = await AccountService.UpdatePreferences(userId, _userPreferences.ToUpdate());
                 if (!result.Succeeded)
+                {
                     result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                }
             }
         }
         catch

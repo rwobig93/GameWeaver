@@ -96,6 +96,15 @@ public partial class ThemeSettings
     {
         if (!_canEditTheme) return;
         
+        // Grab the current preferences in case the theme was changed while we were on this page
+        var latestPreferences = await UserService.GetPreferences(CurrentUser.Id);
+        if (!latestPreferences.Succeeded || latestPreferences.Data is null)
+        {
+            latestPreferences.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        _userPreferences.ThemePreference = latestPreferences.Data.ThemePreference;
+        
         var updatePreferences = _userPreferences.ToUpdate();
         var requestResult = await UserService.UpdatePreferences(CurrentUser.Id, updatePreferences);
         if (!requestResult.Succeeded)
@@ -106,7 +115,7 @@ public partial class ThemeSettings
 
         Snackbar.Add("Themes successfully updated!");
         await GetPreferences();
-        StateHasChanged();
+        NavManager.Refresh();
     }
 
     private void ResetSelectedThemeToDefault()
