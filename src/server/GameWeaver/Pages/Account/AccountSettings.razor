@@ -4,11 +4,13 @@
 @attribute [Authorize]
 
 <MudContainer Class="d-flex pa-4 flex-column align-center">
-    <AccountSettingsNavBar/>
+    <MudPaper Elevation="12" Square="false">
+        <AccountSettingsNavBar/>
+    </MudPaper>
 </MudContainer>
 
-<MudContainer>
-    <MudGrid Class="pa-4 justify-center my-4 mud-text-align-center">
+<MudContainer Class="pt-4">
+    <MudGrid Class="pa-4 justify-center mud-text-align-center">
         <MudPaper Width="98%" Class="pa-4 mb-3">
             <MudItem xs="12" sm="12" md="12" Class="d-flex flex-column align-center pb-4">
                 <AccountAvatar Username="@CurrentUser.Username" AvatarSize="Size.Large" ProfileImageUrl="@CurrentUser.ProfilePictureDataUrl"

@@ -118,7 +118,7 @@
 @keyframes color-shift-gradient {
     0% {
         transform: rotate(0deg) scale(3);
-        background-position: 0% 20%;
+        background-position: 0 20%;
     }
     50% {
         transform: rotate(180deg) scale(3);
@@ -126,7 +126,7 @@
     }
     100% {
         transform: rotate(360deg) scale(3);
-        background-position: 0% 20%;
+        background-position: 0 20%;
     }
 }
 .background-color-shift {
@@ -146,7 +146,7 @@
 }
 
 :root {
-    --dot-size: 20px;
+    --perlin-noise-dot-size: 20px;
 }
 @keyframes perlin-flicker {
     to { mask-position: 50% 50%, 0 50%; }
@@ -157,14 +157,15 @@
     bottom: 0;
     background: conic-gradient(from 180deg at 50% 70%, hsla(0,0%,98%,1) 0deg, var(--mud-palette-primary) 72.0000010728836deg,
         var(--mud-palette-secondary) 144.0000021457672deg, var(--mud-palette-tertiary) 216.00000858306885deg, var(--mud-palette-error) 288.0000042915344deg, hsla(0,0%,98%,1) 1turn);
-    width: max(99vw, 99vh, 99%);
-    height: max(99vw, 99vh, 99%);
+    width: max(100vw, 100%);
+    height: max(100vh, 100%);
     mask:
-            radial-gradient(circle at 50% 50%, white 2px, transparent 2.5px) 50% 50% / var(--dot-size) var(--dot-size),
+            radial-gradient(circle at 50% 50%, white 2px, transparent 2.5px) 50% 50% / var(--perlin-noise-dot-size) var(--perlin-noise-dot-size),
             url("../images/general/perlin-noise-mask.png") 256px 50% / 256px 256px;
     mask-composite: intersect;
     animation: perlin-flicker 20s infinite linear;
 }
 
 /*#endregion*/
+
 

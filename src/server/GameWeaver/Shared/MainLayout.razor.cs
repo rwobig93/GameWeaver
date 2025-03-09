@@ -108,6 +108,8 @@ public partial class MainLayout
         {
             _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
         }
+        
+        StateHasChanged();
     }
 
     private async Task GetPreferences()
@@ -144,10 +146,11 @@ public partial class MainLayout
                 Tertiary = preferenceTheme.ColorTertiary,
                 Background = preferenceTheme.ColorBackground,
                 Success = preferenceTheme.ColorSuccess,
+                Info = preferenceTheme.ColorInfo,
                 Error = preferenceTheme.ColorError,
                 BackgroundGray = preferenceTheme.ColorNavBar,
                 TextDisabled = "rgba(255,255,255, 0.26)",
-                Surface = preferenceTheme.ColorBackground,
+                Surface = preferenceTheme.ColorSurface,
                 DrawerBackground = preferenceTheme.ColorNavBar,
                 DrawerText = preferenceTheme.ColorPrimary,
                 AppbarBackground = preferenceTheme.ColorTitleBar,

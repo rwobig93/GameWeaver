@@ -1,14 +1,17 @@
-﻿<MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined">
-    <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.AccountSettings)">
+﻿<MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined" OverrideStyles="false">
+    <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.AccountSettings)" Variant="Variant.Outlined"
+               Color="@(NavManager.Uri.Contains(AppRouteConstants.Account.AccountSettings) ? Color.Primary : Color.Secondary)">
         General
     </MudButton>
     @if (_canEditTheme)
     {
-        <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Themes)">
+        <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Themes)" Variant="Variant.Outlined"
+                   Color="@(NavManager.Uri.Contains(AppRouteConstants.Account.Themes) ? Color.Primary : Color.Secondary)">
             Themes
         </MudButton>
     }
-    <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Security)">
+    <MudButton OnClick="() => NavigateToPage(AppRouteConstants.Account.Security)" Variant="Variant.Outlined"
+               Color="@(NavManager.Uri.Contains(AppRouteConstants.Account.Security) ? Color.Primary : Color.Secondary)">
         Security
     </MudButton>
 </MudButtonGroup>
