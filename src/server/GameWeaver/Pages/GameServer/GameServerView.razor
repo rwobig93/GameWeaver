@@ -34,6 +34,12 @@ else
                        OnClick="@Save">Save Changes
             </MudButton>
         }
+        @if (_canChangeOwnership)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Person"
+                       OnClick="@ChangeOwnership">Change Ownership
+            </MudButton>
+        }
         @if (_canDeleteGameServer)
         {
             <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
@@ -42,7 +48,15 @@ else
         }
     </MudPaper>
     
-    @if (_updateIsAvailable)
+    @if (_gameServer.IsDeleted)
+    {
+        <MudPaper Elevation="10" Class="d-flex flex-wrap ma-4 pa-2 gap-5 justify-center align-center mud-text-align-center">
+            <MudAlert Dense="true" Elevation="8" Square="false" Severity="Severity.Error" Class="border-glowing-error">
+                This gameserver has been deleted and is no longer available
+            </MudAlert>
+        </MudPaper>
+    }
+    @if (_updateIsAvailable && !_gameServer.IsDeleted)
     {
         <MudPaper Elevation="10" Class="d-flex flex-wrap ma-4 pa-2 gap-5 justify-center align-center mud-text-align-center">
             <MudAlert Dense="true" Elevation="8" Square="false" Severity="Severity.Warning" Class="border-pulse-warning">
@@ -57,9 +71,20 @@ else
         </MudItem>
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_gameServer.ServerName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            @* TODO: Implement a 'config waiting on server reboot' state in some form after config is updated *@
-            <MudTextField @bind-Value="_gameServer.ServerState" Label="Current state" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="true"/>
+            <MudTextField @bind-Value="_gameServer.ServerState" Label="Current state" Variant="Variant.Outlined" Disabled="true"/>
+            <MudTextField @bind-Value="_gameServer.Password" Label="Password" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_gameServer.ExternalHostname" Label="External Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_gameServer.PortGame" Label="Game Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_gameServer.PortPeer" Label="Peer Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_gameServer.PortQuery" Label="Query Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_gameServer.PortRcon" Label="RCON Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            @if (_canEditGameServer)
+            {
+                <MudTextField @bind-Value="_gameServer.PasswordAdmin" Label="Admin Password" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudTextField @bind-Value="_gameServer.PasswordRcon" Label="RCON Password" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            }
         </MudItem>
+        @* TODO: Add informational notice that configuration is inherited from parent profile if assigned, add change / delete buttons *@
         @if (_canStartGameServer || _canStopGameServer)
         {
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-1 justify-center">

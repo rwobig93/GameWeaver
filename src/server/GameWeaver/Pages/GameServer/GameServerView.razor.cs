@@ -61,6 +61,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private bool _canStartGameServer;
     private bool _canStopGameServer;
     private bool _canDeleteGameServer;
+    private bool _canChangeOwnership;
     
     
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -177,6 +178,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canStartGameServer = true;
             _canStopGameServer = true;
             _canDeleteGameServer = true;
+            _canChangeOwnership = true;
             return;
         }
         
@@ -197,6 +199,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canStartGameServer = true;
             _canStopGameServer = true;
             _canDeleteGameServer = false;
+            _canChangeOwnership = true;
         }
         
         _canPermissionGameServer =  await AuthorizationService.UserHasPermission(currentUser,
@@ -212,6 +215,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                               await AuthorizationService.UserHasPermission(currentUser,
                                   PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Stop));
         _canDeleteGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
+        _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
     }
 
     private async Task GetGameServerPermissions()
@@ -669,6 +673,51 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         Snackbar.Add($"Updating the server now!", Severity.Success);
+    }
+
+    private async Task ChangeOwnership()
+    {
+        if (!_canChangeOwnership)
+        {
+            return;
+        }
+        
+        var dialogParameters = new DialogParameters()
+        {
+            {"ConfirmButtonText", "Change Gameserver Owner"},
+            {"Title", "Transfer Gameserver Ownership"},
+            {"OwnerId", _gameServer.OwnerId}
+        };
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+
+        var dialog = await DialogService.ShowAsync<ChangeOwnershipDialog>("Transfer Gameserver Ownership", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var responseOwnerId = (Guid) dialogResult.Data;
+        if (_gameServer.OwnerId == responseOwnerId)
+        {
+            Snackbar.Add("Selected owner is already the owner, everything is as it was", Severity.Info);
+            return;
+        }
+
+        var updateRequest = _gameServer.ToUpdate();
+        updateRequest.OwnerId = responseOwnerId;
+
+        var response = await GameServerService.UpdateAsync(updateRequest, _loggedInUserId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully transferred ownership!", Severity.Success);
+        // Since ownership has changed we want to re-verify permissions
+        await GetPermissions();
+        StateHasChanged();
     }
     
     private async Task<TableData<NotifyRecordSlim>> ServerReload(TableState state, CancellationToken token)

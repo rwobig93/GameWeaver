@@ -273,7 +273,8 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialogResult = await DialogService.Show<ChangeOwnershipDialog>("Transfer Host Ownership", dialogParameters, dialogOptions).Result;
+        var dialog = await DialogService.ShowAsync<ChangeOwnershipDialog>("Transfer Host Ownership", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
