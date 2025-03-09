@@ -66,15 +66,18 @@
         <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-2">
             <MudColorPicker Label="Surface Color" Elevation="12"   Class="d-inline-flex"
                             @bind-Text="_editingTheme.ColorSurface" Variant="Variant.Outlined" @bind-Value="_editThemeSurfaceColor" />
-            <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorTertiary}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
+            <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorSurface}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
             <MudColorPicker Label="Info Color" Elevation="12"
                             @bind-Text="_editingTheme.ColorInfo" Variant="Variant.Outlined" @bind-Value="_editThemeInfoColor" />
-            <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorBackground}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
+            <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorInfo}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
         </MudItem>
         <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-2">
             <MudColorPicker Label="Success Color" Elevation="12"
                             @bind-Text="_editingTheme.ColorSuccess" Variant="Variant.Outlined" @bind-Value="_editThemeSuccessColor" />
             <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorSuccess}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
+            <MudColorPicker Label="Warning Color" Elevation="12"
+                            @bind-Text="_editingTheme.ColorWarning" Variant="Variant.Outlined" @bind-Value="_editThemeWarningColor" />
+            <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorWarning}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
             <MudColorPicker Label="Error Color" Elevation="12"
                             @bind-Text="_editingTheme.ColorError" Variant="Variant.Outlined" @bind-Value="_editThemeErrorColor" />
             <MudIcon Icon="@Icons.Material.Rounded.Square" Style="@($"color: {_editingTheme.ColorError}; height: 50px; width: 50px;")" Class="d-inline-flex align-self-center" />
@@ -135,13 +138,24 @@
         <MudGrid Class="d-flex mx-0 px-8" Style="@($"background-color: {_editingTheme.ColorBackground};")">
             <MudStack Row="true" Wrap="Wrap.Wrap" Justify="Justify.SpaceEvenly" Spacing="2" AlignItems="AlignItems.Center" StretchItems="StretchItems.None" Class="mt-8">
                 <MudAlert Severity="Severity.Normal" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorPrimary};")">Normal Message</MudAlert>
-                <MudAlert Severity="Severity.Info" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorSecondary};")">Info Message</MudAlert>
-                <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorTertiary};")">Warning Message</MudAlert>
+                <MudAlert Severity="Severity.Info" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorInfo};")">Info Message</MudAlert>
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorWarning};")">Warning Message</MudAlert>
                 <MudAlert Severity="Severity.Success" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorSuccess};")">Success Message</MudAlert>
                 <MudAlert Severity="Severity.Error" Dense="true" Class="my-2 d-inline-flex" Style="@($"color: {_editingTheme.ColorError};")">Error Message</MudAlert>
             </MudStack>
             <MudItem sm="12" md="12" xs="12" lg="12">
-                <MudPaper Elevation="5" Square="false" Class="rounded pa-4 d-flex flex-wrap gap-6 justify-center align-center" Style="@($"background: {_editingTheme.ColorSurface};")">
+                <MudPaper Elevation="5" Square="false" Class="rounded-lg pa-4 d-flex flex-wrap gap-6 justify-center align-center" Style="@($"background: {_editingTheme.ColorSurface};")">
+                    <MudText Align="Align.Center" Typo="Typo.h5" Style="@($"color: {_editingTheme.ColorPrimary};")">Example Section Title</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem sm="12" md="12" xs="12" lg="12">
+                <MudPaper Elevation="5" Square="false" Class="rounded-lg pa-4 d-flex flex-wrap gap-6 justify-center align-center" Style="@($"background: {_editingTheme.ColorSurface};")">
+                    <MudTextField T="string" Label="Disabled Text" Variant="Variant.Outlined" Disabled="true" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
+                    <MudTextField T="string" Label="Editable Text" Variant="Variant.Outlined" Disabled="false" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
+                </MudPaper>
+            </MudItem>
+            <MudItem sm="12" md="12" xs="12" lg="12">
+                <MudPaper Elevation="5" Square="false" Class="rounded-lg pa-4 d-flex flex-wrap gap-6 justify-center align-center" Style="@($"background: {_editingTheme.ColorSurface};")">
                     <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.Save"
                                Style="@($"color: {_editingTheme.ColorSecondary}; border-color: {_editingTheme.ColorSecondary};")">
                         Save Example
@@ -150,10 +164,6 @@
                                Style="@($"color: {_editingTheme.ColorError}; border-color: {_editingTheme.ColorError};")">
                         Delete Example
                     </MudButton>
-                </MudPaper>
-            </MudItem>
-            <MudItem sm="12" md="12" xs="12" lg="12">
-                <MudPaper Elevation="5" Square="false" Class="rounded-lg pa-4 d-flex flex-wrap gap-6 justify-center align-center" Style="@($"background: {_editingTheme.ColorSurface};")">
                     <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.Add"
                                Style="@($"color: {_editingTheme.ColorSuccess}; border-color: {_editingTheme.ColorSuccess};")">
                         Add Example
@@ -161,6 +171,19 @@
                     <MudButton Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.FileDownload"
                                Style="@($"color: {_editingTheme.ColorTertiary}; border-color: {_editingTheme.ColorTertiary};")">
                         Download Example
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem sm="12" md="12" xs="12" lg="12">
+                <MudPaper Elevation="5" Square="false" Class="rounded-lg pa-4 d-flex flex-wrap gap-6 justify-center align-center" Style="@($"background: {_editingTheme.ColorSurface};")">
+                    <MudButton Variant="Variant.Outlined" Style="@($"color: {_editingTheme.ColorPrimary}; border-color: {_editingTheme.ColorPrimary};")">
+                        First Button
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Style="@($"color: {_editingTheme.ColorSecondary}; border-color: {_editingTheme.ColorSecondary};")">
+                        Second Button
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Style="@($"color: {_editingTheme.ColorTertiary}; border-color: {_editingTheme.ColorTertiary};")">
+                        Third Button
                     </MudButton>
                 </MudPaper>
             </MudItem>

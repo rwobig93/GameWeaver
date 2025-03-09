@@ -30,6 +30,7 @@ public partial class ThemeSettings
     private MudColor _editThemeNavBarColor = new("#FFFFFF");
     private MudColor _editThemeSuccessColor = new("#FFFFFF");
     private MudColor _editThemeInfoColor = new("#FFFFFF");
+    private MudColor _editThemeWarningColor = new("#FFFFFF");
     private MudColor _editThemeErrorColor = new("#FFFFFF");
 
     private bool _demoOpen;
@@ -87,6 +88,7 @@ public partial class ThemeSettings
         _editThemeNavBarColor = new MudColor(_editingTheme.ColorNavBar);
         _editThemeSuccessColor = new MudColor(_editingTheme.ColorSuccess);
         _editThemeInfoColor = new MudColor(_editingTheme.ColorInfo);
+        _editThemeWarningColor = new MudColor(_editingTheme.ColorWarning);
         _editThemeErrorColor = new MudColor(_editingTheme.ColorError);
         
         StateHasChanged();

@@ -13,6 +13,7 @@ public class AppThemeCustom
     public string ColorNavBar { get; set; } = "#2f2f2f";
     public string ColorSuccess { get; set; } = "#007E33";
     public string ColorInfo { get; set; } = "#2196f3";
+    public string ColorWarning { get; set; } = "#ff9800";
     public string ColorError { get; set; } = "#df0808";
     
     public static AppThemeCustom GetExampleCustomOne()
