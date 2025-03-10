@@ -7,6 +7,7 @@ using Application.Mappers.Identity;
 using Application.Models.Events;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
+using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.Identity.Permission;
@@ -35,6 +36,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private Guid _loggedInUserId = Guid.Empty;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameServerSlim _gameServer = new() { Id = Guid.Empty };
+    private GameProfileSlim? _parentProfile;
     private GameSlim _game = new() { Id = Guid.Empty };
     private List<LocalResourceSlim> _localResources = [];
     private bool _editMode;
@@ -71,6 +73,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             if (firstRender)
             {
                 await GetViewingGameServer();
+                await GetServerParentProfile();
                 await GetServerGame();
                 await GetPermissions();
                 await GetClientTimezone();
@@ -125,6 +128,23 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _validIdProvided = false;
             StateHasChanged();
         }
+    }
+
+    private async Task GetServerParentProfile()
+    {
+        if (_gameServer.ParentGameProfileId is null)
+        {
+            return;
+        }
+
+        var response = await GameServerService.GetGameProfileByIdAsync(_gameServer.ParentGameProfileId.GetFromNullable());
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        _parentProfile = response.Data;
     }
 
     private async Task GetServerGame()

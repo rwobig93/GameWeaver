@@ -4,7 +4,7 @@
 @attribute [Route(AppRouteConstants.GameServer.GameServers.ViewAll)]
 @attribute [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
 
-<MudPaper Elevation="25" Class="mb-6">
+<MudPaper Elevation="25" Class="px-4 mb-7">
     <MudContainer Class="d-flex flex-row gap-3">
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@CreateServer">
             Create
@@ -24,7 +24,7 @@
         <GameServerWidget GameServer="@gameServer" />
     }
 </MudGrid>
-<MudPaper Elevation="25" Class="pt-4 mt-6">
+<MudPaper Elevation="25" Class="px-4 mt-2">
     <MudStack Spacing="2" Row="true" Justify="Justify.SpaceBetween">
         <MudText Class="pa-2">Viewing: @GetCurrentPageViewData()</MudText>
         <MudPagination Class="pa-2" ShowFirstButton="false" ShowLastButton="false" ShowPreviousButton="true" ShowNextButton="true"

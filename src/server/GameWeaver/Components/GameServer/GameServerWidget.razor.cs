@@ -1,12 +1,18 @@
-﻿using Application.Models.GameServer.GameServer;
+﻿using Application.Models.GameServer.Game;
+using Application.Models.GameServer.GameServer;
+using Application.Services.GameServer;
 
 namespace GameWeaver.Components.GameServer;
 
 public partial class GameServerWidget : ComponentBase
 {
     [Parameter] public GameServerSlim GameServer { get; set; } = new();
-    [Parameter] public int WidthPx { get; set; } = 350;
-    [Parameter] public int HeightPx { get; set; } = 150;
+    [Parameter] public int WidthPx { get; set; } = 400;
+    [Parameter] public int HeightPx { get; set; } = 100;
+    
+    [Inject] public IGameService GameService { get; init; } = null!;
+
+    private GameSlim _game = new() { Id = Guid.Empty, FriendlyName = "Unknown" };
     
     
     private string Width => $"{WidthPx}px";
@@ -17,6 +23,16 @@ public partial class GameServerWidget : ComponentBase
         if (firstRender)
         {
             await Task.CompletedTask;
+        }
+    }
+
+    private async Task GetGame()
+    {
+        var response = await GameService.GetByIdAsync(GameServer.GameId);
+        if (response.Data is not null)
+        {
+            _game = response.Data;
+            StateHasChanged();
         }
     }
 

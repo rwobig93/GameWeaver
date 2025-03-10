@@ -6,7 +6,7 @@ using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
-public partial class GameServers : ComponentBase
+public partial class GameServers : ComponentBase, IAsyncDisposable
 {
     [Inject] private IGameServerService GameServerService { get; set; } = null!;
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
@@ -21,7 +21,8 @@ public partial class GameServers : ComponentBase
     // private readonly string[] _orderings = null;
     // private string _searchString = "";
     // private List<string> _autocompleteList;
-    
+    private Timer? _timer;
+
     private bool _canCreateGameServers;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -30,7 +31,19 @@ public partial class GameServers : ComponentBase
         {
             await GetPermissions();
             await RefreshData();
+            
+            _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
         }
+    }
+
+    private async Task TimerDataUpdate()
+    {
+        if (!_pagedData.Any())
+        {
+            return;
+        }
+        
+        await InvokeAsync(RefreshData);
     }
 
     private async Task GetPermissions()
@@ -114,5 +127,11 @@ public partial class GameServers : ComponentBase
     {
         await RefreshData();
         await WebClientService.InvokeScrollToTop();
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        _timer?.Dispose();
+        await Task.CompletedTask;
     }
 }

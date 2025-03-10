@@ -1,8 +1,18 @@
-﻿<MudPaper Class="pa-2" Width="@Width" Height="@Height" Style="background-color: var(--mud-palette-surface); cursor: pointer;" @onclick="ViewServer">
-    <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Start">
-        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">Name: @(GameServer.ServerName)</MudText>
-        <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">Modded: @(GameServer.Modded)</MudText>
-        <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">Socket: @(GameServer.PublicIp):@(GameServer.PortGame)</MudText>
-        <MudText Align="Align.Center" Color="Color.Tertiary" Typo="Typo.body2" Style="position: relative">State: @(GameServer.ServerState)</MudText>
+﻿@using Application.Helpers.GameServer
+<MudPaper Class="rounded-lg justify-center align-center mud-text-align-center" Width="@Width" Height="@Height" Elevation="8"
+          Style="background-color: var(--mud-palette-surface); cursor: pointer;" @onclick="ViewServer">
+    <MudStack Class="pa-4" Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap">
+        <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1">
+            <MudIcon Size="Size.Large" Icon="@(GameServer.ServerState.IsRunning() ? Icons.Material.Filled.ArrowCircleUp : Icons.Material.Filled.ArrowCircleDown)"
+                     Color="@(GameServer.ServerState.IsRunning() ? Color.Success : Color.Error)" Style="width: 55px; height: 55px" />
+            <MudText Align="Align.Center" Typo="Typo.body2" Style="position: relative" Color="@(GameServer.ServerState.IsRunning() ? Color.Success : Color.Error)">
+                @(GameServer.ServerState)
+            </MudText>
+        </MudStack>
+        <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1">
+            <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">@(GameServer.ServerName)</MudText>
+            <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
+            <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">Game: @(_game.FriendlyName)</MudText>
+        </MudStack>
     </MudStack>
 </MudPaper>
