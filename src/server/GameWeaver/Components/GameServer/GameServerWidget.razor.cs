@@ -22,7 +22,7 @@ public partial class GameServerWidget : ComponentBase
     {
         if (firstRender)
         {
-            await Task.CompletedTask;
+            await GetGame();
         }
     }
 
