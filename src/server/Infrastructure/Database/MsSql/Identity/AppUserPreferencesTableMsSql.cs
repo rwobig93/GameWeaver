@@ -24,7 +24,8 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                     [DrawerDefaultOpen] BIT NULL,
                     [CustomThemeOne] NVARCHAR(1024) NULL,
                     [CustomThemeTwo] NVARCHAR(1024) NULL,
-                    [CustomThemeThree] NVARCHAR(1024) NULL
+                    [CustomThemeThree] NVARCHAR(1024) NULL,
+                    [GamerMode] BIT NULL
                 )
             end"
     };
@@ -114,12 +115,13 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 @DrawerDefaultOpen BIT,
                 @CustomThemeOne NVARCHAR(1024),
                 @CustomThemeTwo NVARCHAR(1024),
-                @CustomThemeThree NVARCHAR(1024)
+                @CustomThemeThree NVARCHAR(1024),
+                @GamerMode BIT
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree)
+                INSERT into dbo.[{Table.TableName}] (OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree, GamerMode)
                 OUTPUT INSERTED.Id
-                VALUES (@OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree);
+                VALUES (@OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree, @GamerMode);
             end"
     };
 
@@ -135,13 +137,15 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 @DrawerDefaultOpen BIT = null,
                 @CustomThemeOne NVARCHAR(1024) = null,
                 @CustomThemeTwo NVARCHAR(1024) = null,
-                @CustomThemeThree NVARCHAR(1024) = null
+                @CustomThemeThree NVARCHAR(1024) = null,
+                @GamerMode INT = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET OwnerId = COALESCE(@OwnerId, OwnerId), ThemePreference = COALESCE(@ThemePreference, ThemePreference),
                     DrawerDefaultOpen = COALESCE(@DrawerDefaultOpen, DrawerDefaultOpen), CustomThemeOne = COALESCE(@CustomThemeOne, CustomThemeOne),
-                    CustomThemeTwo = COALESCE(@CustomThemeTwo, CustomThemeTwo), CustomThemeThree = COALESCE(@CustomThemeThree, CustomThemeThree)
+                    CustomThemeTwo = COALESCE(@CustomThemeTwo, CustomThemeTwo), CustomThemeThree = COALESCE(@CustomThemeThree, CustomThemeThree),
+                    GamerMode = COALESCE(@GamerMode, GamerMode)
                 WHERE Id = COALESCE(@Id, Id);
             end"
     };

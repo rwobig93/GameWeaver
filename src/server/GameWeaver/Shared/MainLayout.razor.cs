@@ -26,8 +26,9 @@ public partial class MainLayout
     public AppUserPreferenceFull _userPreferences = new();
     public readonly List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
-
     private AppUserFull UserFull { get; set; } = new();
+    private string _cssThemedText = "";
+
     private bool _settingsDrawerOpen;
     private bool _canEditTheme;
 
@@ -127,8 +128,10 @@ public partial class MainLayout
             }
 
             _userPreferences = preferences.Data;
+            UpdateThemedElements();
             UpdateCustomThemes();
             _selectedTheme = AppThemes.GetThemeById(_userPreferences.ThemePreference).Theme;
+            StateHasChanged();
         }
     }
 
@@ -165,5 +168,16 @@ public partial class MainLayout
                 DrawerIcon = preferenceTheme.ColorPrimary
             };
         }
+    }
+
+    private void UpdateThemedElements()
+    {
+        if (!_userPreferences.GamerMode)
+        {
+            _cssThemedText = "";
+            return;
+        }
+        
+        _cssThemedText = "rainbow-text";
     }
 }

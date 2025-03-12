@@ -2,16 +2,19 @@
 using Application.Helpers.Runtime;
 using Application.Models.GameServer.GameServer;
 using Application.Services.GameServer;
+using Domain.Models.Identity;
 using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
 public partial class GameServers : ComponentBase, IAsyncDisposable
 {
-    [Inject] private IGameServerService GameServerService { get; set; } = null!;
-    [Inject] private IWebClientService WebClientService { get; set; } = null!;
+    [Inject] private IGameServerService GameServerService { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] private IAppAccountService AccountService { get; init; } = null!;
     
     private IEnumerable<GameServerSlim> _pagedData = [];
+    private AppUserPreferenceFull _userPreferences = new();
     
     private string _searchText = "";
     private int _totalItems = 10;
@@ -30,6 +33,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         if (firstRender)
         {
             await GetPermissions();
+            await GetUserPreferences();
             await RefreshData();
             
             _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
@@ -50,6 +54,17 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canCreateGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Create);
+    }
+
+    private async Task GetUserPreferences()
+    {
+        var currentUserId = await CurrentUserService.GetCurrentUserId();
+        if (currentUserId is null)
+        {
+            return;
+        }
+        
+        _userPreferences = (await AccountService.GetPreferences(currentUserId.GetFromNullable())).Data;
     }
     
     private async Task RefreshData()

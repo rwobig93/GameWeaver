@@ -10,6 +10,7 @@ public partial class GameWidget : ComponentBase
     [Parameter] public bool Vertical { get; set; } = false;
     [Parameter] public int WidthPx { get; set; } = 293;  // 385
     [Parameter] public int HeightPx { get; set; } = 137;  // 180
+    [Parameter] public bool GamerMode { get; set; } = false;
 
     [Inject] public IWebClientService WebClientService { get; set; } = null!;
     [Inject] public HttpClient HttpClient { get; set; } = null!;
@@ -26,6 +27,7 @@ public partial class GameWidget : ComponentBase
         if (firstRender)
         {
             await UpdateImage();
+            UpdateThemedElements();
         }
     }
 
@@ -70,6 +72,17 @@ public partial class GameWidget : ComponentBase
     {
         await UpdateImageUrl();
         _imageLoaded = true;
+        StateHasChanged();
+    }
+
+    private void UpdateThemedElements()
+    {
+        if (!GamerMode)
+        {
+            return;
+        }
+
+        CssDisplay += " border-rainbow";
         StateHasChanged();
     }
 }

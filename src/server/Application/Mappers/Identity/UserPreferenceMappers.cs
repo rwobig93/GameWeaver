@@ -17,7 +17,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
             CustomThemeOne = AppThemeCustom.GetExampleCustomOne(),
             CustomThemeTwo = AppThemeCustom.GetExampleCustomTwo(),
-            CustomThemeThree = AppThemeCustom.GetExampleCustomThree()
+            CustomThemeThree = AppThemeCustom.GetExampleCustomThree(),
+            GamerMode = preferenceDb.GamerMode,
         };
     }
 
@@ -31,7 +32,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceFull.DrawerDefaultOpen,
             CustomThemeOne = "",
             CustomThemeTwo = "",
-            CustomThemeThree = ""
+            CustomThemeThree = "",
+            GamerMode = preferenceFull.GamerMode,
         };
     }
 
@@ -44,7 +46,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
             CustomThemeOne = preferenceDb.CustomThemeOne,
             CustomThemeTwo = preferenceDb.CustomThemeTwo,
-            CustomThemeThree = preferenceDb.CustomThemeThree
+            CustomThemeThree = preferenceDb.CustomThemeThree,
+            GamerMode = preferenceDb.GamerMode,
         };
     }
 
@@ -56,7 +59,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceUpdate.DrawerDefaultOpen,
             CustomThemeOne = preferenceUpdate.CustomThemeOne,
             CustomThemeTwo = preferenceUpdate.CustomThemeTwo,
-            CustomThemeThree = preferenceUpdate.CustomThemeThree
+            CustomThemeThree = preferenceUpdate.CustomThemeThree,
+            GamerMode = preferenceUpdate.GamerMode,
         };
     }
 
@@ -69,7 +73,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceCreate.DrawerDefaultOpen,
             CustomThemeOne = preferenceCreate.CustomThemeOne,
             CustomThemeTwo = preferenceCreate.CustomThemeTwo,
-            CustomThemeThree = preferenceCreate.CustomThemeThree
+            CustomThemeThree = preferenceCreate.CustomThemeThree,
+            GamerMode = preferenceCreate.GamerMode,
         };
     }
 
@@ -83,7 +88,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceUpdate.DrawerDefaultOpen,
             CustomThemeOne = preferenceUpdate.CustomThemeOne,
             CustomThemeTwo = preferenceUpdate.CustomThemeTwo,
-            CustomThemeThree = preferenceUpdate.CustomThemeThree
+            CustomThemeThree = preferenceUpdate.CustomThemeThree,
+            GamerMode = preferenceUpdate.GamerMode,
         };
     }
 
@@ -97,7 +103,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
             CustomThemeOne = preferenceDb.CustomThemeOne,
             CustomThemeTwo = preferenceDb.CustomThemeTwo,
-            CustomThemeThree = preferenceDb.CustomThemeThree
+            CustomThemeThree = preferenceDb.CustomThemeThree,
+            GamerMode = preferenceDb.GamerMode,
         };
     }
 
@@ -111,7 +118,8 @@ public static class UserPreferenceMappers
             DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
             CustomThemeOne = JsonConvert.SerializeObject(preferenceDb.CustomThemeOne),
             CustomThemeTwo = JsonConvert.SerializeObject(preferenceDb.CustomThemeTwo),
-            CustomThemeThree = JsonConvert.SerializeObject(preferenceDb.CustomThemeThree)
+            CustomThemeThree = JsonConvert.SerializeObject(preferenceDb.CustomThemeThree),
+            GamerMode = preferenceDb.GamerMode,
         };
     }
 }

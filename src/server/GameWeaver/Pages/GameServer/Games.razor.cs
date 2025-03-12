@@ -1,14 +1,16 @@
 ﻿using Application.Helpers.Runtime;
 using Application.Models.GameServer.Game;
 using Application.Services.GameServer;
+using Domain.Models.Identity;
 using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
 public partial class Games : ComponentBase
 {
-    [Inject] private IGameService GameService { get; set; } = null!;
-    [Inject] private IWebClientService WebClientService { get; set; } = null!;
+    [Inject] private IGameService GameService { get; init; } = null!;
+    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] private IAppAccountService AccountService { get; init; } = null!;
     
     private IEnumerable<GameSlim> _pagedData = [];
     private List<GameWidget> _gameWidgets = [];
@@ -17,6 +19,7 @@ public partial class Games : ComponentBase
         set => _gameWidgets.Add(value);
     }
     
+    private AppUserPreferenceFull _userPreferences = new();
     private string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
@@ -32,6 +35,7 @@ public partial class Games : ComponentBase
     {
         if (firstRender)
         {
+            await GetUserPreferences();
             await RefreshData();
         }
     }
@@ -56,6 +60,17 @@ public partial class Games : ComponentBase
         _totalPages = response.EndPage;
         GetCurrentPageViewData();
         StateHasChanged();
+    }
+
+    private async Task GetUserPreferences()
+    {
+        var currentUserId = CurrentUserService.GetCurrentUserId();
+        if (currentUserId.Result is null)
+        {
+            return;
+        }
+        
+        _userPreferences = (await AccountService.GetPreferences(currentUserId.Result.GetFromNullable())).Data;
     }
 
     private async Task UpdateGameWidgets()

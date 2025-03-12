@@ -2,7 +2,7 @@
 @attribute [Authorize]
 
 <MudContainer>
-    <MudPaper Elevation="5" Square="false" Class="rounded-lg pa-6 mt-12" Style="opacity: 95%;">
+    <MudPaper Elevation="5" Square="false" Class="@($"{_cssBase}{_cssThemedBorder}")" Style="opacity: 95%;">
         <MudGrid Class="pa-4 justify-center mud-text-align-center">
             <MudItem xs="12" sm="12" md="12">
                 <div class="d-flex justify-center">
@@ -10,7 +10,7 @@
                 </div>
             </MudItem>
             <MudItem xs="12" sm="12" md="12">
-                <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
+                <MudText Align="Align.Center" Typo="Typo.h5" Class="@(_cssThemedText)">
                     Hello @_loggedInUser.Username! Welcome to @ServerState.ApplicationName!
                 </MudText>
             </MudItem>

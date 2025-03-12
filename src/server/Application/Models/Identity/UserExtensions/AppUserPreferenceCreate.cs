@@ -12,4 +12,5 @@ public class AppUserPreferenceCreate
     public string? CustomThemeOne { get; set; } = JsonConvert.SerializeObject(AppThemeCustom.GetExampleCustomOne());
     public string? CustomThemeTwo { get; set; } = JsonConvert.SerializeObject(AppThemeCustom.GetExampleCustomTwo());
     public string? CustomThemeThree { get; set; } = JsonConvert.SerializeObject(AppThemeCustom.GetExampleCustomThree());
+    public bool GamerMode { get; set; } = false;
 }

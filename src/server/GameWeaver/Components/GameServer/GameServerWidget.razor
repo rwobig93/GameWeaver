@@ -1,5 +1,5 @@
 ﻿@using Application.Helpers.GameServer
-<MudPaper Class="rounded-lg justify-center align-center mud-text-align-center" Width="@Width" Height="@Height" Elevation="8"
+<MudPaper Class="@($"{_cssBorderBase}{_cssBorderStatus}")" Width="@Width" Height="@Height" Elevation="8"
           Style="background-color: var(--mud-palette-surface); cursor: pointer; position: relative;" @onclick="ViewServer">
     <div style="position: absolute; width: 100%; height: 100%;" class="z-0 rounded-lg darken-content">
         <img src="@(_game.UrlLogo)" width="100%" height="100%" alt="Game Cover" class="z-0 rounded-lg"
@@ -10,12 +10,12 @@
             <MudIcon Size="Size.Large" Icon="@(GameServer.ServerState.IsRunning() ? Icons.Material.Filled.ArrowCircleUp : Icons.Material.Filled.ArrowCircleDown)"
                      Color="@(GameServer.ServerState.IsRunning() ? Color.Success : Color.Error)" Style="width: 55px; height: 55px"/>
             <MudText Align="Align.Center" Typo="Typo.body2" Color="@(GameServer.ServerState.IsRunning() ? Color.Success : Color.Error)">
-                @(GameServer.ServerState)
+                @(GameServer.ServerState.IsRunning() ? "Online" : GameServer.ServerState)
             </MudText>
         </MudStack>
         <MudStack Row="false" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Style="width: 80%;">
             <MudPaper Outlined="false" Elevation="6" Square="false" Class="rounded-lg px-1">
-                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body1" Style="position: relative;">@(GameServer.ServerName)</MudText>
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body1" Style="position: relative;" Class="@(_cssTextStatus)">@(GameServer.ServerName)</MudText>
             </MudPaper>
             <MudSpacer />
             <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
