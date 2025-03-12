@@ -270,6 +270,7 @@
 }
 
 /*#endregion*/
+/*#region Element Effects */
 
 .darken-content:after {
     content: "";
@@ -287,3 +288,5 @@
             rgba(0, 0, 0, 0.8) 100%
     );
 }
+
+/*#endregion*/
