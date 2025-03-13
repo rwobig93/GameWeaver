@@ -55,6 +55,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private List<AppPermissionDisplay> _assignedRolePermissions = [];
     private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
     private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
+    private Color _serverStatusColor = Color.Error;
 
     private bool _canViewGameServer;
     private bool _canPermissionGameServer;

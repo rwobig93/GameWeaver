@@ -65,47 +65,107 @@ else
         </MudPaper>
     }
 
-    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-2 mt-4 gap-4">
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Server Information</MudText>
         </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_gameServer.ServerName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_gameServer.ServerState" Label="Current state" Variant="Variant.Outlined" Disabled="true"/>
-            <MudCheckBox @bind-Value="_gameServer.Private" Label="Server Is Private" Disabled="@(!_editMode)" />
-            <MudTextField @bind-Value="_gameServer.Password" Label="Password" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_gameServer.ExternalHostname" Label="External Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_gameServer.PortGame" Label="Game Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_gameServer.PortPeer" Label="Peer Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_gameServer.PortQuery" Label="Query Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_gameServer.PortRcon" Label="RCON Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+    </MudPaper>
+
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="rounded-lg pa-2">
+            @* TODO: Set icons to disabled when not active status and text color to default *@
+            <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
+                <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
+                    <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowCircleDown" Color="Color.Error" Class="my-1"/>
+                        <MudText Align="Align.Center" Color="Color.Error" Typo="Typo.caption" Class="my-1">Offline</MudText>
+                    </MudStack>
+                    <MudProgressLinear Color="Color.Info" Indeterminate="false" Value="0" Class="ma-4"/>
+                    <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Downloading" Color="Color.Info" Class="my-1"/>
+                        <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Class="my-1">
+                            <MudText Align="Align.Center" Color="Color.Info" Typo="Typo.caption">Installing</MudText>
+                            <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
+                            <MudText Align="Align.Center" Color="Color.Info" Typo="Typo.caption">Updating</MudText>
+                        </MudStack>
+                    </MudStack>
+                    <MudProgressLinear Color="Color.Warning" Indeterminate="false" Value="0" Class="ma-4"/>
+                    <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
+                        <MudIcon Icon="@Icons.Material.Filled.Start" Color="Color.Warning" Class="my-1"/>
+                        <MudText Align="Align.Center" Color="Color.Warning" Typo="Typo.caption" Class="my-1">Spinning Up</MudText>
+                    </MudStack>
+                    <MudProgressLinear Color="Color.Tertiary" Indeterminate="false" Value="0" Class="ma-4"/>
+                    <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowCircleUp" Color="Color.Tertiary" Class="my-1"/>
+                        <MudText Align="Align.Center" Color="Color.Tertiary" Typo="Typo.caption" Class="my-1">Online</MudText>
+                    </MudStack>
+                    <MudProgressLinear Color="Color.Success" Indeterminate="false" Value="0" Class="ma-4"/>
+                    <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Success" Class="my-1"/>
+                        <MudText Align="Align.Center" Color="Color.Success" Typo="Typo.caption" Class="my-1">Connectable</MudText>
+                    </MudStack>
+                </MudStack>
+                <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
+                    <MudChip T="string" Variant="Variant.Outlined" Color="@_serverStatusColor">Status: @_gameServer.ServerState</MudChip>
+                    @if (_canStartGameServer || _canStopGameServer)
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.Wrap" Style="width: 100%;">
+                            @if (_canStartGameServer)
+                            {
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" Disabled="@(_gameServer.ServerState.IsRunning())"
+                                           StartIcon="@Icons.Material.Outlined.Start" OnClick="@StartGameServer">
+                                    Start Server
+                                </MudButton>
+                            }
+                            @if (_canStopGameServer)
+                            {
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" Disabled="@(!_gameServer.ServerState.IsRunning())"
+                                           StartIcon="@Icons.Material.Outlined.Stop" OnClick="@StopGameServer">
+                                    Stop Server
+                                </MudButton>
+                            }
+                            @if (_canStartGameServer && _canStopGameServer)
+                            {
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" Disabled="@(_gameServer.ServerState.IsDoingSomething() || !_gameServer.ServerState.IsRunning())"
+                                           StartIcon="@Icons.Material.Outlined.Refresh" OnClick="@RestartGameServer">
+                                    Restart Server
+                                </MudButton>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(_gameServer.ServerState.IsDoingSomething())"
+                                           StartIcon="@Icons.Material.Outlined.Update" OnClick="@UpdateGameServer">
+                                    Update Server
+                                </MudButton>
+                            }
+                        </MudStack>
+                    }
+                    <MudSwitch @bind-Value="_gameServer.Private" Label="Private Server" Disabled="@(!_editMode)" Color="Color.Secondary"/>
+                </MudStack>
+            </MudStack>
+        </MudItem>
+    </MudPaper>
+
+    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4rounded-lg pa-2">
+            <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
+                <MudTextField @bind-Value="_gameServer.ServerName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                @* TODO: Add copy and view buttons to password fields *@
+                <MudTextField @bind-Value="_gameServer.Password" Label="Password" Variant="Variant.Outlined" Disabled="@(!_editMode)" InputType="InputType.Password"/>
+                <MudTextField @bind-Value="_gameServer.ExternalHostname" Label="External Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            </MudStack>
+            <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
+                <MudTextField @bind-Value="_gameServer.PortGame" Label="Game Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudTextField @bind-Value="_gameServer.PortPeer" Label="Peer Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudTextField @bind-Value="_gameServer.PortQuery" Label="Query Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudTextField @bind-Value="_gameServer.PortRcon" Label="RCON Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            </MudStack>
             @if (_canEditGameServer)
             {
-                <MudTextField @bind-Value="_gameServer.PasswordAdmin" Label="Admin Password" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-                <MudTextField @bind-Value="_gameServer.PasswordRcon" Label="RCON Password" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
+                    <MudTextField @bind-Value="_gameServer.PasswordAdmin" Label="Admin Password" Variant="Variant.Outlined" Disabled="@(!_editMode)" InputType="InputType.Password"/>
+                    <MudTextField @bind-Value="_gameServer.PasswordRcon" Label="RCON Password" Variant="Variant.Outlined" Disabled="@(!_editMode)" InputType="InputType.Password"/>
+                </MudStack>
             }
         </MudItem>
-        @if (_canStartGameServer || _canStopGameServer)
-        {
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-1 justify-center">
-                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" Disabled="@(_gameServer.ServerState.IsRunning())"
-                           StartIcon="@Icons.Material.Outlined.Start" OnClick="@StartGameServer">
-                    Start Server
-                </MudButton>
-                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" Disabled="@(!_gameServer.ServerState.IsRunning())"
-                           StartIcon="@Icons.Material.Outlined.Stop" OnClick="@StopGameServer">
-                    Stop Server
-                </MudButton>
-                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" Disabled="@(_gameServer.ServerState.IsDoingSomething() || !_gameServer.ServerState.IsRunning())"
-                           StartIcon="@Icons.Material.Outlined.Refresh" OnClick="@RestartGameServer">
-                    Restart Server
-                </MudButton>
-                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" Disabled="@(_gameServer.ServerState.IsDoingSomething())"
-                           StartIcon="@Icons.Material.Outlined.Update" OnClick="@UpdateGameServer">
-                    Update Server
-                </MudButton>
-            </MudItem>
-        }
     </MudPaper>
 
     <MudTable ServerData="@ServerReload" Dense="true" Hover="true" Bordered="false" Striped="true" Height="200px" FixedFooter="true" FixedHeader="true"
@@ -208,7 +268,7 @@ else
             {
                 <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
                     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                        <MudText Color="Color.Secondary" Align="Align.Center" Inline="true" Typo="Typo.h6">@localResource.Name</MudText>
+                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
                     </MudItem>
                     <MudContainer Class="d-flex flex-column gap-1">
                         @foreach (var configItem in localResource.ConfigSets.OrderBy(x => x.FriendlyName))
@@ -257,12 +317,14 @@ else
         {
             <MudTabPanel Text="Advanced">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                    <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="py-1" Immediate="true" @bind-Text="_configSearchText"
-                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
+                    <MudPaper Width="100%" Elevation="12">
+                        <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="" Immediate="true" @bind-Text="_configSearchText"
+                                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
+                    </MudPaper>
                 </MudItem>
                 @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
                 {
-                    <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4" Outlined="true" Square="false">
+                    <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
                         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                             <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
                         </MudItem>
