@@ -740,6 +740,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         await GetPermissions();
         StateHasChanged();
     }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await WebClientService.InvokeClipboardCopy(text);
+        Snackbar.Add("Text copied to your clipboard!", Severity.Success);
+    }
     
     private async Task<TableData<NotifyRecordSlim>> ServerReload(TableState state, CancellationToken token)
     {
