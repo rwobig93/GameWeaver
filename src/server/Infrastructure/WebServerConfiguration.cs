@@ -194,10 +194,14 @@ public static class WebServerConfiguration
         using var scope = app.Services.CreateAsyncScope();
         var hangfireJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
         var jobManager = scope.ServiceProvider.GetRequiredService<IJobManager>();
+        var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
         
         hangfireJobs.AddOrUpdate("UserHousekeeping", () => jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
         hangfireJobs.AddOrUpdate("DailySystemCleanup", () => jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
         hangfireJobs.AddOrUpdate("GameVersionCheck", () => jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));
-        hangfireJobs.AddOrUpdate("DailySteamSync", () => jobManager.DailySteamSync(), JobHelpers.CronString.Daily);
+        if (appConfig.Value.UpdateGamesFromSteam)
+        {
+            hangfireJobs.AddOrUpdate("DailySteamSync", () => jobManager.DailySteamSync(), JobHelpers.CronString.Daily);
+        }
     }
 }
