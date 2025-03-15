@@ -19,6 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_solution_items", "_solutio
 		README.md = README.md
 		.gitignore = .gitignore
 		LICENSE = LICENSE
+		.github\CODEOWNERS = .github\CODEOWNERS
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeaverService", "src\client\WeaverService\WeaverService.csproj", "{C79794FE-4CE7-4CAD-88C9-55FE7BDC1070}"
