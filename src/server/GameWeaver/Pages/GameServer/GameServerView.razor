@@ -79,41 +79,62 @@
 @* Server Status Display & Actions *@
 <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="rounded-lg pa-2">
-        @* TODO: Set icons to disabled when not active status and text color to default *@
         <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
             <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
-                <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowCircleDown" Color="Color.Error" Class="my-1"/>
-                    <MudText Align="Align.Center" Color="Color.Error" Typo="Typo.caption" Class="my-1">Offline</MudText>
-                </MudStack>
-                <MudProgressLinear Color="Color.Info" Indeterminate="false" Value="0" Class="ma-4"/>
-                <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
-                    <MudIcon Icon="@Icons.Material.Filled.Downloading" Color="Color.Info" Class="my-1"/>
+                <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.NoWrap" Style="width: 130px; height: 110px;">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowCircleDown" Class="my-1"
+                             Color="@(_gameServer.ServerState is ConnectivityState.ShuttingDown or ConnectivityState.Shutdown ? Color.Error: Color.Default)"/>
                     <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Class="my-1">
-                        <MudText Align="Align.Center" Color="Color.Info" Typo="Typo.caption">Installing</MudText>
+                        <MudText Align="Align.Center" Color="@(_gameServer.ServerState is ConnectivityState.ShuttingDown ? Color.Error : Color.Default)" Typo="Typo.caption">
+                            Offlining
+                        </MudText>
                         <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
-                        <MudText Align="Align.Center" Color="Color.Info" Typo="Typo.caption">Updating</MudText>
+                        <MudText Align="Align.Center" Typo="Typo.caption" Class="my-1" Color="@(_gameServer.ServerState == ConnectivityState.Shutdown ? Color.Error : Color.Default)">
+                            Offline
+                        </MudText>
                     </MudStack>
                 </MudStack>
-                <MudProgressLinear Color="Color.Warning" Indeterminate="false" Value="0" Class="ma-4"/>
+                <MudProgressLinear Color="@(_gameServer.ServerState is ConnectivityState.ShuttingDown ? Color.Error: Color.Default)"
+                                   Indeterminate="@(_gameServer.ServerState is ConnectivityState.ShuttingDown)" Value="0" Class="ma-4"/>
                 <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
-                    <MudIcon Icon="@Icons.Material.Filled.Start" Color="Color.Warning" Class="my-1"/>
-                    <MudText Align="Align.Center" Color="Color.Warning" Typo="Typo.caption" Class="my-1">Spinning Up</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Downloading" Class="my-1"
+                             Color="@(_gameServer.ServerState is ConnectivityState.Installing or ConnectivityState.Updating ? Color.Info: Color.Default)"/>
+                    <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Class="my-1">
+                        <MudText Align="Align.Center" Color="@(_gameServer.ServerState is ConnectivityState.Installing ? Color.Info : Color.Default)" Typo="Typo.caption">
+                            Installing
+                        </MudText>
+                        <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
+                        <MudText Align="Align.Center" Color="@(_gameServer.ServerState is ConnectivityState.Updating ? Color.Info : Color.Default)" Typo="Typo.caption">
+                            Updating
+                        </MudText>
+                    </MudStack>
                 </MudStack>
-                <MudProgressLinear Color="Color.Tertiary" Indeterminate="false" Value="0" Class="ma-4"/>
+                <MudProgressLinear Color="@(_gameServer.ServerState is ConnectivityState.Installing or ConnectivityState.Updating ? Color.Warning : Color.Default)"
+                                   Indeterminate="@(_gameServer.ServerState is ConnectivityState.Installing or ConnectivityState.Updating)" Value="0" Class="ma-4"/>
                 <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowCircleUp" Color="Color.Tertiary" Class="my-1"/>
-                    <MudText Align="Align.Center" Color="Color.Tertiary" Typo="Typo.caption" Class="my-1">Online</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Start" Color="@(_gameServer.ServerState is ConnectivityState.SpinningUp ? Color.Warning : Color.Default)" Class="my-1"/>
+                    <MudText Align="Align.Center" Typo="Typo.caption" Class="my-1"
+                             Color="@(_gameServer.ServerState is ConnectivityState.SpinningUp ? Color.Warning : Color.Default)">Spinning Up</MudText>
                 </MudStack>
-                <MudProgressLinear Color="Color.Success" Indeterminate="false" Value="0" Class="ma-4"/>
+                <MudProgressLinear Color="@(_gameServer.ServerState is ConnectivityState.SpinningUp ? Color.Tertiary : Color.Default)"
+                                   Indeterminate="@(_gameServer.ServerState == ConnectivityState.SpinningUp)" Value="0" Class="ma-4"/>
                 <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Success" Class="my-1"/>
-                    <MudText Align="Align.Center" Color="Color.Success" Typo="Typo.caption" Class="my-1">Connectable</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowCircleUp" Class="my-1"
+                             Color="@(_gameServer.ServerState is ConnectivityState.InternallyConnectable ? Color.Tertiary : Color.Default)"/>
+                    <MudText Align="Align.Center" Typo="Typo.caption" Class="my-1"
+                             Color="@(_gameServer.ServerState is ConnectivityState.InternallyConnectable ? Color.Tertiary : Color.Default)">Online</MudText>
+                </MudStack>
+                <MudProgressLinear Color="@(_gameServer.ServerState is ConnectivityState.InternallyConnectable ? Color.Success : Color.Default)"
+                                   Indeterminate="@(_gameServer.ServerState is ConnectivityState.InternallyConnectable)" Value="0" Class="ma-4"/>
+                <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Spacing="1" Wrap="Wrap.NoWrap" Style="width: 110px; height: 110px;">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountTree" Class="my-1"
+                             Color="@(_gameServer.ServerState is ConnectivityState.Connectable ? Color.Success : Color.Default)"/>
+                    <MudText Align="Align.Center" Typo="Typo.caption" Class="my-1"
+                             Color="@(_gameServer.ServerState is ConnectivityState.Connectable ? Color.Success : Color.Default)">Connectable</MudText>
                 </MudStack>
             </MudStack>
             <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
-                <MudChip T="string" Variant="Variant.Outlined" Color="@_serverStatusColor">Status: @_gameServer.ServerState</MudChip>
                 @if (_canStartGameServer || _canStopGameServer)
                 {
                     <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.Wrap" Style="width: 100%;">
@@ -298,7 +319,7 @@
                         <div class="border-solid rounded-pill border pa-0 ma-1">
                             <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
                                 <MudText Color="Color.Primary" Align="Align.Center" Class="ms-4 justify-center">@configItem.FriendlyName</MudText>
-                                <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" OnKeyDown="@(() => ConfigUpdated(configItem))" />
+                                <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" OnKeyDown="@(() => ConfigUpdated(configItem))"/>
                                 @if (_canConfigureGameServer || _canEditGameServer)
                                 {
                                     <MudButtonGroup Variant="Variant.Text">
@@ -312,7 +333,7 @@
                                             <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
                                         </MudMenu>
                                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
-                                                       OnClick="@(() => ConfigDeleted(configItem))" />
+                                                       OnClick="@(() => ConfigDeleted(configItem))"/>
                                     </MudButtonGroup>
                                 }
                             </MudStack>
@@ -347,6 +368,7 @@
                     </MudAlert>
                 </MudPaper>
             </MudItem>
+            @* TODO: Add create & delete config file buttons *@
             @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
             {
                 <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
