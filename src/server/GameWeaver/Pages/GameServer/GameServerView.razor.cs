@@ -203,26 +203,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
-        // Moderator gets most permissions other than delete
-        var isServerModerator = (await RoleService.IsUserModeratorAsync(_loggedInUserId)).Data;
-        if (!isServerModerator)
-        {
-            isServerModerator = await AuthorizationService.UserHasPermission(currentUser, 
-                PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Moderator));
-        }
-
-        if (isServerModerator)
-        {
-            _canViewGameServer = true;
-            _canPermissionGameServer = true;
-            _canEditGameServer = true;
-            _canConfigureGameServer = true;
-            _canStartGameServer = true;
-            _canStopGameServer = true;
-            _canDeleteGameServer = false;
-            _canChangeOwnership = true;
-        }
-        
         _canPermissionGameServer =  await AuthorizationService.UserHasPermission(currentUser,
                                         PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
         _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update);

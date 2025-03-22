@@ -4,6 +4,7 @@ using Application.Models.GameServer.GameProfile;
 using Application.Requests.GameServer.Game;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
+// ReSharper disable ConvertTypeCheckToNullCheck
 
 namespace Application.Mappers.GameServer;
 
@@ -235,13 +236,13 @@ public static class GameMappers
             PriceInitial = response.Price_Overview.Final_Formatted,
             PriceCurrent = response.Price_Overview.Final_Formatted,
             PriceDiscount = response.Price_Overview.Discount_Percent,
-            // TODO: Steam api returns dict if there is a value or an empty list if there isn't a value
-            // RequirementsPcMinimum = response.PC_Requirements.Minimum,
-            // RequirementsPcRecommended = response.PC_Requirements.Recommended,
-            // RequirementsMacMinimum = response.Mac_Requirements.Minimum,
-            // RequirementsMacRecommended = response.Mac_Requirements.Recommended,
-            // RequirementsLinuxMinimum = response.Linux_Requirements.Minimum,
-            // RequirementsLinuxRecommended = response.Linux_Requirements.Recommended,
+            // TODO: Steam api returns dict if there is a value or an empty list if there isn't a value | Validate is fixed
+            RequirementsPcMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.PC_Requirements.Minimum : "",
+            RequirementsPcRecommended = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.PC_Requirements.Recommended : "",
+            RequirementsMacMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Mac_Requirements.Minimum : "",
+            RequirementsMacRecommended = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Mac_Requirements.Recommended : "",
+            RequirementsLinuxMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Linux_Requirements.Minimum : "",
+            RequirementsLinuxRecommended = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Linux_Requirements.Recommended : "",
             SupportsWindows = response.Platforms.Windows,
             SupportsLinux = response.Platforms.Linux,
             SupportsMac = response.Platforms.Mac,

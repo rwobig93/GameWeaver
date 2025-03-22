@@ -158,7 +158,6 @@ public static class PermissionConstants
             public const string Update = "Permissions.GameServer.Gameservers.Update";
             public const string Delete = "Permissions.GameServer.Gameservers.Delete";
             public const string Search = "Permissions.GameServer.Gameservers.Search";
-            // TODO: Add API Endpoint for ownership transfer
             public const string ChangeOwnership = "Permissions.GameServer.Gameservers.ChangeOwnership";
             public const string StartServer = "Permissions.GameServer.Gameservers.StartServer";
             public const string StopServer = "Permissions.GameServer.Gameservers.StopServer";

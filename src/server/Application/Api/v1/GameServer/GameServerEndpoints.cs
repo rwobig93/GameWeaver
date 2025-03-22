@@ -1,6 +1,9 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.Runtime;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.GameServer;
 using Application.Requests.GameServer.GameServer;
 using Application.Services.GameServer;
@@ -36,6 +39,7 @@ public static class GameServerEndpoints
         app.MapPatch(ApiRouteConstants.GameServer.Gameserver.Update, Update).ApiVersionOne();
         app.MapDelete(ApiRouteConstants.GameServer.Gameserver.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Gameserver.Search, Search).ApiVersionOne();
+        app.MapPost(ApiRouteConstants.GameServer.Gameserver.ChangeOwnership, ChangeOwnership).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.StartServer, StartServer).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.StopServer, StopServer).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.RestartServer, RestartServer).ApiVersionOne();
@@ -307,7 +311,58 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-        
+
+    /// <summary>
+    /// Change ownership of a game server
+    /// </summary>
+    /// <param name="gameServerId"></param>
+    /// <param name="newOwnerId"></param>
+    /// <param name="currentUserService"></param>
+    /// <param name="gameServerService"></param>
+    /// <param name="userService"></param>
+    /// <param name="authorizationService"></param>
+    /// <returns></returns>
+    [Authorize(PermissionConstants.GameServer.Gameserver.ChangeOwnership)]
+    private static async Task<IResult> ChangeOwnership([FromQuery]Guid gameServerId, [FromQuery]Guid newOwnerId, ICurrentUserService currentUserService,
+        IGameServerService gameServerService, IAppUserService userService, IAuthorizationService authorizationService)
+    {
+        try
+        {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            var currentUser = (await currentUserService.GetCurrentUserPrincipal())!;
+            if (!await authorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership))
+            {
+                return await Result.FailAsync(ErrorMessageConstants.Permissions.PermissionError);
+            }
+            
+            var serverResponse = await gameServerService.GetByIdAsync(gameServerId);
+            if (!serverResponse.Succeeded || serverResponse.Data is null)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+            }
+            
+            var userResponse = await userService.GetByIdAsync(newOwnerId);
+            if (!userResponse.Succeeded || userResponse.Data is null)
+            {
+                return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
+            }
+            
+            var serverUpdate = serverResponse.Data.ToUpdate();
+            serverUpdate.OwnerId = newOwnerId;
+            var updateResponse = await gameServerService.UpdateAsync(serverUpdate, currentUserId);
+            if (!updateResponse.Succeeded)
+            {
+                return await Result.FailAsync(updateResponse.Messages);
+            }
+            
+            return await Result.SuccessAsync();
+        }
+        catch (Exception ex)
+        {
+            return await Result.FailAsync(ex.Message);
+        }
+    }
+
     /// <summary>
     /// Start a game server
     /// </summary>

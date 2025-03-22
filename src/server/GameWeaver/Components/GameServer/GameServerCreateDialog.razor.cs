@@ -86,10 +86,6 @@ public partial class GameServerCreateDialog : ComponentBase
 
     private async Task GetHosts()
     {
-        // TODO: Filter hosts to those that the user has access to or is an owner of
-        // TODO: If no hosts are available then don't display the selection list
-        // TODO: If no selectable hosts are available and there's no public hosts available then display an error and don't allow continuation
-        
         var response = await HostService.GetAllAsync();
         if (!response.Succeeded)
         {
@@ -239,9 +235,6 @@ public partial class GameServerCreateDialog : ComponentBase
         _createRequest.GameId = _selectedGame.Id;
         _createRequest.ParentGameProfileId = _selectedParentProfile.Id == Guid.Empty ? null : _selectedParentProfile.Id;
         
-        // TODO: After server is finished w/ discovery and installation we need to apply / deploy configuration to the server
-        
-        // TODO: Validate checks done w/ the CreateAsync method, we need to validate ports, game default profile exists and host availability
         var response = await GameServerService.CreateAsync(_createRequest, _loggedInUserId);
         if (!response.Succeeded)
         {
