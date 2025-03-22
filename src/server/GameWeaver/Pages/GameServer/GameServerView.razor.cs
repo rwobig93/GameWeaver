@@ -45,6 +45,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
+    private readonly List<LocalResourceSlim> _createdLocalResources = [];
+    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
     private bool _updateIsAvailable;
     private MudTable<NotifyRecordSlim> _notifyTable = new();
     private IEnumerable<NotifyRecordSlim> _notifyPagedData = new List<NotifyRecordSlim>();
@@ -256,6 +258,15 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
+        foreach (var resource in _createdLocalResources)
+        {
+            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreateRequest(), _loggedInUserId);
+            if (createResourceResponse.Succeeded) continue;
+            
+            createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
         {
             if (await SaveNewConfigItems())
@@ -277,6 +288,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
+        }
+        foreach (var resource in _deletedLocalResources)
+        {
+            var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
+            if (deleteResourceResponse.Succeeded) continue;
+            
+            deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
         }
         
         ToggleEditMode();
@@ -533,9 +552,49 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
     }
 
+    private async Task LocalResourceAdd()
+    {
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters() {{"GameProfileId", _gameServer.GameProfileId}};
+        var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var newResource = (LocalResourceSlim) dialogResult.Data;
+        
+        _localResources.Add(newResource);
+        _createdLocalResources.Add(newResource);
+    }
+
+    private async Task LocalResourceDelete(LocalResourceSlim localResource)
+    {
+        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters() {
+            {"Title", "Are you sure you want to delete this local resource?"},
+            {"Content", $"You want to delete the resource '{localResource.Name}'?"}
+        };
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Local Resource", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var deletedResource = (LocalResourceSlim) dialogResult.Data;
+        
+        _localResources.Remove(deletedResource);
+        _deletedLocalResources.Add(deletedResource);
+        foreach (var configItem in deletedResource.ConfigSets)
+        {
+            _deletedConfigItems.Remove(configItem);
+        }
+    }
+
     private async Task AddPermissions(bool isForRolesNotUsers)
     {
-        // TODO: Look at solutions for granting permissions with users, roles and permission access needed in the current state
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var dialogParameters = new DialogParameters() {{"GameServerId", _gameServer.Id}, {"IsForRolesNotUsers", isForRolesNotUsers}};
         var dialog = await DialogService.ShowAsync<GameServerPermissionAddDialog>("Add Gameserver Permissions", dialogParameters, dialogOptions);

@@ -358,7 +358,7 @@
     </MudTabPanel>
     @if (_canEditGameServer)
     {
-        <MudTabPanel Text="Advanced">
+        <MudTabPanel Text="Expert">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                 <MudPaper Width="100%" Elevation="12">
                     <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="" Immediate="true" @bind-Text="_configSearchText"
@@ -374,8 +374,11 @@
                         </MudText>
                     </MudAlert>
                 </MudPaper>
+                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                           OnClick="@(() => LocalResourceAdd())" FullWidth="true" Disabled="@(!_editMode)">
+                    Add Resource / File
+                </MudButton>
             </MudItem>
-            @* TODO: Add create & delete config file buttons *@
             @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
             {
                 <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
@@ -385,6 +388,10 @@
                     <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
                                OnClick="@(() => ConfigAdd(localResource))" FullWidth="true" Disabled="@(!_editMode)">
                         Add Config
+                    </MudButton>
+                    <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                               OnClick="@(() => LocalResourceDelete(localResource))" FullWidth="true" Disabled="@(!_editMode)">
+                        Delete Resource
                     </MudButton>
                     <MudContainer Class="d-flex flex-column gap-1">
                         @foreach (var configItem in localResource.ConfigSets.OrderBy(x => x.FriendlyName))

@@ -120,6 +120,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @GameProfileId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(128),
                 @PathWindows NVARCHAR(128),
@@ -137,11 +138,11 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn DATETIME2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, LoadExisting,
+                INSERT into dbo.[{Table.TableName}] (Id, GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, LoadExisting,
                                                      CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @LoadExisting, @CreatedBy, @CreatedOn,
-                        @LastModifiedBy, @LastModifiedOn);
+                VALUES (@Id, @GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @LoadExisting, @CreatedBy,
+                        @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
