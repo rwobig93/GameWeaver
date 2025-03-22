@@ -9,7 +9,6 @@ namespace GameWeaver.Components.GameServer;
 
 public partial class GameServerPermissionAddDialog : ComponentBase
 {
-    
     [CascadingParameter] private IMudDialogInstance MudDialog { get; init; } = null!;
     [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
@@ -53,15 +52,13 @@ public partial class GameServerPermissionAddDialog : ComponentBase
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
 
-        // TODO: Look at cause for dynamic permissions not being loaded, likely due to needing to add policy for dynamic permissions 
-        _canPermissionGameServer = true;
-        // var isServerAdmin = (await RoleService.IsUserAdminAsync(_currentUserId)).Data || await AuthorizationService.UserHasPermission(currentUser,
-        //     PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Admin));
-        // var isServerModerator = (await RoleService.IsUserModeratorAsync(_currentUserId)).Data || await AuthorizationService.UserHasPermission(currentUser,
-        //     PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Moderator));
-        //
-        // _canPermissionGameServer = isServerAdmin || isServerModerator || 
-        //     await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Permission));
+        var isServerAdmin = (await RoleService.IsUserAdminAsync(_currentUserId)).Data || await AuthorizationService.UserHasPermission(currentUser,
+            PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Admin));
+        var isServerModerator = (await RoleService.IsUserModeratorAsync(_currentUserId)).Data || await AuthorizationService.UserHasPermission(currentUser,
+            PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Moderator));
+        
+        _canPermissionGameServer = isServerAdmin || isServerModerator || 
+            await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Permission));
     }
 
     private async Task GetRoles()

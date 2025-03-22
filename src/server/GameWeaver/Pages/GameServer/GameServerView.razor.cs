@@ -530,11 +530,22 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         // Go through each resource config set and remove the targeted config item
         foreach (var resource in _localResources)
         {
-            // TODO: Only remove from resource if it is not a parent profile, add as an ignore if it is a parent profile
-            var matchingActiveConfig = resource.ConfigSets.FirstOrDefault(x => x.Id == item.Id);
+            var resourceConfigSets = resource.ConfigSets.ToList();
+            var matchingActiveConfig = resourceConfigSets.FirstOrDefault(x => x.Id == item.Id);
             if (matchingActiveConfig is null) continue;
+
+            // If the config item is from a parent profile, add as an ignore to the existing resource on the direct profile instead
+            if (matchingActiveConfig.LocalResourceId == Guid.Empty)
+            {
+                matchingActiveConfig.Id = Guid.CreateVersion7();
+                matchingActiveConfig.LocalResourceId = resource.Id;
+                matchingActiveConfig.Ignore = true;
+                _createdConfigItems.Add(matchingActiveConfig);
+                resource.ConfigSets = resourceConfigSets.ToList().Prepend(matchingActiveConfig);
+                continue;
+            }
             
-            resource.ConfigSets = resource.ConfigSets.Where(x => x.Id != item.Id).ToList();
+            resource.ConfigSets = resourceConfigSets.Where(x => x.Id != item.Id).ToList();
         }
         
         // Remove this config item from updated if it was updated and is now being deleted

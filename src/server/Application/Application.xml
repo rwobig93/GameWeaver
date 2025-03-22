@@ -590,6 +590,18 @@
             <returns>List of matching game servers</returns>
             <remarks>Searches by: ID, OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
         </member>
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.ChangeOwnership(System.Guid,System.Guid,Application.Services.Identity.ICurrentUserService,Application.Services.GameServer.IGameServerService,Application.Services.Identity.IAppUserService,Microsoft.AspNetCore.Authorization.IAuthorizationService)">
+            <summary>
+            Change ownership of a game server
+            </summary>
+            <param name="gameServerId"></param>
+            <param name="newOwnerId"></param>
+            <param name="currentUserService"></param>
+            <param name="gameServerService"></param>
+            <param name="userService"></param>
+            <param name="authorizationService"></param>
+            <returns></returns>
+        </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.StartServer(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Start a game server

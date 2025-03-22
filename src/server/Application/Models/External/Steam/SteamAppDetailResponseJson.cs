@@ -14,9 +14,9 @@ public class SteamAppDetailResponseJson
     public string About_The_Game { get; set; } = "";
     public string Short_Description { get; set; } = "";
     public string Header_Image { get; set; } = "";
-    public SteamHardwareRequirementsResponseJson PC_Requirements { get; set; } = new();
-    public SteamHardwareRequirementsResponseJson Mac_Requirements { get; set; } = new();
-    public SteamHardwareRequirementsResponseJson Linux_Requirements { get; set; } = new();
+    // public SteamHardwareRequirementsResponseJson PC_Requirements { get; set; } = new();
+    // public SteamHardwareRequirementsResponseJson Mac_Requirements { get; set; } = new();
+    // public SteamHardwareRequirementsResponseJson Linux_Requirements { get; set; } = new();
     public List<string> Developers { get; set; } = [];
     public List<string> Publishers { get; set; } = [];
     public SteamPriceOverviewResponseJson Price_Overview { get; set; } = new();
