@@ -59,6 +59,7 @@ public static class PermissionHelpers
             PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Admin),
             PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Moderator),
             PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.View),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Edit),
             PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Permission),
             PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Configure),
             PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Start),

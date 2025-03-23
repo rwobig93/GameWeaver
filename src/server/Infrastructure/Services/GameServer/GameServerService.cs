@@ -1667,7 +1667,6 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> StartServerAsync(Guid id, Guid requestUserId)
     {
-        // TODO: Add missing dynamic permissions for all game server methods
         var foundServer = await _gameServerRepository.GetByIdAsync(id);
         if (foundServer.Result is null)
         {

@@ -15,6 +15,7 @@ public interface INotifyRecordRepository
     Task<DatabaseActionResult<int>> CreateAsync(NotifyRecordCreate createObject);
     Task<DatabaseActionResult<IEnumerable<NotifyRecordDb>>> SearchAsync(string searchTerm);
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>>> SearchPaginatedByEntityIdAsync(Guid id, string searchTerm, int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> DeleteOlderThan(DateTime olderThan);
     Task<DatabaseActionResult<int>> DeleteAllForEntityId(Guid id);
 }

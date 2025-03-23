@@ -165,6 +165,28 @@ public class NotifyRecordsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
+
+    public static readonly SqlStoredProcedure SearchPaginatedByEntityId = new()
+    {
+        Table = Table,
+        Action = "SearchPaginatedByEntityId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginatedByEntityId]
+                @Id UNIQUEIDENTIFIER,
+                @SearchTerm NVARCHAR(256),
+                @Offset INT,
+                @PageSize INT
+            AS
+            begin
+                SELECT COUNT(*) OVER() AS TotalCount, *
+                FROM dbo.[{Table.TableName}]
+                WHERE EntityId = @Id
+                    AND (EntityId LIKE '%' + @SearchTerm + '%'
+                    OR Message LIKE '%' + @SearchTerm + '%'
+                    OR Detail LIKE '%' + @SearchTerm + '%')
+                ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+            end"
+    };
     
     public static readonly SqlStoredProcedure DeleteOlderThan = new()
     {

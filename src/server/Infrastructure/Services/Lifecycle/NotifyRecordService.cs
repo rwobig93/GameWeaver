@@ -199,6 +199,37 @@ public class NotifyRecordService : INotifyRecordService
         }
     }
 
+    public async Task<PaginatedResult<IEnumerable<NotifyRecordSlim>>> SearchPaginatedByEntityIdAsync(Guid id, string searchTerm, int pageNumber, int pageSize)
+    {
+        try
+        {
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+            var response = await _notifyRepository.SearchPaginatedByEntityIdAsync(id, searchTerm, pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.SuccessAsync([]);
+            }
+
+            return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
+        }
+        catch (Exception ex)
+        {
+            return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.FailAsync(ex.Message);
+        }
+    }
+
     public async Task<IResult<int>> DeleteOlderThan(DateTime olderThan)
     {
         try

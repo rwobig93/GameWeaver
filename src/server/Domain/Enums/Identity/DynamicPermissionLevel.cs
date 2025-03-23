@@ -8,5 +8,6 @@ public enum DynamicPermissionLevel
     Configure = 3,
     Permission = 4,
     Start = 5,
-    Stop = 6
+    Stop = 6,
+    Edit = 7,
 }

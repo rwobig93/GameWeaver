@@ -57,7 +57,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private List<AppPermissionDisplay> _assignedRolePermissions = [];
     private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
     private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
-    private Color _serverStatusColor = Color.Error;
 
     private bool _canViewGameServer;
     private bool _canPermissionGameServer;
@@ -189,7 +188,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                              await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get) ||
                              await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.View));
 
-        var isServerAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data;
+        var isServerAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
+                            await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Admin));
         
         // Game server owner and admin gets full permissions
         if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
@@ -205,9 +205,28 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
+        var isServerModerator = (await RoleService.IsUserModeratorAsync(_loggedInUserId)).Data ||
+                                await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, 
+                                DynamicPermissionLevel.Moderator));
+
+        if (isServerModerator)
+        {
+            _canViewGameServer = true;
+            _canPermissionGameServer = true;
+            _canEditGameServer = true;
+            _canConfigureGameServer = true;
+            _canStartGameServer = true;
+            _canStopGameServer = true;
+            _canDeleteGameServer = false;
+            _canChangeOwnership = false;
+            return;
+        }
+        
         _canPermissionGameServer =  await AuthorizationService.UserHasPermission(currentUser,
                                         PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
-        _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update);
+        _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
+                             await AuthorizationService.UserHasPermission(currentUser,
+                                 PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Edit));
         _canConfigureGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
                              await AuthorizationService.UserHasPermission(currentUser,
                                  PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Configure));
@@ -450,8 +469,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
-        // TODO: Delete is failing w/: Failed to delete server profile before game server deletion
-        // TODO: Error detail for tshoot log is also showing: "Error": "System.Collections.Generic.List\u00601[System.String]"
         var response = await GameServerService.DeleteAsync(_gameServer.Id, _loggedInUserId);
         if (!response.Succeeded)
         {
@@ -798,7 +815,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private async Task<TableData<NotifyRecordSlim>> ServerReload(TableState state, CancellationToken token)
     {
-        var recordResponse = await NotifyRecordService.SearchPaginatedAsync(_notifySearchText, state.Page + 1, state.PageSize);
+        var recordResponse = await NotifyRecordService.SearchPaginatedByEntityIdAsync(_gameServer.Id, _notifySearchText, state.Page + 1, state.PageSize);
         if (!recordResponse.Succeeded)
         {
             recordResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

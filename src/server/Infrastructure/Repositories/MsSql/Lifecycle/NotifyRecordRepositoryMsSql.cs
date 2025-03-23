@@ -175,6 +175,29 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>>> SearchPaginatedByEntityIdAsync(Guid id, string searchTerm, int pageNumber, int pageSize)
+    {
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<NotifyRecordDb>>> actionReturn = new();
+
+        try
+        {
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response =
+                await _database.LoadDataPaginated<NotifyRecordDb, dynamic>(
+                    NotifyRecordsTableMsSql.SearchPaginatedByEntityId, new { Id = id, SearchTerm = searchTerm, Offset = offset, PageSize = pageSize });
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, NotifyRecordsTableMsSql.SearchPaginatedByEntityId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<int>> DeleteOlderThan(DateTime olderThan)
     {
         DatabaseActionResult<int> actionReturn = new();

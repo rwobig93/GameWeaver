@@ -13,6 +13,7 @@ public interface INotifyRecordService
     Task<IResult<int>> CreateAsync(NotifyRecordCreate createObject);
     Task<IResult<IEnumerable<NotifyRecordSlim>>> SearchAsync(string searchTerm);
     Task<PaginatedResult<IEnumerable<NotifyRecordSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<NotifyRecordSlim>>> SearchPaginatedByEntityIdAsync(Guid id, string searchTerm, int pageNumber, int pageSize);
     Task<IResult<int>> DeleteOlderThan(DateTime olderThan);
     Task<IResult<int>> DeleteAllForEntityId(Guid id);
 }
