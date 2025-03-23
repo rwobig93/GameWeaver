@@ -1,5 +1,8 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.GameServer;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.HostCheckIn;
@@ -7,9 +10,12 @@ using Application.Models.GameServer.WeaverWork;
 using Application.Requests.GameServer.Host;
 using Application.Services.GameServer;
 using Application.Services.Identity;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.Enums.GameServer;
+using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -39,22 +45,40 @@ public static class HostCheckinEndpoints
     /// <param name="request">Host check-in details</param>
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
-    /// <param name="dateTimeService"></param>
+    /// <param name="dateTime"></param>
     /// <param name="serializerService"></param>
+    /// <param name="serverState"></param>
+    /// <param name="tshootService"></param>
     /// <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
     [Authorize(PermissionConstants.GameServer.HostCheckins.CheckIn)]
     private static async Task<IResult<IEnumerable<WeaverWorkClient>>> Checkin([FromBody]HostCheckInRequest request, IHostService hostService, ICurrentUserService currentUserService,
-        IDateTimeService dateTimeService, ISerializerService serializerService)
+        IDateTimeService dateTime, ISerializerService serializerService, IRunningServerState serverState, ITroubleshootingRecordService tshootService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
+            var matchingHostResponse = await hostService.GetByIdAsync(currentUserId);
+            if (!matchingHostResponse.Succeeded || matchingHostResponse.Data is null)
+            {
+                return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
+            }
+
+            if (!matchingHostResponse.Data.CurrentState.IsRunning())
+            {
+                var hostUpdate = new HostUpdateRequest() {Id = currentUserId, CurrentState = ConnectivityState.Connectable};
+                var updateHostResponse = await hostService.UpdateAsync(hostUpdate, serverState.SystemUserId);
+                if (!updateHostResponse.Succeeded)
+                {
+                    await tshootService.CreateTroubleshootRecord(serverState, dateTime, TroubleshootEntityType.Hosts, currentUserId,
+                        "Failed to update host to online status from checkin", new Dictionary<string, string> {{"HostId", currentUserId.ToString()}});
+                }
+            }
             
             var createCheckIn = new HostCheckInCreate
             {
                 HostId = currentUserId,
                 SendTimestamp = request.SendTimestamp,
-                ReceiveTimestamp = dateTimeService.NowDatabaseTime,
+                ReceiveTimestamp = dateTime.NowDatabaseTime,
                 CpuUsage = request.CpuUsage,
                 RamUsage = request.RamUsage,
                 Uptime = request.Uptime,

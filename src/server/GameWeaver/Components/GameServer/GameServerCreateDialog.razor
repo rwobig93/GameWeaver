@@ -18,28 +18,28 @@
                 <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
                     <MudTextField @bind-Value="_selectedGame.SteamName" Label="Game" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="GameSlim" Label="Available Games" @bind-Value="_selectedGame" Required="true"
-                                     SearchFunc="@FilterGames" ToStringFunc="@(x => $"{x.SteamName}")"/>
+                                     SearchFunc="@FilterGames" ToStringFunc="@(x => $"{x?.SteamName}")"/>
                 </MudStack>
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
                 <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
                     <MudTextField @bind-Value="_selectedOwner.Username" Label="Server Owner" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="UserBasicResponse" Label="Available Owners" @bind-Value="_selectedOwner" Required="true"
-                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x.Username}")"/>
+                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")"/>
                 </MudStack>
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
                 <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
                     <MudTextField @bind-Value="_selectedHost.FriendlyName" Label="Host" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="HostSlim" Label="Available Hosts" @bind-Value="_selectedHost"
-                                     SearchFunc="@FilterHosts" ToStringFunc="@(x => $"{x.FriendlyName}")"/>
+                                     SearchFunc="@FilterHosts" ToStringFunc="@(x => $"{x?.FriendlyName}")"/>
                 </MudStack>
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
                 <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
                     <MudTextField @bind-Value="_selectedParentProfile.FriendlyName" Label="Inherit Configuration Profile" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="GameProfileSlim" Label="Available Configuration" @bind-Value="_selectedParentProfile"
-                                     SearchFunc="@FilterProfiles" ToStringFunc="@(x => $"{x.FriendlyName}")"/>
+                                     SearchFunc="@FilterProfiles" ToStringFunc="@(x => $"{x?.FriendlyName}")"/>
                 </MudStack>
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">

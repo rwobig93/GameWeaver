@@ -206,6 +206,12 @@ public partial class GameServerCreateDialog : ComponentBase
             Snackbar.Add("A valid owner wasn't selected", Severity.Error);
             return;
         }
+
+        if (string.IsNullOrWhiteSpace(_createRequest.Name))
+        {
+            Snackbar.Add("Server name cannot be empty", Severity.Error);
+            return;
+        }
         
         if (_loggedInUserId == Guid.Empty)
         {

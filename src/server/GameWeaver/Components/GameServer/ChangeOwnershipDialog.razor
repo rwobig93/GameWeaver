@@ -16,7 +16,7 @@
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
                     <MudAutocomplete T="UserBasicResponse" Label="Available Users" @bind-Value="_selectedUser" CoerceText="true" Required="true"
-                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x.Username}")"/>
+                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")"/>
                 </MudItem>
             </MudStack>
         </MudContainer>

@@ -29,4 +29,6 @@ public class AppConfiguration : IAppSettingsSection
     public bool UpdateGamesFromSteam { get; set; } = true;
 
     public string SteamAppNameFilter { get; set; } = "dedicated server";
+
+    public int HostOfflineAfterSeconds { get; set; } = 3;
 }

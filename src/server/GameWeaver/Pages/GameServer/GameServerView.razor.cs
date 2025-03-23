@@ -15,6 +15,7 @@ using Application.Models.Identity.Permission;
 using Application.Models.Lifecycle;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
+using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using GameWeaver.Components.GameServer;
 
@@ -286,6 +287,13 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
+        await GetServerHost();
+        if (!_host.CurrentState.IsRunning())
+        {
+            Snackbar.Add("The host for this gameserver is currently offline, changes will occur once the host is online again", Severity.Error);
+            StateHasChanged();
+        }
+        
         var response = await GameServerService.UpdateAsync(_gameServer.ToUpdate(), _loggedInUserId);
         if (!response.Succeeded)
         {
@@ -327,7 +335,18 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         
         foreach (var resource in _deletedLocalResources)
         {
-            // TODO: Create resource as ignored if deleted but is from parent or default game profile
+            // Create resource as ignored if deleted but is from parent or default game profile
+            if (resource.Id == Guid.Empty)
+            {
+                resource.GameProfileId = _gameServer.GameProfileId;
+                resource.ContentType = ContentType.Ignore;
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreateRequest(), _loggedInUserId);
+                if (createResourceResponse.Succeeded) continue;
+            
+                createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+            
             var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
             if (deleteResourceResponse.Succeeded) continue;
             
@@ -473,6 +492,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
+        await GetServerHost();
+        if (!_host.CurrentState.IsRunning())
+        {
+            Snackbar.Add("The host for this gameserver is currently offline", Severity.Error);
+            StateHasChanged();
+            return;
+        }
+        
         var dialogParameters = new DialogParameters()
         {
             {"Title", "Are you sure you want to delete this gameserver?"},
@@ -564,6 +591,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         // Go through each resource config set and remove the targeted config item
         foreach (var resource in _localResources)
         {
+            // ReSharper disable once PossibleMultipleEnumeration
             var resourceConfigSets = resource.ConfigSets.ToList();
             var matchingActiveConfig = resourceConfigSets.FirstOrDefault(x => x.Id == item.Id);
             if (matchingActiveConfig is null) continue;
@@ -695,6 +723,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add("Unable to start an already running game server", Severity.Error);
             return;
         }
+        
+        await GetServerHost();
+        if (!_host.CurrentState.IsRunning())
+        {
+            Snackbar.Add("The host for this gameserver is currently offline", Severity.Error);
+            StateHasChanged();
+            return;
+        }
 
         if (_gameServer.ServerState.IsDoingSomething())
         {
@@ -720,6 +756,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (!_gameServer.ServerState.IsRunning())
         {
             Snackbar.Add("Unable to stop an already stopped game server", Severity.Error);
+            return;
+        }
+        
+        await GetServerHost();
+        if (!_host.CurrentState.IsRunning())
+        {
+            Snackbar.Add("The host for this gameserver is currently offline", Severity.Error);
+            StateHasChanged();
             return;
         }
 
@@ -750,6 +794,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
+        await GetServerHost();
+        if (!_host.CurrentState.IsRunning())
+        {
+            Snackbar.Add("The host for this gameserver is currently offline", Severity.Error);
+            StateHasChanged();
+            return;
+        }
+        
         var restartRequest = await GameServerService.RestartServerAsync(_gameServer.Id, _loggedInUserId);
         if (!restartRequest.Succeeded)
         {
@@ -768,6 +820,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (_gameServer.ServerState.IsDoingSomething())
         {
             Snackbar.Add($"The server is currently {_gameServer.ServerState}, unable to deploy an update", Severity.Error);
+            return;
+        }
+        
+        await GetServerHost();
+        if (!_host.CurrentState.IsRunning())
+        {
+            Snackbar.Add("The host for this gameserver is currently offline", Severity.Error);
+            StateHasChanged();
             return;
         }
 
@@ -835,7 +895,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         Snackbar.Add("Text copied to your clipboard!", Severity.Success);
     }
     
-    private async Task<TableData<NotifyRecordSlim>> ServerReload(TableState state, CancellationToken token)
+    private async Task<TableData<NotifyRecordSlim>> ServerEventsReload(TableState state, CancellationToken token)
     {
         var recordResponse = await NotifyRecordService.SearchPaginatedByEntityIdAsync(_gameServer.Id, _notifySearchText, state.Page + 1, state.PageSize);
         if (!recordResponse.Succeeded)

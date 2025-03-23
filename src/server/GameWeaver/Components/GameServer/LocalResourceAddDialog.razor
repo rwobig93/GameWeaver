@@ -25,7 +25,7 @@
                             }
                         </MudSelect>
                     </MudTooltip>
-                    <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Type of content this resource contains">
+                    <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Type of content this resource contains, ignore ignores inherited resources">
                         <MudSelect @bind-Value="_newLocalResource.ContentType" Label="Content Type" Variant="Variant.Outlined" Disabled="false" Required="true">
                             @foreach (var contentType in Enum.GetValues(typeof(ContentType)).Cast<ContentType>())
                             {
@@ -82,7 +82,9 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@Submit">@ConfirmButtonText</MudButton>
-        <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="px-4">
+            <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@Submit">@ConfirmButtonText</MudButton>
+            <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+        </MudStack>
     </DialogActions>
 </MudDialog>

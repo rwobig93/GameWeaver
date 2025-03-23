@@ -654,15 +654,17 @@
             </summary>
             <param name="app">Running application</param>
         </member>
-        <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.Checkin(Application.Requests.GameServer.Host.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService)">
+        <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.Checkin(Application.Requests.GameServer.Host.HostCheckInRequest,Application.Services.GameServer.IHostService,Application.Services.Identity.ICurrentUserService,Application.Services.System.IDateTimeService,Application.Services.System.ISerializerService,Application.Services.Lifecycle.IRunningServerState,Application.Services.Lifecycle.ITroubleshootingRecordService)">
             <summary>
             Inject a valid host check-in status
             </summary>
             <param name="request">Host check-in details</param>
             <param name="hostService"></param>
             <param name="currentUserService"></param>
-            <param name="dateTimeService"></param>
+            <param name="dateTime"></param>
             <param name="serializerService"></param>
+            <param name="serverState"></param>
+            <param name="tshootService"></param>
             <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.HostCheckinEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IHostService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">

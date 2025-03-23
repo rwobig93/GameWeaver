@@ -1,6 +1,9 @@
 
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
+using Application.Settings.AppSettings;
+using Microsoft.Extensions.Options;
+
 #pragma warning disable CS0618 // Type or member is obsolete
 
 namespace GameWeaver.Components.GameServer;
@@ -10,6 +13,7 @@ public partial class HostWidget : ComponentBase
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [Parameter] public HostSlim Host { get; set; } = null!;
     [Parameter] public TimeZoneInfo LocalTimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
     
     
     private double[] _cpuData = [0, 0];
@@ -126,7 +130,7 @@ public partial class HostWidget : ComponentBase
         
         var lastCheckinTime = _checkins.Last().ReceiveTimestamp;
         var currentTime = DateTimeService.NowDatabaseTime;
-        if ((currentTime - lastCheckinTime).TotalSeconds > 3)
+        if ((currentTime - lastCheckinTime).TotalSeconds > AppConfig.Value.HostOfflineAfterSeconds)
         {
             IsOffline = true;
             StatusColor = Color.Error;

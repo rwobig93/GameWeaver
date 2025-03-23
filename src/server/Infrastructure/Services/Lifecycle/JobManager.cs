@@ -9,6 +9,7 @@ using Application.Models.GameServer.Publishers;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Requests.GameServer.Game;
+using Application.Requests.GameServer.Host;
 using Application.Services.External;
 using Application.Services.GameServer;
 using Application.Services.Identity;
@@ -63,6 +64,8 @@ public class JobManager : IJobManager
         _securityConfig = securityConfig;
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task UserHousekeeping()
     {
         try
@@ -75,6 +78,8 @@ public class JobManager : IJobManager
         }
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task DailyCleanup()
     {
         try
@@ -97,6 +102,8 @@ public class JobManager : IJobManager
         }
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     private async Task HostCheckInCleanup()
     {
         var hostCheckInCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.Value.HostCheckInCleanupAfterDays);
@@ -108,6 +115,8 @@ public class JobManager : IJobManager
         _logger.Information("{LogPrefix} Cleaned {RecordCount} host checkin records", DataConstants.Logging.JobDailyCleanup, hostCheckInCleanup.Data);
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     private async Task WeaverWorkCleanup()
     {
         var workCleanupTimestamp = _dateTime.NowDatabaseTime.AddDays(-_lifecycleConfig.Value.WeaverWorkCleanupAfterDays);
@@ -119,6 +128,8 @@ public class JobManager : IJobManager
         _logger.Information("{LogPrefix} Cleaned {RecordCount} weaver work records", DataConstants.Logging.JobDailyCleanup, weaverWorkCleanup.Data);
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     private async Task GameProfileCleanup()
     {
         var allGameProfiles = await _gameServerRepository.GetAllGameProfilesAsync();
@@ -146,6 +157,8 @@ public class JobManager : IJobManager
         }
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     private async Task HostRegistrationCleanup()
     {
         var hostRegistrationCleanup = await _hostService.DeleteRegistrationsOlderThanAsync(_serverState.SystemUserId, _lifecycleConfig.Value.HostRegistrationCleanupHours);
@@ -156,6 +169,8 @@ public class JobManager : IJobManager
         _logger.Information("{LogPrefix} Cleaned {RecordCount} host registration records", DataConstants.Logging.JobDailyCleanup, hostRegistrationCleanup.Data);
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     private async Task AuditTrailCleanup()
     {
         var auditCleanup = await _auditService.DeleteOld(_lifecycleConfig.Value.AuditLogLifetime);
@@ -166,6 +181,8 @@ public class JobManager : IJobManager
         _logger.Information("{LogPrefix} Cleaned {RecordCount} audit records", DataConstants.Logging.JobDailyCleanup, auditCleanup.Data);
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     private async Task HandleLockedOutUsers()
     {
         // If account lockout threshold is 0 minutes then accounts are locked until unlocked by an administrator
@@ -218,6 +235,8 @@ public class JobManager : IJobManager
         _logger.Debug("Finished handling locked out users during housekeeping job");
     }
 
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task GameVersionCheck()
     {
         var allGameServers = await _gameServerService.GetAllAsync();
@@ -482,5 +501,45 @@ public class JobManager : IJobManager
         }
 
         return filteredGameMatches.FirstOrDefault();
+    }
+
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    public async Task HostStatusCheck()
+    {
+        var allHosts = await _hostService.GetAllAsync();
+        _logger.Debug("Gathered {HostCount} active Hosts to check for offline status", allHosts.Data.Count());
+
+        foreach (var host in allHosts.Data)
+        {
+            var latestCheckIn = await _hostService.GetCheckInsLatestByHostIdAsync(host.Id, 1);
+            if (!latestCheckIn.Data.Any() && !host.CurrentState.IsRunning())
+            {
+                _logger.Verbose("Host is already offline and has no latest checkin, no status update necessary: {HostId}", host.Id);
+                continue;
+            }
+            
+            // Last checkin is within configured seconds so is considered online or not
+            var secondsSinceLastCheckIn = (_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds;
+            var hostIsOffline = secondsSinceLastCheckIn > _appConfig.CurrentValue.HostOfflineAfterSeconds;
+            if (hostIsOffline && !host.CurrentState.IsRunning())
+            {
+                _logger.Verbose("Host is already offline and checked in {SecondsSinceCheckin}s ago, no status update necessary for {HostId}",
+                    secondsSinceLastCheckIn, host.Id);
+                continue;
+            }
+            
+            _logger.Debug("Host was last known online but hasn't checked in for {SecondsSinceCheckin}s which is over the offline {OfflineSeconds} and is now considered offline," +
+                          " updating status for host {HostId}", secondsSinceLastCheckIn, _appConfig.CurrentValue.HostOfflineAfterSeconds, host.Id);
+            var updateHost = new HostUpdateRequest() {Id = host.Id, CurrentState = ConnectivityState.Unknown};
+            var updateHostResponse = await _hostService.UpdateAsync(updateHost, _serverState.SystemUserId);
+            if (!updateHostResponse.Succeeded)
+            {
+                _logger.Error("Failed to update host offline status for {HostId}: {Error}", host.Id, updateHostResponse.Messages);
+                continue;
+            }
+            
+            _logger.Information("Host {HostId} hasn't checked in and is now offline", host.Id);
+        }
     }
 }

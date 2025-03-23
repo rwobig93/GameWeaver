@@ -259,7 +259,8 @@ public static class HostMappers
             OwnerId = request.OwnerId,
             FriendlyName = request.Name,
             Description = request.Description,
-            AllowedPorts = request.AllowedPorts
+            AllowedPorts = request.AllowedPorts,
+            CurrentState = request.CurrentState
         };
     }
 
