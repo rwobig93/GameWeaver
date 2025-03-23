@@ -13,14 +13,14 @@
             @if (IsForRolesNotUsers)
             {
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
-                    <MudAutocomplete T="RoleResponse" Label="Give Permissions To" Value="_selectedRole" CoerceText="true" Required="true"
+                    <MudAutocomplete T="RoleResponse" Label="Give Permissions To" Value="_selectedRole" CoerceText="true" Required="true" Clearable="true"
                                      SearchFunc="@FilterRoles" ToStringFunc="@(x => $"{x?.Name}")" ValueChanged="@SelectedRoleChanged"/>
                 </MudItem>
             }
             else
             {
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
-                    <MudAutocomplete T="UserBasicResponse" Label="Give Permissions To" Value="_selectedUser" CoerceText="true" Required="true"
+                    <MudAutocomplete T="UserBasicResponse" Label="Give Permissions To" Value="_selectedUser" CoerceText="true" Required="true" Clearable="true"
                                      SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")" ValueChanged="@SelectedUserChanged"/>
                 </MudItem>
             }

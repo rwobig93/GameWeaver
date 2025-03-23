@@ -9,6 +9,7 @@ using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
+using Application.Models.GameServer.Host;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.Identity.Permission;
 using Application.Models.Lifecycle;
@@ -26,6 +27,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     [Inject] public IAppRoleService RoleService { get; init; } = null!;
     [Inject] public IGameServerService GameServerService { get; init; } = null!;
     [Inject] public IGameService GameService { get; init; } = null!;
+    [Inject] public IHostService HostService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IEventService EventService { get; init; } = null!;
     [Inject] private INotifyRecordService NotifyRecordService { get; init; } = null!;
@@ -36,6 +38,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private Guid _loggedInUserId = Guid.Empty;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameServerSlim _gameServer = new() { Id = Guid.Empty };
+    private HostSlim _host = new() { Id = Guid.Empty };
     private GameProfileSlim? _parentProfile;
     private GameSlim _game = new() { Id = Guid.Empty };
     private List<LocalResourceSlim> _localResources = [];
@@ -77,6 +80,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 await GetViewingGameServer();
                 await GetServerParentProfile();
                 await GetServerGame();
+                await GetServerHost();
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetGameServerResources();
@@ -162,6 +166,18 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
     }
     
+    private async Task GetServerHost()
+    {
+        var hostResponse = await HostService.GetByIdAsync(_gameServer.HostId);
+        if (!hostResponse.Succeeded || hostResponse.Data is null)
+        {
+            Snackbar.Add("Failed to find host for server, please reach out to an administrator", Severity.Error);
+            return;
+        }
+        
+        _host = hostResponse.Data;
+    }
+
     private async Task GetGameServerResources()
     {
         if (!_validIdProvided)
@@ -308,8 +324,10 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 return;
             }
         }
+        
         foreach (var resource in _deletedLocalResources)
         {
+            // TODO: Create resource as ignored if deleted but is from parent or default game profile
             var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
             if (deleteResourceResponse.Succeeded) continue;
             
@@ -610,11 +628,15 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var deletedResource = (LocalResourceSlim) dialogResult.Data;
+        var deleteResource = (bool) dialogResult.Data;
+        if (!deleteResource)
+        {
+            return;
+        }
         
-        _localResources.Remove(deletedResource);
-        _deletedLocalResources.Add(deletedResource);
-        foreach (var configItem in deletedResource.ConfigSets)
+        _localResources.Remove(localResource);
+        _deletedLocalResources.Add(localResource);
+        foreach (var configItem in localResource.ConfigSets)
         {
             _deletedConfigItems.Remove(configItem);
         }

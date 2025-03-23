@@ -175,15 +175,12 @@
 <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4rounded-lg pa-2">
         <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
-            @* TODO: ELements aren't displaying evenly *@
-            <MudTextField @bind-Value="_gameServer.ServerName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)" Style="width: 100%;"/>
-            <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
-                <MudTextField @bind-Value="_gameServer.Password" Label="Password" Variant="Variant.Outlined" Disabled="@(!_editMode)" InputType="InputType.Password"/>
-                <MudIconButton Variant="Variant.Outlined" Icon="@Icons.Material.Outlined.ContentCopy" OnClick="@(() => CopyToClipboard(_gameServer.Password))"/>
-            </MudStack>
+            <MudTextField @bind-Value="_gameServer.ServerName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_gameServer.Password" Label="Password" Variant="Variant.Outlined" Disabled="@(!_editMode)" InputType="InputType.Password"/>
+            <MudIconButton Variant="Variant.Outlined" Icon="@Icons.Material.Outlined.ContentCopy" OnClick="@(() => CopyToClipboard(_gameServer.Password))"/>
+            <MudTextField @bind-Value="_gameServer.ExternalHostname" Label="External Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudStack>
         <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
-            <MudTextField @bind-Value="_gameServer.ExternalHostname" Label="External Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
             <MudTextField @bind-Value="_gameServer.PortGame" Label="Game Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
             <MudTextField @bind-Value="_gameServer.PortPeer" Label="Peer Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
             <MudTextField @bind-Value="_gameServer.PortQuery" Label="Query Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
@@ -387,30 +384,33 @@
                         <MudStack Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
                             <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
                             <MudDivider Vertical="true" />
-                            @* TODO: Take resource path from host OS *@
-                            @if (!string.IsNullOrWhiteSpace(localResource.PathWindows))
+                            @switch (_host)
                             {
-                                <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathWindows</MudText>
-                            }
-                            else if (!string.IsNullOrWhiteSpace(localResource.PathLinux))
-                            {
-                                <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathLinux</MudText>
-                            }
-                            else
-                            {
-                                <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathMac</MudText>
+                                case {Os: OsType.Windows}:
+                                    <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathWindows</MudText>
+                                    break;
+                                case {Os: OsType.Linux}:
+                                    <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathLinux</MudText>
+                                    break;
+                                case {Os: OsType.Mac}:
+                                    <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathMac</MudText>
+                                    break;
+                                default:
+                                    <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathWindows</MudText>
+                                    break;
                             }
                         </MudStack>
                     </MudItem>
-                    @* TODO: Add stack to have both buttons on same row *@
-                    <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
-                               OnClick="@(() => ConfigAdd(localResource))" FullWidth="true" Disabled="@(!_editMode)">
-                        Add Config
-                    </MudButton>
-                    <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
-                               OnClick="@(() => LocalResourceDelete(localResource))" FullWidth="true" Disabled="@(!_editMode)">
-                        Delete Resource
-                    </MudButton>
+                    <MudStack Row="true" Justify="Justify.SpaceEvenly" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                   OnClick="@(() => ConfigAdd(localResource))" Disabled="@(!_editMode)">
+                            Add Config
+                        </MudButton>
+                        <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                                   OnClick="@(() => LocalResourceDelete(localResource))" Disabled="@(!_editMode)">
+                            Delete Resource
+                        </MudButton>
+                    </MudStack>
                     <MudContainer Class="d-flex flex-column gap-1">
                         @foreach (var configItem in localResource.ConfigSets.OrderBy(x => x.FriendlyName))
                         {
