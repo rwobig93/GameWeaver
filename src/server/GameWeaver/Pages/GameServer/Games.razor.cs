@@ -45,8 +45,8 @@ public partial class Games : ComponentBase
         _pagedData = [];
         _gameWidgets = [];
         
-        // TODO: Searching by clicking the button works as expected, pressing "enter" in the text field results in the previous results, enter has to be hit twice
-        // TODO: Assuming some form of caching I haven't been able to find yet is the cause, adding another small get call works for now though
+        // Searching by clicking the button works as expected, pressing "enter" in the text field results in the previous results, enter has to be hit twice
+        // Assuming some form of caching I haven't been able to find yet is the cause, adding another small get call works for now though
         await GameService.GetAllPaginatedAsync(1, 1);
         var response = await GameService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize);
         if (!response.Succeeded)

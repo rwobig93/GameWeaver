@@ -161,7 +161,7 @@ public partial class GameView : ComponentBase
 
     private async Task ViewGameVersionFiles()
     {
-        // TODO: Write open modal logic
+        Snackbar.Add("This feature is currently not implemented", Severity.Warning);
         await Task.CompletedTask;
     }
 

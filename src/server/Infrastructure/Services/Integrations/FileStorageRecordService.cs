@@ -184,7 +184,6 @@ public class FileStorageRecordService : IFileStorageRecordService
     {
         try
         {
-            // TODO: Update game version for new file uploads if 'IsLatest' boolean is true
             var convertedRecord = request.ToCreate();
             convertedRecord.CreatedBy = requestUserId;
             convertedRecord.CreatedOn = _dateTime.NowDatabaseTime;

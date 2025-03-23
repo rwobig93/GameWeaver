@@ -236,7 +236,7 @@ public static class GameMappers
             PriceInitial = response.Price_Overview.Final_Formatted,
             PriceCurrent = response.Price_Overview.Final_Formatted,
             PriceDiscount = response.Price_Overview.Discount_Percent,
-            // TODO: Steam api returns dict if there is a value or an empty list if there isn't a value | Validate is fixed
+            // FUTURE: Steam api returns dict if there is a value or an empty list if there isn't a value | Need to find a good way to handle this
             // RequirementsPcMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.PC_Requirements.Minimum : "",
             // RequirementsPcRecommended = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.PC_Requirements.Recommended : "",
             // RequirementsMacMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Mac_Requirements.Minimum : "",

@@ -383,7 +383,22 @@
             {
                 <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
                     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
+                            <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
+                            <MudDivider Vertical="true" />
+                            @if (!string.IsNullOrWhiteSpace(localResource.PathWindows))
+                            {
+                                <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathWindows</MudText>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(localResource.PathLinux))
+                            {
+                                <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathLinux</MudText>
+                            }
+                            else
+                            {
+                                <MudText Color="Color.Tertiary" Align="Align.Center" Typo="Typo.h6">@localResource.PathMac</MudText>
+                            }
+                        </MudStack>
                     </MudItem>
                     <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
                                OnClick="@(() => ConfigAdd(localResource))" FullWidth="true" Disabled="@(!_editMode)">

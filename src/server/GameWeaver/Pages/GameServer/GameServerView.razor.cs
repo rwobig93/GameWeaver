@@ -418,7 +418,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private void ToggleEditMode()
     {
-        // TODO: Add file / resource creation in the advanced section (also rename to expert) along w/ showing file path, also allow resource delete
         _editMode = !_editMode;
 
         _editButtonText = _editMode ? "Disable Edit Mode" : "Enable Edit Mode";

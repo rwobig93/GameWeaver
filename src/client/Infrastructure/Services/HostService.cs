@@ -16,8 +16,7 @@ public class HostService : IHostService
         _dateTimeService = dateTimeService;
     }
 
-    // TODO: Add timespan for hardware enumeration timeout, is infinity by default
-    private static readonly HardwareInfo HardwareInfo = new();
+    private static readonly HardwareInfo HardwareInfo = new(TimeSpan.FromMilliseconds(5000));
 
     public void PollHostDetail()
     {
