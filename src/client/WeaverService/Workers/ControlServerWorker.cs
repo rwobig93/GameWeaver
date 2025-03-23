@@ -3,6 +3,8 @@ using System.Collections.Concurrent;
 using Application.Requests.Host;
 using Application.Services;
 using Application.Settings;
+using Domain.Enums;
+using Domain.Models.ControlServer;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -79,7 +81,26 @@ public class ControlServerWorker : BackgroundService
             _logger.Information("Server connectivity status changed, server connectivity is now: {ServerStatus}", serverIsUp);
 
         if (_serverService is {ServerIsUp: true, RegisteredWithServer: false})
-            await _serverService.RegistrationConfirm();
+        {
+            var registerResponse = await _serverService.RegistrationConfirm();
+            
+            // On a new registration we need to let the control server know about our host, same as on startup
+            if (!string.IsNullOrWhiteSpace(registerResponse.Data?.Data.HostToken) && registerResponse.Data.Data.HostId != Guid.Empty)
+            {
+                // Registration complete, need to wait a bit for the other workers to catch up
+                await Task.Delay(2000);
+                await _weaverWorkService.CreateAsync(new WeaverWork
+                {
+                    Id = 0,
+                    TargetType = WeaverWorkTarget.HostDetail,
+                    Status = WeaverWorkState.WaitingToBePickedUp,
+                    WorkData = null
+                });
+            }
+            
+            // Waiting on successful registration, we'll add a delay to not hammer the server waiting
+            await Task.Delay(5000);
+        }
         
         _logger.Verbose("Control Server is up: {ServerStatus}", serverIsUp);
     }

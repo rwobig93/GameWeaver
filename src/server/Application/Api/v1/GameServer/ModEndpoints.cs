@@ -50,19 +50,19 @@ public static class ModEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
-
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
             var result = await gameServerService.GetAllModsPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<ModSlim>>.FailAsync(result.Messages);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await gameServerService.GetModCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Mod.GetAll,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Mod.GetAll,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Mod.GetAll, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Mod.GetAll, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -283,20 +283,36 @@ public static class ModEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Search mods by properties
     /// </summary>
     /// <param name="searchText">Text to search</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameServerService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of matching mods</returns>
     /// <remarks>Searches by: ID, GameId, SteamGameId, SteamToolId, SteamId, FriendlyName</remarks>
     [Authorize(PermissionConstants.GameServer.Mod.Search)]
-    private static async Task<IResult<IEnumerable<ModSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<ModSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await gameServerService.SearchModsAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameServerService.SearchModsPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+            
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Mod.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Mod.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

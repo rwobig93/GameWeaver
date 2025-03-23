@@ -282,22 +282,24 @@ public partial class DeveloperTesting : IAsyncDisposable
     {
         Snackbar.Add($"Game server state change: {args.ServerState}", Severity.Info);
         var matchingServer = _gameServers.FirstOrDefault(x => x.Id == args.Id);
-        if (matchingServer is not null)
+        if (matchingServer is null)
         {
-            matchingServer.ServerState = args.ServerState;
-
-            if (args.BuildVersionUpdated)
-            {
-                var matchingGame = _games.FirstOrDefault(x => x.Id == matchingServer.GameId);
-                matchingServer.ServerBuildVersion = matchingGame?.LatestBuildVersion ?? matchingServer.ServerBuildVersion;
-                
-                if (_selectedGameServer != null && matchingServer.Id == _selectedGameServer.Id)
-                {
-                    _gameServerUpToDate = matchingGame?.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
-                }
-            }
-
+            return;
         }
+        
+        matchingServer.ServerState = args.ServerState;
+
+        if (args.BuildVersionUpdated)
+        {
+            var matchingGame = _games.FirstOrDefault(x => x.Id == matchingServer.GameId);
+            matchingServer.ServerBuildVersion = matchingGame?.LatestBuildVersion ?? matchingServer.ServerBuildVersion;
+                
+            if (_selectedGameServer != null && matchingServer.Id == _selectedGameServer.Id)
+            {
+                _gameServerUpToDate = matchingGame?.LatestBuildVersion == _selectedGameServer.ServerBuildVersion;
+            }
+        }
+        
         InvokeAsync(StateHasChanged);
     }
     
@@ -542,7 +544,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 
                 if (matchingItem is not null)
                 {
-                    var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value, ModifyingUserId = _loggedInUser.Id};
+                    var itemUpdate = new ConfigurationItemUpdate {Id = matchingItem.Id, Value = configItem.Value};
                     var updateRequest = await GameServerService.UpdateConfigurationItemAsync(itemUpdate, _loggedInUser.Id);
                     if (!updateRequest.Succeeded)
                     {
@@ -809,7 +811,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     }
 
     
-    private async Task<TableData<FileStorageRecordSlim>> FileRecordReload(TableState state)
+    private async Task<TableData<FileStorageRecordSlim>> FileRecordReload(TableState state, CancellationToken token)
     {
         var foundFiles = await FileService.GetAllAsync();
         if (!foundFiles.Succeeded)

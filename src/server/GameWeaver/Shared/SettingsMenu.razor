@@ -4,7 +4,7 @@
     <MudPaper Elevation="5" Class="d-flex flex-column my-4 justify-center align-center mud-text-align-center">
         <MudItem xs="12" sm="12" md="12" Class="d-flex ma-4 align-center">
             <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium" ProfileImageUrl="@UserFull.ProfilePictureDataUrl"/>
-            <MudText Align="Align.Right" Class="pl-2">@GetDisplayUsername()</MudText>
+            <MudText Align="Align.Right" Class="@_cssThemedText" Style="padding-left: 8px !important;">@_displayUsername</MudText>
         </MudItem>
     </MudPaper>
     <MudPaper Elevation="5" Class="d-flex mb-4 justify-center align-center mud-text-align-center">
@@ -17,19 +17,20 @@
     {
         <MudPaper Elevation="5" Class="d-flex mb-4">
             <MudExpansionPanel Text="Themes" Class="d-flex flex-column pa-1">
-                <MudItem>
-                    <MudChip Color="Color.Primary">Current Theme: @GetCurrentThemeName()</MudChip>
-                </MudItem>
                 <MudItem Class="d-flex flex-column align-center">
                     @foreach (var theme in AvailableThemes)
                     {
                         <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
-                            <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@theme.Icon"
-                                       OnClick="@(() => ChangeThemeOnLayout(theme))">
-                                @theme.FriendlyName
+                            <MudButton Variant="Variant.Text" StartIcon="@theme.Icon" OnClick="@(() => ChangeThemeOnLayout(theme))">
+                                <MudText Class="@_cssThemedText" Style="@(UserPreferences.ThemePreference == theme.Id ? _styleThemedTextSelected : _styleThemedText)">
+                                    @theme.FriendlyName
+                                </MudText>
                             </MudButton>
                         </MudTooltip>
                     }
+                    <MudSwitch T="bool" Color="Color.Tertiary" Value="@UserPreferences.GamerMode" ValueChanged="@(enabled => ToggleGamerMode(enabled))">
+                        <MudText Class="rainbow-text">Gamer Mode</MudText>
+                    </MudSwitch>
                 </MudItem>
             </MudExpansionPanel>
         </MudPaper>
@@ -37,13 +38,13 @@
     <MudPaper Elevation="5" Class="d-flex mb-4">
         <MudExpansionPanel Text="Client Information" Class="d-flex flex-column pa-1 my-1">
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
-                <MudChip Color="Color.Primary">Application Version</MudChip>
+                <MudChip T="string" Color="Color.Primary">Application Version</MudChip>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                 <MudText Typo="Typo.caption" Class="pl-2">@($"v{ServerState.ApplicationVersion.ToString()}")</MudText>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center mt-1">
-                <MudChip Color="Color.Tertiary">Current Timezone</MudChip>
+                <MudChip T="string" Color="Color.Tertiary">Current Timezone</MudChip>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                 <MudText Typo="Typo.caption" Class="pl-2">@_clientTimeZone</MudText>

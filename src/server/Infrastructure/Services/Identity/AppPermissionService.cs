@@ -94,14 +94,39 @@ public class AppPermissionService : IAppPermissionService
             var allBuiltInPermissions = PermissionHelpers.GetAllBuiltInPermissions();
             allPermissions.AddRange(allBuiltInPermissions.ToAppPermissionCreates());
 
-            // Get dynamic permissions - Service Account Admin
-            var serviceAccountsRequest = await _userRepository.GetAllServiceAccountsForPermissionsAsync();
-            if (!serviceAccountsRequest.Succeeded)
-                return await Result<IEnumerable<AppPermissionCreate>>.FailAsync(serviceAccountsRequest.ErrorMessage);
+            return await Result<IEnumerable<AppPermissionCreate>>.SuccessAsync(allPermissions);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppPermissionCreate>>.FailAsync(ex.Message);
+        }
+    }
 
-            var allServiceAccountPermissions =
-                serviceAccountsRequest.Result?.ToAppPermissionCreates(DynamicPermissionLevel.Admin) ?? new List<AppPermissionCreate>();
-            allPermissions.AddRange(allServiceAccountPermissions);
+    public async Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicServiceAccountPermissionsAsync(Guid id)
+    {
+        try
+        {
+            var allPermissions = new List<AppPermissionCreate>();
+            
+            var allServiceAccountPermissions = PermissionHelpers.GetAllServiceAccountDynamicPermissions(id);
+            allPermissions.AddRange(allServiceAccountPermissions.ToDynamicPermissionCreates());
+
+            return await Result<IEnumerable<AppPermissionCreate>>.SuccessAsync(allPermissions);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppPermissionCreate>>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicGameServerPermissionsAsync(Guid id)
+    {
+        try
+        {
+            var allPermissions = new List<AppPermissionCreate>();
+            
+            var allGameServerPermissions = PermissionHelpers.GetAllGameServerDynamicPermissions(id);
+            allPermissions.AddRange(allGameServerPermissions.ToDynamicPermissionCreates());
 
             return await Result<IEnumerable<AppPermissionCreate>>.SuccessAsync(allPermissions);
         }
@@ -132,24 +157,39 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
-            var permissionsRequest = await _permissionRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!permissionsRequest.Succeeded)
-                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(permissionsRequest.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            var permissions = (permissionsRequest.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+            var response = await _permissionRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync([]);
+            }
+
+            var permissions = (response.Result?.Data.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access);
 
-            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync(
+                permissions,
+                response.Result!.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -174,24 +214,39 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppPermissionSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppPermissionSlim>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
     {
         try
         {
-            var searchResult = await _permissionRepository.SearchPaginatedAsync(searchTerm, pageNumber, pageSize);
-            if (!searchResult.Succeeded)
-                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(searchResult.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            var permissions = (searchResult.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+            var response = await _permissionRepository.SearchPaginatedAsync(searchTerm, pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync([]);
+            }
+
+            var permissions = (response.Result?.Data.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
                 .ThenBy(x => x.Access);
 
-            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync(
+                permissions,
+                response.Result!.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -438,7 +493,7 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
-    private async Task UpdateUserForPermissionChange(Guid userId)
+    public async Task UpdateUserForPermissionChange(Guid userId)
     {
         _logger.Debug("Updating clientId's for {UserId} to re-auth for updated permissions", userId);
 
@@ -452,7 +507,7 @@ public class AppPermissionService : IAppPermissionService
         _logger.Debug("Updated clientId's for User to force refresh token re-auth: {UserId}", userId);
     }
 
-    private async Task UpdateRoleUsersForPermissionChange(Guid roleId)
+    public async Task UpdateRoleUsersForPermissionChange(Guid roleId)
     {
         var roleUsers = await _roleRepository.GetUsersForRole(roleId);
         if (!roleUsers.Succeeded)
@@ -655,6 +710,29 @@ public class AppPermissionService : IAppPermissionService
         catch (Exception ex)
         {
             return await Result<bool>.FailAsync(ex.Message);
+        }
+    }
+
+    public async Task<IResult<IEnumerable<AppPermissionSlim>>> GetDynamicByTypeAndNameAsync(DynamicPermissionGroup type, Guid name)
+    {
+        try
+        {
+            var foundPermissions = await _permissionRepository.GetDynamicByTypeAndNameAsync(type, name);
+            if (!foundPermissions.Succeeded)
+            {
+                return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
+            }
+            
+            var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
+                .OrderBy(x => x.Group)
+                .ThenBy(x => x.Name)
+                .ThenBy(x => x.Access);
+
+            return await Result<IEnumerable<AppPermissionSlim>>.SuccessAsync(permissions);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(ex.Message);
         }
     }
 }

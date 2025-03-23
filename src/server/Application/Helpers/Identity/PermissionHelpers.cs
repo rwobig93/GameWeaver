@@ -18,11 +18,6 @@ public static class PermissionHelpers
         return $"Permissions.{permissionGroup}.{permissionName}.{permissionAccess}";
     }
 
-    public static string GetClaimValueFromServiceAccount(Guid accountId, DynamicPermissionGroup permissionGroup, DynamicPermissionLevel permissionLevel)
-    {
-        return $"Dynamic.{permissionGroup.ToString()}.{accountId.ToString()}.{permissionLevel.ToString()}";
-    }
-
     public static string GetGroupFromValue(string permissionValue) => permissionValue.Split('.')[1];
     public static string GetNameFromValue(string permissionValue) => permissionValue.Split('.')[2];
     public static string GetAccessFromValue(string permissionValue) => permissionValue.Split('.')[3];
@@ -49,6 +44,27 @@ public static class PermissionHelpers
     public static List<string> GetAllBuiltInPermissions()
     {
         return ReflectionHelpers.GetConstantsRecursively(typeof(PermissionConstants));
+    }
+
+    public static List<string> GetAllServiceAccountDynamicPermissions(Guid id)
+    {
+        return [
+            PermissionConstants.Identity.ServiceAccounts.Dynamic(id, DynamicPermissionLevel.Admin)
+        ];
+    }
+
+    public static List<string> GetAllGameServerDynamicPermissions(Guid id)
+    {
+        return [
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Admin),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Moderator),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.View),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Edit),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Permission),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Configure),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Start),
+            PermissionConstants.GameServer.Gameserver.Dynamic(id, DynamicPermissionLevel.Stop),
+        ];
     }
 
     public static List<string> GetModeratorRolePermissions()

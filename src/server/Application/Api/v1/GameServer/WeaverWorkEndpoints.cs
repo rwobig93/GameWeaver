@@ -53,19 +53,19 @@ public static class WeaverWorkEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
             var result = await hostService.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(result.Messages);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await hostService.GetWeaverWorkCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -300,20 +300,36 @@ public static class WeaverWorkEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Search for weaver work by properties
     /// </summary>
     /// <param name="searchText">Text to search for</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="hostService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of matching weaver work</returns>
     /// <remarks>Search by: ID, HostId</remarks>
     [Authorize(PermissionConstants.GameServer.WeaverWork.Search)]
-    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> Search([FromQuery]string searchText, IHostService hostService)
+    private static async Task<IResult<IEnumerable<WeaverWorkSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IHostService hostService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await hostService.SearchWeaverWorkAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await hostService.SearchWeaverWorkPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+            
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.WeaverWork.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.WeaverWork.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

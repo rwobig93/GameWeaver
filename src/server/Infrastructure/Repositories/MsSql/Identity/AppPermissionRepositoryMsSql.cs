@@ -6,7 +6,9 @@ using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
@@ -49,16 +51,19 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppPermissionDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppPermissionDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppPermissionDb, dynamic>(
                 AppPermissionsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allPermissions);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -86,16 +91,19 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppPermissionDb>>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppPermissionDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<AppPermissionDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppPermissionDb, dynamic>(
                 AppPermissionsTableMsSql.SearchPaginated, new {SearchTerm = searchTerm, Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(searchResults);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -359,14 +367,14 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
-            
+
             var createdId = await _database.SaveDataReturnId(AppPermissionsTableMsSql.Insert, createObject);
 
             var createdPermission = await GetByIdAsync(createdId);
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Permissions, createdId,
                 createObject.CreatedBy, AuditAction.Create, null, createdPermission.Result);
-            
+
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -386,7 +394,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             var foundPermission = await GetByIdAsync(updateObject.Id);
 
             updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
-            
+
             await _database.SaveData(AppPermissionsTableMsSql.Update, updateObject);
 
             var foundPermissionAfterUpdate = await GetByIdAsync(updateObject.Id);
@@ -394,7 +402,7 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Permissions, updateObject.Id,
                 updateObject.LastModifiedBy.GetFromNullable(), AuditAction.Update,
                 foundPermission.Result!.ToSlim(), foundPermissionAfterUpdate.Result!.ToSlim());
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -412,13 +420,13 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         try
         {
             var foundPermission = await GetByIdAsync(id);
-            
+
             await _database.SaveData(AppPermissionsTableMsSql.Delete, new {Id = id});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Permissions,
-                foundPermission.Result!.Id, modifyingUserId, AuditAction.Delete, 
+                foundPermission.Result!.Id, modifyingUserId, AuditAction.Delete,
                 foundPermission.Result!.ToSlim());
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -480,6 +488,24 @@ public class AppPermissionRepositoryMsSql : IAppPermissionRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetByRoleIdAndValue.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetDynamicByTypeAndNameAsync(DynamicPermissionGroup type, Guid name)
+    {
+        DatabaseActionResult<IEnumerable<AppPermissionDb>> actionReturn = new();
+
+        try
+        {
+            var foundPermissions = await _database.LoadData<AppPermissionDb, dynamic>(
+                AppPermissionsTableMsSql.GetDynamicByTypeAndName, new {Group = type.ToString(), Name = name.ToString()});
+            actionReturn.Succeed(foundPermissions);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, AppPermissionsTableMsSql.GetDynamicByTypeAndName.Path, ex.Message);
         }
 
         return actionReturn;

@@ -76,7 +76,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.IsDeleted = 0
-                ORDER BY h.Id;
+                ORDER BY h.FriendlyName;
             end"
     };
 
@@ -90,10 +90,10 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT h.*
+                SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0
-                ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                WHERE h.IsDeleted = 0 AND h.CurrentState != 1
+                ORDER BY h.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -185,13 +185,13 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0
-                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0 AND h.CurrentState != 1
+                    AND (h.Id LIKE '%' + @SearchTerm + '%'
                     OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
-                    OR h.PublicIp LIKE '%' + @SearchTerm + '%'
+                    OR h.PublicIp LIKE '%' + @SearchTerm + '%')
                 ORDER BY h.Id;
             end"
     };
@@ -207,18 +207,16 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT h.*
+                SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
-                WHERE h.IsDeleted = 0
-                    AND h.Id LIKE '%' + @SearchTerm + '%'
+                WHERE h.IsDeleted = 0 AND h.CurrentState != 1
+                    AND (h.Id LIKE '%' + @SearchTerm + '%'
                     OR h.Hostname LIKE '%' + @SearchTerm + '%'
                     OR h.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR h.Description LIKE '%' + @SearchTerm + '%'
                     OR h.PrivateIp LIKE '%' + @SearchTerm + '%'
-                    OR h.PublicIp LIKE '%' + @SearchTerm + '%'
-                ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                    OR h.PublicIp LIKE '%' + @SearchTerm + '%')
+                ORDER BY h.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -267,6 +265,22 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure DeleteUnregisteredOlderThan = new()
+    {
+        Table = Table,
+        Action = "DeleteUnregisteredOlderThan",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_DeleteUnregisteredOlderThan]
+                @OlderThan DATETIME2
+            AS
+            begin
+                DELETE
+                FROM dbo.[{Table.TableName}]
+                WHERE CurrentState = 1
+                    AND CreatedOn < @OlderThan;
             end"
     };
 }

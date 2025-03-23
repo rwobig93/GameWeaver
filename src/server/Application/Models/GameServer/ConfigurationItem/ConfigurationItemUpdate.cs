@@ -2,7 +2,6 @@
 
 public class ConfigurationItemUpdate
 {
-    public Guid ModifyingUserId { get; set; }
     public Guid Id { get; set; }
     public Guid? LocalResourceId { get; set; }
     public bool? DuplicateKey { get; set; }

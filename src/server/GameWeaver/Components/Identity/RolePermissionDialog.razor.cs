@@ -8,7 +8,7 @@ namespace GameWeaver.Components.Identity;
 
 public partial class RolePermissionDialog
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; init; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; init; } = null!;
     [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
 
     [Parameter] public Guid RoleId { get; set; }
@@ -42,7 +42,9 @@ public partial class RolePermissionDialog
     private async Task GetPermissionLists()
     {
         if (!_canRemovePermissions && !_canAddPermissions)
+        {
             return;
+        }
 
         var rolePermissions = await PermissionService.GetAllForRoleAsync(RoleId);
         if (!rolePermissions.Succeeded)

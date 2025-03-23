@@ -1,3 +1,4 @@
+using Application.Models.GameServer.ConfigResourceTreeItem;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.LocalResource;
 using Application.Requests.GameServer.LocalResource;
@@ -181,6 +182,24 @@ public static class LocalResourceMappers
         };
     }
 
+    public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceUpdateRequest resource)
+    {
+        return new LocalResourceCreateRequest
+        {
+            GameProfileId = resource.GameProfileId,
+            Name = resource.Name ?? string.Empty,
+            PathWindows = resource.PathWindows ?? string.Empty,
+            PathLinux = resource.PathLinux ?? string.Empty,
+            PathMac = resource.PathMac ?? string.Empty,
+            Startup = resource.Startup ?? false,
+            StartupPriority = resource.StartupPriority ?? 0,
+            Type = resource.Type ?? ResourceType.ConfigFile,
+            ContentType = resource.ContentType ?? ContentType.Ignore,
+            Args = resource.Args ?? string.Empty,
+            LoadExisting = resource.LoadExisting ?? false
+        };
+    }
+
     public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceSlim resource)
     {
         return new LocalResourceCreateRequest
@@ -196,6 +215,15 @@ public static class LocalResourceMappers
             ContentType = resource.ContentType,
             Args = resource.Args,
             LoadExisting = resource.LoadExisting
+        };
+    }
+
+    public static ConfigResourceTreeItem ToTreeItem(this LocalResourceSlim resource)
+    {
+        return new ConfigResourceTreeItem
+        {
+            Id = resource.Id,
+            Name = resource.Name
         };
     }
 }

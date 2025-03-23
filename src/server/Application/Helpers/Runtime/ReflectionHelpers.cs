@@ -42,4 +42,9 @@ public static class ReflectionHelpers
 
         return constants;
     }
+
+    public static long GetVersionTicks()
+    {
+        return new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTimeUtc.Ticks;
+    }
 }

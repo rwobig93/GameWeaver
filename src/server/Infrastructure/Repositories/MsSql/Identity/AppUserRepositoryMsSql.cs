@@ -8,6 +8,7 @@ using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
 using Application.Settings.AppSettings;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Enums.Lifecycle;
@@ -72,16 +73,19 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allUsers);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -91,16 +95,19 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllServiceAccountsPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>>> GetAllServiceAccountsPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allServiceAccounts = await _database.LoadData<AppUserSecurityDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.GetAllServiceAccountsPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allServiceAccounts);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -110,16 +117,19 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllDisabledPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>>> GetAllDisabledPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allDisabledUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.GetAllDisabledPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allDisabledUsers);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -129,16 +139,19 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllLockedOutPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>>> GetAllLockedOutPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allLockedOutUsers = await _database.LoadData<AppUserSecurityDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.GetAllLockedOutPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allLockedOutUsers);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -204,8 +217,8 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 foundUser.ExtendedAttributes = (await _database.LoadData<AppUserExtendedAttributeDb, dynamic>(
                     AppUserExtendedAttributesTableMsSql.GetByOwnerId, new {OwnerId = foundUser.Id})).ToList();
             }
-                
-            actionReturn.Succeed(foundUser);   
+
+            actionReturn.Succeed(foundUser);
         }
         catch (Exception ex)
         {
@@ -223,7 +236,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.GetByIdSecurity, new {Id = id})).FirstOrDefault();
-            
+
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
@@ -289,7 +302,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             var foundUser = (await _database.LoadData<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.GetByUsernameSecurity, new {Username = username})).FirstOrDefault();
-            
+
             actionReturn.Succeed(foundUser!);
         }
         catch (Exception ex)
@@ -358,9 +371,9 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             {
                 createObject.Currency = _generalConfig.Value.StartingCurrency;
             }
-            
+
             var createdId = await _database.SaveDataReturnId(AppUsersTableMsSql.Insert, createObject);
-            
+
             // All user get database calls also pull from the security attribute AuthState so we at least need one to exist
             await CreateSecurityAsync(new AppUserSecurityAttributeCreate
             {
@@ -379,7 +392,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, foundUser.Result!.Id,
                 createObject.CreatedBy, AuditAction.Create, null, foundUser.Result!.ToSlim());
-            
+
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -417,16 +430,16 @@ public class AppUserRepositoryMsSql : IAppUserRepository
             if (!foundUser.Succeeded || foundUser.Result is null)
                 throw new Exception(foundUser.ErrorMessage);
             var userUpdate = foundUser.Result.ToUpdate();
-            
+
             // Update user w/ a property that is modified so we get the last updated on/by for the deleting user
             userUpdate.LastModifiedBy = modifyingUser;
             await UpdateAsync(userUpdate);
-            await _database.SaveData(AppUsersTableMsSql.Delete, 
+            await _database.SaveData(AppUsersTableMsSql.Delete,
                 new { userId, DeletedOn = _dateTime.NowDatabaseTime });
 
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userId,
                 userUpdate.LastModifiedBy.GetFromNullable(), AuditAction.Delete, userUpdate);
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -449,7 +462,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 AppUserSecurityAttributesTableMsSql.SetOwnerId, new { CurrentId = currentId, NewId = newId });
             if (updatedId != ownerId)
                 throw new Exception("SetUserID failed, updated User ID doesn't equal security owner ID");
-            
+
             actionReturn.Succeed(updatedId);
         }
         catch (Exception ex)
@@ -495,16 +508,19 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<AppUserSecurityDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset =  offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -514,16 +530,19 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> SearchAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>>> SearchAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AppUserSecurityDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppUserSecurityDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults = await _database.LoadData<AppUserSecurityDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AppUserSecurityDb, dynamic>(
                 AppUsersTableMsSql.Search, new { SearchTerm = searchText, Offset =  offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -647,12 +666,12 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             var existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
                 AppUserPreferencesTableMsSql.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
-            
+
             if (existingPreference is null)
                 await _database.SaveData(AppUserPreferencesTableMsSql.Insert, preferenceUpdate.ToCreate());
             else
                 await _database.SaveData(AppUserPreferencesTableMsSql.Update, preferenceUpdate);
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -671,7 +690,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             var existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
                 AppUserPreferencesTableMsSql.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
-            
+
             if (existingPreference is null)
             {
                 var newPreferences = new AppUserPreferenceCreate() {OwnerId = userId};
@@ -680,7 +699,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(
                         AppUserPreferencesTableMsSql.GetById, new {Id = createdId})).FirstOrDefault();
             }
-            
+
             actionReturn.Succeed(existingPreference!);
         }
         catch (Exception ex)
@@ -865,7 +884,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         try
         {
             Guid securityId;
-            
+
             var existingSecurity = (await _database.LoadData<AppUserSecurityAttributeDb, dynamic>(
                 AppUserSecurityAttributesTableMsSql.GetByOwnerId, new {securityCreate.OwnerId})).FirstOrDefault();
 
@@ -876,7 +895,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
                 securityId = existingSecurity.Id;
                 await UpdateSecurityAsync(existingSecurity.ToUpdate());
             }
-            
+
             actionReturn.Succeed(securityId);
         }
         catch (Exception ex)
@@ -895,7 +914,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         {
             var userSecurity = (await _database.LoadData<AppUserSecurityAttributeDb, dynamic>(
                 AppUserSecurityAttributesTableMsSql.GetByOwnerId, new {OwnerId = userId})).FirstOrDefault();
-            
+
             actionReturn.Succeed(userSecurity!);
         }
         catch (Exception ex)
@@ -913,7 +932,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         try
         {
             await _database.SaveData(AppUserSecurityAttributesTableMsSql.Update, securityUpdate);
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)

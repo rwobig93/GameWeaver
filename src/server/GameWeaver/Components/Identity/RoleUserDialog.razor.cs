@@ -6,7 +6,7 @@ namespace GameWeaver.Components.Identity;
 
 public partial class RoleUserDialog
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; init; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
 

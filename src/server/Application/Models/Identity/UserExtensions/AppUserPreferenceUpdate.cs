@@ -11,4 +11,5 @@ public class AppUserPreferenceUpdate
     public string? CustomThemeOne { get; set; }
     public string? CustomThemeTwo { get; set; }
     public string? CustomThemeThree { get; set; }
+    public bool GamerMode { get; set; }
 }

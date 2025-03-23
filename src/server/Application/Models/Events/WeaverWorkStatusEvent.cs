@@ -6,6 +6,7 @@ public class WeaverWorkStatusEvent
 {
     public int Id { get; set; }
     public Guid? HostId { get; set; }
+    public Guid? GameServerId { get; set; }
     public WeaverWorkTarget TargetType { get; set; }
     public WeaverWorkState Status { get; set; }
 }

@@ -18,3 +18,7 @@
 #components-reconnect-modal.components-reconnect-rejected {
     display: block;
 }
+
+.mud-tooltip-root.mud-tooltip-inline {
+    width: 100% !important;
+}

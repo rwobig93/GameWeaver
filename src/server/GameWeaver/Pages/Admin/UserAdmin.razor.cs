@@ -69,7 +69,7 @@ public partial class UserAdmin
         _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers || _canForceLogin;
     }
     
-    private async Task<TableData<AppUserSlim>> ServerReload(TableState state)
+    private async Task<TableData<AppUserSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var usersResult = await UserService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
         if (!usersResult.Succeeded)
@@ -79,7 +79,7 @@ public partial class UserAdmin
         }
 
         _pagedData = usersResult.Data.ToArray();
-        _totalUsers = (await UserService.GetCountAsync()).Data;
+        _totalUsers = usersResult.TotalCount;
 
         if (_filterDisabled)
             _pagedData = _pagedData.Where(x => x.AuthState == AuthState.Disabled);
@@ -236,12 +236,15 @@ public partial class UserAdmin
         
         var createParameters = new DialogParameters() { {"ServiceAccountId", Guid.Empty} };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var createAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>(
-            "Create Service Account", createParameters, dialogOptions).Result;
-        if (createAccountDialog.Canceled)
+        var createAccountDialog = await DialogService.ShowAsync<ServiceAccountAdminDialog>(
+            "Create Service Account", createParameters, dialogOptions);
+        var dialogResult = await createAccountDialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
             return;
+        }
 
-        var createdPassword = (string?) createAccountDialog.Data;
+        var createdPassword = (string?) dialogResult.Data;
         if (string.IsNullOrWhiteSpace(createdPassword))
         {
             Snackbar.Add("Something happened and we couldn't retrieve the password for this account, please contact the administrator",
@@ -257,7 +260,7 @@ public partial class UserAdmin
             {"TextToDisplay", new string('*', createdPassword.Length)},
             {"TextToCopy", createdPassword}
         };
-        await DialogService.Show<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions).Result;
+        await DialogService.ShowAsync<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions);
         await ReloadSearch();
     }
 

@@ -4,6 +4,7 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
@@ -42,16 +43,19 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<TroubleshootingRecordDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<TroubleshootingRecordDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<TroubleshootingRecordDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<TroubleshootingRecordDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allTroubleshootingRecords = await _database.LoadData<TroubleshootingRecordDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<TroubleshootingRecordDb, dynamic>(
                 TroubleshootingRecordsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allTroubleshootingRecords);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -60,6 +64,7 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
 
         return actionReturn;
     }
+    
     public async Task<DatabaseActionResult<int>> GetCountAsync()
     {
         DatabaseActionResult<int> actionReturn = new();
@@ -187,17 +192,20 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<TroubleshootingRecordDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<TroubleshootingRecordDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<TroubleshootingRecordDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<TroubleshootingRecordDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults =
-                await _database.LoadData<TroubleshootingRecordDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response =
+                await _database.LoadDataPaginated<TroubleshootingRecordDb, dynamic>(
                     TroubleshootingRecordsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {

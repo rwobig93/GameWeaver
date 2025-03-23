@@ -10,11 +10,11 @@ public static class LocalResourceHelpers
         foreach (var resource in priority)
         {
             var matchingResource = existing.FirstOrDefault(x =>
-                (x.PathWindows.Length > 0 && x.PathWindows == resource.PathWindows) &&
-                (x.PathLinux.Length > 0 && x.PathLinux == resource.PathLinux) &&
-                (x.PathMac.Length > 0 && x.PathMac == resource.PathMac) &&
                 x.Type == resource.Type &&
-                x.Args == resource.Args);
+                x.Args == resource.Args &&
+                ((x.PathWindows.Length > 0 && x.PathWindows == resource.PathWindows) ||
+                 (x.PathLinux.Length > 0 && x.PathLinux == resource.PathLinux) ||
+                 (x.PathMac.Length > 0 && x.PathMac == resource.PathMac)));
             
             if (matchingResource is null)
             {
@@ -28,6 +28,8 @@ public static class LocalResourceHelpers
                 continue;
             }
 
+            matchingResource.Id = resource.Id;
+            matchingResource.GameProfileId = resource.GameProfileId;
             matchingResource.Startup = resource.Startup;
             matchingResource.StartupPriority = resource.StartupPriority;
             matchingResource.ContentType = resource.ContentType;
@@ -72,6 +74,8 @@ public static class LocalResourceHelpers
 
                 if (matchingConfig is not null)
                 {
+                    matchingConfig.Id = config.Id;
+                    matchingConfig.LocalResourceId = config.LocalResourceId;
                     matchingConfig.Value = config.Value;
                     continue;
                 }

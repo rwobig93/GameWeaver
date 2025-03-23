@@ -44,19 +44,19 @@ public static class DeveloperEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
-
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
             var result = await gameService.GetAllDevelopersPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<DeveloperSlim>>.FailAsync(result.Messages);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<DeveloperSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await gameService.GetDevelopersCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Developer.GetAll,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Developer.GetAll,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<DeveloperSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Developer.GetAll, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Developer.GetAll, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -180,20 +180,36 @@ public static class DeveloperEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Search developers by properties
     /// </summary>
     /// <param name="searchText">Text to search for</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of developers</returns>
     /// <remarks>Searches by: ID, Name</remarks>
     [Authorize(PermissionConstants.GameServer.Developer.Search)]
-    private static async Task<IResult<IEnumerable<DeveloperSlim>>> Search([FromQuery]string searchText, IGameService gameService)
+    private static async Task<IResult<IEnumerable<DeveloperSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IGameService gameService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await gameService.SearchDevelopersAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameService.SearchDevelopersPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<DeveloperSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+            
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Developer.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Developer.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

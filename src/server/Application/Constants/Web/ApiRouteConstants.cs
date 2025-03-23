@@ -147,6 +147,7 @@ public static class ApiRouteConstants
             public const string Update = "/api/gameserver";
             public const string Delete = "/api/gameserver";
             public const string Search = "/api/gameservers/search";
+            public const string ChangeOwnership = "/api/gameservers/change-ownership";
             public const string StartServer = "/api/gameserver/start";
             public const string StopServer = "/api/gameserver/stop";
             public const string RestartServer = "/api/gameserver/restart";

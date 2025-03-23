@@ -26,8 +26,9 @@ public partial class MainLayout
     public AppUserPreferenceFull _userPreferences = new();
     public readonly List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
-
     private AppUserFull UserFull { get; set; } = new();
+    private string _cssThemedText = "";
+
     private bool _settingsDrawerOpen;
     private bool _canEditTheme;
 
@@ -77,7 +78,9 @@ public partial class MainLayout
         _userPreferences.DrawerDefaultOpen = !_userPreferences.DrawerDefaultOpen;
 
         if (IsUserAuthenticated(CurrentUser))
+        {
             await AccountService.UpdatePreferences(CurrentUserService.GetIdFromPrincipal(CurrentUser), _userPreferences.ToUpdate());
+        }
     }
 
     private void SettingsToggle()
@@ -99,13 +102,17 @@ public partial class MainLayout
                 var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
                 var result = await AccountService.UpdatePreferences(userId, _userPreferences.ToUpdate());
                 if (!result.Succeeded)
+                {
                     result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                }
             }
         }
         catch
         {
             _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
         }
+        
+        StateHasChanged();
     }
 
     private async Task GetPreferences()
@@ -121,8 +128,10 @@ public partial class MainLayout
             }
 
             _userPreferences = preferences.Data;
+            UpdateThemedElements();
             UpdateCustomThemes();
             _selectedTheme = AppThemes.GetThemeById(_userPreferences.ThemePreference).Theme;
+            StateHasChanged();
         }
     }
 
@@ -135,17 +144,18 @@ public partial class MainLayout
             
             matchingTheme.FriendlyName = preferenceTheme.ThemeName;
             matchingTheme.Description = preferenceTheme.ThemeDescription;
-            matchingTheme.Theme.Palette = new PaletteDark()
+            matchingTheme.Theme.PaletteDark = new PaletteDark()
             {
                 Primary = preferenceTheme.ColorPrimary,
                 Secondary = preferenceTheme.ColorSecondary,
                 Tertiary = preferenceTheme.ColorTertiary,
                 Background = preferenceTheme.ColorBackground,
                 Success = preferenceTheme.ColorSuccess,
+                Info = preferenceTheme.ColorInfo,
                 Error = preferenceTheme.ColorError,
-                BackgroundGrey = preferenceTheme.ColorNavBar,
+                BackgroundGray = preferenceTheme.ColorNavBar,
                 TextDisabled = "rgba(255,255,255, 0.26)",
-                Surface = preferenceTheme.ColorBackground,
+                Surface = preferenceTheme.ColorSurface,
                 DrawerBackground = preferenceTheme.ColorNavBar,
                 DrawerText = preferenceTheme.ColorPrimary,
                 AppbarBackground = preferenceTheme.ColorTitleBar,
@@ -158,5 +168,16 @@ public partial class MainLayout
                 DrawerIcon = preferenceTheme.ColorPrimary
             };
         }
+    }
+
+    private void UpdateThemedElements()
+    {
+        if (!_userPreferences.GamerMode)
+        {
+            _cssThemedText = "";
+            return;
+        }
+        
+        _cssThemedText = "rainbow-text";
     }
 }

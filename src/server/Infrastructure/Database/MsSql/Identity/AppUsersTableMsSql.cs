@@ -99,7 +99,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                SELECT COUNT(*) OVER() AS TotalCount, u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
@@ -118,7 +118,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                SELECT COUNT(*) OVER() AS TotalCount, u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
@@ -137,7 +137,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                SELECT COUNT(*) OVER() AS TotalCount, u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
@@ -156,7 +156,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
+                SELECT COUNT(*) OVER() AS TotalCount, u.*, s.PasswordHash, s.PasswordSalt, s.TwoFactorEnabled, s.TwoFactorKey, s.AuthState, s.AuthStateTimestamp,
                         s.BadPasswordAttempts, s.LastBadPassword, s.LastFullLogin
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON u.Id = s.OwnerId
@@ -405,7 +405,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT u.*, s.AuthState as AuthState
+                SELECT COUNT(*) OVER() AS TotalCount, u.*, s.AuthState as AuthState
                 FROM dbo.[{Table.TableName}] u
                 JOIN dbo.[{AppUserSecurityAttributesTableMsSql.Table.TableName}] s ON s.OwnerId = u.Id
                 WHERE u.FirstName LIKE '%' + @SearchTerm + '%'

@@ -1,0 +1,108 @@
+﻿@using Application.Constants.Identity
+@using Application.Models.GameServer.Game
+@using Application.Models.GameServer.GameProfile
+@using Application.Models.GameServer.Host
+@using Application.Responses.v1.Identity
+@attribute [Authorize(PermissionConstants.GameServer.Gameserver.Create)]
+
+<MudDialog Class="rounded-lg">
+    <DialogContent>
+        <MudStack Row="false" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Stretch">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+            </MudItem>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                    <MudTextField @bind-Value="_selectedGame.SteamName" Label="Game" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudAutocomplete T="GameSlim" Label="Available Games" @bind-Value="_selectedGame" Required="true"
+                                     SearchFunc="@FilterGames" ToStringFunc="@(x => $"{x?.SteamName}")"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                    <MudTextField @bind-Value="_selectedOwner.Username" Label="Server Owner" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudAutocomplete T="UserBasicResponse" Label="Available Owners" @bind-Value="_selectedOwner" Required="true"
+                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                    <MudTextField @bind-Value="_selectedHost.FriendlyName" Label="Host" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudAutocomplete T="HostSlim" Label="Available Hosts" @bind-Value="_selectedHost"
+                                     SearchFunc="@FilterHosts" ToStringFunc="@(x => $"{x?.FriendlyName}")"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                    <MudTextField @bind-Value="_selectedParentProfile.FriendlyName" Label="Inherit Configuration Profile" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudAutocomplete T="GameProfileSlim" Label="Available Configuration" @bind-Value="_selectedParentProfile"
+                                     SearchFunc="@FilterProfiles" ToStringFunc="@(x => $"{x?.FriendlyName}")"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_createRequest.Name" Label="Server Name" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_createRequest.Password" Label="Server Password" Variant="Variant.Outlined" InputType="@_passwordInput"
+                                  Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
+                                  AdornmentAriaLabel="Show Password"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_createRequest.PasswordAdmin" Label="Admin Password" Variant="Variant.Outlined" InputType="@_adminPasswordInput"
+                                  Adornment="Adornment.End" AdornmentIcon="@_adminPasswordInputIcon" OnAdornmentClick="@ToggleAdminPasswordVisibility"
+                                  AdornmentAriaLabel="Show Password"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudTextField @bind-Value="_createRequest.PasswordRcon" Label="RCON Password" Variant="Variant.Outlined" InputType="@_rconPasswordInput"
+                                  Adornment="Adornment.End" AdornmentIcon="@_rconPasswordInputIcon" OnAdornmentClick="@ToggleRconPasswordVisibility"
+                                  AdornmentAriaLabel="Show Password"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5 pb-1">
+                    <MudAlert ContentAlignment="HorizontalAlignment.Left" Severity="Severity.Info">
+                        Private servers aren't visible to others unless they have explicit access granted
+                    </MudAlert>
+                </MudStack>
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudCheckBox @bind-Value="_createRequest.Private" Label="Private" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                    <MudCheckBox @bind-Value="_showPortConfig" Label="Manual Port Config" Dense="true" />
+                </MudStack>
+                @if (_showPortConfig)
+                {
+                    <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5 pb-1">
+                        <MudAlert ContentAlignment="HorizontalAlignment.Left" Severity="Severity.Info">
+                            If ports are 0 or unchanged they will be auto-selected from the available pool
+                        </MudAlert>
+                    </MudStack>
+                    <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                        <MudTextField @bind-Value="_createRequest.PortGame" Label="Game Port" Variant="Variant.Outlined" Disabled="false"/>
+                        <MudTextField @bind-Value="_createRequest.PortPeer" Label="Peer Port (usually game + 1)" Variant="Variant.Outlined" Disabled="false"/>
+                    </MudStack>
+                    <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                        <MudTextField @bind-Value="_createRequest.PortQuery" Label="Query Port" Variant="Variant.Outlined" Disabled="false"/>
+                        <MudTextField @bind-Value="_createRequest.PortRcon" Label="RCON Port" Variant="Variant.Outlined" Disabled="false"/>
+                    </MudStack>
+                }
+            </MudPaper>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@CreateGameServer">@ConfirmButtonText</MudButton>
+        <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>

@@ -1,5 +1,7 @@
 ﻿using Application.Models.Identity.Permission;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Identity;
+using Domain.Enums.Identity;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 
@@ -8,9 +10,9 @@ namespace Application.Repositories.Identity;
 public interface IAppPermissionRepository
 {
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllAsync();
-    Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppPermissionDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchAsync(string searchTerm);
-    Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
+    Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AppPermissionDb>>>> SearchPaginatedAsync(string searchTerm, int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<IEnumerable<AppUserSecurityDb>>> GetAllUsersByClaimValueAsync(string claimValue);
     Task<DatabaseActionResult<IEnumerable<AppRoleDb>>> GetAllRolesByClaimValueAsync(string claimValue);
@@ -30,4 +32,5 @@ public interface IAppPermissionRepository
     Task<DatabaseActionResult<bool>> UserHasDirectPermission(Guid userId, string permissionValue);
     Task<DatabaseActionResult<bool>> UserIncludingRolesHasPermission(Guid userId, string permissionValue);
     Task<DatabaseActionResult<bool>> RoleHasPermission(Guid roleId, string permissionValue);
+    Task<DatabaseActionResult<IEnumerable<AppPermissionDb>>> GetDynamicByTypeAndNameAsync(DynamicPermissionGroup type, Guid name);
 }

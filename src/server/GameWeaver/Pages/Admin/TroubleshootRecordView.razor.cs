@@ -6,7 +6,7 @@ namespace GameWeaver.Pages.Admin;
 public partial class TroubleshootRecordView : ComponentBase
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Inject] private ITroubleshootingRecordService TshootService { get; init; } = null!;
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;

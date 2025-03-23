@@ -54,7 +54,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT h.*
+                SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -72,7 +72,24 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 SELECT h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.ReceiveTimestamp > @AfterDate
-                ORDER BY h.Id;
+                ORDER BY h.ReceiveTimestamp DESC;
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure GetAfterByHostId = new()
+    {
+        Table = Table,
+        Action = "GetAfterByHostId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAfterByHostId]
+                @Id UNIQUEIDENTIFIER,
+                @AfterDate DATETIME2
+            AS
+            begin
+                SELECT h.*
+                FROM dbo.[{Table.TableName}] h
+                WHERE h.HostId = @Id AND h.ReceiveTimestamp > @AfterDate
+                ORDER BY h.ReceiveTimestamp DESC;
             end"
     };
     
@@ -176,9 +193,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT h.*
+                SELECT COUNT(*) OVER() AS TotalCount, h.*
                 FROM dbo.[{Table.TableName}] h
                 WHERE h.Id LIKE '%' + @SearchTerm + '%'
                     OR h.HostId LIKE '%' + @SearchTerm + '%'

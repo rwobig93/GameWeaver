@@ -1,0 +1,35 @@
+﻿<div class="@CssDisplay" @onclick="ViewGame">
+    <MudPaper Style="position: relative;">
+        @if (!_imageLoaded)
+        {
+            <MudSkeleton SkeletonType="SkeletonType.Rectangle" Height="@CardHeight" Width="@CardWidth" />
+            return;
+        }
+        @if (_imageExists)
+        {
+            <img src="@(_imageUrl)" width="@CardWidth" height="@CardHeight" alt="Game Cover"/>
+            @if (ShowName)
+            {
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">
+                    @(Game.FriendlyName)
+                </MudText>
+            }
+        }
+        else
+        {
+            <img src="@(_imageUrl)" width="@CardWidth" height="@CardHeight" alt="Game Cover"/>
+            @if (ShowName)
+            {
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: relative">
+                    @(Game.FriendlyName)
+                </MudText>
+            }
+            else
+            {
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body2" Style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    @(Game.FriendlyName)
+                </MudText>
+            }
+        }
+    </MudPaper>
+</div>

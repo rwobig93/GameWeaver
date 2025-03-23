@@ -6,4 +6,5 @@ public interface IJobManager
     Task DailyCleanup();
     Task GameVersionCheck();
     Task DailySteamSync();
+    Task HostStatusCheck();
 }

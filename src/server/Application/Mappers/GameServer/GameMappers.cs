@@ -4,6 +4,7 @@ using Application.Models.GameServer.GameProfile;
 using Application.Requests.GameServer.Game;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
+// ReSharper disable ConvertTypeCheckToNullCheck
 
 namespace Application.Mappers.GameServer;
 
@@ -15,7 +16,7 @@ public static class GameMappers
         {
             Id = gameDb.Id,
             FriendlyName = gameDb.FriendlyName,
-            SteamName = gameDb.FriendlyName,
+            SteamName = gameDb.SteamName,
             SteamGameId = gameDb.SteamGameId,
             SteamToolId = gameDb.SteamToolId,
             DefaultGameProfileId = gameDb.DefaultGameProfileId,
@@ -95,6 +96,31 @@ public static class GameMappers
             ManualFileRecordId = gameDb.ManualFileRecordId,
             ManualVersionUrlCheck = gameDb.ManualVersionUrlCheck,
             ManualVersionUrlDownload = gameDb.ManualVersionUrlDownload
+        };
+    }
+
+    public static GameUpdateRequest ToUpdate(this GameSlim game)
+    {
+        return new GameUpdateRequest
+        {
+            Id = game.Id,
+            DefaultGameProfileId = game.DefaultGameProfileId,
+            LatestBuildVersion = game.LatestBuildVersion,
+            UrlBackground = game.UrlBackground,
+            UrlLogo = game.UrlLogo,
+            UrlLogoSmall = game.UrlLogoSmall,
+            UrlWebsite = game.UrlWebsite,
+            ControllerSupport = game.ControllerSupport,
+            DescriptionShort = game.DescriptionShort,
+            DescriptionLong = game.DescriptionLong,
+            DescriptionAbout = game.DescriptionAbout,
+            UrlMetaCriticPage = game.UrlMetaCriticPage,
+            SupportsWindows = game.SupportsWindows,
+            SupportsLinux = game.SupportsLinux,
+            SupportsMac = game.SupportsMac,
+            ManualFileRecordId = game.ManualFileRecordId,
+            ManualVersionUrlCheck = game.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = game.ManualVersionUrlDownload
         };
     }
 
@@ -210,12 +236,13 @@ public static class GameMappers
             PriceInitial = response.Price_Overview.Final_Formatted,
             PriceCurrent = response.Price_Overview.Final_Formatted,
             PriceDiscount = response.Price_Overview.Discount_Percent,
-            RequirementsPcMinimum = response.PC_Requirements.Minimum,
-            RequirementsPcRecommended = response.PC_Requirements.Recommended,
-            RequirementsMacMinimum = response.Mac_Requirements.Minimum,
-            RequirementsMacRecommended = response.Mac_Requirements.Recommended,
-            RequirementsLinuxMinimum = response.Linux_Requirements.Minimum,
-            RequirementsLinuxRecommended = response.Linux_Requirements.Recommended,
+            // FUTURE: Steam api returns dict if there is a value or an empty list if there isn't a value | Need to find a good way to handle this
+            // RequirementsPcMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.PC_Requirements.Minimum : "",
+            // RequirementsPcRecommended = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.PC_Requirements.Recommended : "",
+            // RequirementsMacMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Mac_Requirements.Minimum : "",
+            // RequirementsMacRecommended = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Mac_Requirements.Recommended : "",
+            // RequirementsLinuxMinimum = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Linux_Requirements.Minimum : "",
+            // RequirementsLinuxRecommended = response.PC_Requirements is SteamHardwareRequirementsResponseJson ? response.Linux_Requirements.Recommended : "",
             SupportsWindows = response.Platforms.Windows,
             SupportsLinux = response.Platforms.Linux,
             SupportsMac = response.Platforms.Mac,

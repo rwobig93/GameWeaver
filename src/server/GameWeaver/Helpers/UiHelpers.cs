@@ -7,7 +7,8 @@ public static class UiHelpers
         var dialogParameters = new DialogParameters { {"Title", title}, {"Content", content} };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialogResult = await dialogService.Show<ConfirmationDialog>(title, dialogParameters, dialogOptions).Result;
+        var dialog = await dialogService.ShowAsync<ConfirmationDialog>(title, dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
         return dialogResult ?? DialogResult.Cancel();
     }
 }

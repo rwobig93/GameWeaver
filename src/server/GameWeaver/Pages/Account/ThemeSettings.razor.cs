@@ -24,10 +24,13 @@ public partial class ThemeSettings
     private MudColor _editThemePrimaryColor = new("#FFFFFF");
     private MudColor _editThemeSecondaryColor = new("#FFFFFF");
     private MudColor _editThemeTertiaryColor = new("#FFFFFF");
+    private MudColor _editThemeSurfaceColor = new("#FFFFFF");
     private MudColor _editThemeBackgroundColor = new("#FFFFFF");
     private MudColor _editThemeTitleBarColor = new("#FFFFFF");
     private MudColor _editThemeNavBarColor = new("#FFFFFF");
     private MudColor _editThemeSuccessColor = new("#FFFFFF");
+    private MudColor _editThemeInfoColor = new("#FFFFFF");
+    private MudColor _editThemeWarningColor = new("#FFFFFF");
     private MudColor _editThemeErrorColor = new("#FFFFFF");
 
     private bool _demoOpen;
@@ -79,10 +82,13 @@ public partial class ThemeSettings
         _editThemePrimaryColor = new MudColor(_editingTheme.ColorPrimary);
         _editThemeSecondaryColor = new MudColor(_editingTheme.ColorSecondary);
         _editThemeTertiaryColor = new MudColor(_editingTheme.ColorTertiary);
+        _editThemeSurfaceColor = new MudColor(_editingTheme.ColorSurface);
         _editThemeBackgroundColor = new MudColor(_editingTheme.ColorBackground);
         _editThemeTitleBarColor = new MudColor(_editingTheme.ColorTitleBar);
         _editThemeNavBarColor = new MudColor(_editingTheme.ColorNavBar);
         _editThemeSuccessColor = new MudColor(_editingTheme.ColorSuccess);
+        _editThemeInfoColor = new MudColor(_editingTheme.ColorInfo);
+        _editThemeWarningColor = new MudColor(_editingTheme.ColorWarning);
         _editThemeErrorColor = new MudColor(_editingTheme.ColorError);
         
         StateHasChanged();
@@ -91,6 +97,15 @@ public partial class ThemeSettings
     private async Task SavePreferences()
     {
         if (!_canEditTheme) return;
+        
+        // Grab the current preferences in case the theme was changed while we were on this page
+        var latestPreferences = await UserService.GetPreferences(CurrentUser.Id);
+        if (!latestPreferences.Succeeded || latestPreferences.Data is null)
+        {
+            latestPreferences.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        _userPreferences.ThemePreference = latestPreferences.Data.ThemePreference;
         
         var updatePreferences = _userPreferences.ToUpdate();
         var requestResult = await UserService.UpdatePreferences(CurrentUser.Id, updatePreferences);
@@ -102,7 +117,7 @@ public partial class ThemeSettings
 
         Snackbar.Add("Themes successfully updated!");
         await GetPreferences();
-        StateHasChanged();
+        NavManager.Refresh();
     }
 
     private void ResetSelectedThemeToDefault()

@@ -259,7 +259,8 @@ public static class HostMappers
             OwnerId = request.OwnerId,
             FriendlyName = request.Name,
             Description = request.Description,
-            AllowedPorts = request.AllowedPorts
+            AllowedPorts = request.AllowedPorts,
+            CurrentState = request.CurrentState
         };
     }
 
@@ -270,6 +271,18 @@ public static class HostMappers
             Id = request.Id,
             Description = request.Description,
             Active = request.Active
+        };
+    }
+
+    public static HostUpdateRequest ToUpdateRequest(this HostSlim host)
+    {
+        return new HostUpdateRequest
+        {
+            Id = host.Id,
+            OwnerId = host.OwnerId,
+            Name = host.FriendlyName,
+            Description = host.Description,
+            AllowedPorts = host.AllowedPorts
         };
     }
 }

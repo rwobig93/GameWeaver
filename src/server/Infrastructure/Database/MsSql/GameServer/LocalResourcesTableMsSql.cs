@@ -61,7 +61,8 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             AS
             begin
                 SELECT l.*
-                FROM dbo.[{Table.TableName}] l;
+                FROM dbo.[{Table.TableName}] l
+                ORDER BY l.Name ASC;
             end"
     };
 
@@ -75,9 +76,9 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT l.*
+                SELECT COUNT(*) OVER() AS TotalCount, l.*
                 FROM dbo.[{Table.TableName}] l
-                ORDER BY l.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -119,6 +120,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @GameProfileId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(128),
                 @PathWindows NVARCHAR(128),
@@ -136,11 +138,11 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn DATETIME2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, LoadExisting,
+                INSERT into dbo.[{Table.TableName}] (Id, GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, LoadExisting,
                                                      CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @LoadExisting, @CreatedBy, @CreatedOn,
-                        @LastModifiedBy, @LastModifiedOn);
+                VALUES (@Id, @GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @LoadExisting, @CreatedBy,
+                        @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     
@@ -178,9 +180,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT l.*
+                SELECT COUNT(*) OVER() AS TotalCount, l.*
                 FROM dbo.[{Table.TableName}] l
                 WHERE l.Id LIKE '%' + @SearchTerm + '%'
                     OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
@@ -189,7 +189,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                     OR l.PathLinux LIKE '%' + @SearchTerm + '%'
                     OR l.PathMac LIKE '%' + @SearchTerm + '%'
                     OR l.Args LIKE '%' + @SearchTerm + '%'
-                ORDER BY l.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

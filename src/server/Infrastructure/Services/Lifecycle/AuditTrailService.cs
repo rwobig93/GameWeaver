@@ -67,21 +67,34 @@ public class AuditTrailService : IAuditTrailService
         }
     }
 
-    public async Task<IResult<IEnumerable<AuditTrailSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AuditTrailSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
-            var auditTrails = await _auditRepository.GetAllPaginatedWithUsersAsync(pageNumber, pageSize);
-            if (!auditTrails.Succeeded)
-                return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            var convertedAuditTrails = auditTrails.Result!.Select(ConvertToSlim).ToList();
+            var response = await _auditRepository.GetAllPaginatedWithUsersAsync(pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AuditTrailSlim>>.SuccessAsync([]);
+            }
 
-            return await Result<IEnumerable<AuditTrailSlim>>.SuccessAsync(convertedAuditTrails);
+            return await PaginatedResult<IEnumerable<AuditTrailSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -189,21 +202,34 @@ public class AuditTrailService : IAuditTrailService
         }
     }
 
-    public async Task<IResult<IEnumerable<AuditTrailSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AuditTrailSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
-            var auditTrails = await _auditRepository.SearchPaginatedWithUserAsync(searchText, pageNumber, pageSize);
-            if (!auditTrails.Succeeded)
-                return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(auditTrails.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            var convertedAuditTrail = auditTrails.Result!.Select(ConvertToSlim).ToList();
+            var response = await _auditRepository.SearchPaginatedWithUserAsync(searchText, pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AuditTrailSlim>>.SuccessAsync([]);
+            }
 
-            return await Result<IEnumerable<AuditTrailSlim>>.SuccessAsync(convertedAuditTrail);
+            return await PaginatedResult<IEnumerable<AuditTrailSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(ex.Message);
         }
     }
 

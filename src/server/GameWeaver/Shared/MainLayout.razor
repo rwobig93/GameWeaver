@@ -1,9 +1,11 @@
-﻿@using GameWeaver.Components.Account
+﻿@using Domain.Enums.Identity
+@using GameWeaver.Components.Account
 @inherits LayoutComponentBase
 
 <PageTitle>@ServerState.ApplicationName</PageTitle>
 
-<MudThemeProvider Theme="@_selectedTheme" DefaultScrollbar="false"/>
+<MudThemeProvider Theme="@_selectedTheme" DefaultScrollbar="false" IsDarkMode="@(_userPreferences.ThemePreference != AppThemeId.Bright)"/>
+<MudPopoverProvider />
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
@@ -12,7 +14,7 @@
         <MudLayout>
             <MudAppBar Dense="true" Elevation="5" Class="z-100">
                 <MudSpacer/>
-                <MudText Typo="Typo.h5" Class="ml-3">@ServerState.ApplicationName</MudText>
+                <MudText Typo="Typo.h5">@ServerState.ApplicationName</MudText>
                 <MudSpacer/>
             </MudAppBar>
             <MudMainContent>
@@ -24,27 +26,33 @@
     </NotAuthorized>
     <Authorized>
         <MudLayout>
-            <MudAppBar Dense="true" Elevation="5" Class="z-100">
-                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
-                               OnClick="@(DrawerToggle)"/>
-                <MudSpacer/>
-                <MudText Typo="Typo.h5" Class="ml-3">@ServerState.ApplicationName</MudText>
-                <MudSpacer/>
-                <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(RefreshPageData)"/>
-                <MudButton OnClick="@(SettingsToggle)">
-                    <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium" ProfileImageUrl="@UserFull.ProfilePictureDataUrl"/>
-                </MudButton>
-            </MudAppBar>
-            <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always" Elevation="2"
-                       Variant="DrawerVariant.Mini" OpenMiniOnHover="false" Anchor="Anchor.Left">
-                <NavMenu/>
-            </MudDrawer>
-            <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="2" Variant="DrawerVariant.Temporary"
-                       OpenMiniOnHover="false" Anchor="Anchor.Right">
-                <SettingsMenu CurrentUser="CurrentUser" UserPreferences="_userPreferences" AvailableThemes="_availableThemes" 
-                              SelectedTheme="_selectedTheme" ThemeChanged="@(ChangeTheme)" UserFull="UserFull"/>
-            </MudDrawer>
             <CascadingValue Value="@this">
+                <MudAppBar Dense="true" Elevation="5" Class="z-100">
+                    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start"
+                                   OnClick="@(DrawerToggle)"/>
+                    <MudSpacer/>
+                    <MudText Typo="Typo.h5" Class="@_cssThemedText">@ServerState.ApplicationName</MudText>
+                    <MudSpacer/>
+                    @if (AppSettings.Value.UseCurrency)
+                    {
+                        <MudBadge Content="@UserFull.Currency" Overlap="true" Class="mx-6 my-4" Color="Color.Dark">
+                            <MudIcon Icon="@Icons.Material.Filled.Token" Color="Color.Primary"/>
+                        </MudBadge>
+                    }
+                    <MudIconButton Icon="@Icons.Material.Filled.Refresh" OnClick="@(RefreshPageData)"/>
+                    <MudButton OnClick="@(SettingsToggle)">
+                        <AccountAvatar Username="@CurrentUser.Identity?.Name" AvatarSize="Size.Medium" ProfileImageUrl="@UserFull.ProfilePictureDataUrl"/>
+                    </MudButton>
+                </MudAppBar>
+                <MudDrawer @bind-Open="_userPreferences.DrawerDefaultOpen" ClipMode="DrawerClipMode.Always" Elevation="2"
+                           Variant="DrawerVariant.Mini" OpenMiniOnHover="false" Anchor="Anchor.Left" MiniWidth="58px">
+                    <NavMenu/>
+                </MudDrawer>
+                <MudDrawer @bind-Open="_settingsDrawerOpen" ClipMode="DrawerClipMode.Docked" Elevation="2" Variant="DrawerVariant.Temporary"
+                           OpenMiniOnHover="false" Anchor="Anchor.Right">
+                    <SettingsMenu CurrentUser="CurrentUser" UserPreferences="_userPreferences" AvailableThemes="_availableThemes"
+                                  SelectedTheme="_selectedTheme" ThemeChanged="@(ChangeTheme)" UserFull="UserFull"/>
+                </MudDrawer>
                 <MudMainContent>
                     <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4 z-50">
                         @Body

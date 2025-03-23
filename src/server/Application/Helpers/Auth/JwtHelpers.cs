@@ -35,12 +35,22 @@ public static class JwtHelpers
 
     public static Guid GetJwtUserId(string token)
     {
-        var decodedJwt = GetJwtDecoded(token);
-        var userId = decodedJwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            return Guid.Empty;
+        }
+
+        try
+        {
+            var decodedJwt = GetJwtDecoded(token);
+            var userId = decodedJwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
         
-        var userIdParsed = Guid.Parse(userId);
-        
-        return userIdParsed;
+            return Guid.Parse(userId);
+        }
+        catch
+        {
+            return Guid.Empty;
+        }
     }
 
     private static DateTime GetJwtValidBeforeTime(IDateTimeService dateTime)

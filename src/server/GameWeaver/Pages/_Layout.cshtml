@@ -11,11 +11,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <base href="~/"/>
     <link rel="stylesheet" href="~/css/overrides.css" asp-append-version="true">
+    <link rel="stylesheet" href="~/css/gameweaver-shared.css" asp-append-version="true">
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered"/>
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
+    <link href="GameWeaver.styles.css" rel="stylesheet" asp-append-version="true" />
 </head>
 <body>
+<div class="background-perlin-noise"></div>
+
 @RenderBody()
 
 <div id="blazor-error-ui">
@@ -35,6 +39,8 @@
 <script src="js/sounds.js"></script>
 <script src="js/download.js"></script>
 <script src="js/timezone.js"></script>
+<script src="js/ensureImageExists.js" asp-append-version="true"></script>
+<script src="js/openExternalUrl.js"></script>
 <script src="_framework/blazor.server.js"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>

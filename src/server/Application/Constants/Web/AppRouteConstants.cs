@@ -53,4 +53,35 @@ public static class AppRouteConstants
     {
         public const string Root = "/jobs";
     }
+
+    public static class GameServer
+    {
+        public static class Hosts
+        {
+            public const string HostsDashboard = "/hosts/dashboard";
+            public const string View = "/hosts/{HostId:guid}";
+            public static string ViewId (Guid id) => $"/hosts/{id}";
+        }
+
+        public static class Games
+        {
+            public const string ViewAll = "/games";
+            public const string View = "/games/{GameId:guid}";
+            public static string ViewId (Guid id) => $"/games/{id}";
+        }
+
+        public static class GameProfiles
+        {
+            public const string ViewAll = "/gameprofiles";
+            public const string View = "/gameprofiles/{GameProfileId:guid}";
+            public static string ViewId (Guid id) => $"/gameprofiles/{id}";
+        }
+
+        public static class GameServers
+        {
+            public const string ViewAll = "/gameservers";
+            public const string View = "/gameservers/{GameServerId:guid}";
+            public static string ViewId (Guid id) => $"/gameservers/{id}";
+        }
+    }
 }

@@ -11,4 +11,5 @@ public class AppUserPreferenceFull
     public AppThemeCustom CustomThemeOne { get; set; } = AppThemeCustom.GetExampleCustomOne();
     public AppThemeCustom CustomThemeTwo { get; set; } = AppThemeCustom.GetExampleCustomTwo();
     public AppThemeCustom CustomThemeThree { get; set; } = AppThemeCustom.GetExampleCustomThree();
+    public bool GamerMode { get; set; }
 }

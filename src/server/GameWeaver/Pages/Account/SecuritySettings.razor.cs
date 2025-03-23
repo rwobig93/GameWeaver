@@ -362,7 +362,7 @@ public partial class SecuritySettings
         
         var dialogParameters = new DialogParameters() {{"ApiTokenId", Guid.Empty}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        await DialogService.Show<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions).Result;
+        await DialogService.ShowAsync<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions);
 
         await GetUserApiTokens();
         StateHasChanged();
@@ -375,7 +375,7 @@ public partial class SecuritySettings
         
         var dialogParameters = new DialogParameters() {{"ApiTokenId", _selectedApiTokens.FirstOrDefault()!.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-        await DialogService.Show<UserApiTokenDialog>("Update API Token", dialogParameters, dialogOptions).Result;
+        await DialogService.ShowAsync<UserApiTokenDialog>("Update API Token", dialogParameters, dialogOptions);
         
         await GetUserApiTokens();
         StateHasChanged();
@@ -393,9 +393,12 @@ public partial class SecuritySettings
             {"Content", string.Join(Environment.NewLine, tokensList)}
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-        var confirmation = await DialogService.Show<ConfirmationDialog>("Confirm Deletion", dialogParameters, dialogOptions).Result;
-        if (confirmation.Canceled)
+        var confirmation = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Deletion", dialogParameters, dialogOptions);
+        var dialogResult = await confirmation.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
             return;
+        }
 
         var messages = new List<string>();
         
@@ -481,8 +484,7 @@ public partial class SecuritySettings
 
             var provider = ExternalAuthHelpers.StringToProvider(OauthCode);
 
-            var addExternalAuthRequest =
-                await AccountService.SetExternalAuthProvider(CurrentUser.Id, provider, OauthState);
+            var addExternalAuthRequest = await AccountService.SetExternalAuthProvider(CurrentUser.Id, provider, OauthState);
             if (!addExternalAuthRequest.Succeeded)
             {
                 addExternalAuthRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

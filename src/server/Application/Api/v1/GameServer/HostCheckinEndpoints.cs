@@ -1,5 +1,8 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Constants.Web;
+using Application.Helpers.GameServer;
+using Application.Helpers.Lifecycle;
 using Application.Helpers.Web;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.HostCheckIn;
@@ -7,9 +10,12 @@ using Application.Models.GameServer.WeaverWork;
 using Application.Requests.GameServer.Host;
 using Application.Services.GameServer;
 using Application.Services.Identity;
+using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.Enums.GameServer;
+using Domain.Enums.Lifecycle;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -39,22 +45,40 @@ public static class HostCheckinEndpoints
     /// <param name="request">Host check-in details</param>
     /// <param name="hostService"></param>
     /// <param name="currentUserService"></param>
-    /// <param name="dateTimeService"></param>
+    /// <param name="dateTime"></param>
     /// <param name="serializerService"></param>
+    /// <param name="serverState"></param>
+    /// <param name="tshootService"></param>
     /// <returns>Success or Failure, payload is a serialized list of work for the host to process</returns>
     [Authorize(PermissionConstants.GameServer.HostCheckins.CheckIn)]
     private static async Task<IResult<IEnumerable<WeaverWorkClient>>> Checkin([FromBody]HostCheckInRequest request, IHostService hostService, ICurrentUserService currentUserService,
-        IDateTimeService dateTimeService, ISerializerService serializerService)
+        IDateTimeService dateTime, ISerializerService serializerService, IRunningServerState serverState, ITroubleshootingRecordService tshootService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
+            var matchingHostResponse = await hostService.GetByIdAsync(currentUserId);
+            if (!matchingHostResponse.Succeeded || matchingHostResponse.Data is null)
+            {
+                return await Result<IEnumerable<WeaverWorkClient>>.FailAsync(ErrorMessageConstants.Hosts.NotFound);
+            }
+
+            if (!matchingHostResponse.Data.CurrentState.IsRunning())
+            {
+                var hostUpdate = new HostUpdateRequest() {Id = currentUserId, CurrentState = ConnectivityState.Connectable};
+                var updateHostResponse = await hostService.UpdateAsync(hostUpdate, serverState.SystemUserId);
+                if (!updateHostResponse.Succeeded)
+                {
+                    await tshootService.CreateTroubleshootRecord(serverState, dateTime, TroubleshootEntityType.Hosts, currentUserId,
+                        "Failed to update host to online status from checkin", new Dictionary<string, string> {{"HostId", currentUserId.ToString()}});
+                }
+            }
             
             var createCheckIn = new HostCheckInCreate
             {
                 HostId = currentUserId,
                 SendTimestamp = request.SendTimestamp,
-                ReceiveTimestamp = dateTimeService.NowDatabaseTime,
+                ReceiveTimestamp = dateTime.NowDatabaseTime,
                 CpuUsage = request.CpuUsage,
                 RamUsage = request.RamUsage,
                 Uptime = request.Uptime,
@@ -91,19 +115,19 @@ public static class HostCheckinEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
             var result = await hostService.GetAllCheckInsPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<HostCheckInFull>>.FailAsync(result.Messages);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await hostService.GetCheckInCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -189,20 +213,36 @@ public static class HostCheckinEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Search for checkins by properties
     /// </summary>
     /// <param name="searchText">Text to search by</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="hostService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of matching host checkins</returns>
     /// <remarks>Searches by: ID, HostId</remarks>
     [Authorize(PermissionConstants.GameServer.HostCheckins.Search)]
-    private static async Task<IResult<IEnumerable<HostCheckInFull>>> Search([FromQuery]string searchText, IHostService hostService)
+    private static async Task<IResult<IEnumerable<HostCheckInFull>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IHostService hostService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await hostService.SearchCheckInsAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await hostService.SearchCheckInsPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+            
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostCheckins.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostCheckins.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

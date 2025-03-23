@@ -45,19 +45,19 @@ public static class ConfigItemEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
             var result = await gameServerService.GetAllConfigurationItemsPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(result.Messages);
-            
-            var totalCountRequest = await gameServerService.GetConfigurationItemsCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.ConfigItem.GetAll,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.ConfigItem.GetAll,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.ConfigItem.GetAll, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.ConfigItem.GetAll, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
@@ -149,6 +149,10 @@ public static class ConfigItemEndpoints
     /// <param name="updateObject">Required properties to update a configuration item</param>
     /// <param name="gameServerService"></param>
     /// <param name="currentUserService"></param>
+    /// <remarks>
+    /// NOTE: Inherited resources and config items will have an empty ID, if intending to update a resource or config item new ones will need
+    /// to be created on the server profile rather than the parent or default game profile
+    /// </remarks>
     /// <returns>Success or failure with context messages</returns>
     [Authorize(PermissionConstants.GameServer.ConfigItem.Update)]
     private static async Task<IResult> Update([FromBody]ConfigurationItemUpdate updateObject, IGameServerService gameServerService,
@@ -185,20 +189,36 @@ public static class ConfigItemEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Search for configuration items by properties
     /// </summary>
     /// <param name="searchText">Text to search for</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameServerService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of matching configuration items</returns>
     /// <remarks>Searches by: ID, GameProfileId, Path, Category, Key, Value</remarks>
     [Authorize(PermissionConstants.GameServer.ConfigItem.Search)]
-    private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> Search([FromQuery]string searchText, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<ConfigurationItemSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await gameServerService.SearchConfigurationItemsAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+
+            var result = await gameServerService.SearchConfigurationItemsPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
+
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.ConfigItem.Search, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.ConfigItem.Search, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {

@@ -16,7 +16,7 @@ public class HostService : IHostService
         _dateTimeService = dateTimeService;
     }
 
-    private static readonly IHardwareInfo HardwareInfo = new HardwareInfo(useAsteriskInWMI: false);
+    private static readonly HardwareInfo HardwareInfo = new(TimeSpan.FromMilliseconds(5000));
 
     public void PollHostDetail()
     {

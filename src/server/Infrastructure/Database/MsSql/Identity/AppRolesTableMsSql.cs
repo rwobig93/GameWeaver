@@ -67,7 +67,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT r.*
+                SELECT COUNT(*) OVER() AS TotalCount, r.*
                 FROM dbo.[{Table.TableName}] r
                 ORDER BY r.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -154,9 +154,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT r.*
+                SELECT COUNT(*) OVER() AS TotalCount, r.*
                 FROM dbo.[{Table.TableName}] r
                 WHERE r.Name LIKE '%' + @SearchTerm + '%'
                     OR r.Description LIKE '%' + @SearchTerm + '%'

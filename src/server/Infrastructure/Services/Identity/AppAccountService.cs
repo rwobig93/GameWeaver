@@ -209,19 +209,22 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult<LocalStorageRequest>> GetLocalStorage()
     {
-        var tokenRequest = new LocalStorageRequest();
+        var tokenRequest = new LocalStorageRequest { Token = "", RefreshToken = "" };
         
         try
         {
+            var currentStorage = await _localStorage.KeysAsync();
+            if (!currentStorage.Any())
+            {
+                return await Result<LocalStorageRequest>.FailAsync(tokenRequest, "Failed to load cookie authentication");
+            }
+            
             tokenRequest.ClientId = await _localStorage.GetItemAsync<string>(LocalStorageConstants.ClientId);
             tokenRequest.Token = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthToken);
             tokenRequest.RefreshToken = await _localStorage.GetItemAsync<string>(LocalStorageConstants.AuthTokenRefresh);
         }
         catch
         {
-            tokenRequest.ClientId = null;
-            tokenRequest.Token = "";
-            tokenRequest.RefreshToken = "";
             return await Result<LocalStorageRequest>.FailAsync(tokenRequest, "Failed to load cookie authentication");
         }
 

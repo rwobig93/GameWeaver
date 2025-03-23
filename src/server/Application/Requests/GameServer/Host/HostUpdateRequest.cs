@@ -1,4 +1,6 @@
-﻿namespace Application.Requests.GameServer.Host;
+﻿using Domain.Enums.GameServer;
+
+namespace Application.Requests.GameServer.Host;
 
 public class HostUpdateRequest
 {
@@ -7,4 +9,5 @@ public class HostUpdateRequest
     public string? Name { get; set; }
     public string? Description { get; set; }
     public List<string>? AllowedPorts { get; set; }
+    public ConnectivityState? CurrentState { get; set; }
 }

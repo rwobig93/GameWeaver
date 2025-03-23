@@ -79,11 +79,12 @@ public class ControlServerService : IControlServerService
     /// </summary>
     /// <remarks>
     ///   - Register URL is cleared in the settings file when a successful registration completes
+    ///   - General configuration ServerURL is updated when a successful registration completes
     ///   - Will always do a new registration confirmation if Register URL is valid and isn't empty
     ///   - Will attempt to get a token if register url is empty
     /// </remarks>
     /// <returns>Host and key pair used to authenticate with the control server</returns>
-    public async Task<IResult<HostRegisterResponse>> RegistrationConfirm()
+    public async Task<IResult<HostRegisterResponse?>> RegistrationConfirm()
     {
         // Client should already be registered if there is no register URL, and we have a valid id and Key pair, so we'll attempt to get a token
         if (string.IsNullOrWhiteSpace(_authConfig.CurrentValue.RegisterUrl))
@@ -95,11 +96,6 @@ public class ControlServerService : IControlServerService
             }
             
             return await Result<HostRegisterResponse>.SuccessAsync();
-        }
-        
-        if (!_authConfig.CurrentValue.RegisterUrl.StartsWith(_generalConfig.ServerUrl, StringComparison.InvariantCultureIgnoreCase))
-        {
-            return await Result<HostRegisterResponse>.FailAsync("Register URL in settings is invalid, please fix the URL and try again");
         }
 
         // Prep confirmation request
@@ -116,6 +112,29 @@ public class ControlServerService : IControlServerService
             return await Result<HostRegisterResponse>.FailAsync(convertedResponse.Messages);
         }
 
+        // Update the server URL in the general configuration to the newly registered control server
+        var parsedServerUrl = new Uri(_authConfig.CurrentValue.RegisterUrl);
+        var updatedGeneralConfig = new GeneralConfiguration
+        {
+            ServerUrl = parsedServerUrl.GetLeftPart(UriPartial.Authority),
+            CommunicationQueueMaxPerRun = _generalConfig.CommunicationQueueMaxPerRun,
+            MaxQueueAttempts = _generalConfig.MaxQueueAttempts,
+            ControlServerWorkIntervalMs = _generalConfig.ControlServerWorkIntervalMs,
+            HostWorkIntervalMs = _generalConfig.HostWorkIntervalMs,
+            GameServerWorkIntervalMs = _generalConfig.GameServerWorkIntervalMs,
+            ResourceGatherIntervalMs = _generalConfig.ResourceGatherIntervalMs,
+            GameServerStatusCheckIntervalSeconds = _generalConfig.GameServerStatusCheckIntervalSeconds,
+            AppDirectory = _generalConfig.AppDirectory,
+            SimultaneousQueueWorkCountMax = _generalConfig.SimultaneousQueueWorkCountMax,
+            GameserverBackupsToKeep = _generalConfig.GameserverBackupsToKeep,
+            GameserverBackupIntervalMinutes = _generalConfig.GameserverBackupIntervalMinutes
+        };
+        var generalSaveResponse = await _serializerService.SaveSettings(GeneralConfiguration.SectionName, updatedGeneralConfig);
+        if (!generalSaveResponse.Succeeded)
+        {
+            return await Result<HostRegisterResponse>.FailAsync(generalSaveResponse.Messages);
+        }
+        
         // Parse the successful registration, clear URL in settings and save HostId and Key for authenticating to the control server going forward
         var updatedAuthConfig = new AuthConfiguration
         {
@@ -124,12 +143,12 @@ public class ControlServerService : IControlServerService
             Key = convertedResponse.Data.HostToken,
             TokenRenewThresholdMinutes = _authConfig.CurrentValue.TokenRenewThresholdMinutes
         };
-        var saveResponse = await _serializerService.SaveSettings(AuthConfiguration.SectionName, updatedAuthConfig);
-        if (!saveResponse.Succeeded)
+        var authSaveResponse = await _serializerService.SaveSettings(AuthConfiguration.SectionName, updatedAuthConfig);
+        if (!authSaveResponse.Succeeded)
         {
-            return await Result<HostRegisterResponse>.FailAsync(saveResponse.Messages);
+            return await Result<HostRegisterResponse>.FailAsync(authSaveResponse.Messages);
         }
-
+        
         return await Result<HostRegisterResponse>.SuccessAsync(convertedResponse);
     }
 

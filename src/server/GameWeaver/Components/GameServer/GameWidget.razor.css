@@ -1,0 +1,108 @@
+﻿.game-card-slide {
+    /* See: https://codepen.io/andrewhawkes/pen/RwwOJrO */
+    z-index: 1;
+    border-radius: 7px;
+    overflow: hidden;
+    object-fit: contain;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+    transform-origin: top center;
+    cursor: pointer;
+    will-change: transform;
+    transform: skewX(.001deg);
+    transition: transform .35s ease-in-out;
+
+    & img {
+        width: 100%;
+        display: inherit;
+    }
+
+    &:before {
+        display: block;
+        position: absolute;
+        top: 5%;
+        left: 5%;
+        width: 100%;
+        height: 110%;
+        background: rgba(0, 0.5, 0);
+        box-shadow: 0 6px 12px 12px rgba(0, 0.4, 0);
+        will-change: opacity;
+        transform-origin: top center;
+        transform: skewX(.001deg);
+        transition: transform .35s ease-in-out, opacity .5s ease-in-out;
+    }
+
+    &:after {
+        display: block;
+        content: '';
+        position: absolute;
+        z-index: 100;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 140%;
+        background: linear-gradient(226deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.4) 35%, rgba(255,255,255,0.2) 42%, rgba(255,255,255,0) 60%);
+        transform: translateY(-20%);
+        will-change: transform;
+        transition: transform .65s cubic-bezier(0.18, 0.9, 0.58, 1);
+    }
+    
+    &:hover {
+        transform: rotateX(7deg) translateY(-6px);
+
+        &::before {
+            opacity: 0.6;
+            transform: rotateX(7deg) translateY(-6px) scale(1.05);
+        }
+        
+        &::after {
+            transform: translateY(0%);
+        }
+    }
+}
+
+.name-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.game-card-lift {
+    /* See: https://codepen.io/offeringofpie/pen/ExagprG */
+    overflow: hidden;
+    border-radius: 7px;
+    object-fit: contain;
+    cursor: pointer;
+    position: relative;
+    box-shadow: 0 10px 20px -10px rgba(0, 0, 0, 0.8);
+    transition: 0.2s all ease-in-out;
+
+    & img {
+        width: 100%;
+        display: inherit;
+    }
+
+    &:before {
+        content: "";
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        background: linear-gradient(-135deg, rgba(200, 230, 250, 1) 0%, transparent 50%);
+        background-size: 200%;
+        box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.5);
+        transition: 0.2s all ease-in-out;
+    }
+
+    &:hover {
+        transform: perspective(50em) rotateX(10deg) scale(1.1);
+        box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+        z-index: 10;
+
+        &:before {
+            background-position: 50%;
+        }
+    }
+}

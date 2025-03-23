@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
-using Application.Filters;
 using Application.Helpers.Auth;
 using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
@@ -47,7 +46,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
 using MudBlazor;
 using MudBlazor.Services;
 using Newtonsoft.Json;
@@ -151,6 +149,7 @@ public static class DependencyInjection
         {
             options.BaseAddress = new Uri(configuration.GetApplicationSettings().BaseUrl);
         }).ConfigureCertificateHandling(configuration);
+        services.AddHttpClient(ApiConstants.Clients.GeneralWeb).ConfigureCertificateHandling(configuration);
         services.AddHttpClient(ApiConstants.Clients.SteamApiNetUnauthenticated, options =>
         {
             options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlApiNet);
@@ -231,6 +230,7 @@ public static class DependencyInjection
         // Lifecycle Services
         services.AddSingleton<IAuditTrailService, AuditTrailService>();
         services.AddSingleton<ITroubleshootingRecordService, TroubleshootingRecordService>();
+        services.AddSingleton<INotifyRecordService, NotifyRecordService>();
 
         // Integration Services
         services.AddSingleton<IExcelService, ExcelService>();
@@ -261,52 +261,9 @@ public static class DependencyInjection
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-        
-        services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen(x =>
-        {
-            // Gather swagger XML generated documentation from every assembly
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                if (assembly.IsDynamic) continue;
-            
-                var xmlPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"{assembly.GetName().Name}.xml");
-                if (File.Exists(xmlPath))
-                    x.IncludeXmlComments(xmlPath);
-            }
-            
-            x.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-            {
-                Name = "Authorization",
-                Type = SecuritySchemeType.ApiKey,
-                Scheme = "Bearer",
-                BearerFormat = "JWT",
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                },
-                In = ParameterLocation.Header,
-                Description = "JSON Web Token Header Authorization Using Bearer Scheme",
 
-            });
-            x.AddSecurityRequirement(new OpenApiSecurityRequirement()
-            {
-                {
-                    new OpenApiSecurityScheme
-                    {
-                        Reference = new OpenApiReference
-                        {
-                            Type = ReferenceType.SecurityScheme,
-                            Id = "Bearer"
-                        }
-                    },
-                    Array.Empty<string>()
-                }
-            });
-            x.UseInlineDefinitionsForEnums();
-            x.SchemaFilter<EnumSchemaFilter>();
-        });
+        services.AddOpenApi();
+        services.AddEndpointsApiExplorer();
         
         services.AddApiVersioning(c =>
         {

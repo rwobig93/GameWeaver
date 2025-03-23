@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net9.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-WeaverService-3E1C2699-C9FD-4AFE-87A9-90A06DBFA437</UserSecretsId>
@@ -9,19 +9,19 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="MemoryPack" Version="1.21.1" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
-        <PackageReference Include="Serilog" Version="3.1.1" />
-        <PackageReference Include="Serilog.Enrichers.Environment" Version="2.3.0" />
-        <PackageReference Include="Serilog.Enrichers.Thread" Version="3.1.0" />
-        <PackageReference Include="Serilog.Extensions.Hosting" Version="8.0.0" />
-        <PackageReference Include="Serilog.Settings.Configuration" Version="8.0.0" />
-        <PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
-        <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
-        <PackageReference Include="Serilog.Sinks.Seq" Version="7.0.0" />
+        <PackageReference Include="MemoryPack" Version="1.21.4" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.2" />
+        <PackageReference Include="Serilog" Version="4.2.0" />
+        <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+        <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+        <PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" />
+        <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
+        <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
+        <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
         <PackageReference Include="SteamQueryNet" Version="1.0.6" />
     </ItemGroup>
 

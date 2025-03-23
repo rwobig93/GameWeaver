@@ -1,3 +1,4 @@
+using Application.Models.GameServer.ConfigResourceTreeItem;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.LocalResource;
 using Domain.DatabaseEntities.GameServer;
@@ -108,6 +109,38 @@ public static class ConfigurationItemMappers
     {
         return new ConfigurationItemCreate
         {
+            LocalResourceId = configItem.LocalResourceId,
+            DuplicateKey = configItem.DuplicateKey,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
+        };
+    }
+
+    public static ConfigResourceTreeItem ToTreeItem(this ConfigurationItemSlim configItem)
+    {
+        return new ConfigResourceTreeItem
+        {
+            Id = configItem.Id,
+            IsConfig = true,
+            Name = configItem.FriendlyName,
+            DuplicateKey = configItem.DuplicateKey,
+            Ignore = configItem.Ignore,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            OriginalValue = configItem.Value
+        };
+    }
+
+    public static ConfigurationItemUpdate ToUpdate(this ConfigurationItemSlim configItem)
+    {
+        return new ConfigurationItemUpdate
+        {
+            Id = configItem.Id,
             LocalResourceId = configItem.LocalResourceId,
             DuplicateKey = configItem.DuplicateKey,
             Path = configItem.Path,

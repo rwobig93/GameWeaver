@@ -2,5 +2,6 @@
 
 public enum DynamicPermissionGroup
 {
-    ServiceAccounts = 0
+    ServiceAccounts = 0,
+    GameServers = 1
 }

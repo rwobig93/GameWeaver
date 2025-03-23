@@ -51,23 +51,34 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<FileStorageRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<FileStorageRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
-            var foundRecords = await _recordRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!foundRecords.Succeeded)
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+            var response = await _recordRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!response.Succeeded)
             {
-                return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(foundRecords.ErrorMessage);
+                return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.SuccessAsync([]);
             }
 
-            var convertedFileStorageRecords = foundRecords.Result?.ToSlims().ToList() ?? [];
-
-            return await Result<IEnumerable<FileStorageRecordSlim>>.SuccessAsync(convertedFileStorageRecords);
+            return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -173,7 +184,6 @@ public class FileStorageRecordService : IFileStorageRecordService
     {
         try
         {
-            // TODO: Update game version for new file uploads if 'IsLatest' boolean is true
             var convertedRecord = request.ToCreate();
             convertedRecord.CreatedBy = requestUserId;
             convertedRecord.CreatedOn = _dateTime.NowDatabaseTime;
@@ -308,23 +318,34 @@ public class FileStorageRecordService : IFileStorageRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<FileStorageRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<FileStorageRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
-            var fileStorageRecords = await _recordRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-            if (!fileStorageRecords.Succeeded)
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+            var response = await _recordRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!response.Succeeded)
             {
-                return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(fileStorageRecords.ErrorMessage);
+                return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.SuccessAsync([]);
             }
 
-            var convertedFileStorageRecord = fileStorageRecords.Result?.ToSlims().ToList() ?? [];
-
-            return await Result<IEnumerable<FileStorageRecordSlim>>.SuccessAsync(convertedFileStorageRecord);
+            return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(ex.Message);
         }
     }
 

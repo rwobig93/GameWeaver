@@ -2,7 +2,7 @@
 
 public partial class ConfirmationDialog
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string Icon { get; set; } = Icons.Material.Filled.Delete;
     [Parameter] public Color IconColor { get; set; } = Color.Error;
     [Parameter] public Color TextColor { get; set; } = Color.Default;

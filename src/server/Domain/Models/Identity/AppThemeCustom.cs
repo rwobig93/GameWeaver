@@ -7,10 +7,13 @@ public class AppThemeCustom
     public string ColorPrimary { get; set; } = "#BB86FC";
     public string ColorSecondary { get; set; } = "#03DAC6";
     public string ColorTertiary { get; set; } = "#f747a3";
+    public string ColorSurface { get; set; } = "#222222";
     public string ColorBackground { get; set; } = "#000000";
     public string ColorTitleBar { get; set; } = "#1f1f1f";
     public string ColorNavBar { get; set; } = "#2f2f2f";
     public string ColorSuccess { get; set; } = "#007E33";
+    public string ColorInfo { get; set; } = "#2196f3";
+    public string ColorWarning { get; set; } = "#ff9800";
     public string ColorError { get; set; } = "#df0808";
     
     public static AppThemeCustom GetExampleCustomOne()

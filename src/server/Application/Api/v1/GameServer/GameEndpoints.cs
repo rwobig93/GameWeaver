@@ -54,23 +54,23 @@ public static class GameEndpoints
     {
         try
         {
-            if (pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize) pageSize = 500;
-
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
             var result = await gameService.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!result.Succeeded)
-                return await Result<IEnumerable<GameSlim>>.FailAsync(result.Messages);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount <= 0) return result;
             
-            var totalCountRequest = await gameService.GetCountAsync();
-            var previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated,
-                pageNumber, pageSize);
-            var next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated,
-                pageNumber, pageSize, totalCountRequest.Data);
-            
-            return await PaginatedResult<IEnumerable<GameSlim>>.SuccessAsync(result.Data, pageNumber, totalCountRequest.Data, pageSize, previous, next);
+            result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize);
+            result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize, result.TotalCount);
+            return result;
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<GameSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(ex.Message);
         }
     }
     
@@ -249,24 +249,42 @@ public static class GameEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
-    /// Search a game by it's properties
+    /// Search a game by its properties
     /// </summary>
     /// <param name="searchText">Text to search with</param>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of games</returns>
     /// <remarks>Searches by: ID, FriendlyName, SteamName, SteamGameId, SteamToolId, Description</remarks>
     [Authorize(PermissionConstants.GameServer.Game.Search)]
-    private static async Task<IResult<IEnumerable<GameSlim>>> Search([FromQuery]string searchText, IGameService gameService)
+    private static async Task<IResult<IEnumerable<GameSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IGameService gameService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            return await gameService.SearchAsync(searchText);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
+            
+            var result = await gameService.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!result!.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(result.Messages);
+            }
+
+            if (result.TotalCount > 0)
+            {
+                result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.Search, pageNumber, pageSize, result.TotalCount);
+                result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.Search, pageNumber, pageSize);
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<GameSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(ex.Message);
         }
     }
     

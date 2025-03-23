@@ -7,10 +7,12 @@ using Application.Mappers.Identity;
 using Application.Requests.Identity.User;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
+using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Application.Api.v1.Identity;
 
@@ -68,18 +70,38 @@ public static class UserEndpoints
     /// <summary>
     /// Get all users
     /// </summary>
+    /// <param name="pageNumber">Page number to get</param>
+    /// <param name="pageSize">Number of items per page</param>
     /// <param name="userService"></param>
+    /// <param name="appConfig"></param>
     /// <returns>List of all users</returns>
     [Authorize(Policy = PermissionConstants.Identity.Users.View)]
-    private static async Task<IResult<List<UserBasicResponse>>> GetAllUsers(IAppUserService userService)
+    private static async Task<IResult<IEnumerable<UserBasicResponse>>> GetAllUsers([FromQuery]int pageNumber, [FromQuery]int pageSize,
+        IAppUserService userService, IOptions<AppConfiguration> appConfig)
     {
         try
         {
-            var allUsers = await userService.GetAllAsync();
-            if (!allUsers.Succeeded)
-                return await Result<List<UserBasicResponse>>.FailAsync(allUsers.Messages);
+            pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
 
-            return await Result<List<UserBasicResponse>>.SuccessAsync(allUsers.Data.ToResponses());
+            var result = await userService.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!result.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<UserBasicResponse>>.FailAsync(result.Messages);
+            }
+            
+            var convertedResult = await PaginatedResult<IEnumerable<UserBasicResponse>>.SuccessAsync(
+                result.Data.ToResponses(),
+                result.StartPage,
+                result.CurrentPage,
+                result.EndPage,
+                result.TotalCount,
+                result.PageSize);
+
+            if (convertedResult.TotalCount <= 0) return convertedResult;
+
+            convertedResult.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.Identity.User.GetAll, pageNumber, pageSize);
+            convertedResult.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.Identity.User.GetAll, pageNumber, pageSize, convertedResult.TotalCount);
+            return convertedResult;
         }
         catch (Exception ex)
         {

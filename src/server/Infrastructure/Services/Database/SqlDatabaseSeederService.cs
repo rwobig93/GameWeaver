@@ -109,13 +109,15 @@ public class SqlDatabaseSeederService : IHostedService
     private async Task SeedDatabaseUsers()
     {
         // Seed system user permissions
-        await EnforceRolesForUser(_systemUser.Id, RoleConstants.GetAdminRoleNames());
+        await EnforceRolesForUser(_systemUser.Id, RoleConstants.AdminRoleNames);
         
         var adminUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.AdminUsername, UserConstants.DefaultUsers.AdminFirstName, UserConstants.DefaultUsers.AdminLastName,
             UserConstants.DefaultUsers.AdminEmail, UserConstants.DefaultUsers.AdminPassword);
         if (adminUser.Succeeded)
-            await EnforceRolesForUser(adminUser.Result!.Id, RoleConstants.GetAdminRoleNames());
+        {
+            await EnforceRolesForUser(adminUser.Result!.Id, RoleConstants.AdminRoleNames);
+        }
 
         if (_lifecycleConfig.EnforceTestAccounts)
         {
@@ -123,20 +125,26 @@ public class SqlDatabaseSeederService : IHostedService
                 UserConstants.DefaultUsers.ModeratorUsername, UserConstants.DefaultUsers.ModeratorFirstName,
                 UserConstants.DefaultUsers.ModeratorLastName, UserConstants.DefaultUsers.ModeratorEmail, UserConstants.DefaultUsers.ModeratorPassword);
             if (moderatorUser.Succeeded)
-                await EnforceRolesForUser(moderatorUser.Result!.Id, RoleConstants.GetModeratorRoleNames());
+            {
+                await EnforceRolesForUser(moderatorUser.Result!.Id, RoleConstants.ModeratorRoleNames);
+            }
             
             var basicUser = await CreateOrGetSeedUser(
                 UserConstants.DefaultUsers.BasicUsername, UserConstants.DefaultUsers.BasicFirstName, UserConstants.DefaultUsers.BasicLastName,
                 UserConstants.DefaultUsers.BasicEmail, UserConstants.DefaultUsers.BasicPassword);
             if (basicUser.Succeeded)
-                await EnforceRolesForUser(basicUser.Result!.Id, RoleConstants.GetDefaultRoleNames());
+            {
+                await EnforceRolesForUser(basicUser.Result!.Id, RoleConstants.DefaultRoleNames);
+            }
         }
         
         var anonymousUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.AnonymousUsername, UserConstants.DefaultUsers.AnonymousFirstName,
             UserConstants.DefaultUsers.AnonymousLastName, UserConstants.DefaultUsers.AnonymousEmail, UrlHelpers.GenerateToken(64));
         if (anonymousUser.Succeeded)
+        {
             await EnforceAnonUserIdToEmptyGuid(anonymousUser.Result!.Id);
+        }
     }
 
     public async Task StopAsync(CancellationToken cancellationToken)

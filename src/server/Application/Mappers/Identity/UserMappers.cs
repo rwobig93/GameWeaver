@@ -5,7 +5,6 @@ using Application.Responses.v1.Identity;
 using Domain.DatabaseEntities.Identity;
 using Domain.Enums.Identity;
 using Domain.Models.Identity;
-using Newtonsoft.Json;
 
 namespace Application.Mappers.Identity;
 

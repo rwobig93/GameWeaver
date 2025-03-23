@@ -6,211 +6,221 @@
 @attribute [Authorize]
 
 <MudContainer Class="d-flex pa-4 flex-column align-center">
-    <AccountSettingsNavBar/>
+    <MudPaper Elevation="12" Square="false">
+        <AccountSettingsNavBar/>
+    </MudPaper>
 </MudContainer>
 
-<MudContainer Style="min-width: 650px;">
-    <MudTabs Outlined="true" Position="Position.Left" Rounded="true" Border="true" Centered="true" Elevation="10"
-        ApplyEffectsToContainer="true" Class="mt-8" PanelClass="d-flex flex-column pa-6" @ref="_securityTabs">
-        <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="MFA">
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+<MudContainer Class="pt-2" Style="min-width: 650px;">
+    <MudTabs Outlined="true" Position="Position.Left" Rounded="true" Border="true" Centered="false" Elevation="10" HideSlider="true"
+        ApplyEffectsToContainer="true" PanelClass="d-flex flex-column pa-6" @ref="_securityTabs">
+        <MudTabPanel Class="pa-4 mb-3" Text="MFA">
+            <MudPaper Elevation="8" Square="false" Class="py-2 mb-6" Width="100%">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Multi-Factor Authentication (MFA)</MudText>
-            </MudItem>
-            @if (QrCodeGenerating)
-            {
-                <MudProgressLinear Color="Color.Info" Indeterminate="true" Rounded="true"/>
-                <MudText Color="Color.Info" Align="Align.Center" Typo="Typo.h6">Generating QR Code...</MudText>
-            }
-            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap justify-center pa-2 gap-4">
-                <MudButton Color="Color.Primary" OnClick="@(InvokeTotpAction)" Variant="Variant.Outlined">
-                    @_mfaButtonText
-                </MudButton>
-                @if (!string.IsNullOrWhiteSpace(CurrentUser.TwoFactorKey))
-                {
-                    <MudButton Color="Color.Secondary" OnClick="@(RegisterTotp)" Variant="Variant.Outlined">
-                        Re-register MFA TOTP Token
-                    </MudButton>
-                }
-            </MudItem>
-            @if (!string.IsNullOrWhiteSpace(_mfaRegisterCode))
-            {
-                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
-                    <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
-                        Please scan the QR code or enter the TOTP key in your MFA app to register
-                    </MudText>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
-                    <MudImage ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Src="@_qrCodeImageSource" Fluid="true" Width="300"/>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
-                    <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
-                        TOTP Key: @(_mfaRegisterCode)
-                    </MudText>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2 gap-4">
-                    <MudTextField T="string" @bind-Value="_totpCode" Placeholder="TOTP Code" OnKeyDown="@(TotpSubmitCheck)" Adornment="Adornment.Start"
-                                  AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
-                    <MudButton Color="Color.Tertiary" OnClick="@(ValidateTotpCode)" Size="Size.Medium" Variant="Variant.Outlined"
-                               StartIcon="@Icons.Material.Filled.Verified">
-                        Verify Code
-                    </MudButton>
-                </MudItem>
-            }
+            </MudPaper>
+            <MudPaper Elevation="8" Square="false" Class="px-6 py-4" Height="100%">
+                <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                    @if (QrCodeGenerating)
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                            <MudProgressLinear Color="Color.Info" Indeterminate="true" Rounded="true"/>
+                            <MudText Color="Color.Info" Align="Align.Center" Typo="Typo.h6">Generating QR Code...</MudText>
+                        </MudStack>
+                    }
+                    <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                        <MudButton Color="Color.Primary" OnClick="@(InvokeTotpAction)" Variant="Variant.Outlined">
+                            @_mfaButtonText
+                        </MudButton>
+                    </MudStack>
+                    @if (!string.IsNullOrWhiteSpace(CurrentUser.TwoFactorKey))
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                            <MudButton Color="Color.Secondary" OnClick="@(RegisterTotp)" Variant="Variant.Outlined">
+                                Re-register MFA TOTP Token
+                            </MudButton>
+                        </MudStack>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(_mfaRegisterCode))
+                    {
+                        <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                            <MudText Align="Align.Center" Typo="Typo.h5" Class="smaller">
+                                Please scan the QR code or enter the TOTP key in your MFA app to register
+                            </MudText>
+                        </MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                            <MudImage ObjectPosition="ObjectPosition.Center" ObjectFit="ObjectFit.Contain" Src="@_qrCodeImageSource" Fluid="true" Width="300"/>
+                        </MudStack>
+                        <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                            <MudText Align="Align.Center" Typo="Typo.h6" Class="smaller">
+                                TOTP Key: @(_mfaRegisterCode)
+                            </MudText>
+                        </MudStack>
+                        <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                            <MudTextField T="string" @bind-Value="_totpCode" Placeholder="Code Response" OnKeyDown="@(TotpSubmitCheck)" Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
+                            <MudButton Color="Color.Tertiary" OnClick="@(ValidateTotpCode)" Size="Size.Medium" Variant="Variant.Outlined"
+                                       StartIcon="@Icons.Material.Filled.Verified">
+                                Verify Code
+                            </MudButton>
+                        </MudStack>
+                    }
+                </MudStack>
+            </MudPaper>
         </MudTabPanel>
-        <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="Device Sessions">
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+        <MudTabPanel Class="pa-4 mb-3" Text="Device Sessions">
+            <MudPaper Elevation="8" Square="false" Class="py-2 mb-6" Width="100%">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Device Sessions</MudText>
-            </MudItem>
-            <MudItem xs="16" sm="20" md="28" lg="36">
-                <MudTable Items="@_userClientSessions" ReadOnly="true" Elevation="6">
-                    <ToolBarContent>
-                        <MudContainer Class="d-flex flex-wrap gap-4">
-                            <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                                     IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
-                                <MudMenuItem IconColor="Color.Error" OnClick="ForceLogin" Icon="@Icons.Material.Filled.Update">Logout Of All Devices</MudMenuItem>
-                            </MudMenu>
-                        </MudContainer>
-                    </ToolBarContent>
-                    <HeaderContent>
-                        <MudTh></MudTh>
-                        <MudTh>State</MudTh>
-                        <MudTh>Session Id (Last 12)</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Devices"/></MudTd>
-                        <MudTd DataLabel="State">@context.Description</MudTd>
-                        <MudTd DataLabel="SessionId)">@context.Value[^12..]</MudTd>
-                    </RowTemplate>
-                    <NoRecordsContent>
-                        <MudText>No Device Sessions Found</MudText>
-                    </NoRecordsContent>
-                    <LoadingContent>
-                        <MudText>Loading...</MudText>
-                    </LoadingContent>
-                </MudTable>
-            </MudItem>
+            </MudPaper>
+            <MudTable Items="@_userClientSessions" ReadOnly="true" Elevation="6">
+                <ToolBarContent>
+                    <MudContainer Class="d-flex flex-wrap gap-4">
+                        <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                 IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
+                            <MudMenuItem IconColor="Color.Error" OnClick="ForceLogin" Icon="@Icons.Material.Filled.Update">Logout Of All Devices</MudMenuItem>
+                        </MudMenu>
+                    </MudContainer>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh>State</MudTh>
+                    <MudTh>Session Id (Last 12)</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Devices"/></MudTd>
+                    <MudTd DataLabel="State">@context.Description</MudTd>
+                    <MudTd DataLabel="SessionId)">@context.Value[^12..]</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No Device Sessions Found</MudText>
+                </NoRecordsContent>
+                <LoadingContent>
+                    <MudText>Loading...</MudText>
+                </LoadingContent>
+            </MudTable>
         </MudTabPanel>
         <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="Password">
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+            <MudPaper Elevation="8" Square="false" Class="py-2 mb-6" Width="100%">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Change Password</MudText>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2">
-                <MudTextField @bind-Value="CurrentPassword" Label="Current Password" Variant="Variant.Outlined" InputType="@_passwordCurrentInput"
-                              Adornment="Adornment.End" AdornmentIcon="@_passwordCurrentInputIcon" OnAdornmentClick="@ToggleCurrentPasswordVisibility"
-                              AdornmentAriaLabel="Show Current Password"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2">
-                <MudTextField @bind-Value="DesiredPassword" Label="Desired Password" Variant="Variant.Outlined" InputType="@_passwordInput"
-                              Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
-                              AdornmentAriaLabel="Show Desired Password"
-                              Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordRequirements))"/>
-                <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" AnchorOrigin="Origin.CenterLeft" Size="Size.Medium">
-                    <MudText Align="Align.Left" Class="mx-4">Minimum Length: @_passwordRequirements.MinimumLength</MudText>
-                    <MudText Align="Align.Left" Class="mx-4">Maximum Length: @_passwordRequirements.MaximumLength</MudText>
-                    <MudText Align="Align.Left" Class="mx-4">Requires Special: @_passwordRequirements.RequiresSpecialCharacters</MudText>
-                    <MudText Align="Align.Left" Class="mx-4">Requires Lowercase: @_passwordRequirements.RequiresLowercase</MudText>
-                    <MudText Align="Align.Left" Class="mx-4">Requires Uppercase: @_passwordRequirements.RequiresUppercase</MudText>
-                    <MudText Align="Align.Left" Class="mx-4">Requires Numbers: @_passwordRequirements.RequiresNumbers</MudText>
-                </MudMenu>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-2">
-                <MudTextField @bind-Value="ConfirmPassword" Label="Confirm Password" Variant="Variant.Outlined" InputType="@_passwordConfirmInput"
-                              Adornment="Adornment.End" AdornmentIcon="@_passwordConfirmInputIcon" OnAdornmentClick="@ToggleConfirmPasswordVisibility"
-                              AdornmentAriaLabel="Show Confirm Password"
-                              Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordsMatch))"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Save"
-                           OnClick="@UpdatePassword">Change Password
-                </MudButton>
-            </MudItem>
+            </MudPaper>
+            <MudPaper Elevation="8" Square="false" Class="px-6 py-4" Height="100%">
+                <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                    <MudTextField @bind-Value="CurrentPassword" Label="Current Password" Variant="Variant.Outlined" InputType="@_passwordCurrentInput"
+                                  Adornment="Adornment.End" AdornmentIcon="@_passwordCurrentInputIcon" OnAdornmentClick="@ToggleCurrentPasswordVisibility"
+                                  AdornmentAriaLabel="Show Current Password"/>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                    <MudTextField @bind-Value="DesiredPassword" Label="Desired Password" Variant="Variant.Outlined" InputType="@_passwordInput"
+                                  Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
+                                  AdornmentAriaLabel="Show Desired Password"
+                                  Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordRequirements))"/>
+                    <MudMenu Icon="@Icons.Material.Filled.QuestionMark" Color="Color.Inherit" Dense="true" AnchorOrigin="Origin.CenterLeft" Size="Size.Medium">
+                        <MudText Align="Align.Left" Class="mx-4">Minimum Length: @_passwordRequirements.MinimumLength</MudText>
+                        <MudText Align="Align.Left" Class="mx-4">Maximum Length: @_passwordRequirements.MaximumLength</MudText>
+                        <MudText Align="Align.Left" Class="mx-4">Requires Special: @_passwordRequirements.RequiresSpecialCharacters</MudText>
+                        <MudText Align="Align.Left" Class="mx-4">Requires Lowercase: @_passwordRequirements.RequiresLowercase</MudText>
+                        <MudText Align="Align.Left" Class="mx-4">Requires Uppercase: @_passwordRequirements.RequiresUppercase</MudText>
+                        <MudText Align="Align.Left" Class="mx-4">Requires Numbers: @_passwordRequirements.RequiresNumbers</MudText>
+                    </MudMenu>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
+                    <MudTextField @bind-Value="ConfirmPassword" Label="Confirm Password" Variant="Variant.Outlined" InputType="@_passwordConfirmInput"
+                                  Adornment="Adornment.End" AdornmentIcon="@_passwordConfirmInputIcon" OnAdornmentClick="@ToggleConfirmPasswordVisibility"
+                                  AdornmentAriaLabel="Show Confirm Password"
+                                  Validation="@(new Func<string, IEnumerable<string>>(ValidatePasswordsMatch))"/>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Class="pt-4">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Save"
+                               OnClick="@UpdatePassword">Change Password
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
         </MudTabPanel>
         @if (ExternalAuthService.AnyProvidersEnabled)
         {
             <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="External Sign-In" @ref="_externalAuthPanel">
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudPaper Elevation="8" Square="false" Class="py-2 mb-6" Width="100%">
                     <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">External Sign-In (Oauth2)</MudText>
-                </MudItem>
-                @if (ExternalAuthService.ProviderEnabledDiscord)
-                {
-                    <MudItem xs="12" sm="12" md="12" Class="justify-center">
-                        <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
-                                   Color="@(_linkedAuthDiscord ? Color.Success : Color.Surface)"
-                                   StartIcon="@Icons.Custom.Brands.Discord"
-                                   OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Discord, _linkedAuthDiscord))">
-                            @if (_linkedAuthDiscord) { @("Unlink Discord Account") } else { @("Link Discord Account") }
-                        </MudButton>
-                    </MudItem>
-                }
-                @if (ExternalAuthService.ProviderEnabledGoogle)
-                {
-                    <MudItem xs="12" sm="12" md="12" Class="justify-center">
-                        <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
-                                   Color="@(_linkedAuthGoogle ? Color.Success : Color.Surface)"
-                                   StartIcon="@Icons.Custom.Brands.Google"
-                                   OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Google, _linkedAuthGoogle))">
-                            @if (_linkedAuthGoogle) { @("Unlink Google Account") } else { @("Link Google Account") }
-                        </MudButton>
-                    </MudItem>
-                }
-                @if (ExternalAuthService.ProviderEnabledSpotify)
-                {
-                    <MudItem xs="12" sm="12" md="12" Class="justify-center">
-                        <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
-                                   Color="@(_linkedAuthSpotify ? Color.Success : Color.Surface)"
-                                   StartIcon="@Icons.Material.Filled.LibraryMusic"
-                                   OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Spotify, _linkedAuthSpotify))">
-                            @if (_linkedAuthSpotify) { @("Unlink Spotify Account") } else { @("Link Spotify Account") }
-                        </MudButton>
-                    </MudItem>
-                }
+                </MudPaper>
+                <MudPaper Elevation="8" Square="false" Class="" Height="100%">
+                    @if (ExternalAuthService.ProviderEnabledDiscord)
+                    {
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                       Color="@(_linkedAuthDiscord ? Color.Success : Color.Surface)"
+                                       StartIcon="@Icons.Custom.Brands.Discord"
+                                       OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Discord, _linkedAuthDiscord))">
+                                @if (_linkedAuthDiscord) { @("Unlink Discord Account") } else { @("Link Discord Account") }
+                            </MudButton>
+                        </MudItem>
+                    }
+                    @if (ExternalAuthService.ProviderEnabledGoogle)
+                    {
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                       Color="@(_linkedAuthGoogle ? Color.Success : Color.Surface)"
+                                       StartIcon="@Icons.Custom.Brands.Google"
+                                       OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Google, _linkedAuthGoogle))">
+                                @if (_linkedAuthGoogle) { @("Unlink Google Account") } else { @("Link Google Account") }
+                            </MudButton>
+                        </MudItem>
+                    }
+                    @if (ExternalAuthService.ProviderEnabledSpotify)
+                    {
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                       Color="@(_linkedAuthSpotify ? Color.Success : Color.Surface)"
+                                       StartIcon="@Icons.Material.Filled.LibraryMusic"
+                                       OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Spotify, _linkedAuthSpotify))">
+                                @if (_linkedAuthSpotify) { @("Unlink Spotify Account") } else { @("Link Spotify Account") }
+                            </MudButton>
+                        </MudItem>
+                    }
+                </MudPaper>
             </MudTabPanel>
         }
         @if (_canGenerateApiTokens)
         {
             <MudTabPanel Class="d-flex flex-column pa-4 mb-3" Text="API">
-                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudPaper Elevation="8" Square="false" Class="py-2 mb-6" Width="100%">
                     <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">API Tokens</MudText>
-                </MudItem>
-                <MudItem xs="16" sm="20" md="28" lg="36">
-                    <MudTable Items="@_userApiTokens" MultiSelection="true" @bind-SelectedItems="_selectedApiTokens" Elevation="6">
-                        <ToolBarContent>
-                            <MudContainer Class="d-flex flex-wrap gap-4">
-                                <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
-                                         IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
-                                    <MudMenuItem IconColor="Color.Secondary" Disabled="@(_selectedApiTokens.Count != 1)" OnClick="UpdateApiToken"
-                                                 Icon="@Icons.Material.Filled.Update">Update</MudMenuItem>
-                                    <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedApiTokens.Count < 1)" OnClick="DeleteApiTokens"
-                                                 Icon="@Icons.Material.Filled.Delete">Delete</MudMenuItem>
-                                </MudMenu>
-                                <MudButton Color="Color.Success" Size="Size.Small" OnClick="@(GenerateUserApiToken)" Variant="Variant.Outlined"
-                                           EndIcon="@Icons.Material.Filled.Add">Create</MudButton>
-                            </MudContainer>
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh></MudTh>
-                            <MudTh>Expiration</MudTh>
-                            <MudTh>Token (Last 4)</MudTh>
-                            <MudTh>Description</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Api"/></MudTd>
-                            <MudTd DataLabel="Name">@DateTime.Parse(context.Name).ConvertToLocal(_localTimeZone).ToFriendlyDisplay()</MudTd>
-                            <MudTd DataLabel="Value">
-                                @context.Value[^4..]
-                                <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
-                                           OnClick="@(async () => await CopyToClipboard(context.Value))"/>
-                            </MudTd>
-                            <MudTd DataLabel="Description">@context.Description</MudTd>
-                        </RowTemplate>
-                        <NoRecordsContent>
-                            <MudText>No API Tokens Found</MudText>
-                        </NoRecordsContent>
-                        <LoadingContent>
-                            <MudText>Loading...</MudText>
-                        </LoadingContent>
-                    </MudTable>
-                </MudItem>
+                </MudPaper>
+                <MudTable Items="@_userApiTokens" MultiSelection="true" @bind-SelectedItems="_selectedApiTokens" Elevation="6">
+                    <ToolBarContent>
+                        <MudContainer Class="d-flex flex-wrap gap-4">
+                            <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
+                                     IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
+                                <MudMenuItem IconColor="Color.Secondary" Disabled="@(_selectedApiTokens.Count != 1)" OnClick="UpdateApiToken"
+                                             Icon="@Icons.Material.Filled.Update">Update</MudMenuItem>
+                                <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedApiTokens.Count < 1)" OnClick="DeleteApiTokens"
+                                             Icon="@Icons.Material.Filled.Delete">Delete</MudMenuItem>
+                            </MudMenu>
+                            <MudButton Color="Color.Success" Size="Size.Small" OnClick="@(GenerateUserApiToken)" Variant="Variant.Outlined"
+                                       EndIcon="@Icons.Material.Filled.Add">Create</MudButton>
+                        </MudContainer>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Expiration</MudTh>
+                        <MudTh>Token (Last 4)</MudTh>
+                        <MudTh>Description</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Tertiary" Icon="@Icons.Material.Filled.Api"/></MudTd>
+                        <MudTd DataLabel="Name">@DateTime.Parse(context.Name).ConvertToLocal(_localTimeZone).ToFriendlyDisplay()</MudTd>
+                        <MudTd DataLabel="Value">
+                            @context.Value[^4..]
+                            <MudButton StartIcon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@(async () => await CopyToClipboard(context.Value))"/>
+                        </MudTd>
+                        <MudTd DataLabel="Description">@context.Description</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText>No API Tokens Found</MudText>
+                    </NoRecordsContent>
+                    <LoadingContent>
+                        <MudText>Loading...</MudText>
+                    </LoadingContent>
+                </MudTable>
             </MudTabPanel>
         }
     </MudTabs>

@@ -1,5 +1,5 @@
 ﻿using Application.Constants.Communication;
-using Application.Helpers.Identity;
+using Application.Constants.Identity;
 using Application.Helpers.Lifecycle;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
@@ -77,19 +77,34 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppUserSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
-            var users = await _userRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!users.Succeeded)
-                return await Result<IEnumerable<AppUserSlim>>.FailAsync(users.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(users.Result!.ToSlims());
+            var response = await _userRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppUserSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppUserSlim>>.SuccessAsync([]);
+            }
+
+            return await PaginatedResult<IEnumerable<AppUserSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppUserSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -263,8 +278,7 @@ public class AppUserService : IAppUserService
             if (updateObject.Username is not null && foundUser.Data.Username == updateObject.Username) return await Result.SuccessAsync();
             
             // Service Accounts have dynamic permissions, so we need to update assigned permissions if the account name changed
-            var claimValue = PermissionHelpers.GetClaimValueFromServiceAccount(
-                foundUser.Data.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin);
+            var claimValue = PermissionConstants.Identity.ServiceAccounts.Dynamic(foundUser.Data.Id, DynamicPermissionLevel.Admin);
             var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
             if (!serviceAccountPermissions.Succeeded || serviceAccountPermissions.Result is null)
             {
@@ -352,19 +366,34 @@ public class AppUserService : IAppUserService
         }
     }
 
-    public async Task<IResult<IEnumerable<AppUserSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<AppUserSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
-            var searchResult = await _userRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-            if (!searchResult.Succeeded)
-                return await Result<IEnumerable<AppUserSlim>>.FailAsync(searchResult.ErrorMessage);
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-            return await Result<IEnumerable<AppUserSlim>>.SuccessAsync(searchResult.Result?.ToSlims() ?? new List<AppUserSlim>());
+            var response = await _userRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!response.Succeeded)
+            {
+                return await PaginatedResult<IEnumerable<AppUserSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<AppUserSlim>>.SuccessAsync([]);
+            }
+
+            return await PaginatedResult<IEnumerable<AppUserSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<AppUserSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<AppUserSlim>>.FailAsync(ex.Message);
         }
     }
 

@@ -1,5 +1,12 @@
-﻿<MudAvatar Color="@GetColorFromState()" Variant="Variant.Outlined" Size="@AvatarSize" Image="@ProfileImageUrl" Style="@Style">
-    @GetUsernameFromState()
+﻿<MudAvatar Color="@GetColorFromState()" Variant="Variant.Outlined" Size="@AvatarSize" Style="@Style">
+    @if (!string.IsNullOrWhiteSpace(ProfileImageUrl))
+    {
+        <MudImage Src="@ProfileImageUrl" Alt="Account Profile Avatar Image" />
+    }
+    else
+    {
+        @GetUsernameFromState()
+    }
 </MudAvatar>
 
 @code {

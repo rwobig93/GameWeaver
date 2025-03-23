@@ -10,7 +10,7 @@ public partial class UserApiTokenDialog
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
 
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public Guid ApiTokenId { get; set; } = Guid.Empty;
 
     private bool _creatingNewToken;

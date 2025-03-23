@@ -4,7 +4,7 @@ namespace GameWeaver.Components.Identity;
 
 public partial class MfaCodeValidationDialog
 {
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string MfaKey { get; set; } = "";
     [Parameter] public string VerifyCodeMessage { get; set; } = "Please enter your MFA code";
     [Inject] private IMfaService MfaService { get; init; } = null!;

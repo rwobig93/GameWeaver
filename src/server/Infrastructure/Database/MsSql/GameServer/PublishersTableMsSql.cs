@@ -47,8 +47,9 @@ public class PublishersTableMsSql : IMsSqlEnforcedEntity
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
             AS
             begin
-                SELECT g.*
-                FROM dbo.[{Table.TableName}] g;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                ORDER BY p.Name ASC;
             end"
     };
 
@@ -62,9 +63,9 @@ public class PublishersTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT g.*
-                FROM dbo.[{Table.TableName}] g
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                SELECT COUNT(*) OVER() AS TotalCount, p.*
+                FROM dbo.[{Table.TableName}] p
+                ORDER BY p.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -77,10 +78,10 @@ public class PublishersTableMsSql : IMsSqlEnforcedEntity
                 @Id UNIQUEIDENTIFIER
             AS
             begin
-                SELECT TOP 1 g.*
-                FROM dbo.[{Table.TableName}] g
-                WHERE g.Id = @Id
-                ORDER BY g.Id;
+                SELECT TOP 1 p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Id = @Id
+                ORDER BY p.Id;
             end"
     };
     
@@ -93,10 +94,10 @@ public class PublishersTableMsSql : IMsSqlEnforcedEntity
                 @GameId UNIQUEIDENTIFIER
             AS
             begin
-                SELECT g.*
-                FROM dbo.[{Table.TableName}] g
-                WHERE g.GameId = @GameId
-                ORDER BY g.Id;
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.GameId = @GameId
+                ORDER BY p.Id;
             end"
     };
     
@@ -109,10 +110,10 @@ public class PublishersTableMsSql : IMsSqlEnforcedEntity
                 @Name NVARCHAR(128)
             AS
             begin
-                SELECT TOP 1 g.*
-                FROM dbo.[{Table.TableName}] g
-                WHERE g.Name = @Name
-                ORDER BY g.Id;
+                SELECT TOP 1 p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Name = @Name
+                ORDER BY p.Id;
             end"
     };
     
@@ -143,10 +144,10 @@ public class PublishersTableMsSql : IMsSqlEnforcedEntity
             begin
                 SET nocount on;
                 
-                SELECT g.*
-                FROM dbo.[{Table.TableName}] g
-                WHERE g.Id LIKE '%' + @SearchTerm + '%'
-                    OR g.Name LIKE '%' + @SearchTerm + '%';
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Id LIKE '%' + @SearchTerm + '%'
+                    OR p.Name LIKE '%' + @SearchTerm + '%';
             end"
     };
     
@@ -161,13 +162,11 @@ public class PublishersTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT g.*
-                FROM dbo.[{Table.TableName}] g
-                WHERE g.Id LIKE '%' + @SearchTerm + '%'
-                    OR g.Name LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                SELECT COUNT(*) OVER() AS TotalCount, p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.Id LIKE '%' + @SearchTerm + '%'
+                    OR p.Name LIKE '%' + @SearchTerm + '%'
+                ORDER BY p.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
 }

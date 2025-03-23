@@ -3,12 +3,14 @@ using Application.Helpers.GameServer;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Mappers.Lifecycle;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
 using Application.Models.Identity.User;
+using Application.Models.Lifecycle;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
@@ -16,7 +18,6 @@ using Application.Requests.GameServer.GameProfile;
 using Application.Requests.GameServer.GameServer;
 using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
-using Application.Services.Identity;
 using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
@@ -39,10 +40,12 @@ public class GameServerService : IGameServerService
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
     private readonly IOptions<AppConfiguration> _generalConfig;
     private readonly IAppUserRepository _userRepository;
+    private readonly IEventService _eventService;
+    private readonly INotifyRecordRepository _notifyRecordRepository;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository, IGameRepository gameRepository,
         IAuditTrailsRepository auditRepository, IRunningServerState serverState, ITroubleshootingRecordsRepository tshootRepository, IOptions<AppConfiguration> generalConfig,
-        IAppUserRepository userRepository)
+        IAppUserRepository userRepository, IEventService eventService, INotifyRecordRepository notifyRecordRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
@@ -53,6 +56,8 @@ public class GameServerService : IGameServerService
         _tshootRepository = tshootRepository;
         _generalConfig = generalConfig;
         _userRepository = userRepository;
+        _eventService = eventService;
+        _notifyRecordRepository = notifyRecordRepository;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
@@ -64,13 +69,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
+        var response = await _gameServerRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetCountAsync()
@@ -82,26 +102,26 @@ public class GameServerService : IGameServerService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<GameServerSlim>> GetByIdAsync(Guid id)
+    public async Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<GameServerSlim?>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<GameServerSlim?>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameServerSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByServerNameAsync(string serverName)
+    public async Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName)
     {
         var request = await _gameServerRepository.GetByServerNameAsync(serverName);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<GameServerSlim?>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<GameServerSlim?>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameServerSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id)
@@ -115,15 +135,15 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameProfileIdAsync(Guid id)
+    public async Task<IResult<GameServerSlim>> GetByGameProfileIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByGameProfileIdAsync(id);
         if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
+            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
+        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id)
@@ -137,15 +157,15 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByOwnerIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetByOwnerIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
     }
 
     public async Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId)
@@ -379,8 +399,8 @@ public class GameServerService : IGameServerService
     /// Delete a game server
     /// </summary>
     /// <param name="id">Game server Id</param>
-    /// <param name="requestUserId">User Id making the request</param>
-    /// <param name="sendHostUninstall">Whether to send an uninstall request to the game server host</param>
+    /// <param name="requestUserId">User ID making the request</param>
+    /// <param name="sendHostUninstall">Whether to send an uninstallation request to the game server host</param>
     /// <returns>Success or failure with context messages</returns>
     public async Task<IResult> DeleteAsync(Guid id, Guid requestUserId, bool sendHostUninstall = true)
     {
@@ -399,18 +419,6 @@ public class GameServerService : IGameServerService
                 {"Error", profileServers.ErrorMessage}
             });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
-        }
-        // Delete the assigned game profile if the only assignment is this game server
-        if (profileServers.Result.ToList().Count == 1)
-        {
-            var profileDeleteRequest = await DeleteGameProfileAsync(foundServer.Result.GameProfileId, requestUserId);
-            if (!profileDeleteRequest.Succeeded)
-            {
-                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id, requestUserId,
-                    "Failed to delete server profile before game server deletion", new Dictionary<string, string> {{"Error", profileDeleteRequest.Messages.ToString() ?? ""}
-                });
-                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
-            }
         }
 
         var updateStatusRequest = await _gameServerRepository.UpdateAsync(new GameServerUpdate
@@ -493,13 +501,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
+        var response = await _gameServerRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsAsync()
@@ -511,13 +534,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ConfigurationItemSlim>());
     }
 
-    public async Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllConfigurationItemsPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ConfigurationItemSlim>());
+        var response = await _gameServerRepository.GetAllConfigurationItemsPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetConfigurationItemsCountAsync()
@@ -553,8 +591,8 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateConfigurationItemAsync(ConfigurationItemCreate request, Guid requestUserId)
     {
-        // Default friendly name to category/key if a short or empty friendly name is provided
-        request.FriendlyName = request.FriendlyName.Length <= 3 ? $"{request.Category}/{request.Key}" : request.FriendlyName;
+        // Default friendly name to key if a short or empty friendly name is provided
+        request.FriendlyName = request.FriendlyName.Length <= 3 ? request.Key : request.FriendlyName;
         
         var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.LocalResourceId);
         if (foundResource.Result is null)
@@ -607,7 +645,7 @@ public class GameServerService : IGameServerService
         {
             return await Result.FailAsync(ErrorMessageConstants.ConfigItems.NotFound);
         }
-
+        
         var configUpdate = await _gameServerRepository.UpdateConfigurationItemAsync(updateObject);
         if (!configUpdate.Succeeded)
         {
@@ -662,13 +700,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ConfigurationItemSlim>());
     }
 
-    public async Task<IResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<ConfigurationItemSlim>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchConfigurationItemsPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ConfigurationItemSlim>());
+        var response = await _gameServerRepository.SearchConfigurationItemsPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ConfigurationItemSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesAsync()
@@ -680,13 +733,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<LocalResourceSlim>());
     }
 
-    public async Task<IResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<LocalResourceSlim>>> GetAllLocalResourcesPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<LocalResourceSlim>());
+        var response = await _gameServerRepository.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetLocalResourcesCountAsync()
@@ -785,6 +853,18 @@ public class GameServerService : IGameServerService
             }
         }
 
+        // Set resource id's to empty so any resource or config changes will require a newly created resource as an override on the server profile
+        foreach (var resource in finalResourceList)
+        {
+            resource.Id = Guid.Empty;
+            resource.GameProfileId = Guid.Empty;
+
+            foreach (var configSet in resource.ConfigSets)
+            {
+                configSet.LocalResourceId = Guid.Empty;
+            }
+        }
+
         var serverProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(gameServerRequest.Result.GameProfileId);
         if (serverProfileResourcesRequest.Result is not null)
         {
@@ -814,10 +894,10 @@ public class GameServerService : IGameServerService
         // Ensure we aren't creating a duplicate resource
         var duplicateResources = profileCurrentResources.Result.Where(x =>
             x.Type == request.Type &&
-            (x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) &&
-            (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) &&
-            (x.PathMac.Length > 0 && x.PathMac == request.PathMac) &&
-            x.Args == request.Args);
+            x.Args == request.Args &&
+            ((x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) ||
+             (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) ||
+             (x.PathMac.Length > 0 && x.PathMac == request.PathMac)));
         if (duplicateResources.Any())
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
@@ -848,6 +928,11 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdateRequest request, Guid requestUserId)
     {
+        if (request.Id == Guid.Empty)
+        {
+            return await CreateLocalResourceAsync(request.ToCreateRequest(), requestUserId);
+        }
+        
         var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.Id);
         if (foundResource.Result is null)
         {
@@ -859,7 +944,7 @@ public class GameServerService : IGameServerService
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
         }
-
+        
         var profileCurrentResources = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync(foundProfile.Result.Id);
         profileCurrentResources.Result ??= new List<LocalResourceDb>();
         
@@ -867,10 +952,10 @@ public class GameServerService : IGameServerService
         var duplicateResources = profileCurrentResources.Result.Where(x =>
             x.Id != request.Id &&
             x.Type == request.Type &&
-            (x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) &&
-            (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) &&
-            (x.PathMac.Length > 0 && x.PathMac == request.PathMac) &&
-            x.Args == request.Args);
+            x.Args == request.Args &&
+            ((x.PathWindows.Length > 0 && x.PathWindows == request.PathWindows) ||
+             (x.PathLinux.Length > 0 && x.PathLinux == request.PathLinux) ||
+             (x.PathMac.Length > 0 && x.PathMac == request.PathMac)));
         if (duplicateResources.Any())
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
@@ -906,7 +991,7 @@ public class GameServerService : IGameServerService
         {
             return await Result.FailAsync(ErrorMessageConstants.LocalResources.NotFound);
         }
-
+        
         var resourceDelete = await _gameServerRepository.DeleteLocalResourceAsync(id);
         if (!resourceDelete.Succeeded)
         {
@@ -964,6 +1049,17 @@ public class GameServerService : IGameServerService
                 });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = serverId,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Configuration change requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server reconfiguration change for file {foundResource.Data.Name}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceLocalResourceUpdate", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1018,6 +1114,17 @@ public class GameServerService : IGameServerService
                 });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = serverId,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Configuration change requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server reconfiguration change for all files"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceAllLocalResourceUpdate", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1045,20 +1152,35 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(localResourceRequest.Result?.ToSlims() ?? new List<LocalResourceSlim>());
     }
 
-    public async Task<IResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourcePaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<LocalResourceSlim>>> SearchLocalResourcePaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var localResourcesRequest = await _gameServerRepository.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize);
-        if (!localResourcesRequest.Succeeded || localResourcesRequest.Result is null)
-            return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(localResourcesRequest.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        var convertedLocalResources = localResourcesRequest.Result.ToSlims().ToList();
+        var response = await _gameServerRepository.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync([]);
+        }
+
+        var convertedLocalResources = response.Result.Data.ToSlims().ToList();
         
         foreach (var resource in convertedLocalResources)
         {
             resource.ConfigSets = await GetLocalResourceConfigurationItems(resource);
         }
 
-        return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(localResourcesRequest.Result?.ToSlims() ?? new List<LocalResourceSlim>());
+        return await PaginatedResult<IEnumerable<LocalResourceSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesAsync()
@@ -1070,13 +1192,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameProfileSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllGameProfilesPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameProfileSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameProfileSlim>());
+        var response = await _gameServerRepository.GetAllGameProfilesPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetGameProfileCountAsync()
@@ -1234,11 +1371,14 @@ public class GameServerService : IGameServerService
         }
 
         // Don't allow deletion if assigned to multiple game servers
-        var assignedGameServers = await _gameServerRepository.GetByGameProfileIdAsync(foundProfile.Result.Id);
-        if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Count() > 1)
+        var assignedGameServer = await _gameServerRepository.GetByGameProfileIdAsync(foundProfile.Result.Id);
+        if (assignedGameServer is {Succeeded: true, Result: not null})
         {
-            List<string> errorMessages = [ErrorMessageConstants.GameProfiles.AssignedGameServers];
-            errorMessages.AddRange((assignedGameServers.Result ?? Array.Empty<GameServerDb>()).ToList().Select(assignment => $"Assigned GameServer: [id]{assignment.Id} [name]{assignment.ServerName}"));
+            List<string> errorMessages =
+            [
+                ErrorMessageConstants.GameProfiles.AssignedGameServers,
+                $"Assigned GameServer: [id]{assignedGameServer.Result.Id} [name]{assignedGameServer.Result.ServerName}"
+            ];
             return await Result.FailAsync(errorMessages);
         }
 
@@ -1285,13 +1425,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameProfileSlim>());
     }
 
-    public async Task<IResult<IEnumerable<GameProfileSlim>>> SearchGameProfilesPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameProfileSlim>>> SearchGameProfilesPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchGameProfilesPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameProfileSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<GameProfileSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameProfileSlim>());
+        var response = await _gameServerRepository.SearchGameProfilesPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<GameProfileSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<IEnumerable<ModSlim>>> GetAllModsAsync()
@@ -1303,13 +1458,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
     }
 
-    public async Task<IResult<IEnumerable<ModSlim>>> GetAllModsPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<ModSlim>>> GetAllModsPaginatedAsync(int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.GetAllModsPaginatedAsync(pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ModSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
+        var response = await _gameServerRepository.GetAllModsPaginatedAsync(pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult<int>> GetModCountAsync()
@@ -1471,13 +1641,28 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
     }
 
-    public async Task<IResult<IEnumerable<ModSlim>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<ModSlim>>> SearchModsPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        var request = await _gameServerRepository.SearchModsPaginatedAsync(searchText, pageNumber, pageSize);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<ModSlim>>.FailAsync(request.ErrorMessage);
+        pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
-        return await Result<IEnumerable<ModSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<ModSlim>());
+        var response = await _gameServerRepository.SearchModsPaginatedAsync(searchText, pageNumber, pageSize);
+        if (!response.Succeeded)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result?.Data is null)
+        {
+            return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync([]);
+        }
+
+        return await PaginatedResult<IEnumerable<ModSlim>>.SuccessAsync(
+            response.Result.Data.ToSlims(),
+            response.Result.StartPage,
+            response.Result.CurrentPage,
+            response.Result.EndPage,
+            response.Result.TotalCount,
+            response.Result.PageSize);
     }
 
     public async Task<IResult> StartServerAsync(Guid id, Guid requestUserId)
@@ -1496,6 +1681,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server start work", new Dictionary<string, string> {{"Error", startRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Server start requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server start from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceStartServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1524,6 +1720,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server stop work", new Dictionary<string, string> {{"Error", stopRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Stop server requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server stop from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceStopServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1551,6 +1758,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server restart work", new Dictionary<string, string> {{"Error", restartRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Restart server requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server restart from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceRestartServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>
@@ -1578,6 +1796,17 @@ public class GameServerService : IGameServerService
                 "Failed to send game server version update work", new Dictionary<string, string> {{"Error", updateRequest.ErrorMessage}});
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
+
+        var requester = await _userRepository.GetByIdAsync(requestUserId);
+        var notifyRecord = new NotifyRecordCreate
+        {
+            EntityId = id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Update server requested",
+            Detail = $"{requester.Result?.Username ?? "Someone"} requested a server update from state {foundServer.Result.ServerState}"
+        };
+        await _notifyRecordRepository.CreateAsync(notifyRecord);
+        _eventService.TriggerNotify("GameServerServiceUpdateServer", notifyRecord.ToEvent());
         
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundServer.Result.Id, requestUserId, AuditAction.GameServerAction,
             null, new Dictionary<string, string>

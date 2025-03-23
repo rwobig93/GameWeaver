@@ -13,6 +13,7 @@ public static class ApiConstants
     public static class Clients
     {
         public const string GameWeaverDefault = "Default";
+        public const string GeneralWeb = "General";
         public const string SteamApiNetUnauthenticated = "Steam-ApiNet-Unauthenticated";
         public const string SteamApiPoweredComUnauthenticated = "Steam-ApiPoweredCom-Unauthenticated";
         public const string SteamStoreAuthenticated = "Steam-Store-Authenticated";
@@ -36,6 +37,10 @@ public static class ApiConstants
         }
         
         public static string StoreAppDetails(int appId) => $"/api/appdetails?appids={appId}";
-        
+    }
+
+    public static class GeneralExternal
+    {
+        public const string UrlGetPublicIp = "https://icanhazip.com";
     }
 }

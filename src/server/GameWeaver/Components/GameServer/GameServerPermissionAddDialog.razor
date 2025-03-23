@@ -1,0 +1,55 @@
+@using Application.Constants.Communication
+@using Application.Responses.v1.Identity
+
+<MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center"
+           ContentStyle="max-height: 600px; min-width: 250px; overflow-y: scroll">
+    <DialogContent>
+        @if (!_canPermissionGameServer)
+        {
+            <IconWithMessageDisplay Icon="@Icons.Material.Filled.PermIdentity" Text="@ErrorMessageConstants.Permissions.NoViewPermission" />
+        }
+        else
+        {
+            @if (IsForRolesNotUsers)
+            {
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                    <MudAutocomplete T="RoleResponse" Label="Give Permissions To" Value="_selectedRole" CoerceText="true" Required="true" Clearable="true"
+                                     SearchFunc="@FilterRoles" ToStringFunc="@(x => $"{x?.Name}")" ValueChanged="@SelectedRoleChanged"/>
+                </MudItem>
+            }
+            else
+            {
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                    <MudAutocomplete T="UserBasicResponse" Label="Give Permissions To" Value="_selectedUser" CoerceText="true" Required="true" Clearable="true"
+                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")" ValueChanged="@SelectedUserChanged"/>
+                </MudItem>
+            }
+            <MudTable Items="@_availablePermissions" Hover="true" Dense="true" Striped="true" Elevation="15" Height="400px" MultiSelection="true"
+                      SelectedItems="_selectedPermissions">
+                <ToolBarContent>
+                    <MudContainer Class="d-flex flex-wrap gap-4">
+                        <MudText Typo="Typo.h6">Available Permissions</MudText>
+                        <MudSpacer/>
+                        <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Add" Color="Color.Success"
+                                   Disabled="@(_selectedPermissions.Count < 1)" OnClick="Save">Add Permissions</MudButton>
+                    </MudContainer>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh></MudTh>
+                    <MudTh>Access Level</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermIdentity"/></MudTd>
+                    <MudTd DataLabel="Access Level">@context.Access</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning" FullWidth="true" StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="Cancel">Cancel
+            </MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

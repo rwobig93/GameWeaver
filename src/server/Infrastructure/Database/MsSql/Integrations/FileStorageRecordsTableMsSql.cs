@@ -62,7 +62,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT *
+                SELECT COUNT(*) OVER() AS TotalCount, *
                 FROM dbo.[{Table.TableName}]
                 WHERE IsDeleted = 0
                 ORDER BY CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
@@ -198,9 +198,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                set nocount on;
-                
-                SELECT *
+                SELECT COUNT(*) OVER() AS TotalCount, *
                 FROM dbo.[{Table.TableName}]
                 WHERE IsDeleted = 0 AND Id LIKE '%' + @SearchTerm + '%'
                     OR LinkedId LIKE '%' + @SearchTerm + '%'

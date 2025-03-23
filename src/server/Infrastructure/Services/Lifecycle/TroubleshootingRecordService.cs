@@ -41,23 +41,34 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<TroubleshootingRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
         try
         {
-            var troubleshootingRecords = await _tshootRepository.GetAllPaginatedAsync(pageNumber, pageSize);
-            if (!troubleshootingRecords.Succeeded)
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+            var response = await _tshootRepository.GetAllPaginatedAsync(pageNumber, pageSize);
+            if (!response.Succeeded)
             {
-                return await Result<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(troubleshootingRecords.ErrorMessage);
+                return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync([]);
             }
 
-            var convertedTroubleshootingRecords = troubleshootingRecords.Result?.ToSlims().ToList() ?? [];
-
-            return await Result<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync(convertedTroubleshootingRecords);
+            return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
         }
     }
 
@@ -197,23 +208,34 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
         }
     }
 
-    public async Task<IResult<IEnumerable<TroubleshootingRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
         try
         {
-            var troubleshootingRecords = await _tshootRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
-            if (!troubleshootingRecords.Succeeded)
+            pageNumber = pageNumber < 1 ? 1 : pageNumber;
+
+            var response = await _tshootRepository.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+            if (!response.Succeeded)
             {
-                return await Result<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(troubleshootingRecords.ErrorMessage);
+                return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(response.ErrorMessage);
+            }
+        
+            if (response.Result?.Data is null)
+            {
+                return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync([]);
             }
 
-            var convertedTroubleshootingRecord = troubleshootingRecords.Result?.ToSlims().ToList() ?? [];
-
-            return await Result<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync(convertedTroubleshootingRecord);
+            return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync(
+                response.Result.Data.ToSlims(),
+                response.Result.StartPage,
+                response.Result.CurrentPage,
+                response.Result.EndPage,
+                response.Result.TotalCount,
+                response.Result.PageSize);
         }
         catch (Exception ex)
         {
-            return await Result<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
+            return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(ex.Message);
         }
     }
 

@@ -89,7 +89,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.CreatedOn DESC;
+                ORDER BY g.FriendlyName ASC;
             end"
     };
 
@@ -103,10 +103,10 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT g.*
+                SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                ORDER BY g.CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                ORDER BY g.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     
@@ -202,7 +202,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.SourceType = @SourceType AND g.IsDeleted = 0
-                ORDER BY g.CreatedOn DESC;
+                ORDER BY g.FriendlyName ASC;
             end"
     };
     
@@ -280,15 +280,15 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 SELECT g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    AND (g.Id LIKE '%' + @SearchTerm + '%'
                     OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
-                    OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.CreatedOn DESC;
+                    OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%')
+                ORDER BY g.FriendlyName ASC;
             end"
     };
     
@@ -305,18 +305,18 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             begin
                 SET nocount on;
                 
-                SELECT g.*
+                SELECT COUNT(*) OVER() AS TotalCount, g.*
                 FROM dbo.[{Table.TableName}] g
                 WHERE g.IsDeleted = 0
-                    AND g.Id LIKE '%' + @SearchTerm + '%'
+                    AND (g.Id LIKE '%' + @SearchTerm + '%'
                     OR g.FriendlyName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamName LIKE '%' + @SearchTerm + '%'
                     OR g.SteamGameId LIKE '%' + @SearchTerm + '%'
                     OR g.SteamToolId LIKE '%' + @SearchTerm + '%'
                     OR g.LatestBuildVersion LIKE '%' + @SearchTerm + '%'
                     OR g.DescriptionShort LIKE '%' + @SearchTerm + '%'
-                    OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%'
-                ORDER BY g.CreatedOn DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+                    OR g.ManualFileRecordId LIKE '%' + @SearchTerm + '%')
+                ORDER BY g.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
     

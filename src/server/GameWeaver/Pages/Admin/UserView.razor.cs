@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Application.Constants.Identity;
-using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
@@ -14,7 +13,7 @@ namespace GameWeaver.Pages.Admin;
 public partial class UserView
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
@@ -118,8 +117,8 @@ public partial class UserView
         if (_canAdminServiceAccount) return;
 
         // If not a service account admin check if the user has a dynamic permission to administrate this service account
-        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionHelpers.GetClaimValueFromServiceAccount(
-            _viewingUser.Id, DynamicPermissionGroup.ServiceAccounts, DynamicPermissionLevel.Admin));
+        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, 
+            PermissionConstants.Identity.ServiceAccounts.Dynamic(_viewingUser.Id, DynamicPermissionLevel.Admin));
     }
     
     private async Task Save()
@@ -174,8 +173,9 @@ public partial class UserView
         var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingUser();
             StateHasChanged();
@@ -187,8 +187,9 @@ public partial class UserView
         var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingUser();
             StateHasChanged();
@@ -216,12 +217,14 @@ public partial class UserView
         
         var updateParameters = new DialogParameters() { {"ServiceAccountId", _viewingUser.Id} };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var updateAccountDialog = await DialogService.Show<ServiceAccountAdminDialog>(
-            "Update Service Account", updateParameters, dialogOptions).Result;
-        if (updateAccountDialog.Canceled)
+        var updateAccountDialog = await DialogService.ShowAsync<ServiceAccountAdminDialog>("Update Service Account", updateParameters, dialogOptions);
+        var dialogResult = await updateAccountDialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
             return;
+        }
 
-        var createdPassword = (string?) updateAccountDialog.Data;
+        var createdPassword = (string?) dialogResult.Data;
         if (string.IsNullOrWhiteSpace(createdPassword))
         {
             StateHasChanged();
@@ -235,7 +238,7 @@ public partial class UserView
             {"TextToDisplay", new string('*', createdPassword.Length)},
             {"TextToCopy", createdPassword}
         };
-        await DialogService.Show<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions).Result;
+        await DialogService.ShowAsync<CopyTextDialog>("Service Account Password", copyParameters, dialogOptions);
         await GetViewingUser();
         Snackbar.Add("Account successfully updated!", Severity.Success);
         StateHasChanged();
@@ -251,11 +254,14 @@ public partial class UserView
             {"FieldLabel", "New Email Address"}
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-        var newEmailPrompt = await DialogService.Show<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions).Result;
-        if (newEmailPrompt.Canceled || string.IsNullOrWhiteSpace((string?)newEmailPrompt.Data))
+        var newEmailPrompt = await DialogService.ShowAsync<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions);
+        var dialogResult = await newEmailPrompt.Result;
+        if (string.IsNullOrWhiteSpace((string?)dialogResult?.Data) || dialogResult.Canceled)
+        {
             return;
+        }
 
-        var newEmailAddress = (string)newEmailPrompt.Data;
+        var newEmailAddress = (string)dialogResult.Data;
         _processingEmailChange = true;
         StateHasChanged();
         var emailChangeRequest = await AccountService.InitiateEmailChange(_viewingUser.Id, newEmailAddress);

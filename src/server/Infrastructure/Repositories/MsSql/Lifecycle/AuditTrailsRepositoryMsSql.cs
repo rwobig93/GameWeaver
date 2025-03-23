@@ -4,6 +4,7 @@ using Application.Models.Lifecycle;
 using Application.Repositories.Lifecycle;
 using Application.Services.Database;
 using Application.Services.System;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Lifecycle;
 using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
@@ -24,7 +25,7 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         _logger = logger;
         _dateTimeService = dateTimeService;
     }
-    
+
     public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllAsync()
     {
         DatabaseActionResult<IEnumerable<AuditTrailDb>> actionReturn = new();
@@ -60,16 +61,19 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AuditTrailDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var allAuditTrails = await _database.LoadData<AuditTrailDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response = await _database.LoadDataPaginated<AuditTrailDb, dynamic>(
                 AuditTrailsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allAuditTrails);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -79,16 +83,19 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> GetAllPaginatedWithUsersAsync(int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailWithUserDb>>>> GetAllPaginatedWithUsersAsync(int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailWithUserDb>>> actionReturn = new();
 
         try
         {
             var offset = (pageNumber - 1) * pageSize;
-            var allAuditTrails = await _database.LoadData<AuditTrailWithUserDb, dynamic>(
+            var response = await _database.LoadDataPaginated<AuditTrailWithUserDb, dynamic>(
                 AuditTrailsTableMsSql.GetAllPaginatedWithUsers, new {Offset =  offset, PageSize = pageSize});
-            actionReturn.Succeed(allAuditTrails);
+            
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+            
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -195,7 +202,7 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         try
         {
             createObject.Timestamp = _dateTimeService.NowDatabaseTime;
-            
+
             var createdId = await _database.SaveDataReturnId(AuditTrailsTableMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
@@ -225,17 +232,20 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AuditTrailDb>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AuditTrailDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults =
-                await _database.LoadData<AuditTrailDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response =
+                await _database.LoadDataPaginated<AuditTrailDb, dynamic>(
                     AuditTrailsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {
@@ -245,17 +255,20 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>>> SearchPaginatedWithUserAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailWithUserDb>>>> SearchPaginatedWithUserAsync(string searchText, int pageNumber, int pageSize)
     {
-        DatabaseActionResult<IEnumerable<AuditTrailWithUserDb>> actionReturn = new();
+        DatabaseActionResult<PaginatedDbEntity<IEnumerable<AuditTrailWithUserDb>>> actionReturn = new();
 
         try
         {
-            var offset = MathHelpers.GetPaginatedOffset(pageNumber, pageSize);
-            var searchResults =
-                await _database.LoadData<AuditTrailWithUserDb, dynamic>(
+            var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
+            var response =
+                await _database.LoadDataPaginated<AuditTrailWithUserDb, dynamic>(
                     AuditTrailsTableMsSql.SearchPaginatedWithUser, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
-            actionReturn.Succeed(searchResults);
+
+            response.UpdatePaginationProperties(pageNumber, pageSize);
+
+            actionReturn.Succeed(response);
         }
         catch (Exception ex)
         {

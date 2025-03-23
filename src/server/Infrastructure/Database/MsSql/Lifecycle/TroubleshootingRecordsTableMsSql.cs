@@ -54,7 +54,7 @@ public class TroubleshootingRecordsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT *
+                SELECT COUNT(*) OVER() AS TotalCount, *
                 FROM dbo.[{Table.TableName}]
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -178,9 +178,7 @@ public class TroubleshootingRecordsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                set nocount on;
-                
-                SELECT *
+                SELECT COUNT(*) OVER() AS TotalCount, *
                 FROM dbo.[{Table.TableName}]
                 WHERE Id LIKE '%' + @SearchTerm + '%'
                     OR RecordId LIKE '%' + @SearchTerm + '%'

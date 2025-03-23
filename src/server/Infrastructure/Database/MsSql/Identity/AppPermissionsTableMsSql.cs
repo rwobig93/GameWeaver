@@ -103,7 +103,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SELECT p.*
+                SELECT COUNT(*) OVER() AS TotalCount, p.*
                 FROM dbo.[{Table.TableName}] p
                 ORDER BY p.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
@@ -338,9 +338,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 @PageSize INT
             AS
             begin
-                SET nocount on;
-                
-                SELECT p.*
+                SELECT COUNT(*) OVER() AS TotalCount, p.*
                 FROM dbo.[{Table.TableName}] p
                 WHERE p.Description LIKE '%' + @SearchTerm + '%'
                     OR p.RoleId LIKE '%' + @SearchTerm + '%'
@@ -378,6 +376,24 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                     CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
                 WHERE Id = COALESCE(@Id, Id);
+            end"
+    };
+    
+    public static readonly SqlStoredProcedure GetDynamicByTypeAndName = new()
+    {
+        Table = Table,
+        Action = "GetDynamicByTypeAndName",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetDynamicByTypeAndName]
+                @Group NVARCHAR(256),
+                @Name NVARCHAR(256)
+            AS
+            begin
+                SELECT p.*
+                FROM dbo.[{Table.TableName}] p
+                WHERE p.[ClaimType] = 'DynamicPermission'
+                    AND p.[Group] = @Group
+                    AND p.[Name] = @Name;
             end"
     };
 }

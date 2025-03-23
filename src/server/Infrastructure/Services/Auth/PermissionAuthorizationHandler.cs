@@ -47,17 +47,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         var userRequiredToFullAuth = (await _accountService.IsRequiredToDoFullReAuthentication(userId)).Data;
         if (userRequiredToFullAuth)
         {
-            await _accountService.LogoutGuiAsync(userId);
-            context.Fail();
-            var currentAuthState = await _accountService.GetCurrentAuthState(userId);
-            var redirectReason = currentAuthState.Data switch
-            {
-                AuthState.LoginRequired => LoginRedirectReason.ReAuthenticationForce,
-                AuthState.LockedOut => LoginRedirectReason.LockedOut,
-                AuthState.Disabled => LoginRedirectReason.Disabled,
-                _ => LoginRedirectReason.SessionExpired
-            };
-            _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(redirectReason), true);
+            await LogoutUserWithRedirect(context, userId);
             return;
         }
 
@@ -104,6 +94,21 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         }
         
         await ValidatePrincipalPermissions(context, requirement);
+    }
+
+    private async Task LogoutUserWithRedirect(AuthorizationHandlerContext context, Guid userId)
+    {
+        await _accountService.LogoutGuiAsync(userId);
+        context.Fail();
+        var currentAuthState = await _accountService.GetCurrentAuthState(userId);
+        var redirectReason = currentAuthState.Data switch
+        {
+            AuthState.LoginRequired => LoginRedirectReason.ReAuthenticationForce,
+            AuthState.LockedOut => LoginRedirectReason.LockedOut,
+            AuthState.Disabled => LoginRedirectReason.Disabled,
+            _ => LoginRedirectReason.SessionExpired
+        };
+        _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(redirectReason), true);
     }
 
     private static async Task ValidatePrincipalPermissions(AuthorizationHandlerContext context, PermissionRequirement requirement)

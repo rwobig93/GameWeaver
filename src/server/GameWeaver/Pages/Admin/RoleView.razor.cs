@@ -9,7 +9,7 @@ namespace GameWeaver.Pages.Admin;
 public partial class RoleView
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
-    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
@@ -136,8 +136,9 @@ public partial class RoleView
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -151,8 +152,9 @@ public partial class RoleView
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions).Result;
-        if (!dialog.Canceled)
+        var dialog = await DialogService.ShowAsync<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is not null && !dialogResult.Canceled)
         {
             await GetViewingRole();
             StateHasChanged();
@@ -179,8 +181,12 @@ public partial class RoleView
         };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
-        var dialog = await DialogService.Show<ConfirmationDialog>("Delete Role", dialogParameters, dialogOptions).Result;
-        if (dialog.Canceled) return;
+        var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Role", dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
 
         var deleteRequest = await RoleService.DeleteAsync(_viewingRole.Id, _currentUserId);
         if (!deleteRequest.Succeeded)
