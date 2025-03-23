@@ -47,12 +47,16 @@ public partial class GameServerToHost
     public string ManualRootUrl { get; set; } = "";
     [MemoryPackOrder(18)]
     public string ServerProcessName { get; set; } = "";
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(19)]
     public ConnectivityState ServerState { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(20)]
     public GameSource Source { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(21)]
     public SerializableList<ModSlim> ModList { get; set; } = [];
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(22)]
     public SerializableList<LocalResourceHost> Resources { get; set; } = [];
 }

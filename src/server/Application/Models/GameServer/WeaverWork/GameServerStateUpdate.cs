@@ -10,6 +10,7 @@ public partial class GameServerStateUpdate
 {
     [MemoryPackOrder(0)] public Guid Id { get; set; }
     [MemoryPackOrder(1)] public bool BuildVersionUpdated { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(2)] public ConnectivityState ServerState { get; set; } = ConnectivityState.Unknown;
     [MemoryPackOrder(3)] public SerializableList<LocalResourceSlim>? Resources { get; set; }
 }

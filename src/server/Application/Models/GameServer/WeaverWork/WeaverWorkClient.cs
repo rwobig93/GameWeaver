@@ -10,8 +10,10 @@ public partial class WeaverWorkClient
     public int Id { get; set; }
     [MemoryPackOrder(1)]
     public Guid? GameServerId { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(2)]
     public WeaverWorkTarget TargetType { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(3)]
     public WeaverWorkState Status { get; set; }
     [MemoryPackOrder(4)]
