@@ -565,6 +565,16 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
+        // If the config item is from a parent profile, add as a new config item instead
+        if (item.Id == Guid.Empty)
+        {
+            item.Id = Guid.CreateVersion7();
+            _createdConfigItems.Add(item);
+            // TODO: Handle which local resource this goes into
+            // localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
+            return;
+        }
+        
         var matchingUpdateConfig = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingUpdateConfig is null)
         {

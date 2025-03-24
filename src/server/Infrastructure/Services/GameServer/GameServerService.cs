@@ -853,7 +853,7 @@ public class GameServerService : IGameServerService
             }
         }
 
-        // Set resource id's to empty so any resource or config changes will require a newly created resource as an override on the server profile
+        // Set resource and config id's to empty so any resource or config changes will require a newly created resource as an override on the server profile
         foreach (var resource in finalResourceList)
         {
             resource.Id = Guid.Empty;
@@ -861,6 +861,7 @@ public class GameServerService : IGameServerService
 
             foreach (var configSet in resource.ConfigSets)
             {
+                configSet.Id = Guid.Empty;
                 configSet.LocalResourceId = Guid.Empty;
             }
         }
