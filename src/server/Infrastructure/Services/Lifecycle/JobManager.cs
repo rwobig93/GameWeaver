@@ -520,7 +520,7 @@ public class JobManager : IJobManager
             }
             
             // Last checkin is within configured seconds so is considered online or not
-            var secondsSinceLastCheckIn = (_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds;
+            var secondsSinceLastCheckIn = Math.Round((_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds, 0, MidpointRounding.ToZero);
             var hostIsOffline = secondsSinceLastCheckIn > _appConfig.CurrentValue.HostOfflineAfterSeconds;
             if (hostIsOffline && !host.CurrentState.IsRunning())
             {
