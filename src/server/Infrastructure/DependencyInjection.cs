@@ -306,7 +306,20 @@ public static class DependencyInjection
                 services.AddSingleton<IGameServerRepository, GameServerRepositoryMsSql>();
                 break;
             case DatabaseProviderType.Postgresql:
-                throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
+                // System Database Repositories
+                services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
+                services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
+                services.AddSingleton<IAppPermissionRepository, AppPermissionRepositoryMsSql>();
+                services.AddSingleton<IAuditTrailsRepository, AuditTrailsRepositoryMsSql>();
+                services.AddSingleton<IServerStateRecordsRepository, ServerStateRecordsRepositoryMsSql>();
+                services.AddSingleton<INotifyRecordRepository, NotifyRecordRepositoryMsSql>();
+                services.AddSingleton<ITroubleshootingRecordsRepository, TroubleshootingRecordsRepositoryMsSql>();
+                services.AddSingleton<IFileStorageRecordRepository, FileStorageRecordRepositoryMsSql>();
+                // GameServer Database Repositories
+                services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
+                services.AddSingleton<IGameRepository, GameRepositoryMsSql>();
+                services.AddSingleton<IGameServerRepository, GameServerRepositoryMsSql>();
+                break;
             case DatabaseProviderType.Sqlite:
                 throw new Exception("Sqlite Database Provider isn't supported, please enter a supported provider in appsettings.json!");
             default:

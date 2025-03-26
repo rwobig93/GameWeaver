@@ -126,7 +126,7 @@ public class SqlDataService : ISqlDataService
         var entitiesToBeEnforced = _dbConfig.Provider switch
         {
             DatabaseProviderType.MsSql => typeof(IMsSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
-            DatabaseProviderType.Postgresql => typeof(IPostgresqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
+            DatabaseProviderType.Postgresql => typeof(IPgSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
             _ => typeof(IMsSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>()
         };
 

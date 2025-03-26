@@ -354,7 +354,7 @@ public class SqlDatabaseSeederService : IHostedService
         var databaseMigrations = _dbConfig.Provider switch
         {
             DatabaseProviderType.MsSql => typeof(IMsSqlMigration).GetImplementingTypes<ISqlMigration>(),
-            DatabaseProviderType.Postgresql => typeof(IPostgresqlMigration).GetImplementingTypes<ISqlMigration>(),
+            DatabaseProviderType.Postgresql => typeof(IPgSqlMigration).GetImplementingTypes<ISqlMigration>(),
             _ => typeof(IMsSqlMigration).GetImplementingTypes<ISqlMigration>()
         };
         var databaseUpgrade = new Version(existingStateRecord.Result.AppVersion) > new Version(existingStateRecord.Result.DatabaseVersion);
