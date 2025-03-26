@@ -311,12 +311,27 @@ else
                         <MudTh>Name</MudTh>
                         <MudTh>Modded</MudTh>
                         <MudTh>State</MudTh>
+                        <MudTh></MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
                         <MudTd DataLabel="Name">@context.ServerName</MudTd>
                         <MudTd DataLabel="Modded">@context.Modded</MudTd>
                         <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
+                        <MudTd DataLabel="Button">
+                            @if (_viewableGameServers.Contains(context.Id))
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@(() => ViewGameServer(context.Id))" Class="rounded-lg">
+                                    View
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" Disabled="true" Class="rounded-lg">
+                                    No Access
+                                </MudButton>
+                            }
+                        </MudTd>
                     </RowTemplate>
                 </MudTable>
             </MudItem>

@@ -10,6 +10,7 @@ using Application.Models.Integrations;
 using Application.Services.GameServer;
 using Application.Services.Integrations;
 using Domain.Enums.GameServer;
+using Domain.Enums.Identity;
 using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
@@ -38,8 +39,10 @@ public partial class GameView : ComponentBase
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
     private readonly List<LocalResourceSlim> _createdLocalResources = [];
     private readonly List<LocalResourceSlim> _deletedLocalResources = [];
+    private readonly List<Guid> _viewableGameServers = [];
 
     private bool _canEditGame;
+    private bool _canConfigureGame;
     private bool _canViewGameServers;
     private bool _canViewGameFiles;
     
@@ -50,7 +53,6 @@ public partial class GameView : ComponentBase
         {
             if (firstRender)
             {
-                // TODO: Add configuration permission vs edit (expert) permission
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingGame();
@@ -71,6 +73,7 @@ public partial class GameView : ComponentBase
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canEditGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Update);
+        _canConfigureGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Configure);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
         _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
     }
@@ -128,6 +131,14 @@ public partial class GameView : ComponentBase
         }
 
         _runningGameservers = response.Data.ToList();
+
+        foreach (var server in _runningGameservers)
+        {
+            if (await CanViewGameServer(server.Id))
+            {
+                _viewableGameServers.Add(server.Id);
+            }
+        }
     }
 
     private async Task GetGameProfileResources()
@@ -466,6 +477,37 @@ public partial class GameView : ComponentBase
         }
 
         _deletedConfigItems.Clear();
+        return false;
+    }
+
+    private void ViewGameServer(Guid id)
+    {
+        NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(id));
+    }
+
+    private async Task<bool> CanViewGameServer(Guid id)
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        if (await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get))
+        {
+            return true;
+        }
+
+        if (await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, id))
+        {
+            return true;
+        }
+
+        if (await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Moderator, id))
+        {
+            return true;
+        }
+
+        if (await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.View, id))
+        {
+            return true;
+        }
+
         return false;
     }
 

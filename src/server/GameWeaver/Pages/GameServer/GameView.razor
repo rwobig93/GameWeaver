@@ -13,7 +13,7 @@
     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@GoBack">Go Back
     </MudButton>
-    @if (_canEditGame)
+    @if (_canEditGame || _canConfigureGame)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                    OnClick="@ToggleEditMode">@_editButtonText
@@ -129,8 +129,12 @@
     </MudPaper>
 }
 
+@if (!_canEditGame && !_canConfigureGame && !_canViewGameServers)
+{
+    return;
+}
 <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center">
-    @if (_canEditGame)  @* TODO: Replace w/ configure permission once added *@
+    @if (_canEditGame || _canConfigureGame)  @* TODO: Replace w/ configure permission once added *@
     {
         <MudTabPanel Text="Config">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -320,7 +324,6 @@
     }
     @if (_canViewGameServers)
     {
-        // TODO: Add view option via a button if user has access, otherwise a blank button that just says 'No Access' 
         <MudTabPanel Text="Gameservers">
             <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -333,12 +336,27 @@
                             <MudTh>Name</MudTh>
                             <MudTh>Modded</MudTh>
                             <MudTh>State</MudTh>
+                            <MudTh></MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
                             <MudTd DataLabel="Name">@context.ServerName</MudTd>
                             <MudTd DataLabel="Modded">@context.Modded</MudTd>
                             <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
+                            <MudTd DataLabel="Button">
+                                @if (_viewableGameServers.Contains(context.Id))
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@(() => ViewGameServer(context.Id))" Class="rounded-lg">
+                                        View
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" Disabled="true" Class="rounded-lg">
+                                        No Access
+                                    </MudButton>
+                                }
+                            </MudTd>
                         </RowTemplate>
                     </MudTable>
                 </MudItem>

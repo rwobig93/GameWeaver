@@ -78,6 +78,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             if (firstRender)
             {
+                // TODO: Private servers are currently viewable by anyone w/ view access
                 await GetViewingGameServer();
                 await GetServerParentProfile();
                 await GetServerGame();
@@ -198,7 +199,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task GetPermissions()
     {
-        // TODO: Add .Entry permissions for each entity type (game server, hosts, ect) so someone can get to the UI page for direct access carrying from there 
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         
@@ -223,8 +223,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         
-        var isServerModerator = (await RoleService.IsUserModeratorAsync(_loggedInUserId)).Data ||
-                                await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, 
+        // Handle server moderator dynamic permission, global moderators get access via their role
+        var isServerModerator = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, 
                                 DynamicPermissionLevel.Moderator));
 
         if (isServerModerator)

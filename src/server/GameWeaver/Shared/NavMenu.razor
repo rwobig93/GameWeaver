@@ -4,10 +4,10 @@
             Home
         </MudNavLink>
     </MudTooltip>
-    @if (_canViewHosts || _canViewGames || _canViewGameServers)
+    @if (_canSeeHostsUi || _canViewGames || _canSeeGameServersUi)
     {
         <MudDivider Light="true" DividerType="DividerType.Middle"/>
-        @if (_canViewHosts)
+        @if (_canSeeHostsUi)
         {
             <MudTooltip Text="Hosts Dashboard" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
                 <MudNavLink Href="@AppRouteConstants.GameServer.Hosts.HostsDashboard" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Memory">
@@ -25,7 +25,7 @@
             </MudTooltip>
         }
 
-        @if (_canViewGameServers)
+        @if (_canSeeGameServersUi)
         {
             <MudTooltip Text="Game Servers" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
                 <MudNavLink Href="@AppRouteConstants.GameServer.GameServers.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Storage">

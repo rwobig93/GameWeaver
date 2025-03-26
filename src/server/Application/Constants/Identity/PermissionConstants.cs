@@ -101,6 +101,7 @@ public static class PermissionConstants
         {
             public const string GetAll = $"{ClaimConstants.Permission}.GameServer.Host.GetAll";
             public const string GetAllPaginated = $"{ClaimConstants.Permission}.GameServer.Host.GetAllPaginated";
+            public const string SeeUi = $"{ClaimConstants.Permission}.GameServer.Host.SeeUi";
             public const string Get = $"{ClaimConstants.Permission}.GameServer.Host.Get";
             public const string Create = $"{ClaimConstants.Permission}.GameServer.Host.Create";
             public const string Update = $"{ClaimConstants.Permission}.GameServer.Host.Update";
@@ -153,6 +154,7 @@ public static class PermissionConstants
         {
             public const string GetAllPaginated = $"{ClaimConstants.Permission}.GameServer.Gameservers.GetAllPaginated";
             public const string GetCount = $"{ClaimConstants.Permission}.GameServer.Gameservers.GetCount";
+            public const string SeeUi = $"{ClaimConstants.Permission}.GameServer.Gameserver.SeeUi";
             public const string Get = $"{ClaimConstants.Permission}.GameServer.Gameservers.Get";
             public const string Create = $"{ClaimConstants.Permission}.GameServer.Gameservers.Create";
             public const string Update = $"{ClaimConstants.Permission}.GameServer.Gameservers.Update";
@@ -220,6 +222,7 @@ public static class PermissionConstants
             public const string Get = $"{ClaimConstants.Permission}.GameServer.Game.Get";
             public const string Create = $"{ClaimConstants.Permission}.GameServer.Game.Create";
             public const string Update = $"{ClaimConstants.Permission}.GameServer.Game.Update";
+            public const string Configure = $"{ClaimConstants.Permission}.GameServer.Game.Configure";
             public const string Delete = $"{ClaimConstants.Permission}.GameServer.Game.Delete";
             public const string Search = $"{ClaimConstants.Permission}.GameServer.Game.Search";
             public const string DownloadLatest = $"{ClaimConstants.Permission}.GameServer.Game.Download";

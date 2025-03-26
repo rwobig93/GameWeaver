@@ -25,7 +25,7 @@
     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@GoBack">Go Back
     </MudButton>
-    @if (_canEditServer)
+    @if (_canEditServer || _canConfigServer)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                    OnClick="@ToggleEditMode">@_editButtonText
