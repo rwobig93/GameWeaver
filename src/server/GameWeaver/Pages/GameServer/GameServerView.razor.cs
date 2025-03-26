@@ -63,12 +63,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
 
     private bool _canViewGameServer;
-    private bool _canPermissionGameServer;
-    private bool _canEditGameServer;
-    private bool _canConfigureGameServer;
-    private bool _canStartGameServer;
-    private bool _canStopGameServer;
-    private bool _canDeleteGameServer;
+    private bool _canPermissionServer;
+    private bool _canEditServer;
+    private bool _canConfigServer;
+    private bool _canStartServer;
+    private bool _canStopServer;
+    private bool _canDeleteServer;
     private bool _canChangeOwnership;
     
     
@@ -198,6 +198,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task GetPermissions()
     {
+        // TODO: Add .Entry permissions for each entity type (game server, hosts, ect) so someone can get to the UI page for direct access carrying from there 
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         
@@ -212,12 +213,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
         {
             _canViewGameServer = true;
-            _canPermissionGameServer = true;
-            _canEditGameServer = true;
-            _canConfigureGameServer = true;
-            _canStartGameServer = true;
-            _canStopGameServer = true;
-            _canDeleteGameServer = true;
+            _canPermissionServer = true;
+            _canEditServer = true;
+            _canConfigServer = true;
+            _canStartServer = true;
+            _canStopServer = true;
+            _canDeleteServer = true;
             _canChangeOwnership = true;
             return;
         }
@@ -229,31 +230,27 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (isServerModerator)
         {
             _canViewGameServer = true;
-            _canPermissionGameServer = true;
-            _canEditGameServer = true;
-            _canConfigureGameServer = true;
-            _canStartGameServer = true;
-            _canStopGameServer = true;
-            _canDeleteGameServer = false;
+            _canPermissionServer = true;
+            _canEditServer = true;
+            _canConfigServer = true;
+            _canStartServer = true;
+            _canStopServer = true;
+            _canDeleteServer = false;
             _canChangeOwnership = false;
             return;
         }
         
-        _canPermissionGameServer =  await AuthorizationService.UserHasPermission(currentUser,
+        _canPermissionServer =  await AuthorizationService.UserHasPermission(currentUser,
                                         PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
-        _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
-                             await AuthorizationService.UserHasPermission(currentUser,
-                                 PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Edit));
-        _canConfigureGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
-                             await AuthorizationService.UserHasPermission(currentUser,
-                                 PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Configure));
-        _canStartGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StartServer) ||
-                                  await AuthorizationService.UserHasPermission(currentUser,
-                                      PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Start));
-        _canStopGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StopServer) ||
-                              await AuthorizationService.UserHasPermission(currentUser,
-                                  PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Stop));
-        _canDeleteGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
+        _canEditServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
+                         await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Edit, _gameServer.Id);
+        _canConfigServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
+                           await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Configure, _gameServer.Id);
+        _canStartServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StartServer) ||
+                          await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Start, _gameServer.Id);
+        _canStopServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StopServer) ||
+                         await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Stop, _gameServer.Id);
+        _canDeleteServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
     }
 
@@ -282,7 +279,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private async Task Save()
     {
-        if (!_canConfigureGameServer && !_canEditGameServer)
+        if (!_canConfigServer && !_canEditServer)
         {
             return;
         }
@@ -486,7 +483,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task DeleteGameServer()
     {
-        if (!_canDeleteGameServer)
+        if (!_canDeleteServer)
         {
             Snackbar.Add(ErrorMessageConstants.Permissions.PermissionError, Severity.Error);
             return;

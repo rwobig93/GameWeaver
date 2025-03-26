@@ -1,10 +1,9 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
+using Application.Auth;
 using Application.Constants.Communication;
-using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
-using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
@@ -206,19 +205,12 @@ public static class DependencyInjection
 
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, DynamicAuthorizationHandler>();
 
         services.AddSingleton<IExternalAuthProviderService, ExternalAuthProviderService>();
         
         services.AddJwtAuthentication(configuration);
-        services.AddAuthorization(options =>
-        {
-            // Enumerate permissions and create claim policies for them
-            foreach (var permission in PermissionHelpers.GetAllBuiltInPermissions())
-            {
-                options.AddPolicy(permission, policy => policy.RequireClaim(
-                    ClaimConstants.Permission, permission));
-            }
-        });
+        services.AddAuthorization();
         services.Configure<SecurityStampValidatorOptions>(options =>
         {
             options.ValidationInterval = TimeSpan.FromSeconds(securitySettings.SecurityStampValidationIntervalMinutes);

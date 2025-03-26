@@ -1,3 +1,4 @@
+using Application.Constants.Identity;
 using Application.Database;
 using Application.Database.MsSql;
 using Application.Helpers.Runtime;
@@ -391,7 +392,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
             begin
                 SELECT p.*
                 FROM dbo.[{Table.TableName}] p
-                WHERE p.[ClaimType] = 'DynamicPermission'
+                WHERE p.[ClaimType] = '{ClaimConstants.DynamicPermission}'
                     AND p.[Group] = @Group
                     AND p.[Name] = @Name;
             end"

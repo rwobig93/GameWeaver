@@ -568,21 +568,24 @@ public class AppPermissionService : IAppPermissionService
             if (!createRequest.Succeeded)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
             
+            
+            
             // Queue background job to update all users w/ permission or role permission to re-auth and have the latest permissions
             _logger.Debug("Kicking off job to update {PermissionClaimValue} claim userClientId's with re-auth string to force token refresh for updated permissions",
                 createObject.ClaimValue);
-
             var response = createObject.UserId == GuidHelpers.GetMax() ?
                 BackgroundJob.Enqueue(() => UpdateRoleUsersForPermissionChange(createObject.RoleId)) :
                 BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(createObject.UserId));
             
             if (response is null)
+            {
                 await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, createRequest.Result,
                     "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>()
-                {
-                    {"Action", "Permission Change - Update Users - Create Permission"},
-                    {"PermissionId", createRequest.Result.ToString()}
-                });
+                    {
+                        {"Action", "Permission Change - Update Users - Create Permission"},
+                        {"PermissionId", createRequest.Result.ToString()}
+                    });
+            }
             
             return await Result<Guid>.SuccessAsync(createRequest.Result);
         }
