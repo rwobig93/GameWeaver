@@ -391,7 +391,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     
     private async Task GatherGameServers()
     {
-        _gameServers = (await GameServerService.GetAllAsync()).Data.ToList();
+        _gameServers = (await GameServerService.GetAllAsync(_loggedInUser.Id)).Data.ToList();
     }
 
     private async Task GatherHosts()

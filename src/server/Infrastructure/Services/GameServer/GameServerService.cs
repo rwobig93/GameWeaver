@@ -42,10 +42,11 @@ public class GameServerService : IGameServerService
     private readonly IAppUserRepository _userRepository;
     private readonly IEventService _eventService;
     private readonly INotifyRecordRepository _notifyRecordRepository;
+    private readonly IAppPermissionRepository _permissionRepository;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository, IGameRepository gameRepository,
         IAuditTrailsRepository auditRepository, IRunningServerState serverState, ITroubleshootingRecordsRepository tshootRepository, IOptions<AppConfiguration> generalConfig,
-        IAppUserRepository userRepository, IEventService eventService, INotifyRecordRepository notifyRecordRepository)
+        IAppUserRepository userRepository, IEventService eventService, INotifyRecordRepository notifyRecordRepository, IAppPermissionRepository permissionRepository)
     {
         _gameServerRepository = gameServerRepository;
         _dateTime = dateTime;
@@ -58,18 +59,65 @@ public class GameServerService : IGameServerService
         _userRepository = userRepository;
         _eventService = eventService;
         _notifyRecordRepository = notifyRecordRepository;
+        _permissionRepository = permissionRepository;
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync()
+    private async Task<GameServerDb> FilterNoAccessServer(GameServerDb gameServer, Guid requestUserId)
     {
-        var request = await _gameServerRepository.GetAllAsync();
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
+        if (requestUserId == _serverState.SystemUserId)
+        {
+            return gameServer;
+        }
+        
+        var userPermissions = (await _permissionRepository.GetAllIncludingRolesForUserAsync(requestUserId)).Result?.ToArray() ?? [];
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
+        if (gameServer.OwnerId == requestUserId || !gameServer.Private || gameServer.PermissionsHaveAccess(userPermissions))
+        {
+            return gameServer;
+        }
+
+        return gameServer.ToNoAccess();
     }
 
-    public async Task<PaginatedResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize)
+    private async Task<IEnumerable<GameServerDb>> FilterNoAccessServers(IEnumerable<GameServerDb> gameServers, Guid requestUserId)
+    {
+        if (requestUserId == _serverState.SystemUserId)
+        {
+            return gameServers;
+        }
+
+        List<GameServerDb> filteredServers = [];
+        
+        var userPermissions = (await _permissionRepository.GetAllIncludingRolesForUserAsync(requestUserId)).Result?.ToArray() ?? [];
+
+        foreach (var gameServer in gameServers)
+        {
+            if (gameServer.OwnerId == requestUserId || !gameServer.Private || gameServer.PermissionsHaveAccess(userPermissions))
+            {
+                filteredServers.Add(gameServer);
+                continue;
+            }
+            
+            filteredServers.Add(gameServer.ToNoAccess());
+        }
+
+        return filteredServers;
+    }
+
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync(Guid requestUserId)
+    {
+        var response = await _gameServerRepository.GetAllAsync();
+        if (!response.Succeeded)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+
+        var accessFilteredServers = await FilterNoAccessServers(response.Result ?? [], requestUserId);
+
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
+    }
+    
+    public async Task<PaginatedResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize, Guid requestUserId)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -78,14 +126,16 @@ public class GameServerService : IGameServerService
         {
             return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
         }
-        
-        if (response.Result?.Data is null)
+
+        if (response.Result is null)
         {
             return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync([]);
         }
 
+        var accessFilteredServers = await FilterNoAccessServers(response.Result.Data, requestUserId);
+
         return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(
-            response.Result.Data.ToSlims(),
+            accessFilteredServers.ToSlims(),
             response.Result.StartPage,
             response.Result.CurrentPage,
             response.Result.EndPage,
@@ -102,70 +152,97 @@ public class GameServerService : IGameServerService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id)
+    public async Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id, Guid requestUserId)
     {
-        var request = await _gameServerRepository.GetByIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<GameServerSlim?>.FailAsync(request.ErrorMessage);
-        if (request.Result is null)
+        var response = await _gameServerRepository.GetByIdAsync(id);
+        if (!response.Succeeded)
+        {
+            return await Result<GameServerSlim?>.FailAsync(response.ErrorMessage);
+        }
+        
+        if (response.Result is null)
+        {
             return await Result<GameServerSlim?>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
+        
+        var permissionFilteredGameserver = await FilterNoAccessServer(response.Result, requestUserId);
 
-        return await Result<GameServerSlim?>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameServerSlim?>.SuccessAsync(permissionFilteredGameserver.ToSlim());
     }
 
-    public async Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName)
+    public async Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName, Guid requestUserId)
     {
         var request = await _gameServerRepository.GetByServerNameAsync(serverName);
         if (!request.Succeeded)
+        {
             return await Result<GameServerSlim?>.FailAsync(request.ErrorMessage);
+        }
+        
         if (request.Result is null)
+        {
             return await Result<GameServerSlim?>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
+        
+        var permissionFilteredGameserver = await FilterNoAccessServer(request.Result, requestUserId);
 
-        return await Result<GameServerSlim?>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameServerSlim?>.SuccessAsync(permissionFilteredGameserver.ToSlim());
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id, Guid requestUserId)
     {
-        var request = await _gameServerRepository.GetByGameIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
-        if (request.Result is null)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var response = await _gameServerRepository.GetByGameIdAsync(id);
+        if (!response.Succeeded)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
+        var accessFilteredServers = await FilterNoAccessServers(response.Result ?? [], requestUserId);
+
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
     }
 
-    public async Task<IResult<GameServerSlim>> GetByGameProfileIdAsync(Guid id)
+    public async Task<IResult<GameServerSlim?>> GetByGameProfileIdAsync(Guid id, Guid requestUserId)
     {
         var request = await _gameServerRepository.GetByGameProfileIdAsync(id);
         if (!request.Succeeded)
-            return await Result<GameServerSlim>.FailAsync(request.ErrorMessage);
+        {
+            return await Result<GameServerSlim?>.FailAsync(request.ErrorMessage);
+        }
+        
         if (request.Result is null)
-            return await Result<GameServerSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        {
+            return await Result<GameServerSlim?>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
+        
+        var permissionFilteredGameserver = await FilterNoAccessServer(request.Result, requestUserId);
 
-        return await Result<GameServerSlim>.SuccessAsync(request.Result.ToSlim());
+        return await Result<GameServerSlim?>.SuccessAsync(permissionFilteredGameserver.ToSlim());
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id, Guid requestUserId)
     {
-        var request = await _gameServerRepository.GetByHostIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
-        if (request.Result is null)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var response = await _gameServerRepository.GetByHostIdAsync(id);
+        if (!response.Succeeded)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
+        var accessFilteredServers = await FilterNoAccessServers(response.Result ?? [], requestUserId);
+
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
     }
 
-    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id)
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id, Guid requestUserId)
     {
-        var request = await _gameServerRepository.GetByOwnerIdAsync(id);
-        if (!request.Succeeded)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(request.ErrorMessage);
-        if (request.Result is null)
-            return await Result<IEnumerable<GameServerSlim>>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        var response = await _gameServerRepository.GetByOwnerIdAsync(id);
+        if (!response.Succeeded)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
 
-        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result.ToSlims());
+        var accessFilteredServers = await FilterNoAccessServers(response.Result ?? [], requestUserId);
+
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
     }
 
     public async Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId)
@@ -501,7 +578,7 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(request.Result?.ToSlims() ?? new List<GameServerSlim>());
     }
 
-    public async Task<PaginatedResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<PaginatedResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize, Guid requestUserId)
     {
         pageNumber = pageNumber < 1 ? 1 : pageNumber;
 
@@ -510,14 +587,16 @@ public class GameServerService : IGameServerService
         {
             return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
         }
-        
-        if (response.Result?.Data is null)
+
+        if (response.Result is null)
         {
             return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync([]);
         }
 
+        var accessFilteredServers = await FilterNoAccessServers(response.Result.Data, requestUserId);
+
         return await PaginatedResult<IEnumerable<GameServerSlim>>.SuccessAsync(
-            response.Result.Data.ToSlims(),
+            accessFilteredServers.ToSlims(),
             response.Result.StartPage,
             response.Result.CurrentPage,
             response.Result.EndPage,

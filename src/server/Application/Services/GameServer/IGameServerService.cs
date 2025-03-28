@@ -12,20 +12,20 @@ namespace Application.Services.GameServer;
 
 public interface IGameServerService
 {
-    Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync();
-    Task<PaginatedResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync(Guid requestUserId);
+    Task<PaginatedResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize, Guid requestUserId);
     Task<IResult<int>> GetCountAsync();
-    Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id);
-    Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName);
-    Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id);
-    Task<IResult<GameServerSlim>> GetByGameProfileIdAsync(Guid id);
-    Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id);
-    Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id);
+    Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id, Guid requestUserId);
+    Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName, Guid requestUserId);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id, Guid requestUserId);
+    Task<IResult<GameServerSlim?>> GetByGameProfileIdAsync(Guid id, Guid requestUserId);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id, Guid requestUserId);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id, Guid requestUserId);
     Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId);
     Task<IResult> UpdateAsync(GameServerUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId, bool sendHostUninstall = true);
     Task<IResult<IEnumerable<GameServerSlim>>> SearchAsync(string searchText);
-    Task<PaginatedResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
+    Task<PaginatedResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize, Guid requestUserId);
     Task<IResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsAsync();
     Task<PaginatedResult<IEnumerable<ConfigurationItemSlim>>> GetAllConfigurationItemsPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetConfigurationItemsCountAsync();

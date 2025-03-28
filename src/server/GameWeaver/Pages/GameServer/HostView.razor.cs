@@ -223,7 +223,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         }
 
         _runningGameservers = [];
-        var response = await GameServerService.GetByHostIdAsync(_host.Id);
+        var response = await GameServerService.GetByHostIdAsync(_host.Id, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

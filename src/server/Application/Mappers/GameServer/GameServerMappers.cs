@@ -1,3 +1,4 @@
+using Application.Constants.GameServer;
 using Application.Models.Events;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.WeaverWork;
@@ -230,6 +231,40 @@ public static class GameServerMappers
             PortRcon = gameServer.PortRcon,
             Modded = gameServer.Modded,
             Private = gameServer.Private
+        };
+    }
+    
+    public static GameServerDb ToNoAccess(this GameServerDb gameServer)
+    {
+        return new GameServerDb
+        {
+            Id = gameServer.Id,
+            OwnerId = gameServer.OwnerId,
+            HostId = gameServer.HostId,
+            GameId = gameServer.GameId,
+            GameProfileId = gameServer.GameProfileId,
+            ParentGameProfileId = gameServer.GameProfileId,
+            ServerBuildVersion = gameServer.ServerBuildVersion,
+            ServerName = gameServer.ServerName,
+            Password = GameServerConstants.NoAccessValue,
+            PasswordRcon = GameServerConstants.NoAccessValue,
+            PasswordAdmin = GameServerConstants.NoAccessValue,
+            PublicIp = GameServerConstants.NoAccessValue,
+            PrivateIp = GameServerConstants.NoAccessValue,
+            ExternalHostname = GameServerConstants.NoAccessValue,
+            PortGame = 0,
+            PortPeer = 0,
+            PortQuery = 0,
+            PortRcon = 0,
+            Modded = gameServer.Modded,
+            Private = gameServer.Private,
+            ServerState = gameServer.ServerState,
+            CreatedBy = gameServer.CreatedBy,
+            CreatedOn = gameServer.CreatedOn,
+            LastModifiedBy = gameServer.LastModifiedBy,
+            LastModifiedOn = gameServer.LastModifiedOn,
+            IsDeleted = gameServer.IsDeleted,
+            DeletedOn = gameServer.DeletedOn
         };
     }
 }

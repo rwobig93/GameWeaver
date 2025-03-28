@@ -123,7 +123,7 @@ public partial class GameView : ComponentBase
         }
 
         _runningGameservers = [];
-        var response = await GameServerService.GetByGameIdAsync(_game.Id);
+        var response = await GameServerService.GetByGameIdAsync(_game.Id, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

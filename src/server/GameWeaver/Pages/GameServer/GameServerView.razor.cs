@@ -78,7 +78,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             if (firstRender)
             {
-                // TODO: Private servers are currently viewable by anyone w/ view access
                 await GetViewingGameServer();
                 await GetServerParentProfile();
                 await GetServerGame();
@@ -115,7 +114,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task GetViewingGameServer()
     {
-        var response = await GameServerService.GetByIdAsync(GameServerId);
+        var response = await GameServerService.GetByIdAsync(GameServerId, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
