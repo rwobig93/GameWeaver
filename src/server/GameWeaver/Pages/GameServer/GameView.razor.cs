@@ -38,6 +38,7 @@ public partial class GameView : ComponentBase
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
     private readonly List<LocalResourceSlim> _createdLocalResources = [];
+    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
     private readonly List<LocalResourceSlim> _deletedLocalResources = [];
     private readonly List<Guid> _viewableGameServers = [];
 
@@ -171,6 +172,10 @@ public partial class GameView : ComponentBase
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        
+        // TODO: Add handling for new, updated and deleted config items
+        
+        // TODO: Add handling for new, updated, and deleted local resources
         
         ToggleEditMode();
         await GetViewingGame();
@@ -340,10 +345,27 @@ public partial class GameView : ComponentBase
         _createdLocalResources.Add(newResource);
     }
 
-    private async Task LocalResourceUpdate(LocalResourceSlim localResource)
+    private void LocalResourceUpdate(LocalResourceSlim localResource)
     {
-        // TODO: Add resource update logic for paths
-        await Task.CompletedTask;
+        var matchingNewResource = _createdLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
+        if (matchingNewResource is not null)
+        {
+            matchingNewResource.PathWindows = localResource.PathWindows;
+            matchingNewResource.PathLinux = localResource.PathLinux;
+            matchingNewResource.PathMac = localResource.PathMac;
+            return;
+        }
+        
+        var matchingUpdatedResource = _updatedLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
+        if (matchingUpdatedResource is null)
+        {
+            _updatedLocalResources.Add(localResource);
+            return;
+        }
+        
+        matchingUpdatedResource.PathWindows = localResource.PathWindows;
+        matchingUpdatedResource.PathLinux = localResource.PathLinux;
+        matchingUpdatedResource.PathMac = localResource.PathMac;
     }
     
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
@@ -364,6 +386,18 @@ public partial class GameView : ComponentBase
         if (!deleteResource)
         {
             return;
+        }
+        
+        var matchingNewResource = _createdLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
+        if (matchingNewResource is not null)
+        {
+            _createdLocalResources.Remove(matchingNewResource);
+        }
+        
+        var matchingUpdatedResource = _updatedLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
+        if (matchingUpdatedResource is not null)
+        {
+            _updatedLocalResources.Remove(matchingUpdatedResource);
         }
         
         _localResources.Remove(localResource);

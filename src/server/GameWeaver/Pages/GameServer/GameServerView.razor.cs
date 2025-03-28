@@ -57,8 +57,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private string _notifySearchText = string.Empty;
     private int _totalNotifyRecords;
     private int _selectedNotifyViewDetail;
-    private List<AppPermissionDisplay> _assignedUserPermissions = [];
-    private List<AppPermissionDisplay> _assignedRolePermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
     private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
     private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
 
@@ -547,7 +547,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
     }
     
-    private void ConfigUpdated(ConfigurationItemSlim item)
+    private void ConfigUpdated(ConfigurationItemSlim item, LocalResourceSlim localResource)
     {
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingNewConfig is not null)
@@ -565,9 +565,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (item.Id == Guid.Empty)
         {
             item.Id = Guid.CreateVersion7();
+            item.LocalResourceId = localResource.Id;
             _createdConfigItems.Add(item);
-            // TODO: Handle which local resource this goes into
-            // localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
+            localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(item);
             return;
         }
         

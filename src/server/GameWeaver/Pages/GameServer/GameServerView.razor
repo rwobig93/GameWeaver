@@ -333,7 +333,8 @@
                         <div class="border-solid rounded-pill border pa-0 ma-1">
                             <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
                                 <MudText Color="Color.Primary" Align="Align.Center" Class="ms-4 justify-center">@configItem.FriendlyName</MudText>
-                                <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)"
+                                              OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                 @if (_canConfigServer || _canEditServer)
                                 {
                                     <MudButtonGroup Variant="Variant.Text">
@@ -451,20 +452,20 @@
                                 <MudStack Row="false" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Class="ma-0 pa-1">
                                     <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
                                         <MudTextField T="string" Label="Friendly Name" @bind-Value="configItem.FriendlyName" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudTextField T="string" Label="Key" @bind-Value="configItem.Key" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                     </MudStack>
                                     <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
                                         <MudTextField T="string" Label="Path" @bind-Value="configItem.Path" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudTextField T="string" Label="Category" @bind-Value="configItem.Category" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudCheckBox @bind-Value="configItem.DuplicateKey" Label="Is Duplicate Key" Dense="true" />
                                     </MudStack>
                                     <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 pa-0">
                                         <MudTextField T="string" Label="Value" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudButtonGroup Variant="Variant.Text">
                                             <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
                                                 <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>

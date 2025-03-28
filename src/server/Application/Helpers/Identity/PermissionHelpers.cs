@@ -105,6 +105,7 @@ public static class PermissionHelpers
             // Gameserver
             PermissionConstants.GameServer.Game.Get,
             PermissionConstants.GameServer.Game.Update,
+            PermissionConstants.GameServer.Game.Configure,
             PermissionConstants.GameServer.Game.Create,
             PermissionConstants.GameServer.Game.Search,
             PermissionConstants.GameServer.Game.GetCount,
