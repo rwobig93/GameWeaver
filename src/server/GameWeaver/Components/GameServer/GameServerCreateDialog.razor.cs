@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.Lifecycle;
+using Application.Mappers.GameServer;
 using Application.Mappers.Identity;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
@@ -241,7 +242,7 @@ public partial class GameServerCreateDialog : ComponentBase
         _createRequest.GameId = _selectedGame.Id;
         _createRequest.ParentGameProfileId = _selectedParentProfile.Id == Guid.Empty ? null : _selectedParentProfile.Id;
         
-        var response = await GameServerService.CreateAsync(_createRequest, _loggedInUserId);
+        var response = await GameServerService.CreateAsync(_createRequest.ToCreate(), _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

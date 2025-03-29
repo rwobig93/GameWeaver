@@ -21,8 +21,8 @@ public interface IGameServerService
     Task<IResult<GameServerSlim?>> GetByGameProfileIdAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerIdAsync(Guid id, Guid requestUserId);
-    Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId);
-    Task<IResult> UpdateAsync(GameServerUpdateRequest request, Guid requestUserId);
+    Task<IResult<Guid>> CreateAsync(GameServerCreate request, Guid requestUserId);
+    Task<IResult> UpdateAsync(GameServerUpdate request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId, bool sendHostUninstall = true);
     Task<IResult<IEnumerable<GameServerSlim>>> SearchAsync(string searchText);
     Task<PaginatedResult<IEnumerable<GameServerSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize, Guid requestUserId);

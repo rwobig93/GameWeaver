@@ -1,6 +1,7 @@
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Requests.GameServer.Host;
 using Application.Responses.v1.GameServer;
@@ -142,7 +143,7 @@ public static class HostEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await hostService.CreateAsync(request, currentUserId);
+            return await hostService.CreateAsync(request.ToCreate(), currentUserId);
         }
         catch (Exception ex)
         {
@@ -163,7 +164,7 @@ public static class HostEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await hostService.UpdateAsync(request, currentUserId);
+            return await hostService.UpdateAsync(request.ToUpdate(), currentUserId);
         }
         catch (Exception ex)
         {

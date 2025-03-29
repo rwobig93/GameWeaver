@@ -3,6 +3,7 @@ using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Runtime;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.Game;
 using Application.Requests.GameServer.Game;
 using Application.Responses.v1.GameServer;
@@ -200,7 +201,7 @@ public static class GameEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameService.CreateAsync(request, currentUserId);
+            return await gameService.CreateAsync(request.ToCreate(), currentUserId);
         }
         catch (Exception ex)
         {
@@ -221,7 +222,7 @@ public static class GameEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameService.UpdateAsync(request, currentUserId);
+            return await gameService.UpdateAsync(request.ToUpdate(), currentUserId);
         }
         catch (Exception ex)
         {

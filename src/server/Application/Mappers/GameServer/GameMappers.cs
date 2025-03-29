@@ -99,9 +99,9 @@ public static class GameMappers
         };
     }
 
-    public static GameUpdateRequest ToUpdate(this GameSlim game)
+    public static GameUpdate ToUpdate(this GameSlim game)
     {
-        return new GameUpdateRequest
+        return new GameUpdate
         {
             Id = game.Id,
             DefaultGameProfileId = game.DefaultGameProfileId,

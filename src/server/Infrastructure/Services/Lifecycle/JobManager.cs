@@ -3,6 +3,7 @@ using Application.Helpers.GameServer;
 using Application.Mappers.GameServer;
 using Application.Models.External.Steam;
 using Application.Models.GameServer.Developers;
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
@@ -274,7 +275,7 @@ public class JobManager : IJobManager
                 }
                 
                 // Latest version is newer than the game's current version, so we'll update the game and add an update record
-                var gameUpdate = await _gameService.UpdateAsync(new GameUpdateRequest
+                var gameUpdate = await _gameService.UpdateAsync(new GameUpdate
                 {
                     Id = foundGame.Data.Id,
                     LatestBuildVersion = latestVersionBuild.Data.VersionBuild
@@ -357,9 +358,9 @@ public class JobManager : IJobManager
 
             if (matchingGame.Data is null)
             {
-                var gameCreate = await _gameService.CreateAsync(new GameCreateRequest
+                var gameCreate = await _gameService.CreateAsync(new GameCreate
                 {
-                    Name = serverApp.Name,
+                    FriendlyName = serverApp.Name,
                     SteamGameId = 0,
                     SteamToolId = serverApp.AppId
                 }, _serverState.SystemUserId);
@@ -530,7 +531,7 @@ public class JobManager : IJobManager
             _logger.Debug("Host was last known online but hasn't checked in for {SecondsSinceCheckin}s which is over the offline {OfflineSeconds} and is now considered offline," +
                           " updating status for host {HostId}", secondsSinceLastCheckIn, _appConfig.CurrentValue.HostOfflineAfterSeconds, host.Id);
             var updateHost = new HostUpdateRequest() {Id = host.Id, CurrentState = ConnectivityState.Unknown};
-            var updateHostResponse = await _hostService.UpdateAsync(updateHost, _serverState.SystemUserId);
+            var updateHostResponse = await _hostService.UpdateAsync(updateHost.ToUpdate(), _serverState.SystemUserId);
             if (!updateHostResponse.Succeeded)
             {
                 _logger.Error("Failed to update host offline status for {HostId}: {Error}", host.Id, updateHostResponse.Messages);

@@ -18,8 +18,8 @@ public interface IGameService
     Task<IResult<GameSlim?>> GetByFriendlyNameAsync(string friendlyName);
     Task<IResult<GameSlim?>> GetBySteamGameIdAsync(int id);
     Task<IResult<GameSlim?>> GetBySteamToolIdAsync(int id);
-    Task<IResult<Guid>> CreateAsync(GameCreateRequest request, Guid requestUserId);
-    Task<IResult> UpdateAsync(GameUpdateRequest request, Guid requestUserId);
+    Task<IResult<Guid>> CreateAsync(GameCreate request, Guid requestUserId);
+    Task<IResult> UpdateAsync(GameUpdate request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<PaginatedResult<IEnumerable<GameSlim>>> SearchAsync(string searchText);
     Task<PaginatedResult<IEnumerable<GameSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);

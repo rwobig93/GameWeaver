@@ -416,7 +416,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        var createGameRequest = await GameService.CreateAsync(gameCreate, _loggedInUser.Id);
+        var createGameRequest = await GameService.CreateAsync(gameCreate.ToCreate(), _loggedInUser.Id);
         if (!createGameRequest.Succeeded)
         {
             foreach (var message in createGameRequest.Messages)
@@ -477,7 +477,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             }
 
             var gameUpdate = new GameUpdateRequest {Id = matchingGame.Data.Id, DefaultGameProfileId = createProfileRequest.Data};
-            var updateGameRequest = await GameService.UpdateAsync(gameUpdate, _loggedInUser.Id);
+            var updateGameRequest = await GameService.UpdateAsync(gameUpdate.ToUpdate(), _loggedInUser.Id);
             if (!updateGameRequest.Succeeded)
             {
                 foreach (var message in updateGameRequest.Messages)
@@ -590,7 +590,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
         
-        var gameServerCreate = new GameServerCreateRequest
+        var gameServerCreateRequest = new GameServerCreateRequest
         {
             OwnerId = _loggedInUser.Id,
             HostId = _selectedHost.Id,
@@ -606,7 +606,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             Modded = _desiredGameServer.Modded,
             Private = _desiredGameServer.Private
         };
-        var createServerRequest = await GameServerService.CreateAsync(gameServerCreate, _loggedInUser.Id);
+        var createServerRequest = await GameServerService.CreateAsync(gameServerCreateRequest.ToCreate(), _loggedInUser.Id);
         if (!createServerRequest.Succeeded)
         {
             foreach (var message in createServerRequest.Messages)
@@ -616,7 +616,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        Snackbar.Add($"Created game server, now installing! [{createServerRequest.Data}]{gameServerCreate.Name}");
+        Snackbar.Add($"Created game server, now installing! [{createServerRequest.Data}]{gameServerCreateRequest.Name}");
         await GatherGameServers();
         
         matchingGameServer = _gameServers.FirstOrDefault(x => x.PortGame == _desiredGameServer.PortGame);

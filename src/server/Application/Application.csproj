@@ -40,8 +40,4 @@
       <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.6.1" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Requests\System\" />
-    </ItemGroup>
-
 </Project>
