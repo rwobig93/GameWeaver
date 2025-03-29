@@ -391,7 +391,7 @@ public partial class DeveloperTesting : IAsyncDisposable
     
     private async Task GatherGameServers()
     {
-        _gameServers = (await GameServerService.GetAllAsync()).Data.ToList();
+        _gameServers = (await GameServerService.GetAllAsync(_loggedInUser.Id)).Data.ToList();
     }
 
     private async Task GatherHosts()
@@ -509,7 +509,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 continue;
             }
             
-            var resourceCreate = resource.ToCreateRequest();
+            var resourceCreate = resource.ToCreate();
             resourceCreate.GameProfileId = matchingProfile.Data.Id;
             
             var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);

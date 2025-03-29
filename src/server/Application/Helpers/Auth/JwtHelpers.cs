@@ -162,7 +162,7 @@ public static class JwtHelpers
     public static string GenerateUserJwtRefreshToken(IDateTimeService dateTime, SecurityConfiguration securityConfig, AppConfiguration appConfig,
         Guid userId)
     {
-        // Refresh token should only have the ID as to not allow someone access to anything, extra layer of abstraction
+        // Refresh token should only have the ID as to not allow someone to access to anything, extra layer of abstraction
         var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId.ToString()) };
         
         var token = new JwtSecurityToken(

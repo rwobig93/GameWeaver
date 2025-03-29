@@ -18,12 +18,15 @@ public partial class LocalResourceHost
     public bool Startup { get; set; }
     [MemoryPackOrder(4)]
     public int StartupPriority { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(5)]
     public ResourceType Type { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(6)]
     public ContentType ContentType { get; set; }
     [MemoryPackOrder(7)]
     public string Args { get; set; } = "";
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(8)]
     public SerializableList<ConfigurationItemHost> ConfigSets { get; set; } = [];
     [MemoryPackOrder(9)]

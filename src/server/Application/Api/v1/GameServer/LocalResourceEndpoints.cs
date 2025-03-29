@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Requests.GameServer.LocalResource;
@@ -160,7 +161,7 @@ public static class LocalResourceEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.CreateLocalResourceAsync(request, currentUserId);
+            return await gameServerService.CreateLocalResourceAsync(request.ToCreate(), currentUserId);
         }
         catch (Exception ex)
         {

@@ -12,8 +12,10 @@ public partial class WeaverWorkSlim
     public Guid HostId { get; set; }
     [MemoryPackOrder(2)]
     public Guid? GameServerId { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(3)]
     public WeaverWorkTarget TargetType { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(4)]
     public WeaverWorkState Status { get; set; } = WeaverWorkState.WaitingToBePickedUp;
     [MemoryPackOrder(5)]

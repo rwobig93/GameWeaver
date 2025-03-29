@@ -100,7 +100,49 @@ public static class PermissionHelpers
             PermissionConstants.Identity.Users.Enable,
             PermissionConstants.Identity.Users.ResetPassword,
             PermissionConstants.Identity.Users.ChangeEmail,
-            PermissionConstants.Identity.ServiceAccounts.View
+            PermissionConstants.Identity.ServiceAccounts.View,
+            
+            // Gameserver
+            PermissionConstants.GameServer.Game.Get,
+            PermissionConstants.GameServer.Game.Update,
+            PermissionConstants.GameServer.Game.Configure,
+            PermissionConstants.GameServer.Game.Create,
+            PermissionConstants.GameServer.Game.Search,
+            PermissionConstants.GameServer.Game.GetCount,
+            PermissionConstants.GameServer.Game.Search,
+            PermissionConstants.GameServer.Game.GetAllPaginated,
+            PermissionConstants.GameServer.Game.Delete,
+            PermissionConstants.GameServer.GameProfile.Get,
+            PermissionConstants.GameServer.GameProfile.GetCount,
+            PermissionConstants.GameServer.GameProfile.Create,
+            PermissionConstants.GameServer.GameProfile.Delete,
+            PermissionConstants.GameServer.GameProfile.Search,
+            PermissionConstants.GameServer.GameProfile.Update,
+            PermissionConstants.GameServer.GameProfile.GetAllPaginated,
+            PermissionConstants.GameServer.Gameserver.SeeUi,
+            PermissionConstants.GameServer.Gameserver.Get,
+            PermissionConstants.GameServer.Gameserver.GetCount,
+            PermissionConstants.GameServer.Gameserver.GetAllPaginated,
+            PermissionConstants.GameServer.Gameserver.Delete,
+            PermissionConstants.GameServer.Gameserver.StartServer,
+            PermissionConstants.GameServer.Gameserver.StopServer,
+            PermissionConstants.GameServer.Gameserver.ChangeOwnership,
+            PermissionConstants.GameServer.Gameserver.Create,
+            PermissionConstants.GameServer.Gameserver.Update,
+            PermissionConstants.GameServer.Gameserver.Search,
+            PermissionConstants.GameServer.Gameserver.RestartServer,
+            PermissionConstants.GameServer.Gameserver.UpdateLocalResource,
+            PermissionConstants.GameServer.Gameserver.UpdateAllLocalResources,
+            PermissionConstants.GameServer.Hosts.SeeUi,
+            PermissionConstants.GameServer.Hosts.Get,
+            PermissionConstants.GameServer.Hosts.Update,
+            PermissionConstants.GameServer.Hosts.Delete,
+            PermissionConstants.GameServer.Hosts.ChangeOwnership,
+            PermissionConstants.GameServer.Hosts.Create,
+            PermissionConstants.GameServer.Hosts.Search,
+            PermissionConstants.GameServer.Hosts.GetAll,
+            PermissionConstants.GameServer.Hosts.SearchPaginated,
+            PermissionConstants.GameServer.Hosts.GetAllPaginated
         ];
     }
 
@@ -114,7 +156,10 @@ public static class PermissionHelpers
         return
         [
             PermissionConstants.Identity.Preferences.ChangeTheme,
-            PermissionConstants.Identity.Users.ChangeEmail
+            PermissionConstants.Identity.Users.ChangeEmail,
+            PermissionConstants.GameServer.Game.Get,
+            PermissionConstants.GameServer.Gameserver.SeeUi,
+            PermissionConstants.GameServer.Hosts.SeeUi
         ];
     }
 }

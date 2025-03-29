@@ -486,7 +486,7 @@
             </summary>
             <param name="app">Running application</param>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetAllPaginated(System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration},Application.Services.Identity.ICurrentUserService)">
             <summary>
             Get all game servers with pagination
             </summary>
@@ -494,6 +494,7 @@
             <param name="pageSize">Number of items per page</param>
             <param name="gameServerService"></param>
             <param name="appConfig"></param>
+            <param name="currentUserService"></param>
             <returns>List of game servers</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetCount(Application.Services.GameServer.IGameServerService)">
@@ -503,52 +504,58 @@
             <param name="gameServerService"></param>
             <returns>Count of total game servers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetById(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetById(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Get a game server by id
             </summary>
             <param name="id">ID of the game server</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Game server object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByServerName(System.String,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByServerName(System.String,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Get a game server by name
             </summary>
             <param name="serverName">Game server name</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>Game server object</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameId(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameId(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Get game servers by game id
             </summary>
             <param name="id">ID of a game</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>List of game servers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameProfileId(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByGameProfileId(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Get game servers by game profile id
             </summary>
             <param name="id">Game profile id</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>List of game servers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByHostId(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByHostId(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Get game servers by host id
             </summary>
             <param name="id">Host id</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>List of game servers</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByOwnerId(System.Guid,Application.Services.GameServer.IGameServerService)">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.GetByOwnerId(System.Guid,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
             <summary>
             Get game servers by the owner id
             </summary>
             <param name="id">ID of the owner</param>
             <param name="gameServerService"></param>
+            <param name="currentUserService"></param>
             <returns>List of game servers</returns>
         </member>
         <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Create(Application.Requests.GameServer.GameServer.GameServerCreateRequest,Application.Services.GameServer.IGameServerService,Application.Services.Identity.ICurrentUserService)">
@@ -578,7 +585,7 @@
             <param name="currentUserService"></param>
             <returns>Success or failure with context messages</returns>
         </member>
-        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration})">
+        <member name="M:Application.Api.v1.GameServer.GameServerEndpoints.Search(System.String,System.Int32,System.Int32,Application.Services.GameServer.IGameServerService,Microsoft.Extensions.Options.IOptions{Application.Settings.AppSettings.AppConfiguration},Application.Services.Identity.ICurrentUserService)">
             <summary>
             Search for game servers
             </summary>
@@ -587,6 +594,7 @@
             <param name="pageSize">Number of items per page</param>
             <param name="gameServerService"></param>
             <param name="appConfig"></param>
+            <param name="currentUserService"></param>
             <returns>List of matching game servers</returns>
             <remarks>Searches by: ID, OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
         </member>

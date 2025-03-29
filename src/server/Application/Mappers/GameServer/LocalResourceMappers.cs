@@ -120,11 +120,12 @@ public static class LocalResourceMappers
         return localResources.Select(x => x.ToHost(gameServerId, osType));
     }
 
-    public static LocalResourceCreate ToCreate(this LocalResourceSlim resource)
+    public static LocalResourceUpdateRequest ToUpdate(this LocalResourceSlim resource)
     {
-        return new LocalResourceCreate
+        return new LocalResourceUpdateRequest
         {
             GameProfileId = resource.GameProfileId,
+            Id = resource.Id,
             Name = resource.Name,
             PathWindows = resource.PathWindows,
             PathLinux = resource.PathLinux,
@@ -134,11 +135,7 @@ public static class LocalResourceMappers
             Type = resource.Type,
             ContentType = resource.ContentType,
             Args = resource.Args,
-            LoadExisting = resource.LoadExisting,
-            CreatedBy = resource.CreatedBy,
-            CreatedOn = resource.CreatedOn,
-            LastModifiedBy = resource.LastModifiedBy,
-            LastModifiedOn = resource.LastModifiedOn
+            LoadExisting = resource.LoadExisting
         };
     }
 
@@ -182,9 +179,9 @@ public static class LocalResourceMappers
         };
     }
 
-    public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceUpdateRequest resource)
+    public static LocalResourceCreate ToCreate(this LocalResourceUpdateRequest resource)
     {
-        return new LocalResourceCreateRequest
+        return new LocalResourceCreate
         {
             GameProfileId = resource.GameProfileId,
             Name = resource.Name ?? string.Empty,
@@ -200,10 +197,11 @@ public static class LocalResourceMappers
         };
     }
 
-    public static LocalResourceCreateRequest ToCreateRequest(this LocalResourceSlim resource)
+    public static LocalResourceCreate ToCreate(this LocalResourceSlim resource)
     {
-        return new LocalResourceCreateRequest
+        return new LocalResourceCreate
         {
+            Id = resource.Id,
             GameProfileId = resource.GameProfileId,
             Name = resource.Name,
             PathWindows = resource.PathWindows,

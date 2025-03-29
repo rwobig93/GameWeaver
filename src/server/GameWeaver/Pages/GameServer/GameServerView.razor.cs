@@ -57,18 +57,18 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private string _notifySearchText = string.Empty;
     private int _totalNotifyRecords;
     private int _selectedNotifyViewDetail;
-    private List<AppPermissionDisplay> _assignedUserPermissions = [];
-    private List<AppPermissionDisplay> _assignedRolePermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
     private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
     private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
 
     private bool _canViewGameServer;
-    private bool _canPermissionGameServer;
-    private bool _canEditGameServer;
-    private bool _canConfigureGameServer;
-    private bool _canStartGameServer;
-    private bool _canStopGameServer;
-    private bool _canDeleteGameServer;
+    private bool _canPermissionServer;
+    private bool _canEditServer;
+    private bool _canConfigServer;
+    private bool _canStartServer;
+    private bool _canStopServer;
+    private bool _canDeleteServer;
     private bool _canChangeOwnership;
     
     
@@ -114,7 +114,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task GetViewingGameServer()
     {
-        var response = await GameServerService.GetByIdAsync(GameServerId);
+        var response = await GameServerService.GetByIdAsync(GameServerId, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -212,48 +212,44 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
         {
             _canViewGameServer = true;
-            _canPermissionGameServer = true;
-            _canEditGameServer = true;
-            _canConfigureGameServer = true;
-            _canStartGameServer = true;
-            _canStopGameServer = true;
-            _canDeleteGameServer = true;
+            _canPermissionServer = true;
+            _canEditServer = true;
+            _canConfigServer = true;
+            _canStartServer = true;
+            _canStopServer = true;
+            _canDeleteServer = true;
             _canChangeOwnership = true;
             return;
         }
         
-        var isServerModerator = (await RoleService.IsUserModeratorAsync(_loggedInUserId)).Data ||
-                                await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, 
+        // Handle server moderator dynamic permission, global moderators get access via their role
+        var isServerModerator = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, 
                                 DynamicPermissionLevel.Moderator));
 
         if (isServerModerator)
         {
             _canViewGameServer = true;
-            _canPermissionGameServer = true;
-            _canEditGameServer = true;
-            _canConfigureGameServer = true;
-            _canStartGameServer = true;
-            _canStopGameServer = true;
-            _canDeleteGameServer = false;
+            _canPermissionServer = true;
+            _canEditServer = true;
+            _canConfigServer = true;
+            _canStartServer = true;
+            _canStopServer = true;
+            _canDeleteServer = false;
             _canChangeOwnership = false;
             return;
         }
         
-        _canPermissionGameServer =  await AuthorizationService.UserHasPermission(currentUser,
+        _canPermissionServer =  await AuthorizationService.UserHasPermission(currentUser,
                                         PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
-        _canEditGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
-                             await AuthorizationService.UserHasPermission(currentUser,
-                                 PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Edit));
-        _canConfigureGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
-                             await AuthorizationService.UserHasPermission(currentUser,
-                                 PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Configure));
-        _canStartGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StartServer) ||
-                                  await AuthorizationService.UserHasPermission(currentUser,
-                                      PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Start));
-        _canStopGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StopServer) ||
-                              await AuthorizationService.UserHasPermission(currentUser,
-                                  PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Stop));
-        _canDeleteGameServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
+        _canEditServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
+                         await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Edit, _gameServer.Id);
+        _canConfigServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
+                           await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Configure, _gameServer.Id);
+        _canStartServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StartServer) ||
+                          await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Start, _gameServer.Id);
+        _canStopServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StopServer) ||
+                         await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Stop, _gameServer.Id);
+        _canDeleteServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
     }
 
@@ -282,7 +278,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private async Task Save()
     {
-        if (!_canConfigureGameServer && !_canEditGameServer)
+        if (!_canConfigServer && !_canEditServer)
         {
             return;
         }
@@ -303,7 +299,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         foreach (var resource in _createdLocalResources)
         {
-            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreateRequest(), _loggedInUserId);
+            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
             
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -324,13 +320,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 return;
             }
-
-            var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
-            if (!hostUpdateResponse.Succeeded)
-            {
-                hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                return;
-            }
         }
         
         foreach (var resource in _deletedLocalResources)
@@ -340,7 +329,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 resource.GameProfileId = _gameServer.GameProfileId;
                 resource.ContentType = ContentType.Ignore;
-                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreateRequest(), _loggedInUserId);
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
                 if (createResourceResponse.Succeeded) continue;
             
                 createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -353,6 +342,19 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        
+        var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
+        if (!hostUpdateResponse.Succeeded)
+        {
+            hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        _createdConfigItems.Clear();
+        _updatedConfigItems.Clear();
+        _deletedConfigItems.Clear();
+        _createdLocalResources.Clear();
+        _deletedLocalResources.Clear();
         
         ToggleEditMode();
         await GetViewingGameServer();
@@ -370,7 +372,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             if (configItem.LocalResourceId == Guid.Empty)
             {
                 var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
-                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreate(), _loggedInUserId);
                 if (!createResourceResponse.Succeeded)
                 {
                     createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -414,7 +416,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
                 if (existingLocalResource is null)
                 {
-                    var resourceCreateRequest = matchingLocalResource.ToCreateRequest();
+                    var resourceCreateRequest = matchingLocalResource.ToCreate();
                     resourceCreateRequest.GameProfileId = _gameServer.GameProfileId;
                     var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
                     if (!createResourceResponse.Succeeded)
@@ -486,7 +488,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task DeleteGameServer()
     {
-        if (!_canDeleteGameServer)
+        if (!_canDeleteServer)
         {
             Snackbar.Add(ErrorMessageConstants.Permissions.PermissionError, Severity.Error);
             return;
@@ -551,7 +553,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
     }
     
-    private void ConfigUpdated(ConfigurationItemSlim item)
+    private void ConfigUpdated(ConfigurationItemSlim item, LocalResourceSlim localResource)
     {
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingNewConfig is not null)
@@ -562,6 +564,16 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             matchingNewConfig.Category = item.Category;
             matchingNewConfig.Path = item.Path;
             matchingNewConfig.DuplicateKey = item.DuplicateKey;
+            return;
+        }
+        
+        // If the config item is from a parent profile, add as a new config item instead
+        if (item.Id == Guid.Empty)
+        {
+            item.Id = Guid.CreateVersion7();
+            item.LocalResourceId = localResource.Id;
+            _createdConfigItems.Add(item);
+            localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(item);
             return;
         }
         

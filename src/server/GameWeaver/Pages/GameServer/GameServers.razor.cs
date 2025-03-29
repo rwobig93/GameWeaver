@@ -15,6 +15,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
     
     private IEnumerable<GameServerSlim> _pagedData = [];
     private AppUserPreferenceFull _userPreferences = new();
+    private Guid _loggedInUserId = Guid.Empty;
     
     private string _searchText = "";
     private int _totalItems = 10;
@@ -69,7 +70,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
     
     private async Task RefreshData()
     {
-        var response = await GameServerService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize);
+        var response = await GameServerService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

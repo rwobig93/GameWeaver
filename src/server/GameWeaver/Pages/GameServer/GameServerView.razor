@@ -25,7 +25,7 @@
     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@GoBack">Go Back
     </MudButton>
-    @if (_canEditGameServer)
+    @if (_canEditServer || _canConfigServer)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                    OnClick="@ToggleEditMode">@_editButtonText
@@ -43,7 +43,7 @@
                    OnClick="@ChangeOwnership">Change Ownership
         </MudButton>
     }
-    @if (_canDeleteGameServer)
+    @if (_canDeleteServer)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
                    OnClick="@DeleteGameServer">Delete
@@ -157,24 +157,24 @@
             </MudStack>
             <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
-                @if (_canStartGameServer || _canStopGameServer)
+                @if (_canStartServer || _canStopServer)
                 {
                     <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.Wrap" Style="width: 100%;">
-                        @if (_canStartGameServer)
+                        @if (_canStartServer)
                         {
                             <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" Disabled="@(_gameServer.ServerState.IsRunning())"
                                        StartIcon="@Icons.Material.Outlined.Start" OnClick="@StartGameServer">
                                 Start Server
                             </MudButton>
                         }
-                        @if (_canStopGameServer)
+                        @if (_canStopServer)
                         {
                             <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" Disabled="@(!_gameServer.ServerState.IsRunning())"
                                        StartIcon="@Icons.Material.Outlined.Stop" OnClick="@StopGameServer">
                                 Stop Server
                             </MudButton>
                         }
-                        @if (_canStartGameServer && _canStopGameServer)
+                        @if (_canStartServer && _canStopServer)
                         {
                             <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" Disabled="@(_gameServer.ServerState.IsDoingSomething() || !_gameServer.ServerState.IsRunning())"
                                        StartIcon="@Icons.Material.Outlined.Refresh" OnClick="@RestartGameServer">
@@ -208,7 +208,7 @@
             <MudTextField @bind-Value="_gameServer.PortQuery" Label="Query Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
             <MudTextField @bind-Value="_gameServer.PortRcon" Label="RCON Port" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         </MudStack>
-        @if (_canEditGameServer)
+        @if (_canEditServer)
         {
             <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 100%;">
                 <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap" Style="width: 50%;">
@@ -333,8 +333,9 @@
                         <div class="border-solid rounded-pill border pa-0 ma-1">
                             <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
                                 <MudText Color="Color.Primary" Align="Align.Center" Class="ms-4 justify-center">@configItem.FriendlyName</MudText>
-                                <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)" OnKeyDown="@(() => ConfigUpdated(configItem))"/>
-                                @if (_canConfigureGameServer || _canEditGameServer)
+                                <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)"
+                                              OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
+                                @if (_canConfigServer || _canEditServer)
                                 {
                                     <MudButtonGroup Variant="Variant.Text">
                                         <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
@@ -365,7 +366,7 @@
             </MudPaper>
         }
     </MudTabPanel>
-    @if (_canEditGameServer)
+    @if (_canEditServer)
     {
         <MudTabPanel Text="Expert">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -451,20 +452,20 @@
                                 <MudStack Row="false" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Class="ma-0 pa-1">
                                     <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
                                         <MudTextField T="string" Label="Friendly Name" @bind-Value="configItem.FriendlyName" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudTextField T="string" Label="Key" @bind-Value="configItem.Key" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                     </MudStack>
                                     <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
                                         <MudTextField T="string" Label="Path" @bind-Value="configItem.Path" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudTextField T="string" Label="Category" @bind-Value="configItem.Category" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudCheckBox @bind-Value="configItem.DuplicateKey" Label="Is Duplicate Key" Dense="true" />
                                     </MudStack>
                                     <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 pa-0">
                                         <MudTextField T="string" Label="Value" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!_editMode)"
-                                                      OnKeyDown="@(() => ConfigUpdated(configItem))"/>
+                                                      OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudButtonGroup Variant="Variant.Text">
                                             <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
                                                 <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
@@ -495,7 +496,7 @@
             }
         </MudTabPanel>
     }
-    @if (_canPermissionGameServer)
+    @if (_canPermissionServer)
     {
         <MudTabPanel Text="Permissions">
             <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4" Square="false">

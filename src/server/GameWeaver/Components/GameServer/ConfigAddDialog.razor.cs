@@ -16,7 +16,7 @@ public partial class ConfigAddDialog : ComponentBase
     [Parameter] public LocalResourceSlim ReferenceResource { get; set; } = null!;
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
-    private readonly ConfigurationItemSlim _newConfigItem = new();
+    private readonly ConfigurationItemSlim _newConfigItem = new() { Id = Guid.CreateVersion7() };
     
     
     private void InjectDynamicValue(string value)

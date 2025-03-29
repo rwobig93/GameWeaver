@@ -8,6 +8,7 @@ public partial class GameDownloadResponse
 {
     [MemoryPackOrder(0)]
     public Guid Id { get; set; }
+    [MemoryPackAllowSerialize]
     [MemoryPackOrder(1)]
     public FileStorageFormat Format { get; set; }
     [MemoryPackOrder(2)]

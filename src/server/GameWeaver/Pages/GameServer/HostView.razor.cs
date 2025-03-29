@@ -10,6 +10,7 @@ using Application.Models.GameServer.HostCheckIn;
 using Application.Responses.v1.Identity;
 using Application.Services.GameServer;
 using Domain.Contracts;
+using Domain.Enums.Identity;
 using GameWeaver.Components.GameServer;
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -40,6 +41,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private string _checkinsDateSelection = "2 Minutes";
     private Timer? _timer;
     private List<GameServerSlim> _runningGameservers = [];
+    private readonly List<Guid> _viewableGameServers = [];
     private List<HostCheckInFull> _checkins = [];
     private readonly HostPortStats _hostPortStats = new();
     private PaletteDark _currentPalette = new();
@@ -221,7 +223,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         }
 
         _runningGameservers = [];
-        var response = await GameServerService.GetByHostIdAsync(_host.Id);
+        var response = await GameServerService.GetByHostIdAsync(_host.Id, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -229,6 +231,14 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         }
 
         _runningGameservers = response.Data.ToList();
+
+        foreach (var server in _runningGameservers)
+        {
+            if (await CanViewGameServer(server.Id))
+            {
+                _viewableGameServers.Add(server.Id);
+            }
+        }
     }
 
     private async Task GetPermissions()
@@ -602,6 +612,32 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         _netInLong.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkInBytes / 8_000).Reverse().ToArray() });
         _netOutShort.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkOutBytes / 8_000).Take(100).Reverse().ToArray() });
         _netOutLong.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkOutBytes / 8_000).Reverse().ToArray() });
+    }
+
+    private void ViewGameServer(Guid id)
+    {
+        NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(id));
+    }
+
+    private async Task<bool> CanViewGameServer(Guid id)
+    {
+        var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
+        if (await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get))
+        {
+            return true;
+        }
+
+        if (await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, id))
+        {
+            return true;
+        }
+
+        if (await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Moderator, id))
+        {
+            return true;
+        }
+
+        return await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.View, id);
     }
 
     private async Task TimeframeChanged()

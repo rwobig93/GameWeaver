@@ -33,18 +33,17 @@ public class JobManager : IJobManager
     private readonly IOptions<SecurityConfiguration> _securityConfig;
     private readonly IAuditTrailService _auditService;
     private readonly IOptions<LifecycleConfiguration> _lifecycleConfig;
-    private readonly IGameServerService _gameServerService;
+    private readonly IGameServerRepository _gameServerRepository;
     private readonly IGameService _gameService;
     private readonly ISteamApiService _steamApiService;
     private readonly IRunningServerState _serverState;
     private readonly IGameRepository _gameRepository;
     private readonly IHostService _hostService;
-    private readonly IGameServerRepository _gameServerRepository;
     private readonly IOptionsMonitor<AppConfiguration> _appConfig;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
         IOptions<SecurityConfiguration> securityConfig, IAuditTrailService auditService, IOptions<LifecycleConfiguration> lifecycleConfig,
-        IGameServerService gameServerService, IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository,
+        IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository,
         IHostService hostService, IGameServerRepository gameServerRepository, IOptionsMonitor<AppConfiguration> appConfig)
     {
         _logger = logger;
@@ -52,7 +51,6 @@ public class JobManager : IJobManager
         _accountService = accountService;
         _dateTime = dateTime;
         _auditService = auditService;
-        _gameServerService = gameServerService;
         _gameService = gameService;
         _steamApiService = steamApiService;
         _serverState = serverState;
@@ -239,8 +237,8 @@ public class JobManager : IJobManager
     [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
     public async Task GameVersionCheck()
     {
-        var allGameServers = await _gameServerService.GetAllAsync();
-        var gamesFromGameServers = allGameServers.Data.Select(x => x.GameId).Distinct().ToList();
+        var allGameServers = await _gameServerRepository.GetAllAsync();
+        var gamesFromGameServers = allGameServers.Result?.Select(x => x.GameId).Distinct().ToList() ?? [];
         _logger.Debug("Gathered {GameCount} games from active game servers to check for version updates", gamesFromGameServers.Count);
 
         foreach (var gameId in gamesFromGameServers)
@@ -520,7 +518,7 @@ public class JobManager : IJobManager
             }
             
             // Last checkin is within configured seconds so is considered online or not
-            var secondsSinceLastCheckIn = (_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds;
+            var secondsSinceLastCheckIn = Math.Round((_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds, 0, MidpointRounding.ToZero);
             var hostIsOffline = secondsSinceLastCheckIn > _appConfig.CurrentValue.HostOfflineAfterSeconds;
             if (hostIsOffline && !host.CurrentState.IsRunning())
             {

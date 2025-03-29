@@ -46,7 +46,7 @@ public static class GameServerEndpoints
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateLocalResource, UpdateLocalResource).ApiVersionOne();
         app.MapPost(ApiRouteConstants.GameServer.Gameserver.UpdateAllLocalResources, UpdateAllLocalResources).ApiVersionOne();
     }
-    
+
     /// <summary>
     /// Get all game servers with pagination
     /// </summary>
@@ -54,16 +54,18 @@ public static class GameServerEndpoints
     /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameServerService"></param>
     /// <param name="appConfig"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.GetAllPaginated)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameServerService gameServerService, 
-        IOptions<AppConfiguration> appConfig)
+        IOptions<AppConfiguration> appConfig, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.GetAllPaginatedAsync(pageNumber, pageSize);
+            var result = await gameServerService.GetAllPaginatedAsync(pageNumber, pageSize, currentUserId);
             if (!result.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
@@ -98,57 +100,63 @@ public static class GameServerEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game server by id
     /// </summary>
     /// <param name="id">ID of the game server</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Game server object</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<GameServerSlim?>> GetById([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<GameServerSlim?>> GetById([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.GetByIdAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.GetByIdAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<GameServerSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game server by name
     /// </summary>
     /// <param name="serverName">Game server name</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>Game server object</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<GameServerSlim?>> GetByServerName([FromQuery]string serverName, IGameServerService gameServerService)
+    private static async Task<IResult<GameServerSlim?>> GetByServerName([FromQuery]string serverName, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.GetByServerNameAsync(serverName);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.GetByServerNameAsync(serverName, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<GameServerSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get game servers by game id
     /// </summary>
     /// <param name="id">ID of a game</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameId([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByGameId([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.GetByGameIdAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.GetByGameIdAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
@@ -161,51 +169,57 @@ public static class GameServerEndpoints
     /// </summary>
     /// <param name="id">Game profile id</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<GameServerSlim?>> GetByGameProfileId([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<GameServerSlim?>> GetByGameProfileId([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.GetByGameProfileIdAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.GetByGameProfileIdAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<GameServerSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get game servers by host id
     /// </summary>
     /// <param name="id">Host id</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostId([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostId([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.GetByHostIdAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.GetByHostIdAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get game servers by the owner id
     /// </summary>
     /// <param name="id">ID of the owner</param>
     /// <param name="gameServerService"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
-    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerId([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetByOwnerId([FromQuery]Guid id, IGameServerService gameServerService, ICurrentUserService currentUserService)
     {
         try
         {
-            return await gameServerService.GetByOwnerIdAsync(id);
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
+            return await gameServerService.GetByOwnerIdAsync(id, currentUserId);
         }
         catch (Exception ex)
         {
@@ -284,17 +298,19 @@ public static class GameServerEndpoints
     /// <param name="pageSize">Number of items per page</param>
     /// <param name="gameServerService"></param>
     /// <param name="appConfig"></param>
+    /// <param name="currentUserService"></param>
     /// <returns>List of matching game servers</returns>
     /// <remarks>Searches by: ID, OwnerId, HostId, GameId, GameProfileId, PublicIp, PrivateIp, ExternalHostname, ServerName</remarks>
     [Authorize(PermissionConstants.GameServer.Gameserver.Search)]
     private static async Task<IResult<IEnumerable<GameServerSlim>>> Search([FromQuery]string searchText, [FromQuery]int pageNumber, [FromQuery]int pageSize,
-        IGameServerService gameServerService, IOptions<AppConfiguration> appConfig)
+        IGameServerService gameServerService, IOptions<AppConfiguration> appConfig, ICurrentUserService currentUserService)
     {
         try
         {
+            var currentUserId = await currentUserService.GetApiCurrentUserId();
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
             
-            var result = await gameServerService.SearchPaginatedAsync(searchText, pageNumber, pageSize);
+            var result = await gameServerService.SearchPaginatedAsync(searchText, pageNumber, pageSize, currentUserId);
             if (!result.Succeeded)
             {
                 return await PaginatedResult<IEnumerable<GameServerSlim>>.FailAsync(result.Messages);
@@ -335,7 +351,7 @@ public static class GameServerEndpoints
                 return await Result.FailAsync(ErrorMessageConstants.Permissions.PermissionError);
             }
             
-            var serverResponse = await gameServerService.GetByIdAsync(gameServerId);
+            var serverResponse = await gameServerService.GetByIdAsync(gameServerId, currentUserId);
             if (!serverResponse.Succeeded || serverResponse.Data is null)
             {
                 return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
