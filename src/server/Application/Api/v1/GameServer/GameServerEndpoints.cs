@@ -240,7 +240,7 @@ public static class GameServerEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.CreateAsync(request, currentUserId);
+            return await gameServerService.CreateAsync(request.ToCreate(), currentUserId);
         }
         catch (Exception ex)
         {
@@ -261,7 +261,7 @@ public static class GameServerEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await gameServerService.UpdateAsync(request, currentUserId);
+            return await gameServerService.UpdateAsync(request.ToUpdate(), currentUserId);
         }
         catch (Exception ex)
         {

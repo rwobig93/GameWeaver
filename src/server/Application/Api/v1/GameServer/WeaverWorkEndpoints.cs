@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.WeaverWork;
 using Application.Requests.GameServer.WeaverWork;
 using Application.Services.GameServer;
@@ -200,7 +201,7 @@ public static class WeaverWorkEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await hostService.CreateWeaverWorkAsync(request, currentUserId);
+            return await hostService.CreateWeaverWorkAsync(request.ToCreate(), currentUserId);
         }
         catch (Exception ex)
         {

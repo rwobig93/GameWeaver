@@ -245,7 +245,7 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
     }
 
-    public async Task<IResult<Guid>> CreateAsync(GameServerCreateRequest request, Guid requestUserId)
+    public async Task<IResult<Guid>> CreateAsync(GameServerCreate request, Guid requestUserId)
     {
         var foundGame = await _gameRepository.GetByIdAsync(request.GameId);
         if (foundGame.Result is null)
@@ -343,7 +343,7 @@ public class GameServerService : IGameServerService
 
         var createdGameProfile = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
-            FriendlyName = $"Server Profile - {request.Name}",
+            FriendlyName = $"Server Profile - {request.ServerName}",
             OwnerId = request.OwnerId,
             GameId = foundGame.Result.Id,
             CreatedBy = requestUserId,
@@ -356,13 +356,12 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
-        var convertedRequest = request.ToCreate();
-        convertedRequest.GameProfileId = createdGameProfile.Result;
-        convertedRequest.ServerBuildVersion = foundGame.Result.LatestBuildVersion;
-        convertedRequest.CreatedBy = requestUserId;
-        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+        request.GameProfileId = createdGameProfile.Result;
+        request.ServerBuildVersion = foundGame.Result.LatestBuildVersion;
+        request.CreatedBy = requestUserId;
+        request.CreatedOn = _dateTime.NowDatabaseTime;
         
-        var gameServerCreate = await _gameServerRepository.CreateAsync(convertedRequest);
+        var gameServerCreate = await _gameServerRepository.CreateAsync(request);
         if (!gameServerCreate.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, Guid.Empty, requestUserId,
@@ -431,7 +430,7 @@ public class GameServerService : IGameServerService
         return await Result<Guid>.SuccessAsync(gameServerCreate.Result);
     }
 
-    public async Task<IResult> UpdateAsync(GameServerUpdateRequest request, Guid requestUserId)
+    public async Task<IResult> UpdateAsync(GameServerUpdate request, Guid requestUserId)
     {
         var foundGameServer = await _gameServerRepository.GetByIdAsync(request.Id);
         if (foundGameServer.Result is null)
@@ -453,11 +452,10 @@ public class GameServerService : IGameServerService
             }
         }
 
-        var convertedRequest = request.ToUpdate();
-        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
-        convertedRequest.LastModifiedBy = requestUserId;
+        request.LastModifiedOn = _dateTime.NowDatabaseTime;
+        request.LastModifiedBy = requestUserId;
 
-        var gameServerUpdate = await _gameServerRepository.UpdateAsync(convertedRequest);
+        var gameServerUpdate = await _gameServerRepository.UpdateAsync(request);
         if (!gameServerUpdate.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundGameServer.Result.Id,

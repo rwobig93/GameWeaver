@@ -457,13 +457,12 @@ public class HostService : IHostService
         return await Result<HostSlim>.SuccessAsync(foundHost.Result.ToSlim());
     }
 
-    public async Task<IResult<Guid>> CreateAsync(HostCreateRequest request, Guid requestUserId)
+    public async Task<IResult<Guid>> CreateAsync(HostCreate request, Guid requestUserId)
     {
-        var convertedRequest = request.ToCreate();
-        convertedRequest.CreatedBy = requestUserId;
-        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+        request.CreatedBy = requestUserId;
+        request.CreatedOn = _dateTime.NowDatabaseTime;
         
-        var hostCreate = await _hostRepository.CreateAsync(convertedRequest.ToCreateDb());
+        var hostCreate = await _hostRepository.CreateAsync(request.ToCreateDb());
         if (!hostCreate.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Hosts, Guid.Empty, requestUserId,
@@ -478,7 +477,7 @@ public class HostService : IHostService
         return await Result<Guid>.SuccessAsync(hostCreate.Result);
     }
 
-    public async Task<IResult> UpdateAsync(HostUpdateRequest request, Guid requestUserId)
+    public async Task<IResult> UpdateAsync(HostUpdate request, Guid requestUserId)
     {
         var foundHost = await _hostRepository.GetByIdAsync(request.Id);
         if (foundHost.Result is null)
@@ -486,11 +485,10 @@ public class HostService : IHostService
             return await Result.FailAsync(ErrorMessageConstants.Hosts.NotFound);
         }
 
-        var convertedRequest = request.ToUpdate();
-        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
-        convertedRequest.LastModifiedBy = requestUserId;
+        request.LastModifiedOn = _dateTime.NowDatabaseTime;
+        request.LastModifiedBy = requestUserId;
         
-        var hostUpdate = await _hostRepository.UpdateAsync(convertedRequest.ToUpdateDb());
+        var hostUpdate = await _hostRepository.UpdateAsync(request.ToUpdateDb());
         if (!hostUpdate.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Hosts, foundHost.Result.Id, requestUserId,
@@ -657,7 +655,7 @@ public class HostService : IHostService
         return await Result<HostRegistrationFull>.SuccessAsync(foundRegistration.Result.ToFull());
     }
 
-    public async Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdateRequest request, Guid requestUserId)
+    public async Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdate request, Guid requestUserId)
     {
         var foundRegistration = await _hostRepository.GetRegistrationByIdAsync(request.Id);
         if (foundRegistration.Result is null)
@@ -671,11 +669,10 @@ public class HostService : IHostService
             return await Result<HostRegisterResponse>.FailAsync(ErrorMessageConstants.Hosts.RegistrationNotFound);
         }
 
-        var convertedRequest = request.ToUpdate();
-        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
-        convertedRequest.LastModifiedBy = requestUserId;
+        request.LastModifiedOn = _dateTime.NowDatabaseTime;
+        request.LastModifiedBy = requestUserId;
         
-        var updateRegistrationRequest = await _hostRepository.UpdateRegistrationAsync(convertedRequest);
+        var updateRegistrationRequest = await _hostRepository.UpdateRegistrationAsync(request);
         if (!updateRegistrationRequest.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, foundRegistration.Result.Id,
@@ -1052,13 +1049,12 @@ public class HostService : IHostService
         return await Result<IEnumerable<WeaverWorkSlim>>.SuccessAsync(foundHost.Result.ToSlims());
     }
 
-    public async Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreateRequest request, Guid requestUserId)
+    public async Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreate request, Guid requestUserId)
     {
-        var convertedRequest = request.ToCreate();
-        convertedRequest.CreatedBy = requestUserId;
-        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+        request.CreatedBy = requestUserId;
+        request.CreatedOn = _dateTime.NowDatabaseTime;
 
-        var workCreate = await _hostRepository.CreateWeaverWorkAsync(convertedRequest);
+        var workCreate = await _hostRepository.CreateWeaverWorkAsync(request);
         if (workCreate.Succeeded) return await Result<int>.SuccessAsync(workCreate.Result);
         
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty, requestUserId,

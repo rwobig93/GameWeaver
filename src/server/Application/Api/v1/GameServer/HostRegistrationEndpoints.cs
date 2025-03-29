@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Web;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.HostRegistration;
 using Application.Requests.GameServer.Host;
 using Application.Responses.v1.GameServer;
@@ -177,7 +178,7 @@ public static class HostRegistrationEndpoints
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
-            return await hostService.UpdateRegistrationAsync(request, currentUserId);
+            return await hostService.UpdateRegistrationAsync(request.ToUpdate(), currentUserId);
         }
         catch (Exception ex)
         {

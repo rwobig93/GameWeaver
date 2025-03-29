@@ -274,13 +274,13 @@ public static class HostMappers
         };
     }
 
-    public static HostUpdateRequest ToUpdateRequest(this HostSlim host)
+    public static HostUpdate ToUpdateRequest(this HostSlim host)
     {
-        return new HostUpdateRequest
+        return new HostUpdate
         {
             Id = host.Id,
             OwnerId = host.OwnerId,
-            Name = host.FriendlyName,
+            FriendlyName = host.FriendlyName,
             Description = host.Description,
             AllowedPorts = host.AllowedPorts
         };

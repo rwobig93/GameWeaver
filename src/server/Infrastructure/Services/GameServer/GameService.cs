@@ -137,7 +137,7 @@ public class GameService : IGameService
         return await Result<GameSlim?>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<Guid>> CreateAsync(GameCreateRequest request, Guid requestUserId)
+    public async Task<IResult<Guid>> CreateAsync(GameCreate request, Guid requestUserId)
     {
         if (request.SteamToolId == 0)
         {
@@ -150,12 +150,11 @@ public class GameService : IGameService
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.DuplicateSteamToolId);
         }
 
-        var convertedRequest = request.ToCreate();
-        convertedRequest.CreatedBy = requestUserId;
-        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
-        convertedRequest.DefaultGameProfileId = Guid.Empty;
+        request.CreatedBy = requestUserId;
+        request.CreatedOn = _dateTime.NowDatabaseTime;
+        request.DefaultGameProfileId = Guid.Empty;
 
-        var createRequest = await _gameRepository.CreateAsync(convertedRequest);
+        var createRequest = await _gameRepository.CreateAsync(request);
         if (!createRequest.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Games, Guid.Empty, requestUserId,
@@ -165,7 +164,7 @@ public class GameService : IGameService
 
         var defaultProfileCreate = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
-            FriendlyName = $"{convertedRequest.FriendlyName} - Default",
+            FriendlyName = $"{request.FriendlyName} - Default",
             OwnerId = requestUserId,
             GameId = createRequest.Result,
             CreatedBy = requestUserId,
@@ -201,7 +200,7 @@ public class GameService : IGameService
         return await Result<Guid>.SuccessAsync(createRequest.Result);
     }
 
-    public async Task<IResult> UpdateAsync(GameUpdateRequest request, Guid requestUserId)
+    public async Task<IResult> UpdateAsync(GameUpdate request, Guid requestUserId)
     {
         var foundGame = await _gameRepository.GetByIdAsync(request.Id);
         if (foundGame.Result is null)
@@ -209,11 +208,10 @@ public class GameService : IGameService
             return await Result.FailAsync(ErrorMessageConstants.Games.NotFound);
         }
 
-        var convertedRequest = request.ToUpdate();
-        convertedRequest.LastModifiedOn = _dateTime.NowDatabaseTime;
-        convertedRequest.LastModifiedBy = requestUserId;
+        request.LastModifiedOn = _dateTime.NowDatabaseTime;
+        request.LastModifiedBy = requestUserId;
 
-        var updateRequest = await _gameRepository.UpdateAsync(convertedRequest);
+        var updateRequest = await _gameRepository.UpdateAsync(request);
         if (!updateRequest.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Games, foundGame.Result.Id, requestUserId,

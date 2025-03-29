@@ -21,8 +21,8 @@ public interface IHostService
     Task<IResult<int>> GetCountAsync();
     Task<IResult<HostSlim?>> GetByIdAsync(Guid id);
     Task<IResult<HostSlim?>> GetByHostnameAsync(string hostName);
-    Task<IResult<Guid>> CreateAsync(HostCreateRequest request, Guid requestUserId);
-    Task<IResult> UpdateAsync(HostUpdateRequest request, Guid requestUserId);
+    Task<IResult<Guid>> CreateAsync(HostCreate request, Guid requestUserId);
+    Task<IResult> UpdateAsync(HostUpdate request, Guid requestUserId);
     Task<IResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<IResult<IEnumerable<HostSlim>>> SearchAsync(string searchText);
     Task<PaginatedResult<IEnumerable<HostSlim>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);
@@ -33,7 +33,7 @@ public interface IHostService
     Task<IResult<int>> GetRegistrationCountAsync();
     Task<IResult<HostRegistrationFull>> GetRegistrationByIdAsync(Guid id);
     Task<IResult<HostRegistrationFull>> GetRegistrationByHostIdAsync(Guid hostId);
-    Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdateRequest request, Guid requestUserId);
+    Task<IResult> UpdateRegistrationAsync(HostRegistrationUpdate request, Guid requestUserId);
     Task<IResult<int>> DeleteRegistrationsOlderThanAsync(Guid requestUserId, int olderThanHours = 24);
     Task<IResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsAsync(string searchText);
     Task<PaginatedResult<IEnumerable<HostRegistrationFull>>> SearchRegistrationsPaginatedAsync(string searchText, int pageNumber, int pageSize);
@@ -60,7 +60,7 @@ public interface IHostService
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByTargetTypeAsync(WeaverWorkTarget target);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkByStatusAsync(WeaverWorkState status);
     Task<IResult<IEnumerable<WeaverWorkSlim>>> GetWeaverWorkCreatedWithinAsync(DateTime from, DateTime until);
-    Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreateRequest request, Guid requestUserId);
+    Task<IResult<int>> CreateWeaverWorkAsync(WeaverWorkCreate request, Guid requestUserId);
     Task<IResult> UpdateWeaverWorkAsync(WeaverWorkUpdate request, string sourceIp = "");
     Task<IResult> DeleteWeaverWorkAsync(int id, Guid requestUserId);
     Task<IResult> DeleteWeaverWorkForHostAsync(Guid hostId, Guid requestUserId);

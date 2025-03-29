@@ -213,9 +213,9 @@ public static class GameServerMappers
         };
     }
 
-    public static GameServerUpdateRequest ToUpdate(this GameServerSlim gameServer)
+    public static GameServerUpdate ToUpdate(this GameServerSlim gameServer)
     {
-        return new GameServerUpdateRequest
+        return new GameServerUpdate
         {
             Id = gameServer.Id,
             OwnerId = gameServer.OwnerId,
