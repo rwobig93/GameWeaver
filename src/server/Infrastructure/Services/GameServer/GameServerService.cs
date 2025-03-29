@@ -960,7 +960,7 @@ public class GameServerService : IGameServerService
         return await Result<IEnumerable<LocalResourceSlim>>.SuccessAsync(finalResourceList);
     }
 
-    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreateRequest request, Guid requestUserId)
+    public async Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate request, Guid requestUserId)
     {
         var foundProfile = await _gameServerRepository.GetGameProfileByIdAsync(request.GameProfileId);
         if (foundProfile.Result is null)
@@ -983,11 +983,10 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync(ErrorMessageConstants.LocalResources.DuplicateResource);
         }
 
-        var convertedRequest = request.ToCreate();
-        convertedRequest.CreatedBy = requestUserId;
-        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+        request.CreatedBy = requestUserId;
+        request.CreatedOn = _dateTime.NowDatabaseTime;
         
-        var resourceCreate = await _gameServerRepository.CreateLocalResourceAsync(convertedRequest);
+        var resourceCreate = await _gameServerRepository.CreateLocalResourceAsync(request);
         if (!resourceCreate.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.LocalResources, Guid.Empty, requestUserId,
@@ -1010,7 +1009,7 @@ public class GameServerService : IGameServerService
     {
         if (request.Id == Guid.Empty)
         {
-            return await CreateLocalResourceAsync(request.ToCreateRequest(), requestUserId);
+            return await CreateLocalResourceAsync(request.ToCreate(), requestUserId);
         }
         
         var foundResource = await _gameServerRepository.GetLocalResourceByIdAsync(request.Id);

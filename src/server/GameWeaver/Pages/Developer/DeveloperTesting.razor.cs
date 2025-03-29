@@ -509,7 +509,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 continue;
             }
             
-            var resourceCreate = resource.ToCreateRequest();
+            var resourceCreate = resource.ToCreate();
             resourceCreate.GameProfileId = matchingProfile.Data.Id;
             
             var createRequest = await GameServerService.CreateLocalResourceAsync(resourceCreate, _loggedInUser.Id);

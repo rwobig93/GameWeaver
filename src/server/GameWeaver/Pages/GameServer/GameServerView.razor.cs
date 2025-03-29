@@ -299,7 +299,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         foreach (var resource in _createdLocalResources)
         {
-            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreateRequest(), _loggedInUserId);
+            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
             
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -320,13 +320,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 return;
             }
-
-            var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
-            if (!hostUpdateResponse.Succeeded)
-            {
-                hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                return;
-            }
         }
         
         foreach (var resource in _deletedLocalResources)
@@ -336,7 +329,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 resource.GameProfileId = _gameServer.GameProfileId;
                 resource.ContentType = ContentType.Ignore;
-                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreateRequest(), _loggedInUserId);
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
                 if (createResourceResponse.Succeeded) continue;
             
                 createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -349,6 +342,19 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        
+        var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
+        if (!hostUpdateResponse.Succeeded)
+        {
+            hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        _createdConfigItems.Clear();
+        _updatedConfigItems.Clear();
+        _deletedConfigItems.Clear();
+        _createdLocalResources.Clear();
+        _deletedLocalResources.Clear();
         
         ToggleEditMode();
         await GetViewingGameServer();
@@ -366,7 +372,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             if (configItem.LocalResourceId == Guid.Empty)
             {
                 var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
-                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreate(), _loggedInUserId);
                 if (!createResourceResponse.Succeeded)
                 {
                     createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -410,7 +416,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
                 if (existingLocalResource is null)
                 {
-                    var resourceCreateRequest = matchingLocalResource.ToCreateRequest();
+                    var resourceCreateRequest = matchingLocalResource.ToCreate();
                     resourceCreateRequest.GameProfileId = _gameServer.GameProfileId;
                     var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
                     if (!createResourceResponse.Succeeded)

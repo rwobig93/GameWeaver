@@ -172,10 +172,56 @@ public partial class GameView : ComponentBase
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
+        foreach (var resource in _createdLocalResources)
+        {
+            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
+            if (createResourceResponse.Succeeded) continue;
+            
+            createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
         
-        // TODO: Add handling for new, updated and deleted config items
+        if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
+        {
+            if (await SaveNewConfigItems())
+            {
+                return;
+            }
+            if (await SaveUpdatedConfigItems())
+            {
+                return;
+            }
+            if (await SaveDeletedConfigItems())
+            {
+                return;
+            }
+        }
+
+        foreach (var resource in _updatedLocalResources)
+        {
+            var updateResourceResponse = await GameServerService.UpdateLocalResourceAsync(resource.ToUpdate(), _loggedInUserId);
+            if (!updateResourceResponse.Succeeded) continue;
+            
+            updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
         
-        // TODO: Add handling for new, updated, and deleted local resources
+        foreach (var resource in _deletedLocalResources)
+        {
+            var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
+            if (deleteResourceResponse.Succeeded) continue;
+            
+            deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+        
+        _createdConfigItems.Clear();
+        _updatedConfigItems.Clear();
+        _deletedConfigItems.Clear();
+        _createdLocalResources.Clear();
+        _updatedLocalResources.Clear();
+        _deletedLocalResources.Clear();
         
         ToggleEditMode();
         await GetViewingGame();
@@ -450,7 +496,7 @@ public partial class GameView : ComponentBase
 
             if (existingLocalResource is null)
             {
-                var resourceCreateRequest = matchingLocalResource.ToCreateRequest();
+                var resourceCreateRequest = matchingLocalResource.ToCreate();
                 resourceCreateRequest.GameProfileId = _game.DefaultGameProfileId;
                 var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
                 if (!createResourceResponse.Succeeded)
@@ -485,7 +531,7 @@ public partial class GameView : ComponentBase
             if (configItem.LocalResourceId == Guid.Empty)
             {
                 var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
-                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreateRequest(), _loggedInUserId);
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(matchingLocalResource.ToCreate(), _loggedInUserId);
                 if (!createResourceResponse.Succeeded)
                 {
                     createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

@@ -42,7 +42,7 @@ public interface IGameServerService
     Task<IResult<LocalResourceSlim>> GetLocalResourceByIdAsync(Guid id);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesByGameProfileIdAsync(Guid id);
     Task<IResult<IEnumerable<LocalResourceSlim>>> GetLocalResourcesForGameServerIdAsync(Guid id);
-    Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreateRequest request, Guid requestUserId);
+    Task<IResult<Guid>> CreateLocalResourceAsync(LocalResourceCreate request, Guid requestUserId);
     Task<IResult> UpdateLocalResourceAsync(LocalResourceUpdateRequest request, Guid requestUserId);
     Task<IResult> DeleteLocalResourceAsync(Guid id, Guid requestUserId, bool sendUpdateToHost = false);
     Task<IResult> UpdateLocalResourceOnGameServerAsync(Guid serverId, Guid resourceId, Guid requestUserId);
