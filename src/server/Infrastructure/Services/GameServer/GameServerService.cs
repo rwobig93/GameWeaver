@@ -15,7 +15,6 @@ using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
 using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.GameProfile;
-using Application.Requests.GameServer.GameServer;
 using Application.Requests.GameServer.LocalResource;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;

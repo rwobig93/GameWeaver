@@ -1,8 +1,8 @@
-namespace GameServerQuery.Models;
+namespace GameServerQuery.Client.Models;
 
 public class ClientSendResult
 {
-    public bool Success { get; set; }
+    public bool Succeeded { get; set; }
     public string Message { get; set; } = string.Empty;
     public int BytesSent { get; set; } = -1;
 }

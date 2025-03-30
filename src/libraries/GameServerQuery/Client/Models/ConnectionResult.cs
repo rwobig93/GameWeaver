@@ -1,7 +1,7 @@
-namespace GameServerQuery.Models;
+namespace GameServerQuery.Client.Models;
 
 public class ConnectionResult
 {
-    public bool Success { get; set; }
+    public bool Succeeded { get; set; }
     public string Message { get; set; } = null!;
 }

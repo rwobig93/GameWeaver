@@ -1,4 +1,4 @@
-namespace GameServerQuery.Enums;
+namespace GameServerQuery.Steam.Enums;
 
 public enum SteamChallengeResponseHeader : byte
 {

@@ -5,9 +5,9 @@ public static class SteamServerMessages
     // For supported steam query headers and protocol definitions see: https://developer.valvesoftware.com/wiki/Server_queries
     
     /// <summary>
-    /// Retrieves information about the server including, but not limited to: its name, the map currently being played, and the number of players.
+    /// A2S_INFO: Retrieves information about the server including, but not limited to: its name, the map currently being played, and the number of players.
     /// </summary>
-    public static readonly byte[] A2SInfoQuery =
+    public static readonly byte[] InfoQuery =
     [
         0xFF, 0xFF, 0xFF, 0xFF, 0x54, 0x53, 0x6F, 0x75, 0x72, 0x63, 0x65, 0x20, 0x45, 0x6E, 0x67, 0x69, 0x6E, 0x65, 0x20, 0x51, 0x75, 0x65, 
         0x72, 0x79, 0x00

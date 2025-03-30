@@ -1,8 +1,8 @@
-namespace GameServerQuery.Models;
+namespace GameServerQuery.Client.Models;
 
 public class ClientReceiveResult
 {
-    public bool Success { get; set; }
+    public bool Succeeded { get; set; }
     public string Message { get; set; } = string.Empty;
     public byte[] Response { get; set; } = [];
 }

@@ -1,4 +1,4 @@
-namespace GameServerQuery.Constants;
+namespace GameServerQuery.Client.Constants;
 
 public static class ClientConstants
 {

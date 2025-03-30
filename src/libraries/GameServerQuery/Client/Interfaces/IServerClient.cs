@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
-using GameServerQuery.Models;
+using GameServerQuery.Client.Models;
 
-namespace GameServerQuery.Interfaces;
+namespace GameServerQuery.Client.Interfaces;
 
 public interface IServerClient
 {

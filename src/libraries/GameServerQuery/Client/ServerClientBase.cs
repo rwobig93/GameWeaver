@@ -1,10 +1,10 @@
 using System.Net;
 using System.Net.Sockets;
-using GameServerQuery.Constants;
-using GameServerQuery.Interfaces;
-using GameServerQuery.Models;
+using GameServerQuery.Client.Constants;
+using GameServerQuery.Client.Interfaces;
+using GameServerQuery.Client.Models;
 
-namespace GameServerQuery;
+namespace GameServerQuery.Client;
 
 public class ServerClientBase : IServerClient, IDisposable
 {
@@ -61,7 +61,7 @@ public class ServerClientBase : IServerClient, IDisposable
             case ProtocolType.Ipx:
             case ProtocolType.Spx:
             case ProtocolType.SpxII:
-            default: return new ConnectionResult { Success = false, Message = "Only TCP and UDP protocols are supported" };
+            default: return new ConnectionResult { Succeeded = false, Message = "Only TCP and UDP protocols are supported" };
         }
         
         SendTimeout = sendTimeout;
@@ -74,11 +74,11 @@ public class ServerClientBase : IServerClient, IDisposable
 
         if (!socketConnectionResult.AsyncWaitHandle.WaitOne(ReceiveTimeout, true))
         {
-            return new ConnectionResult { Success = false, Message = "A timeout occurred while connecting to the server" };
+            return new ConnectionResult { Succeeded = false, Message = "A timeout occurred while connecting to the server" };
         }
         IsConnected = true;
         
-        return new ConnectionResult { Success = true, Message = "Successfully connected to the server" };
+        return new ConnectionResult { Succeeded = true, Message = "Successfully connected to the server" };
     }
 
     /// <inheritdoc/>
@@ -86,11 +86,11 @@ public class ServerClientBase : IServerClient, IDisposable
     {
         if (string.IsNullOrEmpty(hostOrIp))
         {
-            return new ConnectionResult { Success = false, Message = "Provided Hostname or IP address is empty or invalid" };
+            return new ConnectionResult { Succeeded = false, Message = "Provided Hostname or IP address is empty or invalid" };
         }
         if (hostOrIp.Length > 255)
         {
-            return new ConnectionResult { Success = false, Message = "Provided Hostname is over 255 characters which is the hostname limit" };
+            return new ConnectionResult { Succeeded = false, Message = "Provided Hostname is over 255 characters which is the hostname limit" };
         }
         
         if (IPAddress.TryParse(hostOrIp, out var address))
@@ -103,22 +103,22 @@ public class ServerClientBase : IServerClient, IDisposable
             var record = Dns.GetHostAddresses(hostOrIp);
             if (record.Length == 0)
             {
-                return new ConnectionResult { Success = false, Message = "Couldn't resolve a valid record for the provided hostname" };
+                return new ConnectionResult { Succeeded = false, Message = "Couldn't resolve a valid record for the provided hostname" };
             }
 
             return await Connect(new IPEndPoint(record.First(), port), type, sendTimeout, receiveTimeout);
         }
         catch (SocketException)
         {
-            return new ConnectionResult { Success = false, Message = "Couldn't resolve a valid record for the provided hostname" };
+            return new ConnectionResult { Succeeded = false, Message = "Couldn't resolve a valid record for the provided hostname" };
         }
         catch (ArgumentException)
         {
-            return new ConnectionResult { Success = false, Message = "Provided Hostname or IP address is invalid" };
+            return new ConnectionResult { Succeeded = false, Message = "Provided Hostname or IP address is invalid" };
         }
         catch (Exception ex)
         {
-            return new ConnectionResult { Success = false, Message = $"An unexpected error occured: {ex.Message}" };
+            return new ConnectionResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" };
         }
     }
 
@@ -133,25 +133,25 @@ public class ServerClientBase : IServerClient, IDisposable
     {
         if (Socket is null)
         {
-            return new ClientSendResult {Success = false, Message = "Current socket connection is closed"};
+            return new ClientSendResult {Succeeded = false, Message = "Current socket connection is closed"};
         }
 
         try
         {
             var response = await Socket.SendAsync(payload, SocketFlags.None);
-            return new ClientSendResult {Success = true, BytesSent = response};
+            return new ClientSendResult {Succeeded = true, BytesSent = response};
         }
         catch (SocketException ex)
         {
-            return new ClientSendResult {Success = false, Message = ex.Message};
+            return new ClientSendResult {Succeeded = false, Message = ex.Message};
         }
         catch (ObjectDisposedException)
         {
-            return new ClientSendResult {Success = false, Message = "Current socket connection is closed"};
+            return new ClientSendResult {Succeeded = false, Message = "Current socket connection is closed"};
         }
         catch (Exception ex)
         {
-            return new ClientSendResult { Success = false, Message = $"An unexpected error occured: {ex.Message}" };
+            return new ClientSendResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" };
         }
     }
 
@@ -160,26 +160,26 @@ public class ServerClientBase : IServerClient, IDisposable
     {
         if (Socket is null)
         {
-            return new ClientReceiveResult {Success = false, Message = "Current socket connection is closed"};
+            return new ClientReceiveResult {Succeeded = false, Message = "Current socket connection is closed"};
         }
 
         var databuffer = new byte[BufferSize];
         try
         {
             var response = await Socket.ReceiveAsync(databuffer, SocketFlags.None);
-            return new ClientReceiveResult {Success = true, Response = databuffer.Take(response).ToArray()};
+            return new ClientReceiveResult {Succeeded = true, Response = databuffer.Take(response).ToArray()};
         }
         catch (SocketException ex)
         {
-            return new ClientReceiveResult {Success = false, Message = ex.Message};
+            return new ClientReceiveResult {Succeeded = false, Message = ex.Message};
         }
         catch (ObjectDisposedException)
         {
-            return new ClientReceiveResult {Success = false, Message = "Current socket connection is closed"};
+            return new ClientReceiveResult {Succeeded = false, Message = "Current socket connection is closed"};
         }
         catch (Exception ex)
         {
-            return new ClientReceiveResult { Success = false, Message = $"An unexpected error occured: {ex.Message}" };
+            return new ClientReceiveResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" };
         }
     }
 
