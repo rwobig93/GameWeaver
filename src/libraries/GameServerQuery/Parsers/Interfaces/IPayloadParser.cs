@@ -13,9 +13,9 @@ public interface IPayloadParser
     int PayloadLength { get; }
     
     /// <summary>
-    /// Payload bytes currently unparsed
+    /// Whether there are remaining bytes currently unparsed
     /// </summary>
-    int PayloadUnparsed { get; }
+    bool HasUnparsedBytes { get; }
     
     /// <summary>
     /// Skip a specific amount of bytes from the current parsed position

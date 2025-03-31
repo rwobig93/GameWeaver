@@ -2,7 +2,7 @@ namespace GameServerQuery.Steam.Constants;
 
 public static class SteamParsingConstants
 {
-    public const int ChallengeHeaderPreambleBytesSize = 4;
+    public const int HeaderPreambleBytesSize = 4;
 
     /// <summary>
     /// ID's specific to parsing 'The Ship' fields, See: https://developer.valvesoftware.com/wiki/The_Ship

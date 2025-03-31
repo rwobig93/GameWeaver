@@ -1,4 +1,5 @@
 using System.Text;
+using GameServerQuery.Parsers.Helpers;
 using GameServerQuery.Parsers.Interfaces;
 
 namespace GameServerQuery.Parsers;
@@ -24,7 +25,7 @@ public class PayloadParser : IPayloadParser
     public int PayloadLength { get; }
 
     /// <inheritdoc />
-    public int PayloadUnparsed => CurrentPayloadPosition - PayloadLength;
+    public bool HasUnparsedBytes => _payload.RemainingIsEmpty(CurrentPayloadPosition);
 
     /// <inheritdoc />
     public void SkipBytes(int amount)
@@ -39,7 +40,7 @@ public class PayloadParser : IPayloadParser
     /// <inheritdoc />
     public byte[] GetUnparsedPayload()
     {
-        return PayloadUnparsed <= 0 ? [] : _payload.Skip(CurrentPayloadPosition).ToArray();
+        return HasUnparsedBytes ? _payload.Skip(CurrentPayloadPosition).ToArray() : [];
     }
 
     /// <inheritdoc />

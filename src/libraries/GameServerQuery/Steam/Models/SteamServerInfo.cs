@@ -14,9 +14,9 @@ public class SteamServerInfo
     public int Players { get; set; }
     public int MaxPlayers { get; set; }
     public int Bots { get; set; }
-    public SteamServerType Type { get; set; }
-    public SteamServerEnvironment OperatingSystem { get; set; }
-    public bool IsPrivate { get; set; }
+    public SteamServerType ServerType { get; set; }
+    public SteamServerEnvironment Environment { get; set; }
+    public bool HasPassword { get; set; }
     public bool VacEnabled { get; set; }
     public SteamTheShipMode TheShipMode { get; set; }
     public string Version { get; set; } = string.Empty;

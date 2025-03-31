@@ -4,7 +4,7 @@ using GameServerQuery.Client.Models;
 
 namespace GameServerQuery.Client.Interfaces;
 
-public interface IServerClient
+public interface IServerClient : IDisposable
 {
     /// <summary>
     /// Time in milliseconds to allow a send request to take before a timeout occurs

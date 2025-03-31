@@ -6,7 +6,7 @@ using GameServerQuery.Client.Models;
 
 namespace GameServerQuery.Client;
 
-public class ServerClientBase : IServerClient, IDisposable
+public class ServerClientBase : IServerClient
 {
     /// <inheritdoc/>
     public int SendTimeout { get; private set; } = 3000;
@@ -23,20 +23,23 @@ public class ServerClientBase : IServerClient, IDisposable
     /// <inheritdoc/>
     public ProtocolType Protocol { get; private set; } = ProtocolType.Udp;
 
-    private Socket? Socket { get; set; }
-
+    private Socket? _socket;
+    
     /// <inheritdoc/>
     public async Task<ConnectionResult> Connect(IPEndPoint endpoint, ProtocolType type, int sendTimeout = 3000, int receiveTimeout = 3000)
     {
+        SendTimeout = sendTimeout;
+        ReceiveTimeout = receiveTimeout;
+        
         switch (type)
         {
             case ProtocolType.Tcp:
-                Socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 Protocol = ProtocolType.Tcp;
                 BufferSize = ClientConstants.DefaultTcpBufferSize;
                 break;
             case ProtocolType.Udp:
-                Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 Protocol = ProtocolType.Udp;
                 BufferSize = ClientConstants.DefaultUdpBufferSize;
                 break;
@@ -61,24 +64,22 @@ public class ServerClientBase : IServerClient, IDisposable
             case ProtocolType.Ipx:
             case ProtocolType.Spx:
             case ProtocolType.SpxII:
-            default: return new ConnectionResult { Succeeded = false, Message = "Only TCP and UDP protocols are supported" };
+            default: return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Only TCP and UDP protocols are supported" });
         }
         
-        SendTimeout = sendTimeout;
-        Socket.SendTimeout = sendTimeout;
-        ReceiveTimeout = receiveTimeout;
-        Socket.ReceiveTimeout = receiveTimeout;
+        _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, SendTimeout);
+        _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, ReceiveTimeout);
+        _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, BufferSize);
+        _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, BufferSize);
 
-        var socketConnectionResult = Socket.BeginConnect(endpoint, null, null);
-        await Task.Yield();
-
-        if (!socketConnectionResult.AsyncWaitHandle.WaitOne(ReceiveTimeout, true))
+        await _socket.ConnectAsync(endpoint);
+        if (!_socket.Connected)
         {
-            return new ConnectionResult { Succeeded = false, Message = "A timeout occurred while connecting to the server" };
+            return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Failed to connect to the server" });
         }
+
         IsConnected = true;
-        
-        return new ConnectionResult { Succeeded = true, Message = "Successfully connected to the server" };
+        return await Task.FromResult(new ConnectionResult { Succeeded = true, Message = "Successfully connected to the server" });
     }
 
     /// <inheritdoc/>
@@ -86,11 +87,11 @@ public class ServerClientBase : IServerClient, IDisposable
     {
         if (string.IsNullOrEmpty(hostOrIp))
         {
-            return new ConnectionResult { Succeeded = false, Message = "Provided Hostname or IP address is empty or invalid" };
+            return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Provided Hostname or IP address is empty or invalid" });
         }
         if (hostOrIp.Length > 255)
         {
-            return new ConnectionResult { Succeeded = false, Message = "Provided Hostname is over 255 characters which is the hostname limit" };
+            return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Provided Hostname is over 255 characters which is the hostname limit" });
         }
         
         if (IPAddress.TryParse(hostOrIp, out var address))
@@ -103,86 +104,101 @@ public class ServerClientBase : IServerClient, IDisposable
             var record = Dns.GetHostAddresses(hostOrIp);
             if (record.Length == 0)
             {
-                return new ConnectionResult { Succeeded = false, Message = "Couldn't resolve a valid record for the provided hostname" };
+                return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Couldn't resolve a valid record for the provided hostname" });
             }
 
             return await Connect(new IPEndPoint(record.First(), port), type, sendTimeout, receiveTimeout);
         }
         catch (SocketException)
         {
-            return new ConnectionResult { Succeeded = false, Message = "Couldn't resolve a valid record for the provided hostname" };
+            return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Couldn't resolve a valid record for the provided hostname" });
         }
         catch (ArgumentException)
         {
-            return new ConnectionResult { Succeeded = false, Message = "Provided Hostname or IP address is invalid" };
+            return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Provided Hostname or IP address is invalid" });
         }
         catch (Exception ex)
         {
-            return new ConnectionResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" };
+            return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" });
         }
     }
 
     /// <inheritdoc/>
     public void CloseConnection()
     {
-        Socket?.Close();
+        _socket?.Close();
+        IsConnected = false;
     }
 
     /// <inheritdoc/>
     public async Task<ClientSendResult> SendAsync(byte[] payload)
     {
-        if (Socket is null)
+        if (_socket is null || !_socket.Connected)
         {
-            return new ClientSendResult {Succeeded = false, Message = "Current socket connection is closed"};
+            return await Task.FromResult(new ClientSendResult { Succeeded = false, Message = "The socket is currently closed" });
         }
-
+        
         try
         {
-            var response = await Socket.SendAsync(payload, SocketFlags.None);
-            return new ClientSendResult {Succeeded = true, BytesSent = response};
+            var socketSend = _socket.BeginSend(payload, 0, payload.Length, SocketFlags.None, null, null);
+            socketSend.AsyncWaitHandle.WaitOne(SendTimeout);
+            if (!socketSend.IsCompleted)
+            {
+                return await Task.FromResult(new ClientSendResult { Succeeded = false, Message = "Timeout occurred while waiting to send data" });
+            }
+
+            var bytesSent = _socket.EndSend(socketSend);
+            return await Task.FromResult(new ClientSendResult {Succeeded = true, BytesSent = bytesSent});
         }
         catch (SocketException ex)
         {
-            return new ClientSendResult {Succeeded = false, Message = ex.Message};
+            return await Task.FromResult(new ClientSendResult {Succeeded = false, Message = ex.Message});
         }
         catch (ObjectDisposedException)
         {
-            return new ClientSendResult {Succeeded = false, Message = "Current socket connection is closed"};
+            return await Task.FromResult(new ClientSendResult {Succeeded = false, Message = "Socket connection was closed unexpectedly"});
         }
         catch (Exception ex)
         {
-            return new ClientSendResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" };
+            return await Task.FromResult(new ClientSendResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" });
         }
     }
 
     /// <inheritdoc/>
     public async Task<ClientReceiveResult> ReceiveAsync()
     {
-        if (Socket is null)
+        if (_socket is null || !_socket.Connected)
         {
-            return new ClientReceiveResult {Succeeded = false, Message = "Current socket connection is closed"};
+            return await Task.FromResult(new ClientReceiveResult { Succeeded = false, Message = "The socket is currently closed" });
         }
 
         var databuffer = new byte[BufferSize];
         try
         {
-            var response = await Socket.ReceiveAsync(databuffer, SocketFlags.None);
-            return new ClientReceiveResult {Succeeded = true, Response = databuffer.Take(response).ToArray()};
+            var socketReceive = _socket.BeginReceive(databuffer, 0, databuffer.Length, SocketFlags.None, null, null);
+            socketReceive.AsyncWaitHandle.WaitOne(ReceiveTimeout);
+            if (!socketReceive.IsCompleted)
+            {
+                return await Task.FromResult(new ClientReceiveResult { Succeeded = false, Message = "Timeout occurred while waiting to receive data" });
+            }
+
+            _socket.EndReceive(socketReceive);
+            return await Task.FromResult(new ClientReceiveResult {Succeeded = true, Response = databuffer});
         }
         catch (SocketException ex)
         {
-            return new ClientReceiveResult {Succeeded = false, Message = ex.Message};
+            return await Task.FromResult(new ClientReceiveResult {Succeeded = false, Message = ex.Message});
         }
         catch (ObjectDisposedException)
         {
-            return new ClientReceiveResult {Succeeded = false, Message = "Current socket connection is closed"};
+            return await Task.FromResult(new ClientReceiveResult {Succeeded = false, Message = "Connection was closed unexpectedly"});
         }
         catch (Exception ex)
         {
-            return new ClientReceiveResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" };
+            return await Task.FromResult(new ClientReceiveResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" });
         }
     }
-
+    
     public void Dispose()
     {
         CloseConnection();
