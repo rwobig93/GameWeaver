@@ -49,10 +49,10 @@ public partial class DeveloperTesting : IAsyncDisposable
     private bool _isTester;
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
-    private string _serverIp = "";
-    private int _serverPort;
+    private string _serverIp = "atmos-games-01";
+    private int _serverPort = 40520;
     private string _serverStatus = "";
-    private NetworkProtocol _serverProtocol = NetworkProtocol.Tcp;
+    private NetworkProtocol _serverProtocol = NetworkProtocol.Udp;
     private GameSource _serverSource = GameSource.Steam;
     private List<GameServerSlim> _gameServers = [];
     private GameServerSlim? _selectedGameServer;

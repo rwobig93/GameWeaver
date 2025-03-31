@@ -4,7 +4,6 @@ using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.GameServer.Mod;
 using Application.Requests.GameServer.GameProfile;
-using Application.Requests.GameServer.GameServer;
 using Application.Requests.GameServer.LocalResource;
 using Domain.Contracts;
 

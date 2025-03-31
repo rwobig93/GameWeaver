@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <Company>Rick Wobig &lt;https://github.com/rwobig93&gt;</Company>
+        <AssemblyVersion>1.0.0</AssemblyVersion>
+        <FileVersion>1.0.0</FileVersion>
+        <IsPackable>false</IsPackable>
+        <Title>GameServerQuery</Title>
+        <Authors>Rick Wobig</Authors>
+        <Description>https://github.com/rwobig93</Description>
+        <Copyright>NA</Copyright>
+    </PropertyGroup>
+
+</Project>

@@ -18,6 +18,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\libraries\GameServerQuery\GameServerQuery.csproj" />
       <ProjectReference Include="..\Application\Application.csproj" />
     </ItemGroup>
 
@@ -41,7 +42,6 @@
       <PackageReference Include="OAuth2" Version="0.10.3" />
       <PackageReference Include="Otp.NET" Version="1.4.0" />
       <PackageReference Include="QRCoder" Version="1.6.0" />
-      <PackageReference Include="QueryMaster" Version="1.1.2" />
       <PackageReference Include="RandomNameGeneratorNG" Version="2.0.2" />
       <PackageReference Include="Scalar.AspNetCore" Version="2.0.26" />
       <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />

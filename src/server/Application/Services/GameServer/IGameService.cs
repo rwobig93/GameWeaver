@@ -3,7 +3,6 @@ using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
 using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
-using Application.Requests.GameServer.Game;
 using Domain.Contracts;
 
 namespace Application.Services.GameServer;
