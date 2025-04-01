@@ -18,15 +18,15 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] int IDENTITY(1,1) PRIMARY KEY,
+                    [Id] INT IDENTITY(1,1) PRIMARY KEY,
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
-                    [SendTimestamp] datetime2 NOT NULL,
-                    [ReceiveTimestamp] datetime2 NOT NULL,
-                    [CpuUsage] float(24) NOT NULL,
-                    [RamUsage] float(24) NOT NULL,
-                    [Uptime] float(24) NOT NULL,
-                    [NetworkOutBytes] int NOT NULL,
-                    [NetworkInBytes] int NOT NULL
+                    [SendTimestamp] DATETIME2 NOT NULL,
+                    [ReceiveTimestamp] DATETIME2 NOT NULL,
+                    [CpuUsage] FLOAT(24) NOT NULL,
+                    [RamUsage] FLOAT(24) NOT NULL,
+                    [Uptime] FLOAT(24) NOT NULL,
+                    [NetworkOutBytes] INT NOT NULL,
+                    [NetworkInBytes] INT NOT NULL
                 )
             end"
     };

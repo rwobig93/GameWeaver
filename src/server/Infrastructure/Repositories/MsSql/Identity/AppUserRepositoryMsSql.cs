@@ -367,10 +367,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         try
         {
             createObject.CreatedOn = _dateTime.NowDatabaseTime;
-            if (_generalConfig.Value.UseCurrency)
-            {
-                createObject.Currency = _generalConfig.Value.StartingCurrency;
-            }
+            createObject.Currency = _generalConfig.Value.StartingCurrency;
 
             var createdId = await _database.SaveDataReturnId(AppUsersTableMsSql.Insert, createObject);
 

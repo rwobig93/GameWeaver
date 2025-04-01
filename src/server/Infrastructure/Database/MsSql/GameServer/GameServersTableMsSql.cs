@@ -18,7 +18,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
@@ -235,6 +235,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @OwnerId UNIQUEIDENTIFIER,
                 @HostId UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
@@ -260,11 +261,11 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @IsDeleted BIT
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (OwnerId, HostId, GameId, GameProfileId, ParentGameProfileId, ServerBuildVersion, ServerName, Password, PasswordRcon,
+                INSERT into dbo.[{Table.TableName}]  (Id, OwnerId, HostId, GameId, GameProfileId, ParentGameProfileId, ServerBuildVersion, ServerName, Password, PasswordRcon,
                                                       PasswordAdmin, PublicIp, PrivateIp, ExternalHostname, PortGame, PortPeer, PortQuery, PortRcon, Modded, Private, ServerState,
                                                       CreatedBy, CreatedOn, IsDeleted)
                 OUTPUT INSERTED.Id
-                VALUES (@OwnerId, @HostId, @GameId, @GameProfileId, @ParentGameProfileId, @ServerBuildVersion, @ServerName, @Password, @PasswordRcon, @PasswordAdmin,
+                VALUES (@Id, @OwnerId, @HostId, @GameId, @GameProfileId, @ParentGameProfileId, @ServerBuildVersion, @ServerName, @Password, @PasswordRcon, @PasswordAdmin,
                         @PublicIp, @PrivateIp, @ExternalHostname, @PortGame, @PortPeer, @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @IsDeleted);
             end"
     };

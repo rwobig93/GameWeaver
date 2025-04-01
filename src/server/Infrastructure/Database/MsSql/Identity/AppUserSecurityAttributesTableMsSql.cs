@@ -18,7 +18,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [PasswordHash] NVARCHAR(256) NOT NULL,
                     [PasswordSalt] NVARCHAR(256) NOT NULL,
@@ -113,6 +113,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @OwnerId UNIQUEIDENTIFIER,
                 @PasswordHash NVARCHAR(256),
                 @PasswordSalt NVARCHAR(256),
@@ -125,10 +126,10 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                 @LastFullLogin datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, TwoFactorEnabled, TwoFactorKey, AuthState,
+                INSERT into dbo.[{Table.TableName}] (Id, OwnerId, PasswordHash, PasswordSalt, TwoFactorEnabled, TwoFactorKey, AuthState,
                                          AuthStateTimestamp, BadPasswordAttempts, LastBadPassword, LastFullLogin)
                 OUTPUT INSERTED.Id
-                values (@OwnerId, @PasswordHash, @PasswordSalt, @TwoFactorEnabled, @TwoFactorKey, @AuthState, @AuthStateTimestamp,
+                values (@Id, @OwnerId, @PasswordHash, @PasswordSalt, @TwoFactorEnabled, @TwoFactorKey, @AuthState, @AuthStateTimestamp,
                         @BadPasswordAttempts, @LastBadPassword, @LastFullLogin);
             end"
     };

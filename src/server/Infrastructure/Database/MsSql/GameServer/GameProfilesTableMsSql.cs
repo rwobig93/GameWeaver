@@ -18,7 +18,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [FriendlyName] NVARCHAR(128) NOT NULL,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
@@ -151,6 +151,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @FriendlyName NVARCHAR(128),
                 @OwnerId UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
@@ -162,9 +163,9 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (FriendlyName, OwnerId, GameId, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
+                INSERT into dbo.[{Table.TableName}] (Id, FriendlyName, OwnerId, GameId, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@FriendlyName, @OwnerId, @GameId, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                VALUES (@Id, @FriendlyName, @OwnerId, @GameId, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"
     };
     

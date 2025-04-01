@@ -18,7 +18,7 @@ public class ServerStateRecordsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [Timestamp] DATETIME2 NOT NULL,
                     [AppVersion] NVARCHAR(128) NOT NULL,
                     [DatabaseVersion] NVARCHAR(128) NOT NULL
@@ -140,14 +140,15 @@ public class ServerStateRecordsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @Timestamp DATETIME2,
                 @AppVersion NVARCHAR(128),
                 @DatabaseVersion NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Timestamp, AppVersion, DatabaseVersion)
+                INSERT into dbo.[{Table.TableName}] (Id, Timestamp, AppVersion, DatabaseVersion)
                 OUTPUT INSERTED.Id
-                VALUES (@Timestamp, @AppVersion, @DatabaseVersion);
+                VALUES (@Id, @Timestamp, @AppVersion, @DatabaseVersion);
             end"
     };
 }

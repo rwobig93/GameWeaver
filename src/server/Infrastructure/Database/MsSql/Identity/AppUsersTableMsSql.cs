@@ -18,7 +18,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [Username] NVARCHAR(256) NOT NULL,
                     [Email] NVARCHAR(256) NOT NULL,
                     [EmailConfirmed] BIT NOT NULL,
@@ -345,6 +345,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @Username NVARCHAR(256),
                 @Email NVARCHAR(256),
                 @EmailConfirmed BIT,
@@ -364,11 +365,11 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 @Currency INT
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Username, Email, EmailConfirmed, PhoneNumber, PhoneNumberConfirmed, FirstName, LastName,
+                INSERT into dbo.[{Table.TableName}] (Id, Username, Email, EmailConfirmed, PhoneNumber, PhoneNumberConfirmed, FirstName, LastName,
                                          CreatedBy, ProfilePictureDataUrl, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn,
                                          AccountType, Notes, Currency)
                 OUTPUT INSERTED.Id
-                VALUES (@Username, @Email, @EmailConfirmed, @PhoneNumber, @PhoneNumberConfirmed, @FirstName, @LastName, @CreatedBy,
+                VALUES (@Id, @Username, @Email, @EmailConfirmed, @PhoneNumber, @PhoneNumberConfirmed, @FirstName, @LastName, @CreatedBy,
                         @ProfilePictureDataUrl, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn, @AccountType, @Notes, @Currency);
             end"
     };

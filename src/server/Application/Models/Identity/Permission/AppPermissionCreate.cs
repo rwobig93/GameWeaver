@@ -5,6 +5,7 @@ namespace Application.Models.Identity.Permission;
 
 public class AppPermissionCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid RoleId { get; set; } = GuidHelpers.GetMax();
     public Guid UserId { get; set; } = GuidHelpers.GetMax();
     public string ClaimType { get; set; } = ClaimConstants.Permission;

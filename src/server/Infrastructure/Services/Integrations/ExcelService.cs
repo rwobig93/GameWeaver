@@ -2,6 +2,8 @@
 using System.Drawing;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
+using Application.Settings.AppSettings;
+using Microsoft.Extensions.Options;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
@@ -10,10 +12,12 @@ namespace Infrastructure.Services.Integrations;
 public class ExcelService : IExcelService
 {
     private readonly IRunningServerState _serverState;
+    private readonly IOptions<AppConfiguration> _appConfiguration;
 
-    public ExcelService(IRunningServerState serverState)
+    public ExcelService(IRunningServerState serverState, IOptions<AppConfiguration> appConfiguration)
     {
         _serverState = serverState;
+        _appConfiguration = appConfiguration;
     }
 
     private static void ConfigureWorkSheetHeaders(List<string> workSheetHeaders, ExcelWorksheet workSheet)
@@ -74,7 +78,7 @@ public class ExcelService : IExcelService
     public async Task<string> ExportBase64Async<TData>(IEnumerable<TData> data, Dictionary<string, Func<TData, object>> dataMapping,
         string sheetName = "Sheet1")
     {
-        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+        ExcelPackage.License.SetNonCommercialPersonal(_appConfiguration.Value.ApplicationName);
         using var excelPackage = new ExcelPackage();
         excelPackage.Workbook.Properties.Author = _serverState.ApplicationName;
         excelPackage.Workbook.Worksheets.Add(sheetName);

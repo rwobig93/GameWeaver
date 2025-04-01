@@ -255,8 +255,6 @@ public static class DependencyInjection
             });
 
         services.AddOpenApi();
-        services.AddEndpointsApiExplorer();
-        
         services.AddApiVersioning(c =>
         {
             c.AssumeDefaultVersionWhenUnspecified = true;
@@ -268,9 +266,9 @@ public static class DependencyInjection
                 new MediaTypeApiVersionReader("ver"),
                 new UrlSegmentApiVersionReader());
         });
+        services.AddEndpointsApiExplorer();
         
-        services.AddHealthChecks()
-            .AddCheck<DatabaseHealthCheck>("Database");
+        services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("Database");
     }
 
     private static void AddDatabaseServices(this IServiceCollection services, IConfiguration configuration)
@@ -328,7 +326,7 @@ public static class DependencyInjection
                 bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
                 bearer.AutomaticRefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
                 bearer.RefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
-
+                
                 bearer.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = auth =>

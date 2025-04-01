@@ -18,7 +18,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
                     [SteamGameId] int NOT NULL,
                     [SteamToolId] int NOT NULL,
@@ -202,6 +202,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
                 @SteamGameId int,
                 @SteamToolId int,
@@ -216,10 +217,10 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (GameId, SteamGameId, SteamToolId, SteamId, FriendlyName, CurrentHash, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn,
+                INSERT into dbo.[{Table.TableName}] (Id, GameId, SteamGameId, SteamToolId, SteamId, FriendlyName, CurrentHash, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn,
                                                      IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@GameId, @SteamGameId, @SteamToolId, @SteamId, @FriendlyName, @CurrentHash, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted,
+                VALUES (@Id, @GameId, @SteamGameId, @SteamToolId, @SteamId, @FriendlyName, @CurrentHash, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted,
                         @DeletedOn);
             end"
     };

@@ -18,7 +18,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NULL,
                     [ThemePreference] INT NULL,
                     [DrawerDefaultOpen] BIT NULL,
@@ -110,6 +110,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @OwnerId UNIQUEIDENTIFIER,
                 @ThemePreference INT,
                 @DrawerDefaultOpen BIT,
@@ -119,9 +120,9 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 @GamerMode BIT
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree, GamerMode)
+                INSERT into dbo.[{Table.TableName}] (Id, OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree, GamerMode)
                 OUTPUT INSERTED.Id
-                VALUES (@OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree, @GamerMode);
+                VALUES (@Id, @OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree, @GamerMode);
             end"
     };
 

@@ -2,6 +2,7 @@
 
 public class ModCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid GameId { get; set; }
     public int SteamGameId { get; set; }
     public int SteamToolId { get; set; }

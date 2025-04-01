@@ -128,15 +128,6 @@ public static class WebServerConfiguration
     {
         using var scope = app.Services.CreateAsyncScope();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
-
-        app.MapOpenApi();
-        app.MapScalarApiReference("/api", options =>
-        {
-            options.Title = $"{serverState.ApplicationName} API";
-            options.Layout = ScalarLayout.Modern;
-            options.DarkMode = true;
-            options.WithPreferredScheme("Bearer");
-        });
         
         app.MapControllers();
         app.ConfigureApiVersions();
@@ -144,6 +135,19 @@ public static class WebServerConfiguration
         app.MapHealthChecks("/_health", new HealthCheckOptions()
         {
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+        });
+
+        app.MapOpenApi("/api/{documentName}.json");
+        app.MapScalarApiReference("/api", options =>
+        {
+            options.Title = $"{serverState.ApplicationName} API";
+            options.Layout = ScalarLayout.Modern;
+            options.DarkMode = true;
+            options.WithHttpBearerAuthentication(bearer => bearer.Token = "your-bearer-token");
+            options.WithOpenApiRoutePattern("/api/{documentName}.json");
+            options.WithPreferredScheme("Bearer");
+            options.WithHttpBearerAuthentication(bearer => bearer.Token = "your-bearer-token");
+            options.HideClientButton = true;
         });
     }
 

@@ -4,6 +4,7 @@ namespace Application.Models.Identity.User;
 
 public class AppUserCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public string Username { get; set; } = null!;
     public string Email { get; set; } = null!;
     public bool EmailConfirmed { get; set; }

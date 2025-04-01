@@ -4,6 +4,7 @@ namespace Application.Models.GameServer.GameServer;
 
 public class GameServerCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid OwnerId { get; set; }
     public Guid HostId { get; set; }
     public Guid GameId { get; set; }

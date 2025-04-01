@@ -10,10 +10,10 @@
 
     <ItemGroup>
         <PackageReference Include="MemoryPack" Version="1.21.4" />
-        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.2" />
-        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.2" />
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.2" />
-        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.2" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.3" />
         <PackageReference Include="Serilog" Version="4.2.0" />
         <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
         <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
@@ -27,5 +27,17 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="GameWeaverService\game-servers.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\GameServers\c58351d6-cd02-45d8-bffb-4cf24f1164a5\ConanSandbox\Config\CommandScripts\AIBenchmark.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\GameServers\c58351d6-cd02-45d8-bffb-4cf24f1164a5\ConanSandbox\Config\CommandScripts\AIBenchmark_v4.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\GameServers\c58351d6-cd02-45d8-bffb-4cf24f1164a5\ConanSandbox\Config\CommandScripts\BenchmarkConanSandbox1.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\GameServers\c58351d6-cd02-45d8-bffb-4cf24f1164a5\ConanSandbox\Config\CommandScripts\BenchmarkScript.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\GameServers\c58351d6-cd02-45d8-bffb-4cf24f1164a5\ConanSandbox\Config\CommandScripts\ScriptTest.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\GameServers\c58351d6-cd02-45d8-bffb-4cf24f1164a5\ConanSandbox\Config\webrtc-config.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\GameServers\c58351d6-cd02-45d8-bffb-4cf24f1164a5\ConanSandbox\Saved\ModControllerCache.json" />
+      <_ContentIncludedByDefault Remove="GameWeaverService\weaver-work.json" />
     </ItemGroup>
 </Project>

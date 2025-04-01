@@ -18,7 +18,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [FriendlyName] NVARCHAR(128) NOT NULL,
                     [SteamName] NVARCHAR(128) NOT NULL,
                     [SteamGameId] INT NULL,
@@ -212,6 +212,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @FriendlyName NVARCHAR(128),
                 @SteamName NVARCHAR(128),
                 @SteamGameId INT,
@@ -251,14 +252,14 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 @ManualVersionUrlDownload NVARCHAR(1024)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, LatestBuildVersion, UrlBackground, UrlLogo,
+                INSERT into dbo.[{Table.TableName}]  (Id, FriendlyName, SteamName, SteamGameId, SteamToolId, DefaultGameProfileId, LatestBuildVersion, UrlBackground, UrlLogo,
                                                       UrlLogoSmall, UrlWebsite, ControllerSupport, DescriptionShort, DescriptionLong, DescriptionAbout, PriceInitial, PriceCurrent,
                                                       PriceDiscount, MetaCriticScore, UrlMetaCriticPage, RequirementsPcMinimum, RequirementsPcRecommended, RequirementsMacMinimum,
                                                       RequirementsMacRecommended, RequirementsLinuxMinimum, RequirementsLinuxRecommended, CreatedBy, CreatedOn, LastModifiedBy,
                                                       LastModifiedOn, IsDeleted, SupportsWindows, SupportsLinux, SupportsMac, SourceType, ManualFileRecordId, ManualVersionUrlCheck,
                                                       ManualVersionUrlDownload)
                 OUTPUT INSERTED.Id
-                VALUES (@FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @LatestBuildVersion, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
+                VALUES (@Id, @FriendlyName, @SteamName, @SteamGameId, @SteamToolId, @DefaultGameProfileId, @LatestBuildVersion, @UrlBackground, @UrlLogo, @UrlLogoSmall, @UrlWebsite,
                         @ControllerSupport, @DescriptionShort, @DescriptionLong, @DescriptionAbout, @PriceInitial, @PriceCurrent, @PriceDiscount, @MetaCriticScore,
                         @UrlMetaCriticPage, @RequirementsPcMinimum, @RequirementsPcRecommended, @RequirementsMacMinimum, @RequirementsMacRecommended, @RequirementsLinuxMinimum,
                         @RequirementsLinuxRecommended, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @SupportsWindows, @SupportsLinux, @SupportsMac,

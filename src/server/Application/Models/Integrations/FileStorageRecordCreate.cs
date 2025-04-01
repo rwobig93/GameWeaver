@@ -4,6 +4,7 @@ namespace Application.Models.Integrations;
 
 public class FileStorageRecordCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public FileStorageFormat Format { get; set; }
     public FileStorageType LinkedType { get; set; }
     public Guid LinkedId { get; set; }

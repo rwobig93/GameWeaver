@@ -18,7 +18,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(128) NOT NULL,
                     [Description] NVARCHAR(128) NOT NULL
@@ -124,14 +124,15 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(128),
                 @Description NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (GameId, Name, Description)
+                INSERT into dbo.[{Table.TableName}]  (Id, GameId, Name, Description)
                 OUTPUT INSERTED.Id
-                VALUES (@GameId, @Name, @Description);
+                VALUES (@Id, @GameId, @Name, @Description);
             end"
     };
     

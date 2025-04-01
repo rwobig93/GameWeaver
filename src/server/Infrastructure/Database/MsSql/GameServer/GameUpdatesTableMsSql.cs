@@ -18,7 +18,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
                     [SupportsWindows] int NOT NULL,
                     [SupportsLinux] int NOT NULL,
@@ -123,6 +123,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
                 @SupportsWindows int,
                 @SupportsLinux int,
@@ -131,9 +132,9 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 @BuildVersionReleased datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}]  (GameId, SupportsWindows, SupportsLinux, SupportsMac, BuildVersion, BuildVersionReleased)
+                INSERT into dbo.[{Table.TableName}]  (Id, GameId, SupportsWindows, SupportsLinux, SupportsMac, BuildVersion, BuildVersionReleased)
                 OUTPUT INSERTED.Id
-                VALUES (@GameId, @SupportsWindows, @SupportsLinux, @SupportsMac, @BuildVersion, @BuildVersionReleased);
+                VALUES (@Id, @GameId, @SupportsWindows, @SupportsLinux, @SupportsMac, @BuildVersion, @BuildVersionReleased);
             end"
     };
     

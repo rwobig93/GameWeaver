@@ -4,6 +4,7 @@ namespace Application.Models.Identity.UserExtensions;
 
 public class AppUserSecurityAttributeCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid OwnerId { get; set; }
     public string PasswordHash { get; set; } = null!;
     public string PasswordSalt { get; set; } = null!;

@@ -18,7 +18,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [GameProfileId] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(128) NOT NULL,
                     [PathWindows] NVARCHAR(128) NOT NULL,

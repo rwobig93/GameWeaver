@@ -4,6 +4,7 @@ namespace Application.Models.Lifecycle;
 
 public class TroubleshootingRecordCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public TroubleshootEntityType EntityType { get; set; }
     public Guid RecordId { get; set; }
     public Guid ChangedBy { get; set; }
