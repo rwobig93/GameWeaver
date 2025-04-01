@@ -18,7 +18,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [HostId] UNIQUEIDENTIFIER NOT NULL,
                     [Description] NVARCHAR(2048) NOT NULL,
                     [Active] BIT NOT NULL,
@@ -161,6 +161,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @HostId UNIQUEIDENTIFIER,
                 @Description NVARCHAR(2048),
                 @Active BIT,
@@ -173,9 +174,9 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (HostId, Description, Active, [Key], ActivationDate, ActivationPublicIp, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (Id, HostId, Description, Active, [Key], ActivationDate, ActivationPublicIp, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@HostId, @Description, @Active, @Key, @ActivationDate, @ActivationPublicIp, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                VALUES (@Id, @HostId, @Description, @Active, @Key, @ActivationDate, @ActivationPublicIp, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     

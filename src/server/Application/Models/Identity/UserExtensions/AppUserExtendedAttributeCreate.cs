@@ -4,6 +4,7 @@ namespace Application.Models.Identity.UserExtensions;
 
 public class AppUserExtendedAttributeCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid OwnerId { get; set; }
     public string Name { get; set; } = "";
     public string Value { get; set; } = "";

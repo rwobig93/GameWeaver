@@ -2,6 +2,7 @@
 
 public class ConfigurationItemCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid LocalResourceId { get; set; }
     public bool DuplicateKey { get; set; }
     public string Path { get; set; } = "";

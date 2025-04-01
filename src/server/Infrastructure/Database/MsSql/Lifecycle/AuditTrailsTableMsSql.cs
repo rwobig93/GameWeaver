@@ -19,7 +19,7 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [TableName] NVARCHAR(100) NOT NULL,
                     [RecordId] UNIQUEIDENTIFIER NOT NULL,
                     [ChangedBy] UNIQUEIDENTIFIER NOT NULL,
@@ -166,6 +166,7 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @TableName NVARCHAR(100),
                 @RecordId UNIQUEIDENTIFIER,
                 @ChangedBy UNIQUEIDENTIFIER,
@@ -175,9 +176,9 @@ public class AuditTrailsTableMsSql : IMsSqlEnforcedEntity
                 @After NVARCHAR(MAX)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (TableName, RecordId, ChangedBy, Timestamp, Action, Before, After)
+                INSERT into dbo.[{Table.TableName}] (Id, TableName, RecordId, ChangedBy, Timestamp, Action, Before, After)
                 OUTPUT INSERTED.Id
-                VALUES (@TableName, @RecordId, @ChangedBy, @Timestamp, @Action, @Before, @After);
+                VALUES (@Id, @TableName, @RecordId, @ChangedBy, @Timestamp, @Action, @Before, @After);
             end"
     };
 

@@ -4,6 +4,7 @@ namespace Application.Models.GameServer.Game;
 
 public class GameCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public string FriendlyName { get; set; } = "";
     public string SteamName { get; set; } = "";
     public int SteamGameId { get; set; }

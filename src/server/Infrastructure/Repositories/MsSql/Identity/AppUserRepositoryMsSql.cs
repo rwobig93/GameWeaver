@@ -360,6 +360,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
+    // TODO: API Documentation isn't being generated
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
@@ -367,10 +368,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         try
         {
             createObject.CreatedOn = _dateTime.NowDatabaseTime;
-            if (_generalConfig.Value.UseCurrency)
-            {
-                createObject.Currency = _generalConfig.Value.StartingCurrency;
-            }
+            createObject.Currency = _generalConfig.Value.StartingCurrency;
 
             var createdId = await _database.SaveDataReturnId(AppUsersTableMsSql.Insert, createObject);
 

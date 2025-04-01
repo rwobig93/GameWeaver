@@ -18,7 +18,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [Format] INT NOT NULL,
                     [LinkedType] INT NOT NULL,
                     [LinkedId] UNIQUEIDENTIFIER NOT NULL,
@@ -139,6 +139,7 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @Format INT,
                 @LinkedType INT,
                 @LinkedId UNIQUEIDENTIFIER,
@@ -155,10 +156,10 @@ public class FileStorageRecordsTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn DATETIME2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Format, LinkedType, LinkedId, FriendlyName, Filename, Description, HashSha256, Version, CreatedBy, CreatedOn, LastModifiedBy,
+                INSERT into dbo.[{Table.TableName}] (Id, Format, LinkedType, LinkedId, FriendlyName, Filename, Description, HashSha256, Version, CreatedBy, CreatedOn, LastModifiedBy,
                                                      LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@Format, @LinkedType, @LinkedId, @FriendlyName, @Filename, @Description, @HashSha256, @Version, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn,
+                VALUES (@Id, @Format, @LinkedType, @LinkedId, @FriendlyName, @Filename, @Description, @HashSha256, @Version, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn,
                         @IsDeleted, @DeletedOn);
             end"
     };

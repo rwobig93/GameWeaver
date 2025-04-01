@@ -2,6 +2,7 @@
 
 public class GameUpdateCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid GameId { get; set; }
     public bool SupportsWindows { get; set; }
     public bool SupportsLinux { get; set; }

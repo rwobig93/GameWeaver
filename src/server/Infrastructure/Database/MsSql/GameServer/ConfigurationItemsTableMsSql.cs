@@ -18,7 +18,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [LocalResourceId] UNIQUEIDENTIFIER NOT NULL,
                     [DuplicateKey] BIT NOT NULL,
                     [Path] NVARCHAR(128) NOT NULL,
@@ -112,6 +112,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @LocalResourceId UNIQUEIDENTIFIER,
                 @DuplicateKey BIT,
                 @Path NVARCHAR(128),
@@ -121,9 +122,9 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 @FriendlyName NVARCHAR(128)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (LocalResourceId, DuplicateKey, Path, Category, [Key], Value, FriendlyName)
+                INSERT into dbo.[{Table.TableName}] (Id, LocalResourceId, DuplicateKey, Path, Category, [Key], Value, FriendlyName)
                 OUTPUT INSERTED.Id
-                VALUES (@LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value, @FriendlyName);
+                VALUES (@Id, @LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value, @FriendlyName);
             end"
     };
     

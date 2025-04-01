@@ -18,7 +18,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [PasswordHash] NVARCHAR(256) NOT NULL,
                     [PasswordSalt] NVARCHAR(256) NOT NULL,
@@ -135,6 +135,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @OwnerId UNIQUEIDENTIFIER,
                 @PasswordHash NVARCHAR(256),
                 @PasswordSalt NVARCHAR(256),
@@ -162,11 +163,11 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, PasswordHash, PasswordSalt, Hostname, FriendlyName, Description, PrivateIp, PublicIp, CurrentState, Os,
+                INSERT into dbo.[{Table.TableName}] (Id, OwnerId, PasswordHash, PasswordSalt, Hostname, FriendlyName, Description, PrivateIp, PublicIp, CurrentState, Os,
                                                      OsName, OsVersion, AllowedPorts, Cpus, Motherboards, Storage, NetworkInterfaces, RamModules, Gpus, CreatedBy, CreatedOn,
                                                      LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@OwnerId, @PasswordHash, @PasswordSalt, @Hostname, @FriendlyName, @Description, @PrivateIp, @PublicIp, @CurrentState, @Os,
+                VALUES (@Id, @OwnerId, @PasswordHash, @PasswordSalt, @Hostname, @FriendlyName, @Description, @PrivateIp, @PublicIp, @CurrentState, @Os,
                         @OsName, @OsVersion, @AllowedPorts, @Cpus, @Motherboards, @Storage, @NetworkInterfaces, @RamModules, @Gpus,
                         @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"

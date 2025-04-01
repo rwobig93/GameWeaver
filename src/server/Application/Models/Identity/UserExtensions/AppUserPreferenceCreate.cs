@@ -6,6 +6,7 @@ namespace Application.Models.Identity.UserExtensions;
 
 public class AppUserPreferenceCreate
 {
+    public Guid Id { get; set; } = Guid.CreateVersion7();
     public Guid OwnerId { get; set; }
     public AppThemeId ThemePreference { get; set; } = AppThemeId.Dark;
     public bool DrawerDefaultOpen { get; set; } = true;

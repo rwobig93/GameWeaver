@@ -18,7 +18,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [Name] NVARCHAR(256) NOT NULL,
                     [Description] NVARCHAR(4000) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
@@ -111,6 +111,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
                 @Description NVARCHAR(4000),
                 @CreatedBy UNIQUEIDENTIFIER,
@@ -119,9 +120,9 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Name, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
+                INSERT into dbo.[{Table.TableName}] (Id, Name, Description, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@Name, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
+                VALUES (@Id, @Name, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
     

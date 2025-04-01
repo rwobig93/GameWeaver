@@ -18,7 +18,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [Name] NVARCHAR(256) NOT NULL,
                     [Value] NVARCHAR(512) NOT NULL,
@@ -205,6 +205,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @OwnerId UNIQUEIDENTIFIER,
                 @Name NVARCHAR(256),
                 @Value NVARCHAR(512),
@@ -212,9 +213,9 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 @Type int
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (OwnerId, Name, Value, Description, Type)
+                INSERT into dbo.[{Table.TableName}] (Id, OwnerId, Name, Value, Description, Type)
                 OUTPUT INSERTED.Id
-                values (@OwnerId, @Name, @Value, @Description, @Type);
+                values (@Id, @OwnerId, @Name, @Value, @Description, @Type);
             end"
     };
     

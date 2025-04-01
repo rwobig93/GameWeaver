@@ -19,7 +19,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [RoleId] UNIQUEIDENTIFIER NULL,
                     [UserId] UNIQUEIDENTIFIER NULL,
                     [ClaimType] NVARCHAR(256) NULL,
@@ -286,6 +286,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @RoleId UNIQUEIDENTIFIER,
                 @UserId UNIQUEIDENTIFIER,
                 @ClaimType NVARCHAR(256),
@@ -300,10 +301,10 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (RoleId, UserId, Name, [Group], Access, ClaimType, ClaimValue, Description, CreatedBy, CreatedOn,
+                INSERT into dbo.[{Table.TableName}] (Id, RoleId, UserId, Name, [Group], Access, ClaimType, ClaimValue, Description, CreatedBy, CreatedOn,
                 LastModifiedBy, LastModifiedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@RoleId, @UserId, @Name, @Group, @Access, @ClaimType, @ClaimValue, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
+                VALUES (@Id, @RoleId, @UserId, @Name, @Group, @Access, @ClaimType, @ClaimValue, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy,
                 @LastModifiedOn);
             end"
     };

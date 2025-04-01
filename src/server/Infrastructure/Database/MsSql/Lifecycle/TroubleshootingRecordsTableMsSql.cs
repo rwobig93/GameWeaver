@@ -19,7 +19,7 @@ public class TroubleshootingRecordsTableMsSql : IMsSqlEnforcedEntity
             IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
             begin
                 CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
+                    [Id] UNIQUEIDENTIFIER PRIMARY KEY,
                     [EntityType] INT NOT NULL,
                     [RecordId] UNIQUEIDENTIFIER NOT NULL,
                     [ChangedBy] UNIQUEIDENTIFIER NOT NULL,
@@ -132,6 +132,7 @@ public class TroubleshootingRecordsTableMsSql : IMsSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
+                @Id UNIQUEIDENTIFIER,
                 @EntityType INT,
                 @RecordId UNIQUEIDENTIFIER,
                 @ChangedBy UNIQUEIDENTIFIER,
@@ -140,9 +141,9 @@ public class TroubleshootingRecordsTableMsSql : IMsSqlEnforcedEntity
                 @Detail NVARCHAR(MAX)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (EntityType, RecordId, ChangedBy, Timestamp, Message, Detail)
+                INSERT into dbo.[{Table.TableName}] (Id, EntityType, RecordId, ChangedBy, Timestamp, Message, Detail)
                 OUTPUT INSERTED.Id
-                VALUES (@EntityType, @RecordId, @ChangedBy, @Timestamp, @Message, @Detail);
+                VALUES (@Id, @EntityType, @RecordId, @ChangedBy, @Timestamp, @Message, @Detail);
             end"
     };
 
