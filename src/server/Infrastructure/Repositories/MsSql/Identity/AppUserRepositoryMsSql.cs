@@ -360,7 +360,6 @@ public class AppUserRepositoryMsSql : IAppUserRepository
         return actionReturn;
     }
 
-    // TODO: API Documentation isn't being generated
     public async Task<DatabaseActionResult<Guid>> CreateAsync(AppUserCreate createObject)
     {
         DatabaseActionResult<Guid> actionReturn = new();
