@@ -27,8 +27,10 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
+using Hangfire;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 
@@ -52,11 +54,13 @@ public class HostService : IHostService
     private readonly IAppUserRepository _userRepository;
     private readonly IOptions<AppConfiguration> _generalConfig;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly INetworkService _networkService;
 
     public HostService(IHostRepository hostRepository, IDateTimeService dateTime, IRunningServerState serverState, IOptions<AppConfiguration> appConfig,
         IOptions<SecurityConfiguration> securityConfig, ILogger logger, IGameServerRepository gameServerRepository, ISerializerService serializerService,
         IEventService eventService, IGameRepository gameRepository, IAuditTrailsRepository auditRepository, INotifyRecordRepository recordRepository,
-        ITroubleshootingRecordsRepository tshootRepository, IAppUserRepository userRepository, IOptions<AppConfiguration> generalConfig, IHttpClientFactory httpClientFactory)
+        ITroubleshootingRecordsRepository tshootRepository, IAppUserRepository userRepository, IOptions<AppConfiguration> generalConfig,
+        IHttpClientFactory httpClientFactory, INetworkService networkService)
     {
         _hostRepository = hostRepository;
         _dateTime = dateTime;
@@ -72,6 +76,7 @@ public class HostService : IHostService
         _userRepository = userRepository;
         _generalConfig = generalConfig;
         _httpClientFactory = httpClientFactory;
+        _networkService = networkService;
         _securityConfig = securityConfig.Value;
         _appConfig = appConfig.Value;
     }
@@ -1281,6 +1286,58 @@ public class HostService : IHostService
             return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
     }
+
+    public async Task VerifyGameServerConnectable(GameServerDb gameServer)
+    {
+        var gameServerGame = await _gameRepository.GetByIdAsync(gameServer.GameId);
+        if (!gameServerGame.Succeeded || gameServerGame.Result is null)
+        {
+            _logger.Error("Game for gameserver couldn't be found to check for connectable state: [{GameserverId}]{GameserverState}", gameServer.Id, gameServer.ServerState);
+            return;
+        }
+
+        var gameServerCheck = gameServer.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !_serverState.IsRunningInDebugMode);
+        var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
+        if (!connectableResponse.Data)
+        {
+            _logger.Verbose("Gameserver is internally connectable but not externally, no change: [{GameserverId}]{GameserverState}",
+                gameServer.Id, gameServer.ServerState);
+            return;
+        }
+
+        var gameServerUpdate = new GameServerUpdate { Id = gameServer.Id, ServerState = ConnectivityState.Connectable };
+        var updateState = await _gameServerRepository.UpdateAsync(gameServerUpdate);
+        if (!updateState.Succeeded)
+        {
+            _logger.Error("Update gameserver state for connectivity check error: {Error}", updateState.ErrorMessage);
+            return;
+        }
+        
+        var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+        {
+            EntityId = gameServer.Id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+            Detail = $"Server State Change: {gameServer.ServerState} => {gameServerUpdate.ServerState}"
+        });
+        if (!stateRecordCreate.Succeeded)
+        {
+            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, gameServer.Id, 
+                gameServer.HostId, "Failed to create state change notify record from weaver work for game server", new Dictionary<string, string>
+                {
+                    {"Source", "VerifyGameServerConnectable"},
+                    {"Error", updateState.ErrorMessage}
+                });
+        }
+        
+        _eventService.TriggerNotify("VerifyGameServerConnectable", new NotifyTriggeredEvent
+        {
+            EntityId = gameServer.Id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+            Detail = $"Server State Change: {gameServer.ServerState} => {gameServerUpdate.ServerState}"
+        });
+    }
     
     private async Task<IResult> HandleUpdateGameServerState(WeaverWorkUpdate request)
     {
@@ -1393,6 +1450,11 @@ public class HostService : IHostService
             serverStatusEvent.ServerName = foundServer.Result.ServerName;
             
             _eventService.TriggerGameServerStatus("HostServiceGameServerStateUpdate", serverStatusEvent);
+
+            if (deserializedData.ServerState is ConnectivityState.InternallyConnectable)
+            {
+                BackgroundJob.Enqueue(() => VerifyGameServerConnectable(foundServer.Result));
+            }
 
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
             

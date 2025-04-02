@@ -1,14 +1,19 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.GameServer;
+using Application.Helpers.Lifecycle;
 using Application.Mappers.GameServer;
+using Application.Models.Events;
 using Application.Models.External.Steam;
 using Application.Models.GameServer.Developers;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameGenre;
+using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.GameUpdate;
 using Application.Models.GameServer.Publishers;
+using Application.Models.Lifecycle;
 using Application.Repositories.GameServer;
 using Application.Repositories.Identity;
+using Application.Repositories.Lifecycle;
 using Application.Requests.GameServer.Host;
 using Application.Services.External;
 using Application.Services.GameServer;
@@ -17,8 +22,10 @@ using Application.Services.Lifecycle;
 using Application.Services.System;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
+using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
+using Domain.Enums.Lifecycle;
 using Hangfire;
 using Microsoft.Extensions.Options;
 
@@ -33,18 +40,24 @@ public class JobManager : IJobManager
     private readonly IOptions<SecurityConfiguration> _securityConfig;
     private readonly IAuditTrailService _auditService;
     private readonly IOptions<LifecycleConfiguration> _lifecycleConfig;
-    private readonly IGameServerRepository _gameServerRepository;
     private readonly IGameService _gameService;
     private readonly ISteamApiService _steamApiService;
     private readonly IRunningServerState _serverState;
     private readonly IGameRepository _gameRepository;
     private readonly IHostService _hostService;
     private readonly IOptionsMonitor<AppConfiguration> _appConfig;
+    private readonly INetworkService _networkService;
+    private readonly IGameServerService _gameServerService;
+    private readonly IGameServerRepository _gameServerRepository;
+    private readonly IEventService _eventService;
+    private readonly INotifyRecordRepository _recordRepository;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public JobManager(ILogger logger, IAppUserRepository userRepository, IAppAccountService accountService, IDateTimeService dateTime,
         IOptions<SecurityConfiguration> securityConfig, IAuditTrailService auditService, IOptions<LifecycleConfiguration> lifecycleConfig,
         IGameService gameService, ISteamApiService steamApiService, IRunningServerState serverState, IGameRepository gameRepository,
-        IHostService hostService, IGameServerRepository gameServerRepository, IOptionsMonitor<AppConfiguration> appConfig)
+        IHostService hostService, IOptionsMonitor<AppConfiguration> appConfig, INetworkService networkService, IGameServerService gameServerService,
+        IGameServerRepository gameServerRepository, IEventService eventService, INotifyRecordRepository recordRepository, ITroubleshootingRecordsRepository tshootRepository)
     {
         _logger = logger;
         _userRepository = userRepository;
@@ -56,8 +69,13 @@ public class JobManager : IJobManager
         _serverState = serverState;
         _gameRepository = gameRepository;
         _hostService = hostService;
-        _gameServerRepository = gameServerRepository;
         _appConfig = appConfig;
+        _networkService = networkService;
+        _gameServerService = gameServerService;
+        _gameServerRepository = gameServerRepository;
+        _eventService = eventService;
+        _recordRepository = recordRepository;
+        _tshootRepository = tshootRepository;
         _lifecycleConfig = lifecycleConfig;
         _securityConfig = securityConfig;
     }
@@ -539,5 +557,97 @@ public class JobManager : IJobManager
             
             _logger.Information("Host {HostId} hasn't checked in and is now offline", host.Id);
         }
+    }
+
+
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    public async Task GameServerStatusCheck()
+    {
+        var allGameServers = await _gameServerRepository.GetAllAsync();
+        if (!allGameServers.Succeeded || allGameServers.Result is null)
+        {
+            _logger.Error("Failed to gather game servers for connectable status check: {Error}", allGameServers.ErrorMessage);
+            return;
+        }
+        
+        _logger.Debug("Gathered {GameserverCount} gameservers to check for connectable status", allGameServers.Result.Count());
+        foreach (var gameserver in allGameServers.Result)
+        {
+            if (gameserver.ServerState != ConnectivityState.Connectable &&
+                gameserver.ServerState != ConnectivityState.Unknown &&
+                gameserver.ServerState != ConnectivityState.Unreachable &&
+                gameserver.ServerState != ConnectivityState.InternallyConnectable)
+            {
+                _logger.Debug("Gameserver isn't a valid state for checking connectable state, skipping: [{GameserverId}]{GameserverState}", gameserver.Id, gameserver.ServerState);
+                continue;
+            }
+
+            await UpdateGameServerStatus(gameserver);
+        }
+    }
+
+    public async Task UpdateGameServerStatus(GameServerDb gameserver)
+    {
+        var gameServerGame = await _gameRepository.GetByIdAsync(gameserver.GameId);
+        if (!gameServerGame.Succeeded || gameServerGame.Result is null)
+        {
+            _logger.Error("Game for gameserver couldn't be found to check for connectable state: [{GameserverId}]{GameserverState}", gameserver.Id, gameserver.ServerState);
+            return;
+        }
+
+        var gameServerCheck = gameserver.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !_serverState.IsRunningInDebugMode);
+        var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
+        switch (connectableResponse.Data)
+        {
+            case true when gameserver.ServerState is ConnectivityState.Connectable:
+                _logger.Verbose("Gameserver is connectable and last state was connectable, no change: [{GameserverId}]{GameserverState}",
+                    gameserver.Id, gameserver.ServerState);
+                return;
+            case false when gameserver.ServerState is ConnectivityState.InternallyConnectable:
+                _logger.Verbose("Gameserver is internally connectable but not externally, no change: [{GameserverId}]{GameserverState}",
+                    gameserver.Id, gameserver.ServerState);
+                return;
+        }
+
+        var gameServerUpdate = new GameServerUpdate
+        {
+            Id = gameserver.Id,
+            ServerState = connectableResponse.Data ? ConnectivityState.Connectable : ConnectivityState.Unreachable
+        };
+        var updateState = await _gameServerService.UpdateAsync(gameServerUpdate, _serverState.SystemUserId);
+        if (!updateState.Succeeded)
+        {
+            updateState.Messages.ForEach(x => _logger.Error("Update gameserver state for connectivity check error: {Error}", x));
+            return;
+        }
+            
+        var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+        {
+            EntityId = gameserver.Id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+            Detail = $"Server State Change: {gameserver.ServerState} => {gameServerUpdate.ServerState}"
+        });
+        if (!stateRecordCreate.Succeeded)
+        {
+            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Network, gameserver.Id, 
+                gameserver.HostId, "Failed to create state change notify record from gameserver status check job", new Dictionary<string, string>
+                {
+                    {"Source", "GameServerStatusCheck"},
+                    {"Error", string.Join(Environment.NewLine, updateState.Messages)}
+                });
+        }
+            
+        _eventService.TriggerNotify("GameServerStatusCheck", new NotifyTriggeredEvent
+        {
+            EntityId = gameserver.Id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+            Detail = $"Server State Change: {gameserver.ServerState} => {gameServerUpdate.ServerState}"
+        });
+            
+        _logger.Information("Updated gameserver connectivity state from {PreviousState} to {CurrentState} for gameserver {GameserverId}",
+            gameserver.ServerState, gameServerUpdate.ServerState, gameserver.Id);
     }
 }
