@@ -1309,55 +1309,64 @@ public class HostService : IHostService
 
     public async Task VerifyGameServerConnectable(GameServerDb gameServer)
     {
-        // TODO: Retry this a few times just in case query responses take a little longer based on the server
-        var gameServerGame = await _gameRepository.GetByIdAsync(gameServer.GameId);
-        if (!gameServerGame.Succeeded || gameServerGame.Result is null)
+        // Multiple connectivity attempts w/ backoff timers to get a responsive experience, after that it's down to the normal connectable job
+        foreach (var attemptTimeout in GameServerConstants.ConnectableCheckAttempts)
         {
-            _logger.Error("Game for gameserver couldn't be found to check for connectable state: [{GameserverId}]{GameserverState}", gameServer.Id, gameServer.ServerState);
-            return;
-        }
+            await Task.Delay(attemptTimeout);
+            
+            var gameServerGame = await _gameRepository.GetByIdAsync(gameServer.GameId);
+            if (!gameServerGame.Succeeded || gameServerGame.Result is null)
+            {
+                _logger.Error("Game for gameserver couldn't be found to check for connectable state: [{GameserverId}]{GameserverState}", gameServer.Id, gameServer.ServerState);
+                return;
+            }
 
-        var gameServerCheck = gameServer.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !_serverState.IsRunningInDebugMode);
-        var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
-        if (!connectableResponse.Data)
-        {
-            _logger.Verbose("Gameserver is internally connectable but not externally, no change: [{GameserverId}]{GameserverState}",
-                gameServer.Id, gameServer.ServerState);
-            return;
-        }
+            var gameServerCheck = gameServer.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !_serverState.IsRunningInDebugMode);
+            var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
+            if (!connectableResponse.Data)
+            {
+                _logger.Verbose("Gameserver is internally connectable but not externally, no change: [{GameserverId}]{GameserverState}",
+                    gameServer.Id, gameServer.ServerState);
+                continue;
+            }
 
-        var gameServerUpdate = new GameServerUpdate { Id = gameServer.Id, ServerState = ConnectivityState.Connectable };
-        var updateState = await _gameServerRepository.UpdateAsync(gameServerUpdate);
-        if (!updateState.Succeeded)
-        {
-            _logger.Error("Update gameserver state for connectivity check error: {Error}", updateState.ErrorMessage);
+            var gameServerUpdate = new GameServerUpdate { Id = gameServer.Id, ServerState = ConnectivityState.Connectable };
+            var updateState = await _gameServerRepository.UpdateAsync(gameServerUpdate);
+            if (!updateState.Succeeded)
+            {
+                _logger.Error("Update gameserver state for connectivity check error: {Error}", updateState.ErrorMessage);
+                return;
+            }
+            
+            var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+            {
+                EntityId = gameServer.Id,
+                Timestamp = _dateTime.NowDatabaseTime,
+                Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+                Detail = $"Server State Change: {gameServer.ServerState} => {gameServerUpdate.ServerState}"
+            });
+            if (!stateRecordCreate.Succeeded)
+            {
+                await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, gameServer.Id, 
+                    gameServer.HostId, "Failed to create state change notify record from weaver work for game server", new Dictionary<string, string>
+                    {
+                        {"Source", "VerifyGameServerConnectable"},
+                        {"Error", updateState.ErrorMessage}
+                    });
+            }
+            
+            _eventService.TriggerNotify("VerifyGameServerConnectable", new NotifyTriggeredEvent
+            {
+                EntityId = gameServer.Id,
+                Timestamp = _dateTime.NowDatabaseTime,
+                Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
+                Detail = $"Server State Change: {gameServer.ServerState} => {gameServerUpdate.ServerState}"
+            });
+            
             return;
         }
         
-        var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
-        {
-            EntityId = gameServer.Id,
-            Timestamp = _dateTime.NowDatabaseTime,
-            Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
-            Detail = $"Server State Change: {gameServer.ServerState} => {gameServerUpdate.ServerState}"
-        });
-        if (!stateRecordCreate.Succeeded)
-        {
-            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, gameServer.Id, 
-                gameServer.HostId, "Failed to create state change notify record from weaver work for game server", new Dictionary<string, string>
-                {
-                    {"Source", "VerifyGameServerConnectable"},
-                    {"Error", updateState.ErrorMessage}
-                });
-        }
-        
-        _eventService.TriggerNotify("VerifyGameServerConnectable", new NotifyTriggeredEvent
-        {
-            EntityId = gameServer.Id,
-            Timestamp = _dateTime.NowDatabaseTime,
-            Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
-            Detail = $"Server State Change: {gameServer.ServerState} => {gameServerUpdate.ServerState}"
-        });
+        _logger.Information("Gameserver connectable check exhausted attempts and wasn't connectable [{GameserverId}]{GameserverState}", gameServer.Id, gameServer.ServerState);
     }
     
     private async Task<IResult> HandleUpdateGameServerState(WeaverWorkUpdate request)

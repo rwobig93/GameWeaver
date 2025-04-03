@@ -80,6 +80,15 @@
       <EmbeddedResource Include="wwwroot\images\general\perlin-noise-mask.png">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </EmbeddedResource>
+      <EmbeddedResource Remove="Logs\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Logs\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Logs\**" />
     </ItemGroup>
 
 </Project>
