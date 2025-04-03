@@ -1,4 +1,5 @@
 
+using Application.Helpers.Runtime;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
 using Application.Settings.AppSettings;
@@ -18,15 +19,18 @@ public partial class HostWidget : ComponentBase
     
     private double[] _cpuData = [0, 0];
     private double[] _ramData = [0, 0];
-    private readonly List<ChartSeries> _netIn = [];
-    private readonly List<ChartSeries> _netOut = [];
+    private readonly List<TimeSeriesChartSeries> _netIn = [];
+    private readonly List<TimeSeriesChartSeries> _netOut = [];
     private readonly ChartOptions _chartOptionsCpu = new()
     {
         LineStrokeWidth = 4,
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
     private readonly ChartOptions _chartOptionsRam = new()
     {
@@ -34,15 +38,24 @@ public partial class HostWidget : ComponentBase
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
     private readonly ChartOptions _chartOptionsNetwork = new()
     {
-        LineStrokeWidth = 4,
-        InterpolationOption = InterpolationOption.NaturalSpline,
+        LineStrokeWidth = 2,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        YAxisTicks = 500,
+        YAxisRequireZeroPoint = true,
+        YAxisLabelPosition = YAxisLabelPosition.None,
+        XAxisLabelPosition = XAxisLabelPosition.None,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
 
     private List<HostCheckInFull> _checkins = [];
@@ -166,12 +179,12 @@ public partial class HostWidget : ComponentBase
 
         var currentCpu = (double) (_checkins.LastOrDefault()?.CpuUsage ?? 0);
         var cpuLeftOver = 100 - currentCpu;
-
+        
         _cpuData = [cpuLeftOver, currentCpu];
-
+        
         var currentRam = (int) (_checkins.LastOrDefault()?.RamUsage ?? 0);
         var ramLeftOver = 100 - currentRam;
-
+        
         _ramData = [ramLeftOver, currentRam];
         await Task.CompletedTask;
     }
@@ -186,8 +199,13 @@ public partial class HostWidget : ComponentBase
         _netIn.Clear();
         _netOut.Clear();
         
-        _netIn.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkInBytes / 8_000).Reverse().ToArray() });
-        _netOut.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkOutBytes / 8_000).Reverse().ToArray() });
+        var networkIn = _checkins.Select(x =>
+            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double)x.NetworkInBytes / 8_000))).Reverse().ToList();
+        var networkOut = _checkins.Select(x =>
+            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double)x.NetworkOutBytes / 8_000))).Reverse().ToList();
+        
+        _netIn.Add(new TimeSeriesChartSeries { Data = networkIn });
+        _netOut.Add(new TimeSeriesChartSeries { Data = networkOut });
         await Task.CompletedTask;
     }
 

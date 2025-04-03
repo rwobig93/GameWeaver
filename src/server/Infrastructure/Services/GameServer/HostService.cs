@@ -1266,10 +1266,30 @@ public class HostService : IHostService
                     });
                 return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
-
+            
             var updatedHost = await _hostRepository.GetByIdAsync(foundHost.Result.Id);
             await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.Hosts, foundHost.Result.Id, AuditAction.Update,
                 foundHost.Result, updatedHost.Result);
+
+            var hostGameServers = _gameServerRepository.GetByHostIdAsync(convertedRequest.Id);
+            if (!hostGameServers.Result.Succeeded || hostGameServers.Result.Result is null)
+            {
+                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty,
+                    foundHost.Result.Id, "Failed to get gameservers to update ip addresses from weaver work host detail", new Dictionary<string, string>
+                    {
+                        {"WorkId", request.Id.ToString()},
+                        {"HostId", request.HostId.ToString() ?? ""},
+                        {"Error", hostUpdate.ErrorMessage}
+                    });
+                return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+            }
+
+            foreach (var gameserver in hostGameServers.Result.Result)
+            {
+                gameserver.PrivateIp = convertedRequest.PrivateIp ?? gameserver.PrivateIp;
+                gameserver.PublicIp = convertedRequest.PublicIp ?? gameserver.PublicIp;
+                await _gameServerRepository.UpdateAsync(gameserver.ToUpdate());
+            }
 
             return await Result.SuccessAsync();
         }
@@ -1289,6 +1309,7 @@ public class HostService : IHostService
 
     public async Task VerifyGameServerConnectable(GameServerDb gameServer)
     {
+        // TODO: Retry this a few times just in case query responses take a little longer based on the server
         var gameServerGame = await _gameRepository.GetByIdAsync(gameServer.GameId);
         if (!gameServerGame.Succeeded || gameServerGame.Result is null)
         {

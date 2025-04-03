@@ -20,39 +20,38 @@
                 <MudSpacer/>
                 <MudText Typo="Typo.body2" Align="Align.Right">@Host.PublicIp</MudText>
             </MudStack>
-            @* TODO: Charts are going out of index after the latest MudBlazor update *@
-            @* <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2"> *@
-            @*     <MudItem Class="d-flex flex-column justify-center"> *@
-            @*         <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu"> *@
-            @*             <CustomGraphics> *@
-            @*                 <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Primary.Value"> *@
-            @*                     @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)% *@
-            @*                 </text> *@
-            @*             </CustomGraphics> *@
-            @*         </MudChart> *@
-            @*         <MudText Typo="Typo.body2" Align="Align.Center">CPU</MudText> *@
-            @*     </MudItem> *@
-            @*     <MudItem Class="d-flex flex-column justify-center"> *@
-            @*         <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsRam"> *@
-            @*             <CustomGraphics> *@
-            @*                 <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Secondary.Value"> *@
-            @*                     @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)% *@
-            @*                 </text> *@
-            @*             </CustomGraphics> *@
-            @*         </MudChart> *@
-            @*         <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText> *@
-            @*     </MudItem> *@
-            @*     <MudStack Spacing="2" Row="true"> *@
-            @*         <MudItem Class="d-flex flex-column justify-center"> *@
-            @*             <MudChart ChartType="ChartType.Line" ChartSeries="@_netIn" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/> *@
-            @*             <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText> *@
-            @*         </MudItem> *@
-            @*         <MudItem Class="d-flex flex-column justify-center"> *@
-            @*             <MudChart ChartType="ChartType.Line" ChartSeries="@_netOut" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/> *@
-            @*             <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText> *@
-            @*         </MudItem> *@
-            @*     </MudStack> *@
-            @* </MudStack> *@
+            <MudStack Spacing="2" Row="true" AlignItems="AlignItems.Center" Class="justify-center pa-2">
+                <MudItem Class="d-flex flex-column justify-center">
+                    <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu">
+                        <CustomGraphics>
+                            <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="60" fill="@_currentPalette.Primary.Value">
+                                @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                            </text>
+                        </CustomGraphics>
+                    </MudChart>
+                    <MudText Typo="Typo.body2" Align="Align.Center">CPU</MudText>
+                </MudItem>
+                <MudItem Class="d-flex flex-column justify-center">
+                    <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsRam">
+                        <CustomGraphics>
+                            <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="60" fill="@_currentPalette.Secondary.Value">
+                                @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
+                            </text>
+                        </CustomGraphics>
+                    </MudChart>
+                    <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText>
+                </MudItem>
+                <MudStack Spacing="2" Row="true">
+                    <MudItem Class="d-flex flex-column justify-center">
+                        <MudTimeSeriesChart ChartSeries="@_netIn" Width="125px" Height="75px" ChartOptions="@_chartOptionsNetwork"/>
+                        <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
+                    </MudItem>
+                    <MudItem Class="d-flex flex-column justify-center">
+                        <MudTimeSeriesChart ChartSeries="@_netOut" Width="125px" Height="75px" ChartOptions="@_chartOptionsNetwork"/>
+                        <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
+                    </MudItem>
+                </MudStack>
+            </MudStack>
             <MudStack Row="true" Spacing="2" Class="justify-center pa-2" AlignItems="AlignItems.Stretch" Justify="Justify.SpaceEvenly">
                 <MudItem Class="d-flex flex-column">
                     <MudText Class="pb-2" Typo="Typo.body2" Align="Align.Center">Storage Used: @StorageUsed%</MudText>

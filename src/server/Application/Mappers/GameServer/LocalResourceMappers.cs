@@ -201,7 +201,6 @@ public static class LocalResourceMappers
     {
         return new LocalResourceCreate
         {
-            Id = resource.Id,
             GameProfileId = resource.GameProfileId,
             Name = resource.Name,
             PathWindows = resource.PathWindows,

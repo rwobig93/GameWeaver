@@ -67,11 +67,6 @@ public partial class DeveloperTesting : IAsyncDisposable
     private HostCheckInFull? _latestHostCheckin;
     private bool _workInProgress;
     private SteamAppInfo _steamAppInfo = new();
-    private readonly ChartOptions _chartOptionsUsage = new() { LineStrokeWidth = 4, YAxisTicks = 100, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
-    private readonly ChartOptions _chartOptionsNet = new() { LineStrokeWidth = 4, InterpolationOption = InterpolationOption.NaturalSpline, YAxisLines = true };
-    private readonly List<ChartSeries> _cpuUsage = [];
-    private readonly List<ChartSeries> _ramUsage = [];
-    private readonly List<ChartSeries> _netUsage = [];
     private MudTable<FileStorageRecordSlim> _fileRecordsTable = new();
     private IEnumerable<FileStorageRecordSlim> _fileRecords = [];
     private int _totalFileRecords;
@@ -215,16 +210,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         {
             return;
         }
-
-        _cpuUsage.Clear();
-        _ramUsage.Clear();
-        _netUsage.Clear();
         
-        _cpuUsage.Add(new ChartSeries {Name = "CPU Usage", Data = usageRequest.Data.Select(x => (double) x.CpuUsage).Reverse().ToArray()});
-        _ramUsage.Add(new ChartSeries {Name = "RAM Usage", Data = usageRequest.Data.Select(x => (double) x.RamUsage).Reverse().ToArray()});
-        _netUsage.Add(new ChartSeries {Name = "Net In kb", Data = usageRequest.Data.Select(x => (double) x.NetworkInBytes / 8_000).Reverse().ToArray()});
-        _netUsage.Add(new ChartSeries {Name = "Net Out kb", Data = usageRequest.Data.Select(x => (double) x.NetworkOutBytes / 8_000).Reverse().ToArray()});
-
         _latestHostCheckin = latestCheckin;
         await InvokeAsync(StateHasChanged);
     }
