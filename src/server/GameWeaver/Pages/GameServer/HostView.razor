@@ -69,7 +69,7 @@ else
             <MudItem Class="d-flex flex-column justify-center">
                 <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_cpuData" ChartOptions="@_chartOptionsCpu">
                     <CustomGraphics>
-                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Primary.Value">
+                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="60" fill="@_currentPalette.Primary.Value">
                             @_cpuData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
                         </text>
                     </CustomGraphics>
@@ -79,7 +79,7 @@ else
             <MudItem Class="d-flex flex-column justify-center">
                 <MudChart ChartType="ChartType.Donut" Width="75px" Height="75px" InputData="@_ramData" ChartOptions="@_chartOptionsRam">
                     <CustomGraphics>
-                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="8" fill="@_currentPalette.Secondary.Value">
+                        <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="60" fill="@_currentPalette.Secondary.Value">
                             @_ramData.LastOrDefault().ToString(CultureInfo.InvariantCulture)%
                         </text>
                     </CustomGraphics>
@@ -87,11 +87,11 @@ else
                 <MudText Typo="Typo.body2" Align="Align.Center">RAM</MudText>
             </MudItem>
             <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_netInShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudTimeSeriesChart ChartSeries="@_netInShort" Width="125px" Height="75px" ChartOptions="@_chartOptionsNetworkShort"/>
                 <MudText Typo="Typo.body2" Align="Align.Center">Net In</MudText>
             </MudItem>
             <MudItem Class="d-flex flex-column justify-center">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutShort" ChartOptions="@_chartOptionsNetwork" Width="100px" Height="75px"/>
+                <MudTimeSeriesChart ChartSeries="@_netOutShort" Width="125px" Height="75px" ChartOptions="@_chartOptionsNetworkShort"/>
                 <MudText Typo="Typo.body2" Align="Align.Center">Net Out</MudText>
             </MudItem>
             <MudItem Class="d-flex flex-column">
@@ -204,11 +204,11 @@ else
                 <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText>
             </MudItem>
             <MudItem Class="justify-center py-2">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_netInLong" ChartOptions="@_chartOptionsNetworkLong" Width="98%" Style="min-width: 370px;" />
+                <MudTimeSeriesChart ChartSeries="@_netInLong" Width="98%" Style="min-width: 370px;" ChartOptions="@_chartOptionsNetworkLong"/>
                 <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText>
             </MudItem>
             <MudItem Class="justify-center py-2">
-                <MudChart ChartType="ChartType.Line" ChartSeries="@_netOutLong" ChartOptions="@_chartOptionsNetworkLong" Width="98%" Style="min-width: 370px;" />
+                <MudTimeSeriesChart ChartSeries="@_netOutLong" Width="98%" Style="min-width: 370px;" ChartOptions="@_chartOptionsNetworkLong"/>
                 <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText>
             </MudItem>
         </MudStack>

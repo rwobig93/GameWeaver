@@ -39,6 +39,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             await GetPermissions();
             await GetClientTimezone();
             await RefreshData();
+            await TimerDataUpdate();
             
             _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
             

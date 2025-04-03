@@ -1,4 +1,6 @@
-﻿namespace Application.Services.Lifecycle;
+﻿using Domain.DatabaseEntities.GameServer;
+
+namespace Application.Services.Lifecycle;
 
 public interface IJobManager
 {
@@ -7,4 +9,6 @@ public interface IJobManager
     Task GameVersionCheck();
     Task DailySteamSync();
     Task HostStatusCheck();
+    Task GameServerStatusCheck();
+    Task UpdateGameServerStatus(GameServerDb gameserver);
 }

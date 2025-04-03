@@ -45,12 +45,12 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private List<HostCheckInFull> _checkins = [];
     private readonly HostPortStats _hostPortStats = new();
     private PaletteDark _currentPalette = new();
-    private double[] _cpuData = [0, 0];
-    private double[] _ramData = [0, 0];
-    private readonly List<ChartSeries> _netInShort = [];
-    private readonly List<ChartSeries> _netInLong = [];
-    private readonly List<ChartSeries> _netOutShort = [];
-    private readonly List<ChartSeries> _netOutLong = [];
+    private double[] _cpuData = [-1, -1];
+    private double[] _ramData = [-1, -1];
+    private readonly List<TimeSeriesChartSeries> _netInShort = [];
+    private readonly List<TimeSeriesChartSeries> _netInLong = [];
+    private readonly List<TimeSeriesChartSeries> _netOutShort = [];
+    private readonly List<TimeSeriesChartSeries> _netOutLong = [];
     private readonly List<ChartSeries> _cpu = [];
     private readonly List<ChartSeries> _ram = [];
     private readonly ChartOptions _chartOptionsCpu = new()
@@ -60,7 +60,10 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
     private readonly ChartOptions _chartOptionsCpuLong = new()
     {
@@ -70,7 +73,10 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.Straight,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
     private readonly ChartOptions _chartOptionsRam = new()
     {
@@ -78,7 +84,10 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
     private readonly ChartOptions _chartOptionsRamLong = new()
     {
@@ -88,23 +97,38 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         InterpolationOption = InterpolationOption.Straight,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
-    private readonly ChartOptions _chartOptionsNetwork = new()
+    private readonly ChartOptions _chartOptionsNetworkShort = new()
     {
-        LineStrokeWidth = 1,
-        InterpolationOption = InterpolationOption.NaturalSpline,
+        LineStrokeWidth = 2,
         YAxisLines = false,
         XAxisLines = false,
-        ShowLegend = false
+        ShowLegend = false,
+        YAxisTicks = 500,
+        YAxisRequireZeroPoint = true,
+        YAxisLabelPosition = YAxisLabelPosition.None,
+        XAxisLabelPosition = XAxisLabelPosition.None,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
     private readonly ChartOptions _chartOptionsNetworkLong = new()
     {
         LineStrokeWidth = 1,
-        InterpolationOption = InterpolationOption.NaturalSpline,
         YAxisLines = false,
-        XAxisLines = false,
-        ShowLegend = false
+        XAxisLines = true,
+        ShowLegend = false,
+        YAxisTicks = 500,
+        YAxisRequireZeroPoint = false,
+        YAxisLabelPosition = YAxisLabelPosition.None,
+        XAxisLabelPosition = XAxisLabelPosition.None,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
     };
     private readonly List<string> _resourceHistoryChoices =
     [
@@ -570,7 +594,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         _chartOptionsCpuLong.ChartPalette = [_currentPalette.Primary.Value, _currentPalette.Surface.Value];
         _chartOptionsRam.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Secondary.Value];
         _chartOptionsRamLong.ChartPalette = [_currentPalette.Secondary.Value, _currentPalette.Surface.Value];
-        _chartOptionsNetwork.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
+        _chartOptionsNetworkShort.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
         _chartOptionsNetworkLong.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
     }
 
@@ -608,10 +632,15 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         _netOutShort.Clear();
         _netOutLong.Clear();
         
-        _netInShort.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkInBytes / 8_000).Take(100).Reverse().ToArray() });
-        _netInLong.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkInBytes / 8_000).Reverse().ToArray() });
-        _netOutShort.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkOutBytes / 8_000).Take(100).Reverse().ToArray() });
-        _netOutLong.Add(new ChartSeries { Data = _checkins.Select(x => (double) x.NetworkOutBytes / 8_000).Reverse().ToArray() });
+        var networkIn = _checkins.Select(x =>
+            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(_localTimeZone), (double)x.NetworkInBytes / 8_000)).Reverse().ToList();
+        var networkOut = _checkins.Select(x =>
+            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(_localTimeZone), (double)x.NetworkOutBytes / 8_000)).Reverse().ToList();
+        
+        _netInShort.Add(new TimeSeriesChartSeries { Data = networkIn.TakeLast(100).ToList() });
+        _netInLong.Add(new TimeSeriesChartSeries { Data = networkIn });
+        _netOutShort.Add(new TimeSeriesChartSeries { Data = networkOut.TakeLast(100).ToList() });
+        _netOutLong.Add(new TimeSeriesChartSeries { Data = networkIn });
     }
 
     private void ViewGameServer(Guid id)

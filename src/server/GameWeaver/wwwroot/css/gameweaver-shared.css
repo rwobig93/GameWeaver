@@ -239,8 +239,8 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: max(100vw, 100vh, 100%);
-        height: max(100vw, 100vh, 100%);
+        width: max(100vw, 100%);
+        height: max(100vh, 100%);
         z-index: -1;
         background: linear-gradient(45deg, var(--mud-palette-surface), var(--mud-palette-background), var(--mud-palette-primary));
         background-size: 400% 400%;

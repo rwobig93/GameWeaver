@@ -3,7 +3,6 @@
 public class HostRegistrationCreate
 {
     public Guid Id { get; set; } = Guid.CreateVersion7();
-    public Guid? OwnerId { get; set; }
     public Guid HostId { get; set; }
     public string Description { get; set; } = null!;
     public bool Active { get; set; }

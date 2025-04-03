@@ -207,6 +207,8 @@ public static class WebServerConfiguration
         {
             hangfireJobs.AddOrUpdate("DailySteamSync", () => jobManager.DailySteamSync(), JobHelpers.CronString.Daily);
         }
+        else { hangfireJobs.RemoveIfExists("DailySteamSync"); }
         hangfireJobs.AddOrUpdate("HostStatusCheck", () => jobManager.HostStatusCheck(), JobHelpers.CronString.MinuteInterval(1));
+        hangfireJobs.AddOrUpdate("GameserverStatusCheck", () => jobManager.GameServerStatusCheck(), JobHelpers.CronString.MinuteInterval(1));
     }
 }
