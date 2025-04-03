@@ -1,4 +1,4 @@
-namespace Application.Database.Postgres;
+namespace Application.Database.PgSql;
 
 public interface IPgSqlEnforcedEntity : ISqlEnforcedEntity
 {

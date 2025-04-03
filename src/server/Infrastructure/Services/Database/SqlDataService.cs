@@ -1,6 +1,7 @@
 using System.Data;
 using Application.Database;
 using Application.Database.MsSql;
+using Application.Database.PgSql;
 using Application.Database.Postgres;
 using Application.Helpers.Runtime;
 using Application.Services.Database;
@@ -34,7 +35,7 @@ public class SqlDataService : ISqlDataService
         return _dbConfig.Provider switch
         {
             DatabaseProviderType.MsSql => _dbConfig.MsSql,
-            DatabaseProviderType.Postgresql => _dbConfig.Postgres,
+            DatabaseProviderType.Postgres => _dbConfig.Postgres,
             DatabaseProviderType.Sqlite => _dbConfig.Sqlite,
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -108,7 +109,12 @@ public class SqlDataService : ISqlDataService
     {
         try
         {
-            using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
+            using IDbConnection connection = _dbConfig.Provider switch
+            {
+                DatabaseProviderType.MsSql => new SqlConnection(GetCurrentConnectionString()),
+                DatabaseProviderType.Postgres => new Npgsql.NpgsqlConnection(GetCurrentConnectionString()),
+                _ => new SqlConnection(GetCurrentConnectionString())
+            };
             connection.Execute(dbEntity.SqlStatement);
             _logger.Debug("Sql Enforce Success: [Type]{scriptType} [Name]{scriptName}",
                 dbEntity.Type, dbEntity.FriendlyName);
@@ -126,7 +132,7 @@ public class SqlDataService : ISqlDataService
         var entitiesToBeEnforced = _dbConfig.Provider switch
         {
             DatabaseProviderType.MsSql => typeof(IMsSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
-            DatabaseProviderType.Postgresql => typeof(IPgSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
+            DatabaseProviderType.Postgres => typeof(IPgSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>(),
             _ => typeof(IMsSqlEnforcedEntity).GetImplementingTypes<ISqlEnforcedEntity>()
         };
 

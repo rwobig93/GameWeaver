@@ -29,6 +29,7 @@ using Infrastructure.Repositories.MsSql.GameServer;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Integrations;
 using Infrastructure.Repositories.MsSql.Lifecycle;
+using Infrastructure.Repositories.PgSql.GameServer;
 using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.External;
@@ -119,7 +120,7 @@ public static class DependencyInjection
                 case DatabaseProviderType.MsSql:
                     x.UseSqlServerStorage(databaseSettings.MsSql);
                     break;
-                case DatabaseProviderType.Postgresql:
+                case DatabaseProviderType.Postgres:
                     // Need to add database support for application before we can fully support Postgresql
                     x.UsePostgreSqlStorage(options => options.UseNpgsqlConnection(databaseSettings.Postgres));
                     throw new Exception("Postgres Database Provider isn't supported, please enter a supported provider in appsettings.json!");
@@ -305,7 +306,7 @@ public static class DependencyInjection
                 services.AddSingleton<IGameRepository, GameRepositoryMsSql>();
                 services.AddSingleton<IGameServerRepository, GameServerRepositoryMsSql>();
                 break;
-            case DatabaseProviderType.Postgresql:
+            case DatabaseProviderType.Postgres:
                 // System Database Repositories
                 services.AddSingleton<IAppUserRepository, AppUserRepositoryMsSql>();
                 services.AddSingleton<IAppRoleRepository, AppRoleRepositoryMsSql>();
@@ -317,7 +318,7 @@ public static class DependencyInjection
                 services.AddSingleton<IFileStorageRecordRepository, FileStorageRecordRepositoryMsSql>();
                 // GameServer Database Repositories
                 services.AddSingleton<IHostRepository, HostRepositoryMsSql>();
-                services.AddSingleton<IGameRepository, GameRepositoryMsSql>();
+                services.AddSingleton<IGameRepository, GameRepositoryPgSql>();
                 services.AddSingleton<IGameServerRepository, GameServerRepositoryMsSql>();
                 break;
             case DatabaseProviderType.Sqlite:

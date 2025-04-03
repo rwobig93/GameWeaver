@@ -38,6 +38,7 @@
       <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.2" />
       <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.6.1" />
       <PackageReference Include="MudBlazor" Version="8.3.0" />
+      <PackageReference Include="Npgsql" Version="9.0.3" />
       <PackageReference Include="OAuth2" Version="0.10.3" />
       <PackageReference Include="Otp.NET" Version="1.4.0" />
       <PackageReference Include="QRCoder" Version="1.6.0" />
@@ -57,6 +58,14 @@
       <None Remove="DatabaseScripts\MsSql\Tables\Roles.sql" />
       <None Remove="EmailTemplates\RegistrationConfirmation.cshtml" />
       <None Remove="EmailTemplates\PasswordReset.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Database\PgSql\Identity\" />
+      <Folder Include="Database\PgSql\Integrations\" />
+      <Folder Include="Database\PgSql\Lifecycle\" />
+      <Folder Include="Database\PgSql\Migrations\" />
+      <Folder Include="Database\PgSql\Shared\" />
     </ItemGroup>
 
 </Project>
