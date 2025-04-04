@@ -154,7 +154,9 @@ public static class GameServerMappers
             Id = gameServer.Id,
             ServerName = gameServer.ServerName,
             BuildVersionUpdated = false,
-            ServerState = gameServer.ServerState
+            ServerState = gameServer.ServerState,
+            RunningConfigHash = gameServer.RunningConfigHash,
+            StorageConfigHash = gameServer.StorageConfigHash
         };
     }
 

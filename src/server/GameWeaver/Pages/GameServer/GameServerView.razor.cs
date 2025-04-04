@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Constants.Lifecycle;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
@@ -555,6 +556,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     
     private void ConfigUpdated(ConfigurationItemSlim item, LocalResourceSlim localResource)
     {
+        // TODO: Config items are being duplicated and can't be saved
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingNewConfig is not null)
         {
@@ -916,7 +918,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return new TableData<NotifyRecordSlim>();
         }
 
-        _notifyPagedData = recordResponse.Data.ToArray();
+        var notifyRecords = recordResponse.Data.ToArray(); 
+        _notifyPagedData = notifyRecords;
         _totalNotifyRecords = recordResponse.TotalCount;
 
         _notifyPagedData = state.SortLabel switch
@@ -952,6 +955,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
         
         _gameServer.ServerState = args.ServerState;
+        _gameServer.RunningConfigHash = args.RunningConfigHash;
+        _gameServer.StorageConfigHash = args.StorageConfigHash;
 
         if (args.BuildVersionUpdated)
         {

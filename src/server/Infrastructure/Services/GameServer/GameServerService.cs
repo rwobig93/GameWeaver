@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.Lifecycle;
 using Application.Helpers.GameServer;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
@@ -1131,7 +1132,7 @@ public class GameServerService : IGameServerService
         {
             EntityId = serverId,
             Timestamp = _dateTime.NowDatabaseTime,
-            Message = "Configuration change requested",
+            Message = NotifyRecordConstants.GameServerConfigChanged,
             Detail = $"{requester.Result?.Username ?? "Someone"} requested a server reconfiguration change for file {foundResource.Data.Name}"
         };
         await _notifyRecordRepository.CreateAsync(notifyRecord);
@@ -1196,7 +1197,7 @@ public class GameServerService : IGameServerService
         {
             EntityId = serverId,
             Timestamp = _dateTime.NowDatabaseTime,
-            Message = "Configuration change requested",
+            Message = NotifyRecordConstants.GameServerConfigChanged,
             Detail = $"{requester.Result?.Username ?? "Someone"} requested a server reconfiguration change for all files"
         };
         await _notifyRecordRepository.CreateAsync(notifyRecord);
@@ -1763,7 +1764,7 @@ public class GameServerService : IGameServerService
         {
             EntityId = id,
             Timestamp = _dateTime.NowDatabaseTime,
-            Message = "Server start requested",
+            Message = NotifyRecordConstants.GameServerStart,
             Detail = $"{requester.Result?.Username ?? "Someone"} requested a server start from state {foundServer.Result.ServerState}"
         };
         await _notifyRecordRepository.CreateAsync(notifyRecord);
@@ -1802,7 +1803,7 @@ public class GameServerService : IGameServerService
         {
             EntityId = id,
             Timestamp = _dateTime.NowDatabaseTime,
-            Message = "Stop server requested",
+            Message = NotifyRecordConstants.GameServerStop,
             Detail = $"{requester.Result?.Username ?? "Someone"} requested a server stop from state {foundServer.Result.ServerState}"
         };
         await _notifyRecordRepository.CreateAsync(notifyRecord);
@@ -1840,7 +1841,7 @@ public class GameServerService : IGameServerService
         {
             EntityId = id,
             Timestamp = _dateTime.NowDatabaseTime,
-            Message = "Restart server requested",
+            Message = NotifyRecordConstants.GameServerRestart,
             Detail = $"{requester.Result?.Username ?? "Someone"} requested a server restart from state {foundServer.Result.ServerState}"
         };
         await _notifyRecordRepository.CreateAsync(notifyRecord);
@@ -1878,7 +1879,7 @@ public class GameServerService : IGameServerService
         {
             EntityId = id,
             Timestamp = _dateTime.NowDatabaseTime,
-            Message = "Update server requested",
+            Message = NotifyRecordConstants.GameServerUpdate,
             Detail = $"{requester.Result?.Username ?? "Someone"} requested a server update from state {foundServer.Result.ServerState}"
         };
         await _notifyRecordRepository.CreateAsync(notifyRecord);

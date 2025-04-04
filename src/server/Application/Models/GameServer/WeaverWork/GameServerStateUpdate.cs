@@ -13,4 +13,6 @@ public partial class GameServerStateUpdate
     [MemoryPackAllowSerialize]
     [MemoryPackOrder(2)] public ConnectivityState ServerState { get; set; } = ConnectivityState.Unknown;
     [MemoryPackOrder(3)] public SerializableList<LocalResourceSlim>? Resources { get; set; }
+    [MemoryPackOrder(4)] public string? RunningConfigHash { get; set; }
+    [MemoryPackOrder(5)] public string? StorageConfigHash { get; set; }
 }

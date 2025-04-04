@@ -39,6 +39,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     [Modded] BIT NOT NULL,
                     [Private] BIT NOT NULL,
                     [ServerState] INT NOT NULL,
+                    [RunningConfigHash] NVARCHAR(128) NOT NULL,
+                    [StorageConfigHash] NVARCHAR(128) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] DATETIME2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -256,6 +258,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @Modded BIT,
                 @Private BIT,
                 @ServerState INT,
+                @RunningConfigHash NVARCHAR(128),
+                @StorageConfigHash NVARCHAR(128),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn DATETIME2,
                 @IsDeleted BIT
@@ -263,10 +267,11 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 INSERT into dbo.[{Table.TableName}]  (Id, OwnerId, HostId, GameId, GameProfileId, ParentGameProfileId, ServerBuildVersion, ServerName, Password, PasswordRcon,
                                                       PasswordAdmin, PublicIp, PrivateIp, ExternalHostname, PortGame, PortPeer, PortQuery, PortRcon, Modded, Private, ServerState,
-                                                      CreatedBy, CreatedOn, IsDeleted)
+                                                      RunningConfigHash, StorageConfigHash, CreatedBy, CreatedOn, IsDeleted)
                 OUTPUT INSERTED.Id
                 VALUES (@Id, @OwnerId, @HostId, @GameId, @GameProfileId, @ParentGameProfileId, @ServerBuildVersion, @ServerName, @Password, @PasswordRcon, @PasswordAdmin,
-                        @PublicIp, @PrivateIp, @ExternalHostname, @PortGame, @PortPeer, @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @IsDeleted);
+                        @PublicIp, @PrivateIp, @ExternalHostname, @PortGame, @PortPeer, @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @RunningConfigHash,
+                        @StorageConfigHash, @CreatedBy, @CreatedOn, @IsDeleted);
             end"
     };
     
@@ -354,6 +359,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @Modded BIT = null,
                 @Private BIT = null,
                 @ServerState INT = null,
+                @RunningConfigHash NVARCHAR(128) = null,
+                @StorageConfigHash NVARCHAR(128) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn DATETIME2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
@@ -370,7 +377,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     PublicIp = COALESCE(@PublicIp, PublicIp), PrivateIp = COALESCE(@PrivateIp, PrivateIp), ExternalHostname = COALESCE(@ExternalHostname, ExternalHostname),
                     PortGame = COALESCE(@PortGame, PortGame), PortPeer = COALESCE(@PortPeer, PortPeer), PortQuery = COALESCE(@PortQuery, PortQuery),
                     PortRcon = COALESCE(@PortRcon, PortRcon), Modded = COALESCE(@Modded, Modded), Private = COALESCE(@Private, Private),
-                    ServerState = COALESCE(@ServerState, ServerState), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    ServerState = COALESCE(@ServerState, ServerState), RunningConfigHash = COALESCE(@RunningConfigHash, RunningConfigHash),
+                    StorageConfigHash = COALESCE(@StorageConfigHash, StorageConfigHash), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;

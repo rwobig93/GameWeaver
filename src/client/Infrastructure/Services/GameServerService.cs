@@ -316,7 +316,7 @@ public class GameServerService : IGameServerService
         _logger.Debug("Successfully saved game server client to the local file system: [{GameserverId}]{GameserverName} => {Filename}",
             gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
 
-        var downloadedHash = FileHelpers.ComputeSha256Hash(clientDownloadPath);
+        var downloadedHash = FileHelpers.ComputeFileContentSha256Hash(clientDownloadPath);
         if (downloadedHash != serverClientDownload.Data.HashSha256)
         {
             if (secondRun)
@@ -571,6 +571,22 @@ public class GameServerService : IGameServerService
     public async Task<IResult> UpdateState(Guid id, ServerState state)
     {
         return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate {Id = id, ServerState = state});
+    }
+
+    public async Task<IResult> UpdateState(Guid id, ServerState state, string storageConfigHash)
+    {
+        return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate {Id = id, ServerState = state, StorageConfigHash = storageConfigHash});
+    }
+
+    public async Task<IResult> UpdateState(Guid id, ServerState state, string runningConfigHash, string storageConfigHash)
+    {
+        return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate
+        {
+            Id = id,
+            ServerState = state,
+            RunningConfigHash = runningConfigHash,
+            StorageConfigHash = storageConfigHash
+        });
     }
 
     public async Task<IResult> Housekeeping()

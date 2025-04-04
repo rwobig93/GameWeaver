@@ -1803,6 +1803,8 @@
             <b>string</b> ManualRootUrl<br/>
             <b>string</b> ServerProcessName<br/>
             <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>string</b> RunningConfigHash<br/>
+            <b>string</b> StorageConfigHash<br/>
             <b>Domain.Enums.GameServer.GameSource</b> Source<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.Mod.ModSlim&gt;</b> ModList<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceHost&gt;</b> Resources<br/>
@@ -1846,6 +1848,8 @@
             <b>bool</b> BuildVersionUpdated<br/>
             <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            <b>string</b> RunningConfigHash<br/>
+            <b>string</b> StorageConfigHash<br/>
             </code>
             </remarks>
         </member>

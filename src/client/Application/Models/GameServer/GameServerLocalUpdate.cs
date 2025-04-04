@@ -26,6 +26,8 @@ public class GameServerLocalUpdate
     public string? ServerProcessName { get; set; }
     public DateTime? LastStateUpdate { get; set; }
     public ServerState? ServerState { get; set; }
+    public string? RunningConfigHash { get; set; }
+    public string? StorageConfigHash { get; set; }
     public GameSource? Source { get; set; }
     public SerializableList<Mod>? ModList { get; set; }
     public SerializableList<LocalResource>? Resources { get; set; }

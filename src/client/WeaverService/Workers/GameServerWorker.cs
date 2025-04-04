@@ -1,4 +1,5 @@
-﻿using Application.Helpers;
+﻿using System.Text;
+using Application.Helpers;
 using Application.Mappers;
 using Application.Services;
 using Application.Settings;
@@ -394,6 +395,25 @@ public class GameServerWorker : BackgroundService
         await Task.CompletedTask;
     }
 
+    private async Task<string> GetConfigurationIntegrityHash(IEnumerable<LocalResource> resources)
+    {
+        StringBuilder fullHashBuilder = new();
+
+        foreach (var resource in resources)
+        {
+            if (!File.Exists(resource.GetFullPath()))
+            {
+                fullHashBuilder.Append(string.Empty);
+                continue;
+            }
+            
+            var fileContentHash = FileHelpers.ComputeFileContentSha256Hash(resource.GetFullPath());
+            fullHashBuilder.Append(fileContentHash ?? string.Empty);
+        }
+        
+        return await Task.FromResult(FileHelpers.GetIntegrityHash(fullHashBuilder.ToString()));
+    }
+
     private async Task StartGameServer(WeaverWork work)
     {
         var gameServerLocal = await GetGameServerFromIdWorkData(work);
@@ -460,13 +480,16 @@ public class GameServerWorker : BackgroundService
             
             if (currentState.Data == ServerState.InternallyConnectable)
             {
-                await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.InternallyConnectable);
+                var configurationHash = await GetConfigurationIntegrityHash(gameServerLocal.Data.Resources);
+                await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.InternallyConnectable, configurationHash, configurationHash);
                 work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
                 {
                     Id = gameServerLocal.Data.Id,
                     BuildVersionUpdated = false,
                     ServerState = ServerState.InternallyConnectable,
-                    Resources = null
+                    Resources = null,
+                    RunningConfigHash = configurationHash,
+                    StorageConfigHash = configurationHash
                 });
                 break;
             }
@@ -696,20 +719,25 @@ public class GameServerWorker : BackgroundService
         }
 
         gameServerUpdated.Resources.Add(updatedResource);
-
-        var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
-        if (!gameServerLocalUpdateRequest.Succeeded)
-        {
-            work.SendStatusUpdate(WeaverWorkState.Failed, gameServerLocalUpdateRequest.Messages);
-            return;
-        }
-        
         var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
             return;
         }
+        
+        var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
+        gameServerUpdated.StorageConfigHash = configurationHash;
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+        {
+            Id = gameServerUpdated.Id,
+            BuildVersionUpdated = false,
+            ServerState = gameServerUpdated.ServerState,
+            Resources = null,
+            StorageConfigHash = configurationHash
+        });
+
+        await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
         
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
@@ -749,6 +777,19 @@ public class GameServerWorker : BackgroundService
             return;
         }
         
+        var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
+        gameServerUpdated.StorageConfigHash = configurationHash;
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+        {
+            Id = gameServerUpdated.Id,
+            BuildVersionUpdated = false,
+            ServerState = gameServerUpdated.ServerState,
+            Resources = null,
+            StorageConfigHash = configurationHash
+        });
+
+        await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
+        
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 
@@ -781,6 +822,19 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
             return;
         }
+        
+        var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
+        gameServerUpdated.StorageConfigHash = configurationHash;
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
+        {
+            Id = gameServerUpdated.Id,
+            BuildVersionUpdated = false,
+            ServerState = gameServerUpdated.ServerState,
+            Resources = null,
+            StorageConfigHash = configurationHash
+        });
+
+        await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
         
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }

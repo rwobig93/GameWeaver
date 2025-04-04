@@ -79,12 +79,22 @@
         </MudPaper>
     </MudStack>
 }
-@if (_updateIsAvailable && !_gameServer.IsDeleted)
+@if (!_gameServer.IsDeleted && _updateIsAvailable)
 {
     <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-2">
         <MudPaper Elevation="10" Square="false">
             <MudAlert Dense="true" Elevation="8" Square="false" Severity="Severity.Warning" Class="border-pulse-warning">
                 An update is available for this game server
+            </MudAlert>
+        </MudPaper>
+    </MudStack>
+}
+@if (!_gameServer.IsDeleted && _gameServer.RunningConfigHash != _gameServer.StorageConfigHash)
+{
+    <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-2">
+        <MudPaper Elevation="10" Square="false">
+            <MudAlert Dense="true" Elevation="8" Square="false" Severity="Severity.Warning" Class="border-pulse-warning">
+                This game server is waiting on a reboot to apply configuration
             </MudAlert>
         </MudPaper>
     </MudStack>

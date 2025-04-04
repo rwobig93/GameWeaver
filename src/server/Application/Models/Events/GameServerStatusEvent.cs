@@ -8,4 +8,6 @@ public class GameServerStatusEvent : EventArgs
     public string ServerName { get; set; } = "";
     public bool BuildVersionUpdated = false;
     public ConnectivityState ServerState { get; set; }
+    public string RunningConfigHash { get; set; } = "";
+    public string StorageConfigHash { get; set; } = "";
 }

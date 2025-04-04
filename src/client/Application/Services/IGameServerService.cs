@@ -22,6 +22,8 @@ public interface IGameServerService
     Task<IResult> StopServer(Guid id);
     Task<IResult> Update(GameServerLocalUpdate gameServerUpdate);
     Task<IResult> UpdateState(Guid id, ServerState state);
+    Task<IResult> UpdateState(Guid id, ServerState state, string storageConfigHash);
+    Task<IResult> UpdateState(Guid id, ServerState state, string runningConfigHash, string storageConfigHash);
     Task<IResult> Housekeeping();
     Task<IResult<ServerState>> GetCurrentRealtimeState(Guid id);
     Task<IResult> UpdateConfigurationFiles(Guid id, bool loadExisting = true);

@@ -25,6 +25,8 @@ public class GameServerCreate
     public bool Modded { get; set; } = false;
     public bool Private { get; set; } = true;
     public ConnectivityState ServerState { get; set; } = ConnectivityState.Uninstalled;
+    public string RunningConfigHash { get; set; } = "";
+    public string StorageConfigHash { get; set; } = "";
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public bool IsDeleted { get; set; } = false;

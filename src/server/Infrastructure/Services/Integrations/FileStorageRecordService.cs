@@ -234,7 +234,7 @@ public class FileStorageRecordService : IFileStorageRecordService
                 return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
 
-            var fileHash = FileHelpers.ComputeSha256Hash(filePath);
+            var fileHash = FileHelpers.ComputeFileContentSha256Hash(filePath);
             var recordUpdate = await _recordRepository.UpdateAsync(new FileStorageRecordUpdate() {Id = recordCreate.Result, HashSha256 = fileHash});
             if (recordUpdate.Succeeded) return await Result<Guid>.SuccessAsync(recordCreate.Result);
             {
