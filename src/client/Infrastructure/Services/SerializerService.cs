@@ -67,7 +67,7 @@ public class SerializerService : ISerializerService
                     jContainer[prop.Name] = JToken.FromObject(prop.GetValue(updatedSection)!);
                 }
             }
-            
+
             // Save the file
             var exportFile = jsonObj.ToString();
             File.WriteAllText(filePath, exportFile);

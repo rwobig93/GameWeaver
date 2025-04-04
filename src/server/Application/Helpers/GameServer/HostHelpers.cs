@@ -21,7 +21,7 @@ public static class HostHelpers
             .Where(netInterface => netInterface.IpAddresses.Count != 0)
             .FirstOrDefault(netInterface => !netInterface.IpAddresses.First().StartsWith("127."));
     }
-    
+
     public static string? GetPrimaryIp(this IEnumerable<HostNetworkInterface>? networkInterfaces)
     {
         return networkInterfaces.GetPrimaryInterface()?.IpAddresses.First();

@@ -19,7 +19,7 @@ public class ApiObjectFromQuery<T> where T : new()
         {
             // ignored
         }
-        
+
         request = new T();
         return false;
     }

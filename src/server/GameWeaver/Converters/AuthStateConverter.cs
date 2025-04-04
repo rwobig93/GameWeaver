@@ -9,7 +9,7 @@ public class AuthStateConverter : BoolConverter<AuthState>
         SetFunc = OnSet;
         GetFunc = OnGet;
     }
-    
+
     private AuthState OnGet(bool? value) => value == true ? AuthState.Enabled : AuthState.Disabled;
 
     private bool? OnSet(AuthState state)

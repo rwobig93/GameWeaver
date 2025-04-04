@@ -16,14 +16,14 @@ public class IniData
             Load(filePath, true);
         }
     }
-    
+
     public void Load(string filePath, bool loadClean = false)
     {
         if (loadClean)
         {
             Sections.Clear();
         }
-        
+
         if (!File.Exists(filePath))
         {
             return;
@@ -49,13 +49,13 @@ public class IniData
             {
                 continue;
             }
-            
+
             var keyAndValue = trimmedLine.Split(['='], 2);
             if (keyAndValue.Length != 2)
             {
                 continue;
             }
-                
+
             var key = keyAndValue[0].Trim();
             var value = keyAndValue[1].Trim();
             AddOrUpdateKey(currentSection.Name, key, value);
@@ -137,7 +137,7 @@ public class IniData
             {
                 return;
             }
-            
+
             selectedSection.Keys.Add(new IniKeyValue {Key = key, Value = value});
             return;
         }

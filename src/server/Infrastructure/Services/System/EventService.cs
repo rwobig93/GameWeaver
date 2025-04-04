@@ -7,9 +7,9 @@ public class EventService : IEventService
 {
     public event EventHandler<GameServerStatusEvent>? GameServerStatusChanged;
     public event EventHandler<WeaverWorkStatusEvent>? WeaverWorkStatusChanged;
-    public event EventHandler<GameVersionUpdatedEvent>? GameVersionUpdated; 
+    public event EventHandler<GameVersionUpdatedEvent>? GameVersionUpdated;
     public event EventHandler<NotifyTriggeredEvent>? NotifyTriggered;
-    
+
     public void TriggerGameServerStatus(string source, GameServerStatusEvent args)
     {
         GameServerStatusChanged?.Invoke(source, args);

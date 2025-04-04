@@ -7,11 +7,11 @@ namespace GameWeaver.Components.Account;
 public partial class AccountSettingsNavBar
 {
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
-    
+
     private UserBasicResponse CurrentUser { get; set; } = new();
     private bool _canEditTheme;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

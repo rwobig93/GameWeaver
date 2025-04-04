@@ -10,11 +10,11 @@ public static class ConnectivityStateHelpers
         {
             ConnectivityState.Unknown or ConnectivityState.UnRegistered or ConnectivityState.Unreachable or ConnectivityState.Shutdown or ConnectivityState.Uninstalled
                 or ConnectivityState.OverlappingPort => false,
-            
+
             ConnectivityState.SpinningUp or ConnectivityState.Connectable or ConnectivityState.InternallyConnectable or ConnectivityState.Updating or ConnectivityState.Stalled
                 or ConnectivityState.Restarting or ConnectivityState.Installing or ConnectivityState.Uninstalling or ConnectivityState.ShuttingDown
                 or ConnectivityState.Discovering => true,
-            
+
             _ => throw new ArgumentOutOfRangeException(nameof(connectivityState), connectivityState, null)
         };
     }

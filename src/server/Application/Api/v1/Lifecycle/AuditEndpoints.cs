@@ -53,7 +53,7 @@ public static class AuditEndpoints
             {
                 return await PaginatedResult<IEnumerable<AuditTrailResponse>>.FailAsync(result.Messages);
             }
-            
+
             var convertedResult = await PaginatedResult<IEnumerable<AuditTrailResponse>>.SuccessAsync(
                 result.Data.ToResponses(),
                 result.StartPage,

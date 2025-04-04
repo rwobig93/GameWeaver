@@ -3,7 +3,7 @@
 public static class MathHelpers
 {
     public const int GigabyteDivider = 1_073_741_824;  // 1_073_741_824 is aggregate 1024 per conversion step (kebibyte, mebibyte and gebibyte)
-    
+
     public static double ConvertToGigabytes(double number)
     {
         if (number <= 0)
@@ -20,7 +20,7 @@ public static class MathHelpers
         {
             return 0;
         }
-        
+
         return number / GigabyteDivider;
     }
 

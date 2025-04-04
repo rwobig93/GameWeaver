@@ -11,14 +11,14 @@ public partial class Games : ComponentBase
     [Inject] private IGameService GameService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    
+
     private IEnumerable<GameSlim> _pagedData = [];
     private List<GameWidget> _gameWidgets = [];
     public GameWidget WidgetReference
     {
         set => _gameWidgets.Add(value);
     }
-    
+
     private AppUserPreferenceFull _userPreferences = new();
     private string _searchText = "";
     private int _totalItems = 10;
@@ -39,12 +39,12 @@ public partial class Games : ComponentBase
             await RefreshData();
         }
     }
-    
+
     private async Task RefreshData()
     {
         _pagedData = [];
         _gameWidgets = [];
-        
+
         // Searching by clicking the button works as expected, pressing "enter" in the text field results in the previous results, enter has to be hit twice
         // Assuming some form of caching I haven't been able to find yet is the cause, adding another small get call works for now though
         await GameService.GetAllPaginatedAsync(1, 1);
@@ -69,7 +69,7 @@ public partial class Games : ComponentBase
         {
             return;
         }
-        
+
         _userPreferences = (await AccountService.GetPreferences(currentUserId.Result.GetFromNullable())).Data;
     }
 
@@ -80,7 +80,7 @@ public partial class Games : ComponentBase
             await gameWidget.UpdateImage();
         }
     }
-    
+
     private string GetCurrentPageViewData()
     {
         var currentStart = 1;
@@ -101,7 +101,7 @@ public partial class Games : ComponentBase
 
         return $"{currentStart}-{currentEnd} of {_totalItems}";
     }
-    
+
     private async Task PageChanged(int pageNumber)
     {
         _currentPage = pageNumber;
@@ -120,7 +120,7 @@ public partial class Games : ComponentBase
         await Task.CompletedTask;
         Snackbar.Add("Not currently implemented", Severity.Warning);
     }
-    
+
     private async Task SearchKeyDown(KeyboardEventArgs keyArgs)
     {
         if (keyArgs.Code is "Enter" or "NumpadEnter")

@@ -14,7 +14,7 @@ public partial class ServiceAccountAdminDialog
 {
     [CascadingParameter] private IMudDialogInstance MudDialog { get; init; } = null!;
     [Parameter] public Guid ServiceAccountId { get; set; } = Guid.Empty;
-    
+
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
@@ -32,7 +32,7 @@ public partial class ServiceAccountAdminDialog
     private bool _creatingServiceAccount;
 
     private bool _canAdminServiceAccounts;
-    
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -82,19 +82,19 @@ public partial class ServiceAccountAdminDialog
             _creatingServiceAccount = true;
 
         if (!_creatingServiceAccount) return;
-        
+
         _desiredPassword = UrlHelpers.GenerateToken(64);
         _confirmPassword = _desiredPassword;
         _serviceUser.Notes = $"Service Account - {DateTimeService.NowDatabaseTime.ToFriendlyDisplayMilitaryTimezone()}";
     }
-    
+
     private IEnumerable<string> ValidatePasswordRequirements(string content)
     {
         var passwordIssues = AccountHelpers.GetAnyIssuesWithPassword(content);
         if (!string.IsNullOrEmpty(content) && passwordIssues.Any())
             yield return passwordIssues.First();
     }
-    
+
     private IEnumerable<string> ValidatePasswordsMatch(string content)
     {
         if (!string.IsNullOrEmpty(content) &&
@@ -139,14 +139,14 @@ public partial class ServiceAccountAdminDialog
             Snackbar.Add("Username is too short, please have at least 3 characters and try again", Severity.Error);
             return false;
         }
-        
+
         var passwordIssues = AccountHelpers.GetAnyIssuesWithPassword(_desiredPassword);
         if (!string.IsNullOrEmpty(_desiredPassword) && passwordIssues.Any())
         {
             Snackbar.Add(passwordIssues.First(), Severity.Error);
             return false;
         }
-        
+
         if (_desiredPassword != _confirmPassword)
         {
             Snackbar.Add("Desired & Confirm Passwords Don't Match", Severity.Error);
@@ -155,15 +155,15 @@ public partial class ServiceAccountAdminDialog
 
         return true;
     }
-    
+
     private async Task Save()
     {
         if (!_canAdminServiceAccounts) return;
-        
+
         if (!RequirementsAreMet()) return;
 
         _serviceUser.AccountType = AccountType.Service;
-        
+
         if (_creatingServiceAccount)
         {
             _serviceUser.CreatedBy = _currentUser.Id;
@@ -184,7 +184,7 @@ public partial class ServiceAccountAdminDialog
                 getServiceAccountRoleRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
-            
+
             var addRoleRequest = await RoleService.AddUserToRoleAsync(
                 _serviceUser.Id, getServiceAccountRoleRequest.Data.Id, ServerState.SystemUserId);
             if (!addRoleRequest.Succeeded)
@@ -213,7 +213,7 @@ public partial class ServiceAccountAdminDialog
                 return;
             }
         }
-        
+
         if (_creatingServiceAccount) return;
 
         _serviceUser.LastModifiedBy = _currentUser.Id;

@@ -159,7 +159,7 @@ public class JobManager : IJobManager
             {
                 continue;
             }
-                
+
             var profileDelete = await _gameServerRepository.DeleteGameProfileAsync(gameProfile.Id, _serverState.SystemUserId);
             if (!profileDelete.Succeeded)
             {
@@ -167,7 +167,7 @@ public class JobManager : IJobManager
                     DataConstants.Logging.JobDailyCleanup, gameProfile.Id, profileDelete.ErrorMessage);
                 continue;
             }
-                    
+
             _logger.Information("{LogPrefix} Deleted unassigned game profile: [{GameProfileId}]{GameProfileName}",
                 DataConstants.Logging.JobDailyCleanup, gameProfile.Id, gameProfile.FriendlyName);
         }
@@ -229,7 +229,7 @@ public class JobManager : IJobManager
                 {
                     continue;
                 }
-                
+
                 // Account has passed locked threshold, so it's ready to be unlocked
                 var unlockResult = await _accountService.SetAuthState(user.Id, AuthState.Enabled);
                 if (!unlockResult.Succeeded)
@@ -237,17 +237,17 @@ public class JobManager : IJobManager
                     _logger.Error("Failed to unlock user during housekeeping: [{Id}]{Username}", user.Id, user.Username);
                     continue;
                 }
-                
-                _logger.Debug("Successfully unlocked locked account that passed the lockout threshold[{Id}]{Username}", 
+
+                _logger.Debug("Successfully unlocked locked account that passed the lockout threshold[{Id}]{Username}",
                     user.Id, user.Username);
             }
             catch (Exception innerException)
             {
-                _logger.Error(innerException, 
+                _logger.Error(innerException,
                     "Failed to parse locked out user for housekeeping: [{Id}]{Username}", user.Id, user.Username);
             }
         }
-        
+
         _logger.Debug("Finished handling locked out users during housekeeping job");
     }
 
@@ -290,7 +290,7 @@ public class JobManager : IJobManager
                         gameId, foundGame.Data.LatestBuildVersion, latestVersionBuild.Data.VersionBuild);
                     continue;
                 }
-                
+
                 // Latest version is newer than the game's current version, so we'll update the game and add an update record
                 var gameUpdate = await _gameService.UpdateAsync(new GameUpdate
                 {
@@ -317,7 +317,7 @@ public class JobManager : IJobManager
                     _logger.Error("Failed to create game update record: [{GameId}]{Error}", gameId, updateRecordCreate.Messages);
                     continue;
                 }
-                
+
                 _logger.Information("Game version updated! [{GameId}]{PreviousVersion} => {LatestVersion}",
                     foundGame.Data.Id, foundGame.Data.LatestBuildVersion, latestVersionBuild.Data.VersionBuild);
             }
@@ -326,7 +326,7 @@ public class JobManager : IJobManager
                 _logger.Error(ex, "Failure occurred attempting to check version for game [{GameId}]{Error}", gameId, ex.Message);
             }
         }
-        
+
         _logger.Debug("Finished game version check job");
     }
 
@@ -340,7 +340,7 @@ public class JobManager : IJobManager
             _logger.Error("Failed to get all steam apps from the Steam API: {Error}", allSteamApps.Messages);
             return;
         }
-        
+
         var serverApps = allSteamApps.Data.Where(x =>
             x.Name.Contains(_appConfig.CurrentValue.SteamAppNameFilter, StringComparison.CurrentCultureIgnoreCase) ||
             x.Name.Contains(_appConfig.CurrentValue.SteamAppNameFilter.Replace(" ", ""), StringComparison.CurrentCultureIgnoreCase));
@@ -352,7 +352,7 @@ public class JobManager : IJobManager
                 _logger.Verbose("Steam app sanitized name is empty, skipping: [{ToolId}]{GameName}", serverApp.AppId, serverApp.Name);
                 continue;
             }
-            
+
             var matchingGame = await _gameService.GetBySteamToolIdAsync(serverApp.AppId);
             if (matchingGame.Data is not null
                 && matchingGame.Data.SourceType == GameSource.Steam
@@ -386,10 +386,10 @@ public class JobManager : IJobManager
                     _logger.Error("Failed to create server app game from steam: [{ToolId}]{Error}", serverApp.AppId, gameCreate.Messages);
                     continue;
                 }
-                
+
                 _logger.Information("Created missing server app from steam: [{ToolId}]{GameName} => {GameId}",
                     serverApp.AppId, serverApp.Name, gameCreate.Data);
-                
+
                 gameId = gameCreate.Data;
             }
 
@@ -398,7 +398,7 @@ public class JobManager : IJobManager
             convertedGameUpdate.FriendlyName = baseGame.Name;
             convertedGameUpdate.LastModifiedBy = _serverState.SystemUserId;
             convertedGameUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
-            
+
             var gameUpdate = await _gameRepository.UpdateAsync(convertedGameUpdate);
             if (!gameUpdate.Succeeded)
             {
@@ -406,7 +406,7 @@ public class JobManager : IJobManager
                     serverApp.AppId, baseGame.Steam_AppId, gameUpdate.ErrorMessage);
                 continue;
             }
-            
+
             foreach (var publisher in baseGame.Publishers)
             {
                 var createPublisher = await _gameService.CreatePublisherAsync(new PublisherCreate
@@ -449,7 +449,7 @@ public class JobManager : IJobManager
                         serverApp.AppId, baseGame.Steam_AppId, createGenre.Messages);
                 }
             }
-            
+
             _logger.Information("Successfully synchronized game from steam: [{ToolId}/{GameId}] {GameLocalId}",
                 serverApp.AppId, baseGame.Steam_AppId, gameId);
         }
@@ -460,7 +460,7 @@ public class JobManager : IJobManager
         var sanitizedServerAppName = serverApp.Name.SanitizeFromSteam();
         _logger.Debug("Attempting to find base game for server app: [{ToolId}]{GameName} => {AppName}", serverApp.AppId, serverApp.Name, sanitizedServerAppName);
         List<SteamAppDetailResponseJson> filteredGameMatches = [];
-        
+
         var baseGameMatches = allSteamApps.Data.Where(x =>
             x.AppId != serverApp.AppId &&
             !x.Name.EndsWith(" beta", StringComparison.InvariantCultureIgnoreCase) &&
@@ -534,17 +534,22 @@ public class JobManager : IJobManager
                 _logger.Verbose("Host is already offline and has no latest checkin, no status update necessary: {HostId}", host.Id);
                 continue;
             }
-            
+
             // Last checkin is within configured seconds so is considered online or not
-            var secondsSinceLastCheckIn = Math.Round((_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds, 0, MidpointRounding.ToZero);
+            var secondsSinceLastCheckIn = (int)Math.Round((_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds, 1, MidpointRounding.ToZero);
             var hostIsOffline = secondsSinceLastCheckIn > _appConfig.CurrentValue.HostOfflineAfterSeconds;
-            if (hostIsOffline && !host.CurrentState.IsRunning())
+            switch (hostIsOffline)
             {
-                _logger.Verbose("Host is already offline and checked in {SecondsSinceCheckin}s ago, no status update necessary for {HostId}",
-                    secondsSinceLastCheckIn, host.Id);
-                continue;
+                case true when !host.CurrentState.IsRunning():
+                    _logger.Verbose("Host is already offline and checked in {SecondsSinceCheckin}s ago, no status update necessary for {HostId}",
+                        secondsSinceLastCheckIn, host.Id);
+                    continue;
+                case false when host.CurrentState.IsRunning():
+                    _logger.Verbose("Host is already online and checked in {SecondsSinceCheckin}s ago, no status update necessary for {HostId}",
+                        secondsSinceLastCheckIn, host.Id);
+                    continue;
             }
-            
+
             _logger.Debug("Host was last known online but hasn't checked in for {SecondsSinceCheckin}s which is over the offline {OfflineSeconds} and is now considered offline," +
                           " updating status for host {HostId}", secondsSinceLastCheckIn, _appConfig.CurrentValue.HostOfflineAfterSeconds, host.Id);
             var updateHost = new HostUpdateRequest() {Id = host.Id, CurrentState = ConnectivityState.Unknown};
@@ -554,7 +559,7 @@ public class JobManager : IJobManager
                 _logger.Error("Failed to update host offline status for {HostId}: {Error}", host.Id, updateHostResponse.Messages);
                 continue;
             }
-            
+
             _logger.Information("Host {HostId} hasn't checked in and is now offline", host.Id);
         }
     }
@@ -570,7 +575,7 @@ public class JobManager : IJobManager
             _logger.Error("Failed to gather game servers for connectable status check: {Error}", allGameServers.ErrorMessage);
             return;
         }
-        
+
         _logger.Debug("Gathered {GameserverCount} gameservers to check for connectable status", allGameServers.Result.Count());
         foreach (var gameserver in allGameServers.Result)
         {
@@ -596,7 +601,8 @@ public class JobManager : IJobManager
             return;
         }
 
-        var gameServerCheck = gameserver.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !_serverState.IsRunningInDebugMode);
+        var serverIsLocal = _serverState.PublicIp == gameserver.PublicIp;  // If the gameserver has the same public IP as this server we'll assume it's local
+        var gameServerCheck = gameserver.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !serverIsLocal);
         var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
         switch (connectableResponse.Data)
         {
@@ -621,7 +627,16 @@ public class JobManager : IJobManager
             updateState.Messages.ForEach(x => _logger.Error("Update gameserver state for connectivity check error: {Error}", x));
             return;
         }
-            
+
+        var serverStatusEvent = new GameServerStatusEvent
+        {
+            Id = gameserver.Id,
+            ServerName = gameserver.ServerName,
+            BuildVersionUpdated = false,
+            ServerState = ConnectivityState.Connectable,
+        };
+        _eventService.TriggerGameServerStatus("GameServerStatusCheck", serverStatusEvent);
+
         var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
         {
             EntityId = gameserver.Id,
@@ -631,14 +646,14 @@ public class JobManager : IJobManager
         });
         if (!stateRecordCreate.Succeeded)
         {
-            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Network, gameserver.Id, 
+            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Network, gameserver.Id,
                 gameserver.HostId, "Failed to create state change notify record from gameserver status check job", new Dictionary<string, string>
                 {
                     {"Source", "GameServerStatusCheck"},
                     {"Error", string.Join(Environment.NewLine, updateState.Messages)}
                 });
         }
-            
+
         _eventService.TriggerNotify("GameServerStatusCheck", new NotifyTriggeredEvent
         {
             EntityId = gameserver.Id,
@@ -646,7 +661,7 @@ public class JobManager : IJobManager
             Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
             Detail = $"Server State Change: {gameserver.ServerState} => {gameServerUpdate.ServerState}"
         });
-            
+
         _logger.Information("Updated gameserver connectivity state from {PreviousState} to {CurrentState} for gameserver {GameserverId}",
             gameserver.ServerState, gameServerUpdate.ServerState, gameserver.Id);
     }

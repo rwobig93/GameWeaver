@@ -30,9 +30,9 @@ public class CurrentUserService : ICurrentUserService
         var userIdentity = await GetCurrentUserPrincipal();
         if (userIdentity is null)
             return null;
-        
+
         var userId = GetIdFromPrincipal(userIdentity);
-        
+
         if (userId == Guid.Empty) return null;
         return userId;
     }
@@ -41,14 +41,14 @@ public class CurrentUserService : ICurrentUserService
     {
         var userIdClaim = principal?.Claims.Where(x => x.Type == ClaimTypes.NameIdentifier).FirstOrDefault();
         var isGuid = Guid.TryParse(userIdClaim?.Value, out var userId);
-        
+
         return !isGuid ? Guid.Empty : userId;
     }
 
     public async Task<UserBasicResponse?> GetCurrentUserBasic()
     {
         var userId = await GetCurrentUserId();
-        
+
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
@@ -58,7 +58,7 @@ public class CurrentUserService : ICurrentUserService
     public async Task<AppUserFull?> GetCurrentUserFull()
     {
         var userId = await GetCurrentUserId();
-        
+
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);
@@ -68,7 +68,7 @@ public class CurrentUserService : ICurrentUserService
     public async Task<AppUserSecurityFull?> GetCurrentUserSecurityFull()
     {
         var userId = await GetCurrentUserId();
-        
+
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdSecurityAsync((Guid)userId);
@@ -78,7 +78,7 @@ public class CurrentUserService : ICurrentUserService
     public async Task<AppUserDb?> GetCurrentUserDb()
     {
         var userId = await GetCurrentUserId();
-        
+
         if (userId is null) return null;
 
         var foundUser = await _userRepository.GetByIdAsync((Guid)userId);

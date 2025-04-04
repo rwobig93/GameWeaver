@@ -8,7 +8,7 @@ public interface ISqlDatabaseScript
     public DbResourceType Type { get; }
     public string SqlStatement { get; }
     public string Path { get; }
-    
+
     // Determines the order of database script enforcement by inheriting classes, primarily for foreign keys and database dependencies
     public int EnforcementOrder { get; }
 }

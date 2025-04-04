@@ -21,7 +21,7 @@
         </MudButton>
     </MudContainer>
 </MudPaper>
-<MudGrid Class="d-flex flex-row gap-4 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
+<MudGrid Class="d-flex flex-row gap-3 pa-2 pt-4 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var game in _pagedData)
     {
         <GameWidget @ref="@WidgetReference" Game="@game" CssDisplay="@_cssDisplay" ShowName="@_showNames" GamerMode="_userPreferences.GamerMode" />

@@ -44,15 +44,15 @@ public partial class GameServerCreateDialog : ComponentBase
     private GameProfileSlim _selectedParentProfile = new() {Id = Guid.Empty, FriendlyName = "None"};
     private readonly GameServerCreateRequest _createRequest = new();
     private bool _showPortConfig;
-    
+
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _adminPasswordInput = InputType.Password;
     private string _adminPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _rconPasswordInput = InputType.Password;
     private string _rconPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -105,7 +105,7 @@ public partial class GameServerCreateDialog : ComponentBase
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _games = response.Data.ToList();
     }
 
@@ -115,14 +115,14 @@ public partial class GameServerCreateDialog : ComponentBase
         {
             return;
         }
-        
+
         var response = await GameServerService.GetGameProfilesByGameIdAsync(_selectedGame.Id);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _gameProfiles = response.Data.ToList();
     }
 
@@ -146,9 +146,9 @@ public partial class GameServerCreateDialog : ComponentBase
         {
             return _games;
         }
-        
+
         await Task.CompletedTask;
-        
+
         return _games.Where(x =>
             x.FriendlyName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
             x.SteamName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
@@ -163,9 +163,9 @@ public partial class GameServerCreateDialog : ComponentBase
         {
             return _hosts;
         }
-        
+
         await Task.CompletedTask;
-        
+
         return _hosts.Where(x =>
             x.FriendlyName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
             x.Hostname.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
@@ -179,15 +179,15 @@ public partial class GameServerCreateDialog : ComponentBase
         {
             return _gameProfiles;
         }
-        
+
         await Task.CompletedTask;
-        
+
         return _gameProfiles.Where(x =>
             x.FriendlyName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
             x.OwnerId.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
             x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
     }
-    
+
     private async Task CreateGameServer()
     {
         if (_selectedGame.Id == Guid.Empty)
@@ -213,7 +213,7 @@ public partial class GameServerCreateDialog : ComponentBase
             Snackbar.Add("Server name cannot be empty", Severity.Error);
             return;
         }
-        
+
         if (_loggedInUserId == Guid.Empty)
         {
             var tshootId = await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.GameServers, Guid.Empty, _loggedInUserId,
@@ -236,19 +236,19 @@ public partial class GameServerCreateDialog : ComponentBase
             Snackbar.Add(ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data), Severity.Error);
             return;
         }
-        
+
         _createRequest.OwnerId = _selectedOwner.Id;
         _createRequest.HostId = _selectedHost.Id;
         _createRequest.GameId = _selectedGame.Id;
         _createRequest.ParentGameProfileId = _selectedParentProfile.Id == Guid.Empty ? null : _selectedParentProfile.Id;
-        
+
         var response = await GameServerService.CreateAsync(_createRequest.ToCreate(), _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         MudDialog.Close(DialogResult.Ok(response.Data));
     }
 
@@ -290,7 +290,7 @@ public partial class GameServerCreateDialog : ComponentBase
         _rconPasswordInput = InputType.Password;
         _rconPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
     }
-    
+
     private void Cancel()
     {
         MudDialog.Cancel();

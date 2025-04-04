@@ -20,7 +20,7 @@ public partial class NavMenu
     private bool _canViewGames;
     private bool _canViewGameServers;
     private bool _canSeeGameServersUi;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -37,7 +37,7 @@ public partial class NavMenu
         {
             return;
         }
-        
+
         _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.View);
         _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Jobs.View);
         _canViewUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.View);

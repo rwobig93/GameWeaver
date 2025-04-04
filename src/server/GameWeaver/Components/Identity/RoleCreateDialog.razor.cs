@@ -14,7 +14,7 @@ public partial class RoleCreateDialog
     private AppRoleCreate _newRole = new();
 
     private bool _canCreateRoles;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -35,18 +35,18 @@ public partial class RoleCreateDialog
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Create);
     }
-    
+
     private async Task Save()
     {
         if (!_canCreateRoles) return;
-        
+
         var createRoleRequest = await RoleService.CreateAsync(_newRole, _currentUserId);
         if (!createRoleRequest.Succeeded)
         {
             createRoleRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         Snackbar.Add("Successfully created role!", Severity.Success);
         MudDialog.Close(DialogResult.Ok(createRoleRequest.Data));
     }

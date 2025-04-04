@@ -14,7 +14,7 @@ public partial class UserView
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
-    
+
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
@@ -48,7 +48,7 @@ public partial class UserView
     private bool _enableEditable;
     private string _editButtonText = "Enable Edit Mode";
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -75,11 +75,11 @@ public partial class UserView
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
         if (!queryParameters.TryGetValue("userId", out var queryUserId)) return;
-        
+
         var providedIdIsValid = Guid.TryParse(queryUserId, out var parsedUserId);
         if (!providedIdIsValid)
             throw new InvalidDataException("Invalid UserId provided for user view");
-            
+
         UserId = parsedUserId;
     }
 
@@ -88,7 +88,7 @@ public partial class UserView
         _viewingUser = (await UserService.GetByIdFullAsync(UserId)).Data!;
         _createdByUsername = (await UserService.GetByIdAsync(_viewingUser.CreatedBy)).Data?.Username;
         _createdOn = _viewingUser.CreatedOn.ConvertToLocal(_localTimeZone);
-        
+
         if (_viewingUser.LastModifiedBy is not null)
         {
             _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingUser.LastModifiedBy)).Data?.Username;
@@ -112,33 +112,33 @@ public partial class UserView
         _canAdminEmail = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.AdminEmail);
         _canForceLogin = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.Users.ForceLogin);
         if (_viewingUser.AccountType != AccountType.Service) return;
-        
+
         _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, PermissionConstants.Identity.ServiceAccounts.Admin);
         if (_canAdminServiceAccount) return;
 
         // If not a service account admin check if the user has a dynamic permission to administrate this service account
-        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser, 
+        _canAdminServiceAccount = await AuthorizationService.UserHasPermission(_currentUser,
             PermissionConstants.Identity.ServiceAccounts.Dynamic(_viewingUser.Id, DynamicPermissionLevel.Admin));
     }
-    
+
     private async Task Save()
     {
         if (!_canEditUsers) return;
-        
+
         var updateResult = await UserService.UpdateAsync(_viewingUser.ToUpdate(), CurrentUserService.GetIdFromPrincipal(_currentUser));
         if (!updateResult.Succeeded)
         {
             updateResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         var updateSecurityResult = await AccountService.SetAuthState(_viewingUser.Id, _viewingUser.AuthState);
         if (!updateSecurityResult.Succeeded)
         {
             updateSecurityResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         ToggleEditMode();
         await GetViewingUser();
         Snackbar.Add("Account successfully updated!", Severity.Success);
@@ -208,13 +208,13 @@ public partial class UserView
     private async Task EditServiceAccount()
     {
         if (_viewingUser.AccountType != AccountType.Service) return;
-        
+
         if (!_canAdminServiceAccount)
         {
             Snackbar.Add("You don't have permission to edit service accounts, how'd you initiate this request!?", Severity.Error);
             return;
         }
-        
+
         var updateParameters = new DialogParameters() { {"ServiceAccountId", _viewingUser.Id} };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var updateAccountDialog = await DialogService.ShowAsync<ServiceAccountAdminDialog>("Update Service Account", updateParameters, dialogOptions);
@@ -230,7 +230,7 @@ public partial class UserView
             StateHasChanged();
             return;
         }
-        
+
         var copyParameters = new DialogParameters()
         {
             {"Title", "Please copy the account password and save it somewhere safe"},
@@ -247,7 +247,7 @@ public partial class UserView
     private async Task ChangeEmail()
     {
         if (!_canAdminEmail) return;
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"Title", "Confirm New Email Address"},
@@ -277,7 +277,7 @@ public partial class UserView
         StateHasChanged();
         Snackbar.Add(emailChangeRequest.Messages.First(), Severity.Success);
     }
-    
+
     private async Task ForceLogin()
     {
         var requestUserId = CurrentUserService.GetIdFromPrincipal(_currentUser);

@@ -18,7 +18,7 @@ public static class FileHelpers
         var hash = SHA256.HashData(stream);
         return Convert.ToHexStringLower(hash);
     }
-    
+
     public static string? ComputeFileContentSha256Hash(string filePath)
     {
         if (!File.Exists(filePath))

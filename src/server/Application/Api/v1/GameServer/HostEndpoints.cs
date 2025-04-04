@@ -57,7 +57,7 @@ public static class HostEndpoints
             return await Result<HostAuthResponse>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get all game server hosts with pagination
     /// </summary>
@@ -67,13 +67,13 @@ public static class HostEndpoints
     /// <param name="appConfig"></param>
     /// <returns>List of game server hosts</returns>
     [Authorize(PermissionConstants.GameServer.Hosts.GetAllPaginated)]
-    private static async Task<IResult<IEnumerable<HostSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService, 
+    private static async Task<IResult<IEnumerable<HostSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IHostService hostService,
         IOptions<AppConfiguration> appConfig)
     {
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.GetAllPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -81,7 +81,7 @@ public static class HostEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.GetAllPaginated, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.GetAllPaginated, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -91,7 +91,7 @@ public static class HostEndpoints
             return await Result<IEnumerable<HostSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a host by it's id
     /// </summary>
@@ -110,7 +110,7 @@ public static class HostEndpoints
             return await Result<HostSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a host by it's hostname
     /// </summary>
@@ -171,7 +171,7 @@ public static class HostEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a host by it's id
     /// </summary>
@@ -210,7 +210,7 @@ public static class HostEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.SearchPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -218,7 +218,7 @@ public static class HostEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Host.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Host.Search, pageNumber, pageSize, result.TotalCount);
             return result;

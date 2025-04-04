@@ -20,8 +20,8 @@ public partial class UserApiTokenDialog
     private AppUserExtendedAttributeSlim _apiToken = new();
 
     private bool _canGenerateTokens;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -51,7 +51,7 @@ public partial class UserApiTokenDialog
     private async Task ValidateTokenAction()
     {
         if (!_canGenerateTokens) return;
-        
+
         var existingTokenRequest = await UserService.GetExtendedAttributeByIdAsync(ApiTokenId);
         if (!existingTokenRequest.Succeeded || existingTokenRequest.Data is null)
         {
@@ -87,7 +87,7 @@ public partial class UserApiTokenDialog
             MudDialog.Close(DialogResult.Ok(true));
             return;
         }
-        
+
         // Updating an existing token - we only allow updating the description
         var tokenUpdateRequest = await UserService.UpdateExtendedAttributeAsync(_apiToken.Id, null, _apiToken.Description);
         if (!tokenUpdateRequest.Succeeded)

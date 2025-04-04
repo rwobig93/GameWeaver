@@ -9,7 +9,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "Developers";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(DevelopersTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -24,7 +24,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -38,7 +38,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -68,7 +68,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -84,7 +84,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameId = new()
     {
         Table = Table,
@@ -100,7 +100,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByName = new()
     {
         Table = Table,
@@ -116,7 +116,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -133,7 +133,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@Id, @GameId, @Name);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -151,7 +151,7 @@ public class DevelopersTableMsSql : IMsSqlEnforcedEntity
                     OR g.Name LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,

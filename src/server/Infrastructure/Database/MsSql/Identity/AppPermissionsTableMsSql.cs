@@ -8,9 +8,9 @@ namespace Infrastructure.Database.MsSql.Identity;
 public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
 {
     private const string TableName = "AppPermissions";
-    
+
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppPermissionsTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
@@ -35,7 +35,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -50,7 +50,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteForUser = new()
     {
         Table = Table,
@@ -65,7 +65,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE UserId = @UserId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteForRole = new()
     {
         Table = Table,
@@ -80,7 +80,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE RoleId = @RoleId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -140,7 +140,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 JOIN dbo.[{AppRolesTableMsSql.Table.TableName}] r ON r.Id = p.RoleId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -156,7 +156,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByName = new()
     {
         Table = Table,
@@ -172,7 +172,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGroup = new()
     {
         Table = Table,
@@ -187,7 +187,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE p.[Group] = @Group;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByAccess = new()
     {
         Table = Table,
@@ -202,7 +202,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE p.Access = @Access;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByClaimValue = new()
     {
         Table = Table,
@@ -217,7 +217,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE p.ClaimValue = @ClaimValue;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByRoleId = new()
     {
         Table = Table,
@@ -232,7 +232,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE p.RoleId = @RoleId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByRoleIdAndValue = new()
     {
         Table = Table,
@@ -248,7 +248,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE p.RoleId = @RoleId AND p.ClaimValue = @ClaimValue;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByUserId = new()
     {
         Table = Table,
@@ -263,7 +263,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE p.UserId = @UserId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByUserIdAndValue = new()
     {
         Table = Table,
@@ -279,7 +279,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE p.UserId = @UserId AND p.ClaimValue = @ClaimValue;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -308,7 +308,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 @LastModifiedOn);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -328,7 +328,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                     OR p.ClaimValue LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -349,7 +349,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY p.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
@@ -380,7 +380,7 @@ public class AppPermissionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = COALESCE(@Id, Id);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetDynamicByTypeAndName = new()
     {
         Table = Table,

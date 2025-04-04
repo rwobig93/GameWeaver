@@ -18,7 +18,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     private readonly NavigationManager _navigationManager;
     private readonly ILogger _logger;
     private readonly IOptions<AppConfiguration> _appSettings;
-    
+
     public PermissionAuthorizationHandler(IAppAccountService accountService, NavigationManager navigationManager, ILogger logger, IOptions<AppConfiguration> appSettings)
     {
         _accountService = accountService;
@@ -41,7 +41,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             await ValidatePrincipalPermissions(context, requirement);
             return;
         }
-        
+
         // Validate if user is required to do a full re-authentication
         var userId = context.User.Claims.GetId();
         var userRequiredToFullAuth = (await _accountService.IsRequiredToDoFullReAuthentication(userId)).Data;
@@ -62,12 +62,12 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
                 _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(LoginRedirectReason.SessionExpired), true);
                 return;
             }
-            
+
             _navigationManager.NavigateTo(_navigationManager.Uri, true);
             context.Fail();
             return;
         }
-        
+
         // Validate or re-authenticate active session based on token expiration, this can happen if the token hasn't been validated recently
         var sessionNeedsReAuthenticated = (await _accountService.DoesCurrentSessionNeedReAuthenticated()).Data;
         if (sessionNeedsReAuthenticated)
@@ -80,7 +80,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
                 _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(LoginRedirectReason.SessionExpired), true);
                 return;
             }
-            
+
             context.Fail();
             _navigationManager.NavigateTo(_navigationManager.Uri, true);
             return;
@@ -92,7 +92,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             context.Fail();
             return;
         }
-        
+
         await ValidatePrincipalPermissions(context, requirement);
     }
 
@@ -122,7 +122,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             await Task.CompletedTask;
             return;
         }
-        
+
         // Default explicit permission validation fail
         context.Fail();
     }
@@ -134,7 +134,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         {
             return true;
         }
-        
+
         // Using refresh token failed, user must do a fresh login
         await LogoutAndClearCache(userId);
         return false;
@@ -146,7 +146,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         await _accountService.LogoutGuiAsync(logoutUserId);
         var loginUriFull = QueryHelpers.AddQueryString(
             AppRouteConstants.Identity.Login, LoginRedirectConstants.RedirectParameter, nameof(LoginRedirectReason.SessionExpired));
-        
+
         _navigationManager.NavigateTo(loginUriFull, true);
     }
 }

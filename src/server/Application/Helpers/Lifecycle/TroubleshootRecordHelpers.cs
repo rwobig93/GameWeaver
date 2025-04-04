@@ -25,13 +25,13 @@ public static class TroubleshootRecordHelpers
 
         return await Result<Guid>.SuccessAsync(recordCreate.Data);
     }
-    
+
     public static async Task<IResult<Guid>> CreateTroubleshootRecord(this ITroubleshootingRecordService tshootService, IRunningServerState serverState, IDateTimeService dateTime,
         TroubleshootEntityType type, Guid recordId, string message, Dictionary<string, string>? detail)
     {
         return await CreateTroubleshootRecord(tshootService, dateTime, type, recordId, serverState.SystemUserId, message, detail);
     }
-    
+
     public static async Task<IResult<Guid>> CreateTroubleshootRecord(this ITroubleshootingRecordsRepository tshootRepository, IDateTimeService dateTime, TroubleshootEntityType type,
         Guid recordId, Guid changedById, string message, Dictionary<string, string>? detail)
     {
@@ -47,7 +47,7 @@ public static class TroubleshootRecordHelpers
 
         return await Result<Guid>.SuccessAsync(recordCreate.Result);
     }
-    
+
     public static async Task<IResult<Guid>> CreateTroubleshootRecord(this ITroubleshootingRecordsRepository tshootRepository, IRunningServerState serverState,
         IDateTimeService dateTime, TroubleshootEntityType type, Guid recordId, string message, Dictionary<string, string>? detail)
     {

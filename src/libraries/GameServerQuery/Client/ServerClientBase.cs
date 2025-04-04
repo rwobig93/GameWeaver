@@ -24,13 +24,13 @@ public class ServerClientBase : IServerClient
     public ProtocolType Protocol { get; private set; } = ProtocolType.Udp;
 
     private Socket? _socket;
-    
+
     /// <inheritdoc/>
     public async Task<ConnectionResult> Connect(IPEndPoint endpoint, ProtocolType type, int sendTimeout = 3000, int receiveTimeout = 3000)
     {
         SendTimeout = sendTimeout;
         ReceiveTimeout = receiveTimeout;
-        
+
         switch (type)
         {
             case ProtocolType.Tcp:
@@ -66,7 +66,7 @@ public class ServerClientBase : IServerClient
             case ProtocolType.SpxII:
             default: return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Only TCP and UDP protocols are supported" });
         }
-        
+
         _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendTimeout, SendTimeout);
         _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, ReceiveTimeout);
         _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, BufferSize);
@@ -93,7 +93,7 @@ public class ServerClientBase : IServerClient
         {
             return await Task.FromResult(new ConnectionResult { Succeeded = false, Message = "Provided Hostname is over 255 characters which is the hostname limit" });
         }
-        
+
         if (IPAddress.TryParse(hostOrIp, out var address))
         {
             return await Connect(new IPEndPoint(address, port), type, sendTimeout, receiveTimeout);
@@ -137,7 +137,7 @@ public class ServerClientBase : IServerClient
         {
             return await Task.FromResult(new ClientSendResult { Succeeded = false, Message = "The socket is currently closed" });
         }
-        
+
         try
         {
             var socketSend = _socket.BeginSend(payload, 0, payload.Length, SocketFlags.None, null, null);
@@ -198,7 +198,7 @@ public class ServerClientBase : IServerClient
             return await Task.FromResult(new ClientReceiveResult { Succeeded = false, Message = $"An unexpected error occured: {ex.Message}" });
         }
     }
-    
+
     public void Dispose()
     {
         CloseConnection();

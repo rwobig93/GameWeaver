@@ -147,7 +147,7 @@ public class SteamServerQuery : ServerClientBase
         {
             return new SteamServerQueryResult<byte[]> {Succeeded = false, Message = receiveResult.Message};
         }
-        
+
         var parser = new PayloadParser(receiveResult.Response);
         try
         {
@@ -162,7 +162,7 @@ public class SteamServerQuery : ServerClientBase
                     Message = $"Invalid header received from server | Expected: {(byte)SteamChallengeResponseHeader.A2SChallenge} | Received: {responseHeader}"
                 };
             }
-            
+
             byte[] challengeResponse = [parser.ReadByte(), parser.ReadByte(), parser.ReadByte(), parser.ReadByte()];
             return new SteamServerQueryResult<byte[]> {Succeeded = true, Response = challengeResponse};
         }
@@ -171,7 +171,7 @@ public class SteamServerQuery : ServerClientBase
             return new SteamServerQueryResult<byte[]> {Succeeded = false, Message = "Response payload from the server is malformed or not supported"};
         }
     }
-    
+
     /// <summary>
     /// Get players and their session details from the connected server
     /// </summary>
@@ -182,7 +182,7 @@ public class SteamServerQuery : ServerClientBase
         {
             return new SteamServerQueryResult<SteamServerPlayersInfo> {Succeeded = false, Message = "Connection to the server is currently not active"};
         }
-        
+
         var challengeResult = await PlayerChallenge();
         if (!challengeResult.Succeeded || challengeResult.Response is null)
         {
@@ -227,7 +227,7 @@ public class SteamServerQuery : ServerClientBase
                 {
                     break;
                 }
-                
+
                 var player = new SteamServerPlayer
                 {
                     Index = parser.ReadByte(),
@@ -252,7 +252,7 @@ public class SteamServerQuery : ServerClientBase
         {
             playersInfo.TheShipDeaths = parser.ReadULong();
             playersInfo.TheShipMoney = parser.ReadULong();
-            
+
             return new SteamServerQueryResult<SteamServerPlayersInfo> {Succeeded = true, Response = playersInfo};
         }
         catch (EndOfStreamException)
@@ -288,7 +288,7 @@ public class SteamServerQuery : ServerClientBase
         {
             return new SteamServerQueryResult<byte[]> {Succeeded = false, Message = receiveResult.Message};
         }
-        
+
         var parser = new PayloadParser(receiveResult.Response);
         try
         {
@@ -303,7 +303,7 @@ public class SteamServerQuery : ServerClientBase
                     Message = $"Invalid header received from server | Expected: {(byte)SteamChallengeResponseHeader.A2SChallenge} | Received: {responseHeader}"
                 };
             }
-            
+
             byte[] challengeResponse = [parser.ReadByte(), parser.ReadByte(), parser.ReadByte(), parser.ReadByte()];
             return new SteamServerQueryResult<byte[]> {Succeeded = true, Response = challengeResponse};
         }
@@ -312,7 +312,7 @@ public class SteamServerQuery : ServerClientBase
             return new SteamServerQueryResult<byte[]> {Succeeded = false, Message = "Response payload from the server is malformed or not supported"};
         }
     }
-    
+
     /// <summary>
     /// Get server rules from the connected server
     /// </summary>
@@ -323,7 +323,7 @@ public class SteamServerQuery : ServerClientBase
         {
             return new SteamServerQueryResult<SteamServerRulesInfo> {Succeeded = false, Message = "Connection to the server is currently not active"};
         }
-        
+
         var challengeResult = await RulesChallenge();
         if (!challengeResult.Succeeded || challengeResult.Response is null)
         {

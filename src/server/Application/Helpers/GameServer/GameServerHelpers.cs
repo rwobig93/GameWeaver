@@ -20,7 +20,7 @@ public static class GameServerHelpers
     {
         return gameServers.SelectMany(x => x.GetUsedPorts()).ToList();
     }
-    
+
     public static List<int> GetUsedPorts(this GameServerSlim gameServer)
     {
         return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];
@@ -30,7 +30,7 @@ public static class GameServerHelpers
     {
         return gameServers.SelectMany(x => x.GetUsedPorts()).ToList();
     }
-    
+
     public static List<int> GetUsedPorts(this GameServerCreate gameServer)
     {
         return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];
@@ -40,7 +40,7 @@ public static class GameServerHelpers
     {
         return gameServers.SelectMany(x => x.GetUsedPorts()).ToList();
     }
-    
+
     public static List<int> GetUsedPorts(this GameServerCreateRequest gameServer)
     {
         return [gameServer.PortGame, gameServer.PortPeer, gameServer.PortQuery, gameServer.PortRcon];
@@ -73,7 +73,7 @@ public static class GameServerHelpers
                 Source = GameSource.Steam
             };
         }
-        
+
         return new GameServerConnectivityCheck
         {
             HostIp = usePublicIp ? gameServer.PublicIp : gameServer.PrivateIp,

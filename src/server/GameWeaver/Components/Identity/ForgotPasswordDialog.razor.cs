@@ -25,7 +25,7 @@ public partial class ForgotPasswordDialog
             PageIsLoading = false;
             return;
         }
-        
+
         var emailExists = await DoesEmailExist();
         if (!emailExists)
         {
@@ -44,7 +44,7 @@ public partial class ForgotPasswordDialog
             PageIsLoading = false;
             return;
         }
-        
+
         resetResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
         PageIsLoading = false;
         MudDialog.Close(DialogResult.Ok(true));

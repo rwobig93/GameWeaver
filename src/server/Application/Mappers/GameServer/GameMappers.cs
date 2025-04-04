@@ -49,7 +49,7 @@ public static class GameMappers
             ManualVersionUrlDownload = gameDb.ManualVersionUrlDownload
         };
     }
-    
+
     public static IEnumerable<GameSlim> ToSlims(this IEnumerable<GameDb> gameDbs)
     {
         return gameDbs.Select(ToSlim);

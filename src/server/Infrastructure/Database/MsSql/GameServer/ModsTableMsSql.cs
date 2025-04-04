@@ -9,7 +9,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "Mods";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ModsTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -34,7 +34,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -51,7 +51,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -83,7 +83,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -99,7 +99,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameId = new()
     {
         Table = Table,
@@ -115,7 +115,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetBySteamGameId = new()
     {
         Table = Table,
@@ -131,7 +131,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetBySteamToolId = new()
     {
         Table = Table,
@@ -147,7 +147,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetBySteamId = new()
     {
         Table = Table,
@@ -163,7 +163,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByFriendlyName = new()
     {
         Table = Table,
@@ -179,7 +179,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByCurrentHash = new()
     {
         Table = Table,
@@ -195,7 +195,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -224,7 +224,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                         @DeletedOn);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -247,7 +247,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                     OR m.FriendlyName LIKE '%' + @SearchTerm + '%');
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -271,7 +271,7 @@ public class ModsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY m.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

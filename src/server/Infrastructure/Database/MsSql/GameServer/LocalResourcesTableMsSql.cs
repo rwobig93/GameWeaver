@@ -9,7 +9,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "LocalResources";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(LocalResourcesTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 9,
@@ -37,7 +37,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -51,7 +51,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -81,7 +81,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -97,7 +97,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY l.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameProfileId = new()
     {
         Table = Table,
@@ -113,7 +113,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY l.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -145,7 +145,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                         @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -168,7 +168,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                     OR l.Args LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -192,7 +192,7 @@ public class LocalResourcesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

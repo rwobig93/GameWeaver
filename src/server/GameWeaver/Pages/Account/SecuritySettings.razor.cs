@@ -20,7 +20,7 @@ public partial class SecuritySettings
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [Parameter] public string OauthCode { get; set; } = "";
     [Parameter] public string OauthState { get; set; } = "";
-    
+
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IQrCodeService QrCodeService { get; init; } = null!;
@@ -31,11 +31,11 @@ public partial class SecuritySettings
     [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
 
     private AppUserSecurityFull CurrentUser { get; set; } = new();
-    
+
     private bool _canGenerateApiTokens;
     private MudTabs _securityTabs = null!;
     private MudTabPanel _externalAuthPanel = null!;
-    
+
     // User Password Change
     private string CurrentPassword { get; set; } = "";
     private string DesiredPassword { get; set; } = "";
@@ -54,18 +54,18 @@ public partial class SecuritySettings
     private string _qrCodeImageSource = "";
     private string _totpCode = "";
     private bool QrCodeGenerating { get; set; }
-    
+
     // User API Tokens
     private List<AppUserExtendedAttributeSlim> _userApiTokens = [];
     private List<AppUserExtendedAttributeSlim> _userClientSessions = [];
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = [];
-    
+
     // External Auth
     private bool _linkedAuthGoogle;
     private bool _linkedAuthDiscord;
     private bool _linkedAuthSpotify;
-    
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -97,10 +97,10 @@ public partial class SecuritySettings
     {
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-        
+
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthCode, out var oauthCode))
             OauthCode = oauthCode!;
-        
+
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthState, out var oauthState))
             OauthState = oauthState!;
     }
@@ -227,11 +227,11 @@ public partial class SecuritySettings
         // If we have a MFA key on the account we want to allow toggling MFA on/off for the account
         await ToggleMfaEnablement(!CurrentUser.TwoFactorEnabled);
     }
-    
+
     private async Task RegisterTotp()
     {
         QrCodeGenerating = true;
-        
+
         try
         {
             _mfaRegisterCode = MfaService.GenerateKeyString();
@@ -244,7 +244,7 @@ public partial class SecuritySettings
         {
             Snackbar.Add($"Failed to generate TOTP Registration: {ex.Message}", Severity.Error);
         }
-        
+
         QrCodeGenerating = false;
         await Task.CompletedTask;
         StateHasChanged();
@@ -258,7 +258,7 @@ public partial class SecuritySettings
             result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         await GetCurrentUser();
         StateHasChanged();
         var mfaEnablement = CurrentUser.TwoFactorEnabled ? "Enabled" : "Disabled";
@@ -274,18 +274,18 @@ public partial class SecuritySettings
             Snackbar.Add("TOTP code provided is incorrect, please try again", Severity.Error);
             return;
         }
-        
+
         await AccountService.SetTwoFactorKey(CurrentUser.Id, _mfaRegisterCode);
         await AccountService.SetTwoFactorEnabled(CurrentUser.Id, true);
-        
+
         _mfaRegisterCode = "";
         _qrCodeImageSource = "";
         Snackbar.Add("TOTP code provided is correct!", Severity.Success);
-        
+
         // Wait for the snackbar message to be read then we reload the page to force page elements to update
         //  would love to find a better solution for this but as of now StateHasChanged or force updating doesn't work
         await Task.Delay(TimeSpan.FromSeconds(3));
-        
+
         NavManager.NavigateTo(AppRouteConstants.Account.Security, true);
     }
 
@@ -342,7 +342,7 @@ public partial class SecuritySettings
             externalAuthRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         if (!externalAuthRequest.Data.Any())
         {
             _linkedAuthDiscord = false;
@@ -359,7 +359,7 @@ public partial class SecuritySettings
     private async Task GenerateUserApiToken()
     {
         if (!_canGenerateApiTokens) return;
-        
+
         var dialogParameters = new DialogParameters() {{"ApiTokenId", Guid.Empty}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         await DialogService.ShowAsync<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions);
@@ -372,11 +372,11 @@ public partial class SecuritySettings
     {
         if (!_canGenerateApiTokens) return;
         if (_selectedApiTokens.Count != 1) return;
-        
+
         var dialogParameters = new DialogParameters() {{"ApiTokenId", _selectedApiTokens.FirstOrDefault()!.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         await DialogService.ShowAsync<UserApiTokenDialog>("Update API Token", dialogParameters, dialogOptions);
-        
+
         await GetUserApiTokens();
         StateHasChanged();
     }
@@ -384,9 +384,9 @@ public partial class SecuritySettings
     private async Task DeleteApiTokens()
     {
         if (!_canGenerateApiTokens) return;
-        
+
         var tokensList = _selectedApiTokens.Select(x => $"Token: [{x.Value[^4..]}] {x.Description}").ToArray();
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"Title", $"Are you sure you want to delete these {_selectedApiTokens.Count} API Tokens?"},
@@ -401,7 +401,7 @@ public partial class SecuritySettings
         }
 
         var messages = new List<string>();
-        
+
         foreach (var token in _selectedApiTokens)
         {
             var tokenDeleteRequest = await AccountService.DeleteUserApiToken(CurrentUser.Id, token.Value);
@@ -414,7 +414,7 @@ public partial class SecuritySettings
             messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         Snackbar.Add("Finished deleting selected API tokens", Severity.Success);
         await GetUserApiTokens();
         StateHasChanged();
@@ -431,14 +431,14 @@ public partial class SecuritySettings
 
         Snackbar.Add("Successfully copied API token to your clipboard!", Severity.Info);
     }
-    
+
     private IEnumerable<string> ValidatePasswordRequirements(string content)
     {
         var passwordIssues = AccountHelpers.GetAnyIssuesWithPassword(content);
         if (!string.IsNullOrEmpty(content) && passwordIssues.Any())
             yield return passwordIssues.First();
     }
-    
+
     private IEnumerable<string> ValidatePasswordsMatch(string content)
     {
         if (!string.IsNullOrEmpty(content) &&
@@ -464,7 +464,7 @@ public partial class SecuritySettings
             StateHasChanged();
             return;
         }
-        
+
         // Account is not linked so we'll start linking - initiate a redirect to the provider, on successful auth we'll link the account
         var loginUriRedirectRequest = await ExternalAuthService.GetLoginUri(provider, ExternalAuthRedirect.Security);
         if (!loginUriRedirectRequest.Succeeded)
@@ -472,7 +472,7 @@ public partial class SecuritySettings
             loginUriRedirectRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         NavManager.NavigateTo(loginUriRedirectRequest.Data);
     }
 
@@ -490,7 +490,7 @@ public partial class SecuritySettings
                 addExternalAuthRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
-            
+
             Snackbar.Add($"Your {AppConfig.Value.ApplicationName} account has been linked to your {provider} account!", Severity.Success);
             await GetUserExternalAuthLinks();
             _securityTabs.ActivatePanel(_externalAuthPanel);

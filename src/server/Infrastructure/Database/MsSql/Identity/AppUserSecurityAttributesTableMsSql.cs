@@ -9,7 +9,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "AppUserSecurityAttributes";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserSecurityAttributesTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
@@ -32,7 +32,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -47,7 +47,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteAllForOwner = new()
     {
         Table = Table,
@@ -62,7 +62,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE OwnerId = @OwnerId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -78,7 +78,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,
@@ -93,7 +93,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE OwnerId = @OwnerId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -106,7 +106,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}];
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -133,7 +133,7 @@ public class AppUserSecurityAttributesTableMsSql : IMsSqlEnforcedEntity
                         @BadPasswordAttempts, @LastBadPassword, @LastFullLogin);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

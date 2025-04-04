@@ -9,7 +9,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "ConfigurationItems";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ConfigurationItemsTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -30,7 +30,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -44,7 +44,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -73,7 +73,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY c.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -89,7 +89,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY c.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByLocalResourceId = new()
     {
         Table = Table,
@@ -105,7 +105,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY c.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -127,7 +127,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@Id, @LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value, @FriendlyName);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -150,7 +150,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                     OR c.FriendlyName LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -174,7 +174,7 @@ public class ConfigurationItemsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY c.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

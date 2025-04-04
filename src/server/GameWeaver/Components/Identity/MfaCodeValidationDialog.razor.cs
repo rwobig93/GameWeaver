@@ -19,10 +19,10 @@ public partial class MfaCodeValidationDialog
             Snackbar.Add("MFA Code entered is invalid, please try again", Severity.Error);
             return;
         }
-        
+
         MudDialog.Close(DialogResult.Ok(true));
     }
-    
+
     private void MfaCodeTextfieldKeyDown(KeyboardEventArgs keyDown)
     {
         switch (keyDown.Key)
@@ -35,7 +35,7 @@ public partial class MfaCodeValidationDialog
                 break;
         }
     }
-    
+
     private void Cancel()
     {
         MudDialog.Close(DialogResult.Cancel());

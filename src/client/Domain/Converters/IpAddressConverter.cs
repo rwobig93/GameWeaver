@@ -9,7 +9,7 @@ public class IpAddressConverter : JsonConverter<IPAddress>
     public override IPAddress Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var ipString = reader.GetString() ?? "0.0.0.0/0.0.0.0";
-        
+
         return IPAddress.Parse(ipString);
     }
 

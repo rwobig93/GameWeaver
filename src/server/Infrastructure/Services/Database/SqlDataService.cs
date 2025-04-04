@@ -84,7 +84,7 @@ public class SqlDataService : ISqlDataService
 
         return new PaginatedDbEntity<IEnumerable<TDataClass>> { Data = response.Select(x => x.Item2), TotalCount = response.FirstOrDefault().Item1 };
     }
-    
+
     public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(ISqlDatabaseScript script,
         Func<TDataClass, TDataClassJoin, TDataClass> joinMapping, TParameters parameters, string connectionId, int timeoutSeconds = 5)
     {
@@ -131,17 +131,17 @@ public class SqlDataService : ISqlDataService
         };
 
         var databaseScripts = new List<ISqlDatabaseScript>();
-        
+
         // Gather static Database Scripts from inheriting classes
         foreach (var entity in entitiesToBeEnforced)
             databaseScripts.AddRange(entity.GetDbScripts());
-        
+
         // Sort scripts in order of indicated enforcement
         databaseScripts.Sort((scriptOne, scriptTwo) =>
         {
             // Sort by EnforcementOrder in descending order
             var orderWinner = scriptOne.EnforcementOrder.CompareTo(scriptTwo.EnforcementOrder);
-            
+
             return orderWinner != 0 ? orderWinner :
                 // EnforcementOrder matches on both comparable objects, secondary sort by Table Name in Descending order
                 string.Compare(scriptOne.FriendlyName, scriptTwo.FriendlyName, StringComparison.Ordinal);

@@ -49,7 +49,7 @@ public class AuthStateProvider : AuthenticationStateProvider
 
             if (string.IsNullOrWhiteSpace(_authToken))
                 return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
-            
+
             // User is valid and not token isn't expired
             return GenerateNewAuthenticationState(_authToken);
         }
@@ -68,11 +68,11 @@ public class AuthStateProvider : AuthenticationStateProvider
     private AuthenticationState GenerateNewAuthenticationState(string savedToken)
     {
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
-        
+
         var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(JwtHelpers.GetJwtDecoded(savedToken).Claims, JwtBearerDefaults
             .AuthenticationScheme));
         _contextAccessor.HttpContext!.User = authorizedPrincipal;
-        
+
         var state = new AuthenticationState(authorizedPrincipal);
         AuthenticationStateUser = state.User;
         return state;

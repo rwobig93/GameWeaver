@@ -89,12 +89,12 @@ public class SqlDatabaseSeederService : IHostedService
             RoleConstants.DefaultRoles.AdminName, RoleConstants.DefaultRoles.AdminDescription);
         if (adminRole.Succeeded)
             await EnforcePermissionsForRole(adminRole.Result!.Id, PermissionHelpers.GetAllBuiltInPermissions());
-        
+
         var moderatorRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.ModeratorName, RoleConstants.DefaultRoles.ModeratorDescription);
         if (moderatorRole.Succeeded && _lifecycleConfig.EnforceDefaultRolePermissions)
             await EnforcePermissionsForRole(moderatorRole.Result!.Id, PermissionHelpers.GetModeratorRolePermissions());
-        
+
         var serviceAccountRole = await CreateOrGetSeedRole(
             RoleConstants.DefaultRoles.ServiceAccountName, RoleConstants.DefaultRoles.ServiceAccountDescription);
         if (serviceAccountRole.Succeeded && _lifecycleConfig.EnforceDefaultRolePermissions)
@@ -110,7 +110,7 @@ public class SqlDatabaseSeederService : IHostedService
     {
         // Seed system user permissions
         await EnforceRolesForUser(_systemUser.Id, RoleConstants.AdminRoleNames);
-        
+
         var adminUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.AdminUsername, UserConstants.DefaultUsers.AdminFirstName, UserConstants.DefaultUsers.AdminLastName,
             UserConstants.DefaultUsers.AdminEmail, UserConstants.DefaultUsers.AdminPassword);
@@ -128,7 +128,7 @@ public class SqlDatabaseSeederService : IHostedService
             {
                 await EnforceRolesForUser(moderatorUser.Result!.Id, RoleConstants.ModeratorRoleNames);
             }
-            
+
             var basicUser = await CreateOrGetSeedUser(
                 UserConstants.DefaultUsers.BasicUsername, UserConstants.DefaultUsers.BasicFirstName, UserConstants.DefaultUsers.BasicLastName,
                 UserConstants.DefaultUsers.BasicEmail, UserConstants.DefaultUsers.BasicPassword);
@@ -137,7 +137,7 @@ public class SqlDatabaseSeederService : IHostedService
                 await EnforceRolesForUser(basicUser.Result!.Id, RoleConstants.DefaultRoleNames);
             }
         }
-        
+
         var anonymousUser = await CreateOrGetSeedUser(
             UserConstants.DefaultUsers.AnonymousUsername, UserConstants.DefaultUsers.AnonymousFirstName,
             UserConstants.DefaultUsers.AnonymousLastName, UserConstants.DefaultUsers.AnonymousEmail, UrlHelpers.GenerateToken(64));
@@ -160,7 +160,7 @@ public class SqlDatabaseSeederService : IHostedService
             return existingRole;
         if (existingRole.Result is not null)
             return existingRole;
-        
+
         var createdRole = await _roleRepository.CreateAsync(new AppRoleCreate()
         {
             Name = roleName,
@@ -191,7 +191,7 @@ public class SqlDatabaseSeederService : IHostedService
                     permission, roleId, addedPermission.ErrorMessage);
                 continue;
             }
-            
+
             _logger.Debug("Added missing {PermissionValue} to role {RoleId} with id {PermissionId}",
                 permission, roleId, addedPermission.Result);
         }
@@ -208,7 +208,7 @@ public class SqlDatabaseSeederService : IHostedService
         }
         if (existingUser.Result is not null)
             return existingUser;
-        
+
         var createdUser = await _userRepository.CreateAsync(new AppUserCreate
         {
             Username = userName,
@@ -227,7 +227,7 @@ public class SqlDatabaseSeederService : IHostedService
             DeletedOn = null,
             AccountType = AccountType.User
         });
-        
+
         AccountHelpers.GenerateHashAndSalt(userPassword, _securityConfig.PasswordPepper, out var salt, out var hash);
         await _userRepository.UpdateSecurityAsync(new AppUserSecurityAttributeUpdate
         {
@@ -241,9 +241,9 @@ public class SqlDatabaseSeederService : IHostedService
             BadPasswordAttempts = 0,
             LastBadPassword = null
         });
-        
+
         _logger.Information("Created missing {UserName} user with id: {UserId}", userName, createdUser.Result);
-        
+
         return await _userRepository.GetByIdAsync(createdUser.Result);
     }
 
@@ -254,7 +254,7 @@ public class SqlDatabaseSeederService : IHostedService
         {
             var foundRole = await _roleRepository.GetByNameAsync(role);
             await _roleRepository.AddUserToRoleAsync(userId, foundRole.Result!.Id, _systemUser.Id);
-            
+
             _logger.Debug("Added missing role {RoleId} to user {UserId}", foundRole.Result.Id, userId);
         }
     }
@@ -264,21 +264,21 @@ public class SqlDatabaseSeederService : IHostedService
         var desiredAnonUser = await _userRepository.GetByIdAsync(Guid.Empty);
         if (desiredAnonUser.Result is not null)
             return;
-        
+
         var updatedId = await _userRepository.SetUserId(currentId, Guid.Empty);
         if (!updatedId.Succeeded)
         {
             _logger.Error("Failed to set Anonymous UserId to Empty Guid: {ErrorMessage}", updatedId.ErrorMessage);
             return;
         }
-        
+
         var anonUserValidation = await _userRepository.GetByIdAsync(Guid.Empty);
         if (anonUserValidation.Result is null)
         {
             _logger.Error("Failed to get Anonymous UserId after update: {ErrorMessage}", anonUserValidation.ErrorMessage);
             return;
         }
-        
+
         _logger.Information("Anon user ID was updated and validated correct: {UserId}", anonUserValidation.Result!.Id);
     }
 
@@ -296,7 +296,7 @@ public class SqlDatabaseSeederService : IHostedService
         {
             _logger.Debug("Existing server state record exists => [{Id}]{Version}/{DatabaseVersion} :: {Timestamp}",
                 latestRecord.Id, latestRecord.AppVersion, latestRecord.DatabaseVersion, latestRecord.Timestamp);
-        
+
             if (new Version(latestRecord.AppVersion) == _serverState.ApplicationVersion)
             {
                 _logger.Debug($"App version hasn't changed and hasn't been upgraded");
@@ -316,14 +316,14 @@ public class SqlDatabaseSeederService : IHostedService
                 DatabaseVersion = "0.0.0.0"
             };
         }
-        
+
         var createRecordRequest = await _serverStateRepository.CreateAsync(latestRecord.ToCreate());
         if (!createRecordRequest.Succeeded)
         {
             _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
             return;
         }
-        
+
         _logger.Information("Application updated, created server state record: {Id} {AppVersion}/{DatabaseVersion}",
             createRecordRequest.Result, latestRecord.AppVersion, latestRecord.DatabaseVersion);
     }
@@ -350,7 +350,7 @@ public class SqlDatabaseSeederService : IHostedService
             _logger.Error("Failed to retrieve existing server state record: {Error}", existingStateRecord.ErrorMessage);
             return;
         }
-        
+
         var databaseMigrations = _dbConfig.Provider switch
         {
             DatabaseProviderType.MsSql => typeof(IMsSqlMigration).GetImplementingTypes<ISqlMigration>(),
@@ -391,7 +391,7 @@ public class SqlDatabaseSeederService : IHostedService
             _logger.Error("Failed to create server state record: {Error}", createRecordRequest.ErrorMessage);
             return;
         }
-        
+
         _logger.Information("Updated server state record post DB migration: {Id} {AppVersion}/{DatabaseVersion}",
             createRecordRequest.Result, newRecord.AppVersion, newRecord.DatabaseVersion);
     }

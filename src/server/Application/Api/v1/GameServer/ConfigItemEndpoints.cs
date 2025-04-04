@@ -30,7 +30,7 @@ public static class ConfigItemEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.ConfigItem.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.ConfigItem.Search, Search).ApiVersionOne();
     }
-        
+
     /// <summary>
     /// Get all configuration items with pagination
     /// </summary>
@@ -64,7 +64,7 @@ public static class ConfigItemEndpoints
             return await Result<IEnumerable<ConfigurationItemSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total configuration items count
     /// </summary>
@@ -82,7 +82,7 @@ public static class ConfigItemEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a configuration item by id
     /// </summary>
@@ -101,7 +101,7 @@ public static class ConfigItemEndpoints
             return await Result<ConfigurationItemSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get configuration times by game profile id
     /// </summary>

@@ -10,14 +10,14 @@ public partial class TroubleshootRecordView : ComponentBase
     [Inject] private ITroubleshootingRecordService TshootService { get; init; } = null!;
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     [Parameter] public Guid RecordId { get; set; }
 
     private TroubleshootingRecordSlim _viewingRecord = new();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private bool _invalidDataProvided;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -43,13 +43,13 @@ public partial class TroubleshootRecordView : ComponentBase
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
         if (!queryParameters.TryGetValue("recordId", out var queryRecordId)) return;
-        
+
         var providedIdIsValid = Guid.TryParse(queryRecordId, out var parsedRecordId);
         if (!providedIdIsValid)
         {
             throw new InvalidDataException("Invalid RecordId provided for troubleshooting record view");
         }
-            
+
         RecordId = parsedRecordId;
     }
 

@@ -40,7 +40,7 @@ public static class GameEndpoints
         app.MapGet(ApiRouteConstants.GameServer.Game.Search, Search).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Game.DownloadLatest, DownloadLatest).ApiVersionOne();
     }
-    
+
     /// <summary>
     /// Get all games with pagination
     /// </summary>
@@ -56,7 +56,7 @@ public static class GameEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.GetAllPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -64,7 +64,7 @@ public static class GameEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Game.GetAllPaginated, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -74,7 +74,7 @@ public static class GameEndpoints
             return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total game count
     /// </summary>
@@ -92,7 +92,7 @@ public static class GameEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game by id
     /// </summary>
@@ -111,7 +111,7 @@ public static class GameEndpoints
             return await Result<GameSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game by steam name
     /// </summary>
@@ -130,7 +130,7 @@ public static class GameEndpoints
             return await Result<IEnumerable<GameSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game by friendly name
     /// </summary>
@@ -149,7 +149,7 @@ public static class GameEndpoints
             return await Result<GameSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game by steam id
     /// </summary>
@@ -168,7 +168,7 @@ public static class GameEndpoints
             return await Result<GameSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game by steam tool id
     /// </summary>
@@ -229,7 +229,7 @@ public static class GameEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a game
     /// </summary>
@@ -268,7 +268,7 @@ public static class GameEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.SearchPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -288,7 +288,7 @@ public static class GameEndpoints
             return await PaginatedResult<IEnumerable<GameSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Download the latest server client for a manual source game
     /// </summary>
@@ -334,7 +334,7 @@ public static class GameEndpoints
                 HashSha256 = foundFile.Data.HashSha256,
                 Content = fileContent
             };
-            
+
             return await Result<GameDownloadResponse>.SuccessAsync(response);
         }
         catch (Exception ex)

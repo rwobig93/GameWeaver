@@ -5,8 +5,8 @@ public class Result : IResult
     public List<string> Messages { get; set; } = [];
 
     public bool Succeeded { get; set; }
-    
-    
+
+
     public static IResult Fail()
     {
         return new Result { Succeeded = false };
@@ -61,7 +61,7 @@ public class Result : IResult
 public class Result<T> : Result, IResult<T>
 {
     public T Data { get; set; } = default!;
-    
+
 
     public new static Result<T> Fail()
     {

@@ -25,7 +25,7 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
         _logger = logger;
         _dateTimeService = dateTimeService;
     }
-    
+
     public async Task<DatabaseActionResult<IEnumerable<TroubleshootingRecordDb>>> GetAllAsync()
     {
         DatabaseActionResult<IEnumerable<TroubleshootingRecordDb>> actionReturn = new();
@@ -52,9 +52,9 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<TroubleshootingRecordDb, dynamic>(
                 TroubleshootingRecordsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)
@@ -64,7 +64,7 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
 
         return actionReturn;
     }
-    
+
     public async Task<DatabaseActionResult<int>> GetCountAsync()
     {
         DatabaseActionResult<int> actionReturn = new();
@@ -162,7 +162,7 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
         try
         {
             createObject.Timestamp = _dateTimeService.NowDatabaseTime;
-            
+
             var createdId = await _database.SaveDataReturnId(TroubleshootingRecordsTableMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
@@ -202,9 +202,9 @@ public class TroubleshootingRecordsRepositoryMsSql : ITroubleshootingRecordsRepo
             var response =
                 await _database.LoadDataPaginated<TroubleshootingRecordDb, dynamic>(
                     TroubleshootingRecordsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)

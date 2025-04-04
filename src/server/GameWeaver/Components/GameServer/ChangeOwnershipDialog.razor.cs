@@ -22,15 +22,15 @@ public partial class ChangeOwnershipDialog : ComponentBase
     private UserBasicResponse? _selectedUser;
     private UserBasicResponse _currentOwner = new() { Username = "Unknown" };
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await GetAllUsers();
             GetCurrentOwner();
-                
+
             StateHasChanged();
         }
     }
@@ -70,7 +70,7 @@ public partial class ChangeOwnershipDialog : ComponentBase
             x.Username.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
             x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
     }
-    
+
     private void Confirm()
     {
         if (_selectedUser is null)
@@ -78,10 +78,10 @@ public partial class ChangeOwnershipDialog : ComponentBase
             Snackbar.Add("Host must have an assigned owner", Severity.Error);
             return;
         }
-        
+
         MudDialog.Close(DialogResult.Ok(_selectedUser.Id));
     }
-    
+
     private void Cancel()
     {
         MudDialog.Cancel();

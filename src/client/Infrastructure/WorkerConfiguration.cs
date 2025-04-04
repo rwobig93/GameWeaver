@@ -17,7 +17,7 @@ public static class WorkerConfiguration
     public static IHostBuilder AddInfrastructure(this IHostBuilder builder)
     {
         // Replace default logger w/ Serilog, configure via appsettings.json - uses the "Serilog" section
-        builder.UseSerilog((ctx, logConfig) => 
+        builder.UseSerilog((ctx, logConfig) =>
             logConfig.ReadFrom.Configuration(ctx.Configuration), preserveStaticLogger: false);
 
         builder.ConfigureServices((context, services) =>
@@ -71,7 +71,7 @@ public static class WorkerConfiguration
     {
         var generalConfig = configuration.GetRequiredSection(GeneralConfiguration.SectionName).Get<GeneralConfiguration>();
         services.AddTransient<AuthTokenDelegatingHandler>();
-        
+
         services.AddHttpClient(HttpConstants.Unauthenticated, client => { client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/')); });
         services.AddHttpClient(HttpConstants.AuthenticatedServer, client => { client.BaseAddress = new Uri(generalConfig!.ServerUrl.Trim('/')); })
             .AddHttpMessageHandler<AuthTokenDelegatingHandler>();

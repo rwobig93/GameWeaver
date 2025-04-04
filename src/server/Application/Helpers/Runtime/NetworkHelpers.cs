@@ -23,7 +23,7 @@ public static class NetworkHelpers
                     // Handle port range
                     var parts = portOrRange.Split('-');
                     if (parts.Length != 2 || !int.TryParse(parts[0], out var rangeStart) || !int.TryParse(parts[1], out var rangeEnd)) continue;
-                    
+
                     for (var port = rangeStart; port <= rangeEnd; port++)
                     {
                         parsedPorts.Add(port);
@@ -46,14 +46,14 @@ public static class NetworkHelpers
 
         return parsedPorts;
     }
-    
+
     public static async Task<string?> ParseIpFromIpOrHost(string ipOrHost)
     {
         if (IPAddress.TryParse(ipOrHost, out var ip))
         {
             return ip.ToString();
         }
-        
+
         // The input is a hostname, perform DNS lookup
         try
         {
@@ -65,7 +65,7 @@ public static class NetworkHelpers
                     return address.ToString();
                 }
             }
-            
+
             return addresses[0].ToString();
         }
         catch (Exception)

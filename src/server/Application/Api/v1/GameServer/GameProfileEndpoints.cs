@@ -33,7 +33,7 @@ public static class GameProfileEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.GameProfile.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.GameProfile.Search, Search).ApiVersionOne();
     }
-            
+
     /// <summary>
     /// Get all game profiles with pagination
     /// </summary>
@@ -49,7 +49,7 @@ public static class GameProfileEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.GetAllGameProfilesPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -57,7 +57,7 @@ public static class GameProfileEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameProfile.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameProfile.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -67,7 +67,7 @@ public static class GameProfileEndpoints
             return await Result<IEnumerable<GameProfileSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total game profile count
     /// </summary>
@@ -85,7 +85,7 @@ public static class GameProfileEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game profile by id
     /// </summary>
@@ -104,7 +104,7 @@ public static class GameProfileEndpoints
             return await Result<GameProfileSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game profile by friendly name
     /// </summary>
@@ -123,7 +123,7 @@ public static class GameProfileEndpoints
             return await Result<GameProfileSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get list of game profiles by game id
     /// </summary>
@@ -142,7 +142,7 @@ public static class GameProfileEndpoints
             return await Result<IEnumerable<GameProfileSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get game profiles by owner id
     /// </summary>
@@ -161,7 +161,7 @@ public static class GameProfileEndpoints
             return await Result<IEnumerable<GameProfileSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Create a game profile
     /// </summary>
@@ -204,7 +204,7 @@ public static class GameProfileEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a game profile
     /// </summary>
@@ -243,7 +243,7 @@ public static class GameProfileEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.SearchGameProfilesPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -251,7 +251,7 @@ public static class GameProfileEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameProfile.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameProfile.Search, pageNumber, pageSize, result.TotalCount);
             return result;

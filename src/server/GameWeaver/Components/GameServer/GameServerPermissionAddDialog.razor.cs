@@ -24,10 +24,10 @@ public partial class GameServerPermissionAddDialog : ComponentBase
     private HashSet<AppPermissionCreate> _selectedPermissions = [];
     private List<AppPermissionSlim> _assignedPermissions = [];
     private List<AppPermissionCreate> _availablePermissions = [];
-    
+
     private Guid _currentUserId;
     private bool _canPermissionGameServer;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -56,8 +56,8 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Admin));
         var isServerModerator = (await RoleService.IsUserModeratorAsync(_currentUserId)).Data || await AuthorizationService.UserHasPermission(currentUser,
             PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Moderator));
-        
-        _canPermissionGameServer = isServerAdmin || isServerModerator || 
+
+        _canPermissionGameServer = isServerAdmin || isServerModerator ||
             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Permission));
     }
 
@@ -81,7 +81,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             usersRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _availableUsers = usersRequest.Data.ToResponses();
     }
 
@@ -92,7 +92,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
         {
             return;
         }
-        
+
         var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, GameServerId);
         if (!assignedServerPermissions.Succeeded)
         {
@@ -100,7 +100,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             return;
         }
         _assignedPermissions = assignedServerPermissions.Data.Where(x => x.RoleId == _selectedRole.Id).ToList();
-        
+
         var availableServerPermissions = await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(GameServerId);
         if (!availableServerPermissions.Succeeded)
         {
@@ -110,7 +110,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
         _availablePermissions = availableServerPermissions.Data.Where(x => _assignedPermissions
             .FirstOrDefault(p => p.ClaimValue == x.ClaimValue) is null).ToList();
     }
-    
+
     private async Task<IEnumerable<RoleResponse>> FilterRoles(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
@@ -132,7 +132,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
         {
             return;
         }
-        
+
         var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, GameServerId);
         if (!assignedServerPermissions.Succeeded)
         {
@@ -140,7 +140,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             return;
         }
         _assignedPermissions = assignedServerPermissions.Data.Where(x => x.UserId == _selectedUser.Id).ToList();
-        
+
         var availableServerPermissions = await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(GameServerId);
         if (!availableServerPermissions.Succeeded)
         {
@@ -150,7 +150,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
         _availablePermissions = availableServerPermissions.Data.Where(x => _assignedPermissions
             .FirstOrDefault(p => p.ClaimValue == x.ClaimValue) is null).ToList();
     }
-    
+
     private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText))
@@ -172,7 +172,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             Snackbar.Add("No permissions selected to add", Severity.Error);
             return;
         }
-        
+
         foreach (var permission in _selectedPermissions)
         {
             if (_selectedUser is not null)
@@ -192,7 +192,7 @@ public partial class GameServerPermissionAddDialog : ComponentBase
                 return;
             }
         }
-        
+
         MudDialog.Close(DialogResult.Ok(true));
     }
 

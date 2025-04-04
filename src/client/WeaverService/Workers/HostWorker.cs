@@ -23,7 +23,7 @@ public class HostWorker : BackgroundService
     private readonly IOptions<AuthConfiguration> _authConfig;
 
     public static HostResourceUsage CurrentHostResourceUsage { get; private set; } = new();
-    
+
     /// <summary>
     /// Handles host IO operations and resource usage gathering
     /// </summary>
@@ -50,7 +50,7 @@ public class HostWorker : BackgroundService
         _lastRuntime = _dateTimeService.NowDatabaseTime;
         _logger.Information("App Directory: {Directory}", Directory.GetCurrentDirectory());
         ThreadHelper.ConfigureThreadPool(Environment.ProcessorCount, Environment.ProcessorCount * 2);
-        
+
         var steamCmdStatus = await _gameServerService.ValidateSteamCmdInstall();
         if (!steamCmdStatus.Succeeded)
         {
@@ -58,16 +58,16 @@ public class HostWorker : BackgroundService
             _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
             _appLifetime.StopApplication();
         }
-        
+
         StartResourcePoller();
-        
+
         // Add startup delay for poller details to fully gather
         var startupTimePassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
         if (startupTimePassed < 3000)
             await Task.Delay(3000 - startupTimePassed, stoppingToken);
-        
+
         ThreadHelper.QueueWork(_ => UpdateHostDetail());
-        
+
         await base.StartAsync(stoppingToken);
     }
 
@@ -79,7 +79,7 @@ public class HostWorker : BackgroundService
             {
                 _lastRuntime = _dateTimeService.NowDatabaseTime;
                 await UpdateCurrentResourceUsage();
-            
+
                 await ProcessWorkQueue();
 
                 var millisecondsPassed = (_dateTimeService.NowDatabaseTime - _lastRuntime).Milliseconds;
@@ -99,7 +99,7 @@ public class HostWorker : BackgroundService
         _logger.Debug("Stopping {ServiceName} service", nameof(HostWorker));
 
         await _weaverWorkService.Housekeeping();
-        
+
         _logger.Debug("Stopped {ServiceName} service", nameof(HostWorker));
         await base.StopAsync(stoppingToken);
     }
@@ -129,13 +129,13 @@ public class HostWorker : BackgroundService
             },
             Hostname = _hostService.GetHostname()
         };
-        
+
         currentHostInfo.MotherboardList.ForEach(motherboard => hostDetailRequest.Motherboards.Add(new HostMotherboard
         {
             Product = motherboard.Product,
             Manufacturer = motherboard.Manufacturer
         }));
-        
+
         currentHostInfo.CpuList.ForEach(cpu => hostDetailRequest.Cpus.Add(new HostCpu
         {
             Name = cpu.Name,
@@ -143,7 +143,7 @@ public class HostWorker : BackgroundService
             LogicalProcessorCount = Convert.ToInt32(cpu.NumberOfLogicalProcessors),
             SocketDesignation = cpu.SocketDesignation
         }));
-        
+
         currentHostInfo.DriveList.ForEach(
             drive => drive.PartitionList.ForEach(
                 partition => partition.VolumeList.ForEach(
@@ -156,7 +156,7 @@ public class HostWorker : BackgroundService
                     TotalSpace = volume.Size,
                     FreeSpace = volume.FreeSpace
                 }))));
-        
+
         currentHostInfo.NetworkAdapterList.ForEach(adapter => hostDetailRequest.NetworkInterfaces.Add(new HostNetworkInterface
         {
             Name = adapter.Description,
@@ -169,14 +169,14 @@ public class HostWorker : BackgroundService
             DhcpServer = adapter.DHCPServer.ToString(),
             DnsServers = new SerializableList<string>(adapter.DNSServerSearchOrderList.Select(x => x.ToString()))
         }));
-        
+
         currentHostInfo.MemoryList.ForEach(ramStick => hostDetailRequest.RamModules.Add(new HostRam
         {
             Manufacturer = ramStick.Manufacturer,
             Speed = ramStick.Speed,
             Capacity = ramStick.Capacity
         }));
-        
+
         currentHostInfo.VideoControllerList.ForEach(gpu => hostDetailRequest.Gpus.Add(new HostGpu
         {
             Name = gpu.Name,
@@ -184,7 +184,7 @@ public class HostWorker : BackgroundService
             VideoMode = gpu.VideoModeDescription,
             AdapterRam = gpu.AdapterRAM
         }));
-        
+
         work.SendHostDetailUpdate(WeaverWorkState.Completed, hostDetailRequest);
     }
 
@@ -206,17 +206,17 @@ public class HostWorker : BackgroundService
             _logger.Warning("Resource poller was asked to start when it is already running, skipping...");
             return;
         }
-        
+
         _pollerThread = Task.Run(() =>
         {
             var pollerLastRun = _dateTimeService.NowDatabaseTime;
-            
+
             while (true)
             {
                 try
                 {
                     _hostService.PollHostResources();
-                    
+
                     // We'll ensure we are on a 2second interval for gathering
                     var millisecondsPassed = (_dateTimeService.NowDatabaseTime - pollerLastRun).Milliseconds;
                     if (millisecondsPassed < _generalConfig.Value.ResourceGatherIntervalMs)
@@ -235,20 +235,20 @@ public class HostWorker : BackgroundService
     {
         var inProgressCount = await _weaverWorkService.GetCountInProgressHostAsync();
         var waitingCount = await _weaverWorkService.GetCountWaitingHostAsync();
-        
+
         if (inProgressCount.Data >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
             _logger.Verbose("In progress host work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}",
                 inProgressCount.Data, _generalConfig.Value.SimultaneousQueueWorkCountMax, waitingCount.Data);
             return;
         }
-        
+
         if (waitingCount.Data < 1)
         {
             _logger.Verbose("No host work waiting, moving on");
             return;
         }
-        
+
         // Work is waiting, and we have available queue space, adding next work to the thread pool
         var attemptCount = 0;
         while (inProgressCount.Data < _generalConfig.Value.SimultaneousQueueWorkCountMax)
@@ -256,7 +256,7 @@ public class HostWorker : BackgroundService
             inProgressCount = await _weaverWorkService.GetCountInProgressHostAsync();
             waitingCount = await _weaverWorkService.GetCountWaitingHostAsync();
             if (waitingCount.Data < 1) break;
-            
+
             if (attemptCount >= 5)
             {
                 _logger.Error("Reached max attempt count in the host work queue, quiting cycle queue processing");
@@ -279,7 +279,7 @@ public class HostWorker : BackgroundService
                 continue;
             }
             nextWork.Data.SendStatusUpdate(WeaverWorkState.InProgress, "Work is now in progress");
-            
+
             // ReSharper disable once AsyncVoidLambda
             ThreadHelper.QueueWork(async _ => await HandleWork(nextWork.Data));
         }
@@ -302,7 +302,7 @@ public class HostWorker : BackgroundService
                     work.SendStatusUpdate(WeaverWorkState.Failed, "Host work data was invalid, please verify the payload");
                     return;
             }
-            
+
             switch (work.TargetType)
             {
                 case WeaverWorkTarget.HostStatusUpdate:
@@ -330,7 +330,7 @@ public class HostWorker : BackgroundService
                     work.SendStatusUpdate(WeaverWorkState.Failed, $"Unsupported host work type asked for: {work.TargetType}");
                     return;
             }
-            
+
             await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Completed);
             work.SendStatusUpdate(WeaverWorkState.Completed, "Work complete");
             await Task.CompletedTask;

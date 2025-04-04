@@ -92,9 +92,9 @@ public class AuditTrailsRepositoryMsSql : IAuditTrailsRepository
             var offset = (pageNumber - 1) * pageSize;
             var response = await _database.LoadDataPaginated<AuditTrailWithUserDb, dynamic>(
                 AuditTrailsTableMsSql.GetAllPaginatedWithUsers, new {Offset =  offset, PageSize = pageSize});
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)

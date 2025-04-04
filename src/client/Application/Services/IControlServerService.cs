@@ -11,7 +11,7 @@ public interface IControlServerService
     public bool ServerIsUp { get; }
     public bool RegisteredWithServer { get; }
     public HostAuthorization Authorization { get; }
-    
+
     Task<bool> CheckIfServerIsUp();
     Task<IResult<HostRegisterResponse?>> RegistrationConfirm();
     Task<IResult<HostAuthResponse>> GetToken();

@@ -22,7 +22,7 @@ public class PermissionPolicyProvider : IAuthorizationPolicyProvider
         {
             return FallbackPolicyProvider.GetPolicyAsync(policyName);
         }
-        
+
         var policy = new AuthorizationPolicyBuilder();
         policy.AddRequirements(new PermissionRequirement(policyName));
         return Task.FromResult(policy.Build())!;

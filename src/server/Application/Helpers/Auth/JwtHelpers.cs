@@ -44,7 +44,7 @@ public static class JwtHelpers
         {
             var decodedJwt = GetJwtDecoded(token);
             var userId = decodedJwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)!.Value;
-        
+
             return Guid.Parse(userId);
         }
         catch
@@ -78,9 +78,9 @@ public static class JwtHelpers
     {
         var decodedJwt = GetJwtDecoded(token);
         var tokenExpirationRaw = decodedJwt.Claims.FirstOrDefault(x => x.Type == "exp")!.Value;
-        
+
         var tokenExpirationParsed = DateTimeOffset.FromUnixTimeSeconds(long.Parse(tokenExpirationRaw)).UtcDateTime;
-        
+
         return tokenExpirationParsed;
     }
 
@@ -113,7 +113,7 @@ public static class JwtHelpers
     {
         var updatedClaims = claims.ToList();
         updatedClaims.Add(new Claim(ClaimConstants.AuthenticationType, ClaimConstants.AuthType.User));
-        
+
         var token = new JwtSecurityToken(
             claims: updatedClaims,
             notBefore: GetJwtValidBeforeTime(dateTime),
@@ -121,7 +121,7 @@ public static class JwtHelpers
             signingCredentials: GetSigningCredentials(securityConfig),
             issuer: GetJwtIssuer(appConfig),
             audience: GetJwtAudience(appConfig));
-        
+
         return JwtHandler.WriteToken(token);
     }
 
@@ -130,7 +130,7 @@ public static class JwtHelpers
     {
         var updatedClaims = claims.ToList();
         updatedClaims.Add(new Claim(ClaimConstants.AuthenticationType, ClaimConstants.AuthType.Api));
-        
+
         var token = new JwtSecurityToken(
             claims: updatedClaims,
             notBefore: GetJwtValidBeforeTime(dateTime),
@@ -138,7 +138,7 @@ public static class JwtHelpers
             signingCredentials: GetSigningCredentials(securityConfig),
             issuer: GetJwtIssuer(appConfig),
             audience: GetJwtAudience(appConfig));
-        
+
         return JwtHandler.WriteToken(token);
     }
 
@@ -147,7 +147,7 @@ public static class JwtHelpers
     {
         var updatedClaims = claims.ToList();
         updatedClaims.Add(new Claim(ClaimConstants.AuthenticationType, ClaimConstants.AuthType.Host));
-        
+
         var token = new JwtSecurityToken(
             claims: updatedClaims,
             notBefore: GetJwtValidBeforeTime(dateTime),
@@ -155,7 +155,7 @@ public static class JwtHelpers
             signingCredentials: GetSigningCredentials(securityConfig),
             issuer: GetJwtIssuer(appConfig),
             audience: GetJwtAudience(appConfig));
-        
+
         return JwtHandler.WriteToken(token);
     }
 
@@ -164,7 +164,7 @@ public static class JwtHelpers
     {
         // Refresh token should only have the ID as to not allow someone to access to anything, extra layer of abstraction
         var claims = new List<Claim> { new(ClaimTypes.NameIdentifier, userId.ToString()) };
-        
+
         var token = new JwtSecurityToken(
             claims: claims,
             notBefore: GetJwtValidBeforeTime(dateTime),
@@ -172,7 +172,7 @@ public static class JwtHelpers
             signingCredentials: GetSigningCredentials(securityConfig),
             issuer: GetJwtIssuer(appConfig),
             audience: GetJwtAudience(appConfig));
-        
+
         return JwtHandler.WriteToken(token);
     }
 
@@ -214,7 +214,7 @@ public static class JwtHelpers
             return false;
         if (claimsPrincipal == UserConstants.ExpiredPrincipal)
             return false;
-        
+
         return true;
     }
 }

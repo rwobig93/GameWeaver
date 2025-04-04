@@ -20,7 +20,7 @@
                 <MudItem Class="d-flex flex-column align-center">
                     @foreach (var theme in AvailableThemes)
                     {
-                        <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description">
+                        <MudTooltip Arrow="true" Placement="Placement.Left" Text="@theme.Description" Delay="500">
                             <MudButton Variant="Variant.Text" StartIcon="@theme.Icon" OnClick="@(() => ChangeThemeOnLayout(theme))">
                                 <MudText Class="@_cssThemedText" Style="@(UserPreferences.ThemePreference == theme.Id ? _styleThemedTextSelected : _styleThemedText)">
                                     @theme.FriendlyName

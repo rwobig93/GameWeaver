@@ -3,14 +3,14 @@
 public static class AppRouteConstants
 {
     public const string Index = "/";
-    
+
     public static class Example
     {
         public const string Counter = "/example/counter";
         public const string WeatherData = "/example/weather-data";
         public const string Books = "/example/books";
     }
-    
+
     public static class Identity
     {
         public const string Login = "/identity/login";

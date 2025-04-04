@@ -25,19 +25,19 @@ public static class WebServerConfiguration
 {
     // Certificate loading via appsettings.json =>
     //   https://docs.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis?view=aspnetcore-6.0
-    
+
     [SuppressMessage("ReSharper.DPA", "DPA0008: Large number of DB connections")]
     public static void ConfigureWebServices(this WebApplication app)
     {
         app.ConfigureForEnvironment();
         app.ConfigureBlazorServerCommons();
-        
+
         app.ValidateDatabaseStructure();
-        
+
         app.ConfigureCoreServices();
         app.ConfigureApiServices();
         app.ConfigureIdentityServices();
-        
+
         app.MapApplicationApiEndpoints();
         app.AddScheduledJobs();
     }
@@ -47,10 +47,10 @@ public static class WebServerConfiguration
         using var scope = app.Services.CreateAsyncScope();
         var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
         var logger = scope.ServiceProvider.GetRequiredService<ILogger>();
-        
+
         app.Urls.Add(appConfig.Value.BaseUrl);
         logger.Information("Successfully bound application to Url: {Url}", appConfig.Value.BaseUrl);
-        
+
         foreach (var altUrl in appConfig.Value.AlternativeUrls)
         {
             try
@@ -68,18 +68,18 @@ public static class WebServerConfiguration
     private static void ConfigureForEnvironment(this WebApplication app)
     {
         app.ConfigureAppUrls();
-        
+
         if (app.Environment.IsDevelopment())
         {
             app.UseDeveloperExceptionPage();
             return;
         }
-        
+
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All
         });
-        
+
         app.UseExceptionHandler("/Error");
         app.UseHsts();
     }
@@ -91,7 +91,7 @@ public static class WebServerConfiguration
         app.UseRouting();
         app.MapBlazorHub();
         app.MapFallbackToPage("/_Host");
-        
+
         app.UseSerilogRequestLogging();
         app.UseForwardedHeaders(new ForwardedHeadersOptions()
         {
@@ -99,7 +99,7 @@ public static class WebServerConfiguration
         });
         app.UseMiddleware<ErrorHandlerMiddleware>();
     }
-    
+
     private static void ValidateDatabaseStructure(this IHost app)
     {
         using var scope = app.Services.CreateAsyncScope();
@@ -128,10 +128,10 @@ public static class WebServerConfiguration
     {
         using var scope = app.Services.CreateAsyncScope();
         var serverState = scope.ServiceProvider.GetRequiredService<IRunningServerState>();
-        
+
         app.MapControllers();
         app.ConfigureApiVersions();
-        
+
         app.MapHealthChecks("/_health", new HealthCheckOptions()
         {
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
@@ -199,7 +199,7 @@ public static class WebServerConfiguration
         var hangfireJobs = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
         var jobManager = scope.ServiceProvider.GetRequiredService<IJobManager>();
         var appConfig = scope.ServiceProvider.GetRequiredService<IOptions<AppConfiguration>>();
-        
+
         hangfireJobs.AddOrUpdate("UserHousekeeping", () => jobManager.UserHousekeeping(), JobHelpers.CronString.Minutely);
         hangfireJobs.AddOrUpdate("DailySystemCleanup", () => jobManager.DailyCleanup(), JobHelpers.CronString.Daily);
         hangfireJobs.AddOrUpdate("GameVersionCheck", () => jobManager.GameVersionCheck(), JobHelpers.CronString.MinuteInterval(5));

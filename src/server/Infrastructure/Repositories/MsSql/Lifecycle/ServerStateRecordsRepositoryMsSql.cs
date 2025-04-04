@@ -173,7 +173,7 @@ public class ServerStateRecordsRepositoryMsSql : IServerStateRecordsRepository
         try
         {
             createRecord.Timestamp = _dateTime.NowDatabaseTime;
-            
+
             var createdId = await _database.SaveDataReturnId(ServerStateRecordsTableMsSql.Insert, createRecord);
             actionReturn.Succeed(createdId);
         }

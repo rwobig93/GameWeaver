@@ -16,12 +16,12 @@ public static class ReflectionHelpers
             select (ISqlDatabaseScript)propertyValue).ToList();
     }
 
-    public static IEnumerable<T> GetImplementingTypes<T>(this Type type) 
+    public static IEnumerable<T> GetImplementingTypes<T>(this Type type)
         => AppDomain.CurrentDomain.GetAssemblies().SelectMany(s => s.GetTypes())
             .Where(t => t.GetInterfaces().Contains(type))
             .Select(t => (T) Activator.CreateInstance(t)!)
             .ToList();
-    
+
     public static List<string> GetConstantsRecursively(Type type)
     {
         // Get all public static fields of the type

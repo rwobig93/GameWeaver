@@ -15,7 +15,7 @@ public partial class AuditTrailAdmin
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IExcelService ExcelService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     private MudTable<AuditTrailSlim> _table = new();
     private IEnumerable<AuditTrailSlim> _pagedData = new List<AuditTrailSlim>();
     private string _searchString = "";
@@ -27,7 +27,7 @@ public partial class AuditTrailAdmin
     private bool _striped = true;
     private bool _bordered;
     private bool _canExportTrails;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -43,7 +43,7 @@ public partial class AuditTrailAdmin
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canExportTrails = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Audit.Export);
     }
-    
+
     private async Task<TableData<AuditTrailSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var trailResult = await AuditService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
@@ -85,7 +85,7 @@ public partial class AuditTrailAdmin
     private async Task ExportToExcel()
     {
         if (!_canExportTrails) return;
-        
+
         var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
             _pagedData, dataMapping: new Dictionary<string, Func<AuditTrailSlim, object>>
         {

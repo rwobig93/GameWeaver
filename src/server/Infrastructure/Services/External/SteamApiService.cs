@@ -54,7 +54,7 @@ public class SteamApiService : ISteamApiService
             {
                 return await Result<SteamAppInfo?>.FailAsync($"Error: [{response.StatusCode}]{response.ReasonPhrase}");
             }
-            
+
             var convertedResponse = _serializerService.DeserializeJson<SteamApiResponseJson>(await response.Content.ReadAsStringAsync());
 
             var appIdRoot = convertedResponse.Data.GetNestedValue(appId.ToString());
@@ -68,7 +68,7 @@ public class SteamApiService : ISteamApiService
             {
                 return await Result<SteamAppInfo?>.FailAsync("Unable to parse App Id from payload");
             }
-            
+
             var appInfo = new SteamAppInfo { AppId = parsedAppId };
 
             var appCommon = ((JsonElement) appIdRoot).GetNestedValue("common");
@@ -76,7 +76,7 @@ public class SteamApiService : ISteamApiService
             {
                 appInfo.Name = ((JsonElement)appCommon).GetNestedValue("name")?.ToString() ?? "";
                 var osList = ((JsonElement)appCommon).GetNestedValue("oslist").ToString() ?? "";
-                
+
                 if (osList.Contains("windows"))
                     appInfo.OsSupport.Add(OsType.Windows);
                 if (osList.Contains("linux"))
@@ -84,7 +84,7 @@ public class SteamApiService : ISteamApiService
                 if (osList.Contains("mac"))
                     appInfo.OsSupport.Add(OsType.Mac);
             }
-            
+
             var appPublicBranch = ((JsonElement) appIdRoot).GetNestedValue("depots.branches.public");
             if (appPublicBranch is not null)
             {
@@ -123,7 +123,7 @@ public class SteamApiService : ISteamApiService
                 {
                     return await Result<SteamAppDetailResponseJson?>.FailAsync($"Maximum retry backoff timer hit, unable to get response");
                 }
-                
+
                 var response = await httpClient.GetAsync(ApiConstants.Steam.StoreAppDetails(appId));
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
@@ -132,7 +132,7 @@ public class SteamApiService : ISteamApiService
                     await Task.Delay(backOffTimer);
                     continue;
                 }
-                
+
                 if (!response.IsSuccessStatusCode)
                 {
                     return await Result<SteamAppDetailResponseJson?>.FailAsync($"Error: {response.ReasonPhrase}");
@@ -154,7 +154,7 @@ public class SteamApiService : ISteamApiService
                 {
                     return await Result<SteamAppDetailResponseJson?>.FailAsync("Response was provided but was malformed or couldn't be parsed");
                 }
-            
+
                 return await Result<SteamAppDetailResponseJson?>.SuccessAsync(convertedResponse);
             }
         }

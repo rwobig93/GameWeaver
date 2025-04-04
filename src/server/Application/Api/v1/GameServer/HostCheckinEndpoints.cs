@@ -73,7 +73,7 @@ public static class HostCheckinEndpoints
                         "Failed to update host to online status from checkin", new Dictionary<string, string> {{"HostId", currentUserId.ToString()}});
                 }
             }
-            
+
             var createCheckIn = new HostCheckInCreate
             {
                 HostId = currentUserId,
@@ -85,7 +85,7 @@ public static class HostCheckinEndpoints
                 NetworkOutBytes = request.NetworkOutBytes,
                 NetworkInBytes = request.NetworkInBytes
             };
-            
+
             var checkInResponse = await hostService.CreateCheckInAsync(createCheckIn);
             if (!checkInResponse.Succeeded)
             {
@@ -116,7 +116,7 @@ public static class HostCheckinEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.GetAllCheckInsPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -124,7 +124,7 @@ public static class HostCheckinEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostCheckins.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -134,7 +134,7 @@ public static class HostCheckinEndpoints
             return await Result<IEnumerable<HostCheckInFull>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total count of host checkins
     /// </summary>
@@ -152,7 +152,7 @@ public static class HostCheckinEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a host checkin by id
     /// </summary>
@@ -171,7 +171,7 @@ public static class HostCheckinEndpoints
             return await Result<HostCheckInFull>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a host checkins by the host ID
     /// </summary>
@@ -231,7 +231,7 @@ public static class HostCheckinEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.SearchCheckInsPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -239,7 +239,7 @@ public static class HostCheckinEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostCheckins.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostCheckins.Search, pageNumber, pageSize, result.TotalCount);
             return result;

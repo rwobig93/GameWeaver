@@ -71,8 +71,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private bool _canStopServer;
     private bool _canDeleteServer;
     private bool _canChangeOwnership;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -87,11 +87,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 await GetClientTimezone();
                 await GetGameServerResources();
                 await GetGameServerPermissions();
-                
+
                 EventService.GameVersionUpdated += GameVersionUpdated;
                 EventService.GameServerStatusChanged += GameServerStatusChanged;
                 EventService.NotifyTriggered += NotifyTriggered;
-                
+
                 StateHasChanged();
             }
         }
@@ -130,7 +130,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         _gameServer = response.Data;
-        
+
         if (_gameServer.Id == Guid.Empty)
         {
             _validIdProvided = false;
@@ -151,7 +151,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _parentProfile = response.Data;
     }
 
@@ -163,11 +163,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add("Failed to find game for server, please reach out to an administrator", Severity.Error);
             return;
         }
-        
+
         _game = gameResponse.Data;
         _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
     }
-    
+
     private async Task GetServerHost()
     {
         var hostResponse = await HostService.GetByIdAsync(_gameServer.HostId);
@@ -176,7 +176,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add("Failed to find host for server, please reach out to an administrator", Severity.Error);
             return;
         }
-        
+
         _host = hostResponse.Data;
     }
 
@@ -186,14 +186,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var response = await GameServerService.GetLocalResourcesForGameServerIdAsync(_gameServer.Id);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _localResources = response.Data.ToList();
     }
 
@@ -201,14 +201,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
-        
+
         _canViewGameServer = !_gameServer.Private ||
                              await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get) ||
                              await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.View));
 
         var isServerAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Admin));
-        
+
         // Game server owner and admin gets full permissions
         if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
         {
@@ -222,9 +222,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canChangeOwnership = true;
             return;
         }
-        
+
         // Handle server moderator dynamic permission, global moderators get access via their role
-        var isServerModerator = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, 
+        var isServerModerator = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id,
                                 DynamicPermissionLevel.Moderator));
 
         if (isServerModerator)
@@ -239,7 +239,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canChangeOwnership = false;
             return;
         }
-        
+
         _canPermissionServer =  await AuthorizationService.UserHasPermission(currentUser,
                                         PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
         _canEditServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
@@ -259,7 +259,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, _gameServer.Id);
         _assignedUserPermissions.Clear();
         _assignedRolePermissions.Clear();
-        
+
         var filteredUserPermissions = assignedServerPermissions.Data.Where(x => x.UserId != Guid.AllBitsSet).ToDisplays();
         foreach (var permission in filteredUserPermissions.OrderBy(x => x.UserId))
         {
@@ -267,7 +267,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             permission.UserName = matchingUser.Data?.Username ?? "Unknown";
             _assignedUserPermissions.Add(permission);
         }
-        
+
         var filteredRolePermissions = assignedServerPermissions.Data.Where(x => x.RoleId != Guid.AllBitsSet).ToDisplays();
         foreach (var permission in filteredRolePermissions.OrderBy(x => x.RoleId))
         {
@@ -276,21 +276,21 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _assignedRolePermissions.Add(permission);
         }
     }
-    
+
     private async Task Save()
     {
         if (!_canConfigServer && !_canEditServer)
         {
             return;
         }
-        
+
         await GetServerHost();
         if (!_host.CurrentState.IsRunning())
         {
             Snackbar.Add("The host for this gameserver is currently offline, changes will occur once the host is online again", Severity.Error);
             StateHasChanged();
         }
-        
+
         var response = await GameServerService.UpdateAsync(_gameServer.ToUpdate(), _loggedInUserId);
         if (!response.Succeeded)
         {
@@ -302,11 +302,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
-            
+
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
         {
             if (await SaveNewConfigItems())
@@ -322,7 +322,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 return;
             }
         }
-        
+
         foreach (var resource in _deletedLocalResources)
         {
             // Create resource as ignored if deleted but is from parent or default game profile
@@ -332,35 +332,35 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 resource.ContentType = ContentType.Ignore;
                 var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
                 if (createResourceResponse.Succeeded) continue;
-            
+
                 createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
-            
+
             var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
             if (deleteResourceResponse.Succeeded) continue;
-            
+
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         var hostUpdateResponse = await GameServerService.UpdateAllLocalResourcesOnGameServerAsync(_gameServer.Id, _loggedInUserId);
         if (!hostUpdateResponse.Succeeded)
         {
             hostUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _createdConfigItems.Clear();
         _updatedConfigItems.Clear();
         _deletedConfigItems.Clear();
         _createdLocalResources.Clear();
         _deletedLocalResources.Clear();
-        
+
         ToggleEditMode();
         await GetViewingGameServer();
         await GetGameServerResources();
-        
+
         Snackbar.Add("Gameserver successfully updated!", Severity.Success);
         StateHasChanged();
     }
@@ -379,10 +379,10 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                     createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                     return true;
                 }
-                
+
                 configItem.LocalResourceId = createResourceResponse.Data;
                 configItem.Ignore = true;
-                
+
                 var ignoreCreateResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
                 if (!ignoreCreateResponse.Succeeded)
                 {
@@ -393,7 +393,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
             var deleteConfigResponse = await GameServerService.DeleteConfigurationItemAsync(configItem.Id, _loggedInUserId);
             if (deleteConfigResponse.Succeeded) continue;
-            
+
             deleteConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return true;
         }
@@ -425,7 +425,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                         createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                         return true;
                     }
-                
+
                     configItem.LocalResourceId = createResourceResponse.Data;
                 }
                 else
@@ -433,10 +433,10 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                     configItem.LocalResourceId = existingLocalResource.Id;
                 }
             }
-            
+
             var updateConfigResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(), _loggedInUserId);
             if (updateConfigResponse.Succeeded) continue;
-            
+
             updateConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return true;
         }
@@ -463,10 +463,10 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 _updatedConfigItems.Add(matchingIgnoreItem);
                 continue;
             }
-            
+
             var createConfigResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
             if (createConfigResponse.Succeeded) continue;
-            
+
             createConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return true;
         }
@@ -494,7 +494,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add(ErrorMessageConstants.Permissions.PermissionError, Severity.Error);
             return;
         }
-        
+
         await GetServerHost();
         if (!_host.CurrentState.IsRunning())
         {
@@ -502,7 +502,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             StateHasChanged();
             return;
         }
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"Title", "Are you sure you want to delete this gameserver?"},
@@ -516,24 +516,24 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var response = await GameServerService.DeleteAsync(_gameServer.Id, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         Snackbar.Add("Gameserver successfully deleted!", Severity.Success);
         GoBack();
     }
-    
+
     private bool ConfigShouldBeShown(ConfigurationItemSlim item)
     {
         var shouldBeShown = item.FriendlyName.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
                             item.Key.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
                             item.Value.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase);
-        
+
         return shouldBeShown;
     }
 
@@ -549,14 +549,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         var newConfigItem = (ConfigurationItemSlim) dialogResult.Data;
-        
+
         _createdConfigItems.Add(newConfigItem);
         localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
     }
-    
+
     private void ConfigUpdated(ConfigurationItemSlim item, LocalResourceSlim localResource)
     {
-        // TODO: Config items are being duplicated and can't be saved
+        // TODO: The provided config information matches an already existing config, please verify the information provided
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingNewConfig is not null)
         {
@@ -568,24 +568,23 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             matchingNewConfig.DuplicateKey = item.DuplicateKey;
             return;
         }
-        
+
         // If the config item is from a parent profile, add as a new config item instead
         if (item.Id == Guid.Empty)
         {
             item.Id = Guid.CreateVersion7();
             item.LocalResourceId = localResource.Id;
             _createdConfigItems.Add(item);
-            localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(item);
             return;
         }
-        
+
         var matchingUpdateConfig = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingUpdateConfig is null)
         {
             _updatedConfigItems.Add(item);
             return;
         }
-        
+
         matchingUpdateConfig.FriendlyName = item.FriendlyName;
         matchingUpdateConfig.Key = item.Key;
         matchingUpdateConfig.Value = item.Value;
@@ -596,18 +595,22 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private void ConfigDeleted(ConfigurationItemSlim item)
     {
-        if (_createdConfigItems.Contains(item))
-        {
-            _createdConfigItems.Remove(item);
-            return;
-        }
-        
+        _createdConfigItems.Remove(item);
+
         // Go through each resource config set and remove the targeted config item
         foreach (var resource in _localResources)
         {
             // ReSharper disable once PossibleMultipleEnumeration
             var resourceConfigSets = resource.ConfigSets.ToList();
-            var matchingActiveConfig = resourceConfigSets.FirstOrDefault(x => x.Id == item.Id);
+            // If we have an item ID we will use that, otherwise we find the item by all other properties that combine to be a 'unique' config item
+            var matchingActiveConfig = item.Id != Guid.Empty ?
+                resourceConfigSets.FirstOrDefault(x => x.Id == item.Id) :
+                resourceConfigSets.FirstOrDefault(x =>
+                    x.Key == item.Key &&
+                    x.Path == item.Path &&
+                    x.DuplicateKey == item.DuplicateKey &&
+                    x.Value == item.Value &&
+                    x.Category == item.Category);
             if (matchingActiveConfig is null) continue;
 
             // If the config item is from a parent profile, add as an ignore to the existing resource on the direct profile instead
@@ -620,17 +623,17 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 resource.ConfigSets = resourceConfigSets.ToList().Prepend(matchingActiveConfig);
                 continue;
             }
-            
+
             resource.ConfigSets = resourceConfigSets.Where(x => x.Id != item.Id).ToList();
         }
-        
+
         // Remove this config item from updated if it was updated and is now being deleted
         var matchingUpdateConfig = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingUpdateConfig is not null)
         {
             _updatedConfigItems.Remove(item);
         }
-        
+
         // Add the config item to the update list to delete when saved
         var matchingDeleteConfig = _deletedConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingDeleteConfig is null)
@@ -651,7 +654,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         var newResource = (LocalResourceSlim) dialogResult.Data;
-        
+
         _localResources.Add(newResource);
         _createdLocalResources.Add(newResource);
     }
@@ -675,7 +678,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         _localResources.Remove(localResource);
         _deletedLocalResources.Add(localResource);
         foreach (var configItem in localResource.ConfigSets)
@@ -725,7 +728,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 return;
             }
         }
-        
+
         Snackbar.Add("Successfully deleted permissions to the game server!", Severity.Success);
         await GetGameServerPermissions();
     }
@@ -737,7 +740,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add("Unable to start an already running game server", Severity.Error);
             return;
         }
-        
+
         await GetServerHost();
         if (!_host.CurrentState.IsRunning())
         {
@@ -751,7 +754,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add($"The server is currently {_gameServer.ServerState}", Severity.Error);
             return;
         }
-        
+
         var startRequest = await GameServerService.StartServerAsync(_gameServer.Id, _loggedInUserId);
         if (!startRequest.Succeeded)
         {
@@ -772,7 +775,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add("Unable to stop an already stopped game server", Severity.Error);
             return;
         }
-        
+
         await GetServerHost();
         if (!_host.CurrentState.IsRunning())
         {
@@ -807,7 +810,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add($"The server is currently {_gameServer.ServerState}", Severity.Error);
             return;
         }
-        
+
         await GetServerHost();
         if (!_host.CurrentState.IsRunning())
         {
@@ -815,7 +818,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             StateHasChanged();
             return;
         }
-        
+
         var restartRequest = await GameServerService.RestartServerAsync(_gameServer.Id, _loggedInUserId);
         if (!restartRequest.Succeeded)
         {
@@ -836,7 +839,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add($"The server is currently {_gameServer.ServerState}, unable to deploy an update", Severity.Error);
             return;
         }
-        
+
         await GetServerHost();
         if (!_host.CurrentState.IsRunning())
         {
@@ -864,7 +867,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"ConfirmButtonText", "Change Gameserver Owner"},
@@ -908,7 +911,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         await WebClientService.InvokeClipboardCopy(text);
         Snackbar.Add("Text copied to your clipboard!", Severity.Success);
     }
-    
+
     private async Task<TableData<NotifyRecordSlim>> ServerEventsReload(TableState state, CancellationToken token)
     {
         var recordResponse = await NotifyRecordService.SearchPaginatedByEntityIdAsync(_gameServer.Id, _notifySearchText, state.Page + 1, state.PageSize);
@@ -918,7 +921,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return new TableData<NotifyRecordSlim>();
         }
 
-        var notifyRecords = recordResponse.Data.ToArray(); 
+        var notifyRecords = recordResponse.Data.ToArray();
         _notifyPagedData = notifyRecords;
         _totalNotifyRecords = recordResponse.TotalCount;
 
@@ -943,7 +946,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         _notifyTable.ReloadServerData();
     }
 
@@ -953,7 +956,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         _gameServer.ServerState = args.ServerState;
         _gameServer.RunningConfigHash = args.RunningConfigHash;
         _gameServer.StorageConfigHash = args.StorageConfigHash;
@@ -963,7 +966,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _gameServer.ServerBuildVersion = _game.LatestBuildVersion;
             _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
         }
-        
+
         InvokeAsync(StateHasChanged);
     }
 
@@ -976,7 +979,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         _game.LatestBuildVersion = args.VersionBuild;
         _updateIsAvailable = _gameServer.ServerBuildVersion != _game.LatestBuildVersion;
-        
+
         InvokeAsync(StateHasChanged);
     }
 
@@ -987,9 +990,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _selectedNotifyViewDetail = 0;
             return;
         }
-        
+
         _selectedNotifyViewDetail = record.Id;
-        
+
         StateHasChanged();
     }
 
@@ -997,13 +1000,13 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         _notifyTable.ReloadServerData();
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         EventService.GameVersionUpdated -= GameVersionUpdated;
         EventService.GameServerStatusChanged -= GameServerStatusChanged;
         EventService.NotifyTriggered -= NotifyTriggered;
-        
+
         await Task.CompletedTask;
     }
 }   

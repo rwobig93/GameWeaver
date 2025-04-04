@@ -34,7 +34,7 @@ public static class UserEndpoints
         app.MapGet(ApiRouteConstants.Identity.User.GetFullByEmail, GetFullUserByEmail).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetByUsername, GetUserByUsername).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.User.GetFullByUsername, GetFullUserByUsername).ApiVersionOne();
-        
+
         app.MapPatch(ApiRouteConstants.Identity.User.Update, UpdateUser).ApiVersionOne();
 
         app.MapPost(ApiRouteConstants.Identity.User.Create, CreateUser).ApiVersionOne();
@@ -42,7 +42,7 @@ public static class UserEndpoints
         app.MapPost(ApiRouteConstants.Identity.User.ResetPassword, ResetPassword).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.User.Enable, EnableUser).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.User.Disable, DisableUser).ApiVersionOne();
-        
+
         app.MapDelete(ApiRouteConstants.Identity.User.Delete, DeleteUser).ApiVersionOne();
     }
 
@@ -88,7 +88,7 @@ public static class UserEndpoints
             {
                 return await PaginatedResult<IEnumerable<UserBasicResponse>>.FailAsync(result.Messages);
             }
-            
+
             var convertedResult = await PaginatedResult<IEnumerable<UserBasicResponse>>.SuccessAsync(
                 result.Data.ToResponses(),
                 result.StartPage,
@@ -274,13 +274,13 @@ public static class UserEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>GUID ID of the newly created user account</returns>
     [Authorize(Policy = PermissionConstants.Identity.Users.Create)]
-    private static async Task<IResult<Guid>> CreateUser([FromBody]UserCreateRequest userRequest, IAppUserService userService, IAppAccountService 
+    private static async Task<IResult<Guid>> CreateUser([FromBody]UserCreateRequest userRequest, IAppUserService userService, IAppAccountService
     accountService, ICurrentUserService currentUserService)
     {
         try
         {
             var currentUserId = await currentUserService.GetCurrentUserId();
-            
+
             var createRequest = userRequest.ToCreateObject();
 
             return await userService.CreateAsync(createRequest, currentUserId.GetFromNullable());

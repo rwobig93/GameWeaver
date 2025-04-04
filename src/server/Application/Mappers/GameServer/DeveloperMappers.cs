@@ -14,12 +14,12 @@ public static class DeveloperMappers
             Name = developerDb.Name
         };
     }
-    
+
     public static IEnumerable<DeveloperSlim> ToSlims(this IEnumerable<DeveloperDb> developerDbs)
     {
         return developerDbs.Select(x => x.ToSlim()).ToList();
     }
-    
+
     public static DeveloperFull ToFull(this DeveloperDb developerDb)
     {
         return new DeveloperFull
@@ -30,7 +30,7 @@ public static class DeveloperMappers
             Games = []
         };
     }
-    
+
     public static IEnumerable<DeveloperFull> ToFulls(this IEnumerable<DeveloperDb> developerDbs)
     {
         return developerDbs.Select(x => x.ToFull()).ToList();

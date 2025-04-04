@@ -9,7 +9,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "GameGenres";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GameGenreTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -25,7 +25,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -39,7 +39,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -69,7 +69,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -85,7 +85,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameId = new()
     {
         Table = Table,
@@ -101,7 +101,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByName = new()
     {
         Table = Table,
@@ -117,7 +117,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -135,7 +135,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@Id, @GameId, @Name, @Description);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -154,7 +154,7 @@ public class GameGenreTableMsSql : IMsSqlEnforcedEntity
                     OR g.Description LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,

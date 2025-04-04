@@ -23,7 +23,7 @@ public class ExcelService : IExcelService
     private static void ConfigureWorkSheetHeaders(List<string> workSheetHeaders, ExcelWorksheet workSheet)
     {
         var columnIndex = 1;
-        
+
         foreach (var header in workSheetHeaders)
         {
             var currentCell = workSheet.Cells[1, columnIndex];
@@ -70,7 +70,7 @@ public class ExcelService : IExcelService
     private static void AutoFitWorksheetColumns(ExcelWorksheet workSheet, int dataCount, ICollection workSheetHeaders)
     {
         using var workSheetCellRange = workSheet.Cells[1, 1, dataCount + 1, workSheetHeaders.Count];
-        
+
         workSheetCellRange.AutoFilter = true;
         workSheetCellRange.AutoFitColumns();
     }
@@ -82,7 +82,7 @@ public class ExcelService : IExcelService
         using var excelPackage = new ExcelPackage();
         excelPackage.Workbook.Properties.Author = _serverState.ApplicationName;
         excelPackage.Workbook.Worksheets.Add(sheetName);
-        
+
         var workSheet = excelPackage.Workbook.Worksheets[0];
         workSheet.Name = sheetName;
         workSheet.Cells.Style.Font.Size = 11;

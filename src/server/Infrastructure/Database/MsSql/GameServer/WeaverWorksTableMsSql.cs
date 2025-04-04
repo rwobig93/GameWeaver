@@ -9,7 +9,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "WeaverWorks";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(WeaverWorksTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -30,7 +30,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -44,7 +44,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteAllForHostId = new()
     {
         Table = Table,
@@ -59,7 +59,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 WHERE HostId = @HostId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteOlderThan = new()
     {
         Table = Table,
@@ -74,7 +74,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 WHERE CreatedOn < @OlderThan;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -103,7 +103,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -119,7 +119,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostId = new()
     {
         Table = Table,
@@ -135,7 +135,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetTenWaitingByHostId = new()
     {
         Table = Table,
@@ -151,7 +151,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllWaitingByHostId = new()
     {
         Table = Table,
@@ -167,7 +167,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByTargetType = new()
     {
         Table = Table,
@@ -183,7 +183,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByStatus = new()
     {
         Table = Table,
@@ -199,7 +199,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllCreatedWithin = new()
     {
         Table = Table,
@@ -216,7 +216,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -238,7 +238,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@HostId, @TargetType, @Status, @WorkData, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -256,7 +256,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                     OR w.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -275,7 +275,7 @@ public class WeaverWorksTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY w.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

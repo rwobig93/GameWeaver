@@ -22,12 +22,12 @@ public static class ConfigurationItemMappers
             FriendlyName = configDb.FriendlyName
         };
     }
-    
+
     public static IEnumerable<ConfigurationItemSlim> ToSlims(this IEnumerable<ConfigurationItemDb> configDbs)
     {
         return configDbs.Select(x => x.ToSlim()).ToList();
     }
-    
+
     public static ConfigurationItemUpdate ToUpdate(this ConfigurationItemDb configDb)
     {
         return new ConfigurationItemUpdate
@@ -42,7 +42,7 @@ public static class ConfigurationItemMappers
             FriendlyName = configDb.FriendlyName
         };
     }
-    
+
     public static ConfigurationItemCreate ToCreate(this ConfigurationItemDb configDb)
     {
         return new ConfigurationItemCreate

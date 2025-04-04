@@ -20,7 +20,7 @@ public partial class ThemeSettings
     private AppThemeCustom _editingTheme = AppThemeCustom.GetExampleCustomOne();
     private AppThemeId _editingThemeId = AppThemeId.CustomOne;
     private bool _canEditTheme;
-    
+
     private MudColor _editThemePrimaryColor = new("#FFFFFF");
     private MudColor _editThemeSecondaryColor = new("#FFFFFF");
     private MudColor _editThemeTertiaryColor = new("#FFFFFF");
@@ -34,8 +34,8 @@ public partial class ThemeSettings
     private MudColor _editThemeErrorColor = new("#FFFFFF");
 
     private bool _demoOpen;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -90,14 +90,14 @@ public partial class ThemeSettings
         _editThemeInfoColor = new MudColor(_editingTheme.ColorInfo);
         _editThemeWarningColor = new MudColor(_editingTheme.ColorWarning);
         _editThemeErrorColor = new MudColor(_editingTheme.ColorError);
-        
+
         StateHasChanged();
     }
 
     private async Task SavePreferences()
     {
         if (!_canEditTheme) return;
-        
+
         // Grab the current preferences in case the theme was changed while we were on this page
         var latestPreferences = await UserService.GetPreferences(CurrentUser.Id);
         if (!latestPreferences.Succeeded || latestPreferences.Data is null)
@@ -106,7 +106,7 @@ public partial class ThemeSettings
             return;
         }
         _userPreferences.ThemePreference = latestPreferences.Data.ThemePreference;
-        
+
         var updatePreferences = _userPreferences.ToUpdate();
         var requestResult = await UserService.UpdatePreferences(CurrentUser.Id, updatePreferences);
         if (!requestResult.Succeeded)
@@ -123,7 +123,7 @@ public partial class ThemeSettings
     private void ResetSelectedThemeToDefault()
     {
         if (!_canEditTheme) return;
-        
+
         switch (_editingThemeId)
         {
             case AppThemeId.CustomOne:
@@ -142,12 +142,12 @@ public partial class ThemeSettings
             default:
                 throw new ArgumentOutOfRangeException(nameof(_editingThemeId));
         }
-        
+
         UpdateEditingThemeValues(_editingThemeId);
     }
 
     private void DemoToggleDrawer()
     {
         _demoOpen = !_demoOpen;
-    } 
+    }
 }

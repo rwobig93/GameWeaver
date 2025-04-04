@@ -14,7 +14,7 @@ public partial class RoleAdmin
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
     [Inject] private IExcelService ExcelService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     private MudTable<AppRoleSlim> _table = new();
     private IEnumerable<AppRoleSlim> _pagedData = new List<AppRoleSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
@@ -44,7 +44,7 @@ public partial class RoleAdmin
         _canCreateRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Create);
         _canExportRoles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Roles.Export);
     }
-    
+
     private async Task<TableData<AppRoleSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var rolesResult = await RoleService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
@@ -63,7 +63,7 @@ public partial class RoleAdmin
             "Name" => _pagedData.OrderByDirection(state.SortDirection, o => o.Name),
             _ => _pagedData
         };
-        
+
         return new TableData<AppRoleSlim>() {TotalItems = _totalRoles, Items = _pagedData};
     }
 
@@ -82,7 +82,7 @@ public partial class RoleAdmin
     private async Task CreateRole()
     {
         if (!_canCreateRoles) return;
-        
+
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var createRoleDialog = await DialogService.ShowAsync<RoleCreateDialog>("Create New Role", dialogOptions);
         var dialogResult = await createRoleDialog.Result;
@@ -106,7 +106,7 @@ public partial class RoleAdmin
     private async Task ExportSelectedToExcel()
     {
         if (!_canExportRoles) return;
-        
+
         var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
             _pagedData, dataMapping: new Dictionary<string, Func<AppRoleSlim, object>>
             {
@@ -138,7 +138,7 @@ public partial class RoleAdmin
             allRoles.Messages.ForEach(x => Snackbar.Add(x));
             return;
         }
-        
+
         var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
             allRoles.Data, dataMapping: new Dictionary<string, Func<AppRoleSlim, object>>
             {

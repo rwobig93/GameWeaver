@@ -58,9 +58,9 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<AppRoleDb, dynamic>(
                 AppRolesTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)
@@ -151,9 +151,9 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<AppRoleDb, dynamic>(
                 AppRolesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset =  offset, PageSize = pageSize });
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)
@@ -171,14 +171,14 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         try
         {
             createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
-            
+
             var createdId = await _database.SaveDataReturnId(AppRolesTableMsSql.Insert, createObject);
 
             var createdRole = await GetByIdAsync(createdId);
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, createdId,
                 createObject.CreatedBy, AuditAction.Create, null, createdRole.Result);
-            
+
             actionReturn.Succeed(createdId);
         }
         catch (Exception ex)
@@ -188,7 +188,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
         return actionReturn;
     }
-    
+
     public async Task<DatabaseActionResult> UpdateAsync(AppRoleUpdate updateObject)
     {
         DatabaseActionResult actionReturn = new();
@@ -199,16 +199,16 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
             var foundRole = await GetByIdAsync(updateObject.Id);
 
             updateObject.LastModifiedOn = _dateTimeService.NowDatabaseTime;
-            
+
             await _database.SaveData(AppRolesTableMsSql.Update, updateObject);
-            
+
             // Get role after update for auditing
             var foundRoleAfterUpdate = await GetByIdAsync(updateObject.Id);
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, updateObject.Id,
                 updateObject.LastModifiedBy.GetFromNullable(), AuditAction.Update,
                 foundRole.Result!.ToSlim(), foundRoleAfterUpdate.Result!.ToSlim());
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -227,12 +227,12 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         {
             // Get role before deletion for auditing
             var foundRole = await GetByIdAsync(id);
-            
+
             await _database.SaveData(AppRolesTableMsSql.Delete, new {Id = id});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, id,
                 modifyingUserId, AuditAction.Delete, foundRole.Result!.ToSlim());
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -292,7 +292,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 actionReturn.Fail(ErrorMessageConstants.Generic.NotFound);
                 return actionReturn;
             }
-            
+
             var userRoleJunction = (await _database.LoadData<AppUserRoleJunctionDb, dynamic>(
                 AppUserRoleJunctionsTableMsSql.GetByUserRoleId, new {UserId = userId, RoleId = foundRole.Id})).FirstOrDefault();
             var hasRole = userRoleJunction is not null;
@@ -312,7 +312,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Insert, 
+            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Insert,
                 new {UserId = userId, RoleId = roleId});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
@@ -320,7 +320,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 {
                     {"User Addition", userId.ToString()}
                 });
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -337,7 +337,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
 
         try
         {
-            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Delete, 
+            await _database.SaveData(AppUserRoleJunctionsTableMsSql.Delete,
                 new {UserId = userId, RoleId = roleId});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
@@ -345,7 +345,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 {
                     {"User Removal", userId.ToString()}
                 });
-            
+
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -383,7 +383,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
         {
             var users = await _database.LoadData<AppUserDb, dynamic>(
                 AppUserRoleJunctionsTableMsSql.GetUsersOfRole, new {RoleId = roleId});
-            
+
             actionReturn.Succeed(users);
         }
         catch (Exception ex)

@@ -530,7 +530,7 @@ public class HostRepositoryMsSql : IHostRepository
 
     public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsAfterByHostIdAsync(Guid id, DateTime afterDate)
     {
-        
+
         DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
 
         try

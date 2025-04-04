@@ -9,7 +9,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "AppUserRoleJunctions";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserRoleJunctionsTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
@@ -28,7 +28,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -45,7 +45,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                       RoleId = @RoleId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteForUser = new()
     {
         Table = Table,
@@ -60,7 +60,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE UserId = @UserId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteForRole = new()
     {
         Table = Table,
@@ -75,7 +75,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE RoleId = @RoleId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -88,7 +88,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}];
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByUserRoleId = new()
     {
         Table = Table,
@@ -106,7 +106,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY UserId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetRolesOfUser = new()
     {
         Table = Table,
@@ -122,7 +122,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE ur.UserId = @UserId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetUsersOfRole = new()
     {
         Table = Table,
@@ -138,7 +138,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 WHERE ur.RoleId = @RoleId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -153,7 +153,7 @@ public class AppUserRoleJunctionsTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@UserId, @RoleId);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,

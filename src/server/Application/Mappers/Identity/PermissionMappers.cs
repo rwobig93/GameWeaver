@@ -30,7 +30,7 @@ public static class PermissionMappers
     {
         return permissions.Select(x => x.ToResponse()).ToList();
     }
-    
+
     public static AppPermissionCreate ToCreate(this AppPermissionDb permissionDb)
     {
         return new AppPermissionCreate
@@ -54,7 +54,7 @@ public static class PermissionMappers
     {
         return permissionDbs.Select(x => x.ToCreate()).ToList();
     }
-    
+
     public static AppPermissionCreate ToCreate(this AppPermissionSlim permissionSlim)
     {
         return new AppPermissionCreate
@@ -98,7 +98,7 @@ public static class PermissionMappers
             LastModifiedOn = permissionCreate.LastModifiedOn
         };
     }
-    
+
     public static AppPermissionCreate ToCreate(this PermissionCreateForRoleRequest permissionCreate)
     {
         return new AppPermissionCreate
@@ -112,7 +112,7 @@ public static class PermissionMappers
             Access = permissionCreate.Access
         };
     }
-    
+
     public static AppPermissionCreate ToCreate(this PermissionCreateForUserRequest permissionCreate)
     {
         return new AppPermissionCreate
@@ -137,7 +137,7 @@ public static class PermissionMappers
         var permissionName = PermissionHelpers.GetNameFromValue(permissionValue);
         var permissionGroup = PermissionHelpers.GetGroupFromValue(permissionValue);
         var permissionAccess = PermissionHelpers.GetAccessFromValue(permissionValue);
-        
+
         return new AppPermissionCreate
         {
             RoleId = GuidHelpers.GetMax(),
@@ -165,7 +165,7 @@ public static class PermissionMappers
         var permissionName = PermissionHelpers.GetNameFromValue(permissionValue);
         var permissionGroup = PermissionHelpers.GetGroupFromValue(permissionValue);
         var permissionAccess = PermissionHelpers.GetAccessFromValue(permissionValue);
-        
+
         return new AppPermissionCreate
         {
             RoleId = GuidHelpers.GetMax(),
@@ -232,12 +232,12 @@ public static class PermissionMappers
     {
         return gameServers.Select(x => x.ToDynamicPermissionCreate(permissionLevel)).ToList();
     }
-    
+
     public static IEnumerable<AppPermissionCreate> ToAppPermissionCreates(this IEnumerable<string> permissionValues)
     {
         return permissionValues.Select(x => x.ToAppPermissionCreate()).ToList();
     }
-    
+
     public static IEnumerable<AppPermissionCreate> ToDynamicPermissionCreates(this IEnumerable<string> permissionValues)
     {
         return permissionValues.Select(x => x.ToDynamicPermissionCreate()).ToList();
@@ -292,7 +292,7 @@ public static class PermissionMappers
     {
         return appPermissionCreates.Select(x => x.ToSlim());
     }
-    
+
     public static PermissionResponse ToResponse(this AppPermissionSlim permission)
     {
         return new PermissionResponse
@@ -310,7 +310,7 @@ public static class PermissionMappers
     {
         return permissions.Select(x => x.ToResponse()).ToList();
     }
-    
+
     public static AppPermissionUpdate ToUpdate(this PermissionUpdateRequest permissionUpdate)
     {
         return new AppPermissionUpdate

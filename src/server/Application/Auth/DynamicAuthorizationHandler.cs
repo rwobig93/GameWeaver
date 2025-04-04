@@ -24,7 +24,7 @@ public class DynamicAuthorizationHandler : AuthorizationHandler<DynamicRequireme
             context.Succeed(requirement);
             return;
         }
-        
+
         context.Fail();
     }
 }

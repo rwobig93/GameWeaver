@@ -29,7 +29,7 @@ public static class PublisherEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.Publisher.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Publisher.Search, Search).ApiVersionOne();
     }
-    
+
     /// <summary>
     /// Get all publishers with pagination
     /// </summary>
@@ -45,7 +45,7 @@ public static class PublisherEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.GetAllPublishersPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -53,7 +53,7 @@ public static class PublisherEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Publisher.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Publisher.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -63,7 +63,7 @@ public static class PublisherEndpoints
             return await Result<IEnumerable<PublisherSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total count of publishers
     /// </summary>
@@ -81,7 +81,7 @@ public static class PublisherEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a publisher by id
     /// </summary>
@@ -100,7 +100,7 @@ public static class PublisherEndpoints
             return await Result<PublisherSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a publisher by name
     /// </summary>
@@ -119,7 +119,7 @@ public static class PublisherEndpoints
             return await Result<PublisherSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get publishers by game id
     /// </summary>
@@ -198,7 +198,7 @@ public static class PublisherEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.SearchPublishersPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -206,7 +206,7 @@ public static class PublisherEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Publisher.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Publisher.Search, pageNumber, pageSize, result.TotalCount);
             return result;

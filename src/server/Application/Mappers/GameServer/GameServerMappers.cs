@@ -43,7 +43,7 @@ public static class GameServerMappers
             DeletedOn = gameServerDb.DeletedOn
         };
     }
-    
+
     public static IEnumerable<GameServerSlim> ToSlims(this IEnumerable<GameServerDb> gameServerDbs)
     {
         return gameServerDbs.Select(ToSlim);
@@ -235,7 +235,7 @@ public static class GameServerMappers
             Private = gameServer.Private
         };
     }
-    
+
     public static GameServerDb ToNoAccess(this GameServerDb gameServer)
     {
         return new GameServerDb

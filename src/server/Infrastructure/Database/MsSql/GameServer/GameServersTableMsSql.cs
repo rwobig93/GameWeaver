@@ -9,7 +9,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "GameServers";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GameServersTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 7,
@@ -50,7 +50,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -67,7 +67,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -99,7 +99,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.ServerName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -115,7 +115,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,
@@ -131,7 +131,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostId = new()
     {
         Table = Table,
@@ -147,7 +147,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameId = new()
     {
         Table = Table,
@@ -163,7 +163,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameProfileId = new()
     {
         Table = Table,
@@ -180,7 +180,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByParentGameProfileId = new()
     {
         Table = Table,
@@ -197,7 +197,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByServerBuildVersion = new()
     {
         Table = Table,
@@ -214,7 +214,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByServerName = new()
     {
         Table = Table,
@@ -230,7 +230,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -274,7 +274,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                         @StorageConfigHash, @CreatedBy, @CreatedOn, @IsDeleted);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -302,7 +302,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     OR g.ServerName LIKE '%' + @SearchTerm + '%');
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -331,7 +331,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.ServerName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

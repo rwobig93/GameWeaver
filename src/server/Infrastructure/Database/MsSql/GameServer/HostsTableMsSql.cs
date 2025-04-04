@@ -9,7 +9,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "Hosts";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(HostsTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 9,
@@ -47,7 +47,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -64,7 +64,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -96,7 +96,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -112,7 +112,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostname = new()
     {
         Table = Table,
@@ -128,7 +128,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -172,7 +172,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                         @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -196,7 +196,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -220,7 +220,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
@@ -268,7 +268,7 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteUnregisteredOlderThan = new()
     {
         Table = Table,

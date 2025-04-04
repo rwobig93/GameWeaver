@@ -51,9 +51,9 @@ public class FileStorageRecordRepositoryMsSql : IFileStorageRecordRepository
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<FileStorageRecordDb, dynamic>(
                 FileStorageRecordsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)
@@ -221,9 +221,9 @@ public class FileStorageRecordRepositoryMsSql : IFileStorageRecordRepository
             var response =
                 await _database.LoadDataPaginated<FileStorageRecordDb, dynamic>(
                     FileStorageRecordsTableMsSql.SearchPaginated, new { SearchTerm = searchTerm, Offset = offset, PageSize = pageSize });
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)

@@ -9,7 +9,7 @@ public class ServerStateRecordsTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "ServerStateRecords";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ServerStateRecordsTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 1,

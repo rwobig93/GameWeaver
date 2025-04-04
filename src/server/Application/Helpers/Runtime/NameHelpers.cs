@@ -13,7 +13,7 @@ public static class NameHelpers
             WordBank.Nouns
         ]
     };
-    
+
     public static string GenerateHostname()
     {
         return Generator.Generate();

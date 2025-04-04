@@ -29,7 +29,7 @@ public static class GameGenreEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.GameGenre.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.GameGenre.Search, Search).ApiVersionOne();
     }
-    
+
     /// <summary>
     /// Get all game genres with pagination
     /// </summary>
@@ -45,7 +45,7 @@ public static class GameGenreEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.GetAllGameGenresPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -53,7 +53,7 @@ public static class GameGenreEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameGenre.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameGenre.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -63,7 +63,7 @@ public static class GameGenreEndpoints
             return await Result<IEnumerable<GameGenreSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total count of game genres
     /// </summary>
@@ -81,7 +81,7 @@ public static class GameGenreEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game genre by id
     /// </summary>
@@ -100,7 +100,7 @@ public static class GameGenreEndpoints
             return await Result<GameGenreSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a game genre by name
     /// </summary>
@@ -119,7 +119,7 @@ public static class GameGenreEndpoints
             return await Result<GameGenreSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get game genres by game id
     /// </summary>
@@ -198,7 +198,7 @@ public static class GameGenreEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.SearchGameGenresPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -206,7 +206,7 @@ public static class GameGenreEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.GameGenre.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.GameGenre.Search, pageNumber, pageSize, result.TotalCount);
             return result;
