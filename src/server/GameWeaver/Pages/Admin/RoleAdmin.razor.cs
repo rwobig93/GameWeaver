@@ -64,7 +64,7 @@ public partial class RoleAdmin
             _ => _pagedData
         };
 
-        return new TableData<AppRoleSlim>() {TotalItems = _totalRoles, Items = _pagedData};
+        return new TableData<AppRoleSlim> {TotalItems = _totalRoles, Items = _pagedData};
     }
 
     private void OnSearch(string text)
@@ -83,7 +83,7 @@ public partial class RoleAdmin
     {
         if (!_canCreateRoles) return;
 
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var createRoleDialog = await DialogService.ShowAsync<RoleCreateDialog>("Create New Role", dialogOptions);
         var dialogResult = await createRoleDialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)

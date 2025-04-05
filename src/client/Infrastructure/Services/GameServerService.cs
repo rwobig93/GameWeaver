@@ -175,9 +175,9 @@ public class GameServerService : IGameServerService
         _logger.Debug("Running SteamCMD command: [Maintenance:{IsMaintenance}]{Command}", isMaintenanceCommand, command);
         try
         {
-            var steamCmd = new Process()
+            var steamCmd = new Process
             {
-                StartInfo = new ProcessStartInfo()
+                StartInfo = new ProcessStartInfo
                 {
                     FileName = OsHelpers.GetSteamCmdPath(),
                     Arguments = command,
@@ -652,7 +652,7 @@ public class GameServerService : IGameServerService
             var pathIniItems = configFile.ConfigSets
                 .Where(item => !string.IsNullOrWhiteSpace(item.Path))
                 .GroupBy(item => new { item.Path, item.Category })
-                .Select(g => new ConfigurationItemLocal()
+                .Select(g => new ConfigurationItemLocal
                 {
                     Path = g.Key.Path,
                     Key = g.Key.Path,

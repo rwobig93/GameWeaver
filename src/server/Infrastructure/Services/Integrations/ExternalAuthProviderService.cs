@@ -180,14 +180,14 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                     return await Result<ExternalUserProfile>.FailAsync($"{provider.ToString()} currently isn't enabled");
 
                 externalProfile =
-                    (await _googleClient!.GetUserInfoAsync(new NameValueCollection() {{"code", oauthCode}})).ToExternalProfile();
+                    (await _googleClient!.GetUserInfoAsync(new NameValueCollection {{"code", oauthCode}})).ToExternalProfile();
                 break;
             case ExternalAuthProvider.Spotify:
                 if (!ProviderEnabledSpotify)
                     return await Result<ExternalUserProfile>.FailAsync($"{provider.ToString()} currently isn't enabled");
 
                 externalProfile =
-                    (await _spotifyClient!.GetUserInfoAsync(new NameValueCollection() {{"code", oauthCode}})).ToExternalProfile();
+                    (await _spotifyClient!.GetUserInfoAsync(new NameValueCollection {{"code", oauthCode}})).ToExternalProfile();
                 break;
             case ExternalAuthProvider.Unknown:
             default:

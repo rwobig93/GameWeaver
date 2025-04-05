@@ -237,7 +237,7 @@ public class HostService : IHostService
         await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.HostRegistrations, foundRegistration.Result.Id, AuditAction.Update,
             foundRegistration.Result, confirmedRegistration.Result);
 
-        var hostUpdate = new HostUpdateDb()
+        var hostUpdate = new HostUpdateDb
         {
             Id = foundHost.Result.Id,
             CurrentState = ConnectivityState.Unknown,
@@ -381,7 +381,7 @@ public class HostService : IHostService
 
     private static IEnumerable<Claim> GetHostClaims(Guid hostId)
     {
-        return new List<Claim>()
+        return new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, hostId.ToString()),
             new(ClaimTypes.Email, $"{hostId.ToString()}{HostConstants.HostPrincipalSuffix}"),

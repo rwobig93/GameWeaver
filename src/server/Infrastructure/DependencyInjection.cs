@@ -182,7 +182,7 @@ public static class DependencyInjection
 
         httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
         {
-            return new HttpClientHandler()
+            return new HttpClientHandler
             {
                 ServerCertificateCustomValidationCallback = (_, _, _, _) => true
             };

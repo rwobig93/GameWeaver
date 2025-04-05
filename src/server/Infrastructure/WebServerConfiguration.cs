@@ -93,7 +93,7 @@ public static class WebServerConfiguration
         app.MapFallbackToPage("/_Host");
 
         app.UseSerilogRequestLogging();
-        app.UseForwardedHeaders(new ForwardedHeadersOptions()
+        app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
             ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.All
         });
@@ -132,7 +132,7 @@ public static class WebServerConfiguration
         app.MapControllers();
         app.ConfigureApiVersions();
 
-        app.MapHealthChecks("/_health", new HealthCheckOptions()
+        app.MapHealthChecks("/_health", new HealthCheckOptions
         {
             ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
         });

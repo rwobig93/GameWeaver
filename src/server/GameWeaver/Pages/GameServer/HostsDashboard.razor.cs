@@ -159,7 +159,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var dialog = await DialogService.ShowAsync<HostRegisterDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -175,7 +175,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         }
 
         Snackbar.Add("Successfully generated new host registration!", Severity.Success);
-        var copyParameters = new DialogParameters()
+        var copyParameters = new DialogParameters
         {
             {"Title", $"Please copy this registration, if it isn't used it will expire after {LifecycleConfig.Value.HostRegistrationCleanupHours} hours"},
             {"FieldLabel", "New Host Registration"},

@@ -118,7 +118,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var dialog = await DialogService.ShowAsync<GameServerCreateDialog>("Create Gameserver", new DialogParameters(), dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)

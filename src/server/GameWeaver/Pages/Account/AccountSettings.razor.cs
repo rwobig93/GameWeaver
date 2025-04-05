@@ -65,12 +65,12 @@ public partial class AccountSettings
             return;
         }
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"Title", "Confirm New Email Address"},
             {"FieldLabel", "New Email Address"}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var newEmailPrompt = await DialogService.ShowAsync<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions);
         var dialogResult = await newEmailPrompt.Result;
         if (string.IsNullOrWhiteSpace((string?)dialogResult?.Data) || dialogResult.Canceled)

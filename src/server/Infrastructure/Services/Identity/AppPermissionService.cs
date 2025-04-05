@@ -580,7 +580,7 @@ public class AppPermissionService : IAppPermissionService
             if (response is null)
             {
                 await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, createRequest.Result,
-                    "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>()
+                    "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>
                     {
                         {"Action", "Permission Change - Update Users - Create Permission"},
                         {"PermissionId", createRequest.Result.ToString()}
@@ -654,7 +654,7 @@ public class AppPermissionService : IAppPermissionService
 
             if (response is null)
                 await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, permissionId,
-                    "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>()
+                    "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>
                     {
                         {"Action", "Permission Change - Update Users - Delete Permission"},
                         {"PermissionId", permissionId.ToString()}

@@ -829,7 +829,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             _ => _fileRecords
         };
 
-        return new TableData<FileStorageRecordSlim>() {TotalItems = _totalFileRecords, Items = _fileRecords};
+        return new TableData<FileStorageRecordSlim> {TotalItems = _totalFileRecords, Items = _fileRecords};
     }
 
     private void RefreshFileRecords()

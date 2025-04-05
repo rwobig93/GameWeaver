@@ -299,13 +299,13 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"ConfirmButtonText", "Change Host Owner"},
             {"Title", "Transfer Host Ownership"},
             {"OwnerId", _host.OwnerId}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<ChangeOwnershipDialog>("Transfer Host Ownership", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -342,13 +342,13 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"Title", $"Allowed Host Ports for {_host.FriendlyName}"},
             {"FieldLabel", "Allowed Host Ports"},
             {"ConfirmButtonText", "Change Ports"}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialogResult = await DialogService.Show<ValuePromptDialog>("Change Allowed Host Ports", dialogParameters, dialogOptions).Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -377,12 +377,12 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"Title", "Are you sure you want to delete this host?"},
             {"Content", $"Host Name: {_host.FriendlyName}"}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialogResult = await DialogService.Show<ConfirmationDialog>("Delete Host", dialogParameters, dialogOptions).Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)

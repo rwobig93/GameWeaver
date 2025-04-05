@@ -65,7 +65,7 @@ public static class HostCheckinEndpoints
 
             if (!matchingHostResponse.Data.CurrentState.IsRunning())
             {
-                var hostUpdate = new HostUpdateRequest() {Id = currentUserId, CurrentState = ConnectivityState.Connectable};
+                var hostUpdate = new HostUpdateRequest {Id = currentUserId, CurrentState = ConnectivityState.Connectable};
                 var updateHostResponse = await hostService.UpdateAsync(hostUpdate.ToUpdate(), serverState.SystemUserId);
                 if (!updateHostResponse.Succeeded)
                 {

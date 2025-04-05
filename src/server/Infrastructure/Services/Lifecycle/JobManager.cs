@@ -552,7 +552,7 @@ public class JobManager : IJobManager
 
             _logger.Debug("Host was last known online but hasn't checked in for {SecondsSinceCheckin}s which is over the offline {OfflineSeconds} and is now considered offline," +
                           " updating status for host {HostId}", secondsSinceLastCheckIn, _appConfig.CurrentValue.HostOfflineAfterSeconds, host.Id);
-            var updateHost = new HostUpdateRequest() {Id = host.Id, CurrentState = ConnectivityState.Unknown};
+            var updateHost = new HostUpdateRequest {Id = host.Id, CurrentState = ConnectivityState.Unknown};
             var updateHostResponse = await _hostService.UpdateAsync(updateHost.ToUpdate(), _serverState.SystemUserId);
             if (!updateHostResponse.Succeeded)
             {

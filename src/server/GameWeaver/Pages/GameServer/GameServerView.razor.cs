@@ -519,12 +519,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"Title", "Are you sure you want to delete this gameserver?"},
             {"Content", $"Server Name: {_gameServer.ServerName}"}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Gameserver", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -555,8 +555,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {{"ReferenceResource", localResource}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"ReferenceResource", localResource}};
         var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -659,8 +659,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task LocalResourceAdd()
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {{"GameProfileId", _gameServer.GameProfileId}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"GameProfileId", _gameServer.GameProfileId}, {"ResourceType", ResourceType.ConfigFile}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -676,8 +676,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {
             {"Title", "Are you sure you want to delete this local resource?"},
             {"Content", $"You want to delete the resource '{localResource.Name}'?"}
         };
@@ -704,8 +704,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task AddPermissions(bool isForRolesNotUsers)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {{"GameServerId", _gameServer.Id}, {"IsForRolesNotUsers", isForRolesNotUsers}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"GameServerId", _gameServer.Id}, {"IsForRolesNotUsers", isForRolesNotUsers}};
         var dialog = await DialogService.ShowAsync<GameServerPermissionAddDialog>("Add Gameserver Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult is null || dialogResult.Canceled)
@@ -883,13 +883,13 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"ConfirmButtonText", "Change Gameserver Owner"},
             {"Title", "Transfer Gameserver Ownership"},
             {"OwnerId", _gameServer.OwnerId}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<ChangeOwnershipDialog>("Transfer Gameserver Ownership", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -947,7 +947,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _ => _notifyPagedData
         };
 
-        return new TableData<NotifyRecordSlim>() {TotalItems = _totalNotifyRecords, Items = _notifyPagedData};
+        return new TableData<NotifyRecordSlim> {TotalItems = _totalNotifyRecords, Items = _notifyPagedData};
     }
 
     private void InjectDynamicValue(ConfigurationItemSlim item, string value)

@@ -25,7 +25,7 @@ public class EmailService : IEmailService
                 EmailConstants.PathRegistrationConfirmation);
 
             var sendResponse = await _mailService.Subject("Registration Confirmation").To(emailAddress)
-                .UsingTemplateFromFile(templatePath, new EmailAction()
+                .UsingTemplateFromFile(templatePath, new EmailAction
                     {ActionUrl = confirmationUrl, Username = username})
                 .SendAsync();
             if (!sendResponse.Successful)
@@ -57,7 +57,7 @@ public class EmailService : IEmailService
                 EmailConstants.PathEmailChangeConfirmation);
 
             var sendResponse = await _mailService.Subject("Email Change Confirmation").To(emailAddress)
-                .UsingTemplateFromFile(templatePath, new EmailAction()
+                .UsingTemplateFromFile(templatePath, new EmailAction
                     {ActionUrl = confirmationUrl, Username = username})
                 .SendAsync();
             if (!sendResponse.Successful)
@@ -89,7 +89,7 @@ public class EmailService : IEmailService
                 EmailConstants.PathPasswordReset);
 
             var sendResponse = await _mailService.Subject("Password Reset Confirmation").To(emailAddress)
-                .UsingTemplateFromFile(templatePath, new EmailAction()
+                .UsingTemplateFromFile(templatePath, new EmailAction
                     {ActionUrl = confirmationUrl, Username = username})
                 .SendAsync();
             if (!sendResponse.Successful)

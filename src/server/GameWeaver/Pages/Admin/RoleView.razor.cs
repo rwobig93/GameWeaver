@@ -133,8 +133,8 @@ public partial class RoleView
     {
         if (!_canAddRoles || !_canRemoveRoles) return;
 
-        var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"RoleId", _viewingRole.Id}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<RoleUserDialog>("Edit Role Membership", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -149,8 +149,8 @@ public partial class RoleView
     {
         if (!_canAddPermissions || !_canRemovePermissions) return;
 
-        var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"RoleId", _viewingRole.Id}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<RolePermissionDialog>("Edit Role Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -174,12 +174,12 @@ public partial class RoleView
     {
         if (!_canDeleteRole) return;
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"Title", "Are you sure you want to delete this role?"},
             {"Content", $"Role Name: {_viewingRole.Name}"}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Role", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;

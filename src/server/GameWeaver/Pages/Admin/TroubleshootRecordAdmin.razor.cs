@@ -67,7 +67,7 @@ public partial class TroubleshootRecordAdmin
             _ => _pagedData
         };
 
-        return new TableData<TroubleshootingRecordSlim>() {TotalItems = _totalTrails, Items = _pagedData};
+        return new TableData<TroubleshootingRecordSlim> {TotalItems = _totalTrails, Items = _pagedData};
     }
 
     private void OnSearch(string text)

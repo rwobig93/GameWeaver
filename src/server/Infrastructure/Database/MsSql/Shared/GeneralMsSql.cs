@@ -12,7 +12,7 @@ public class GeneralTableMsSql : IMsSqlEnforcedEntity
 
     public static readonly SqlStoredProcedure GetRowCount = new()
     {
-        Table = new SqlTable() { TableName = TableName },
+        Table = new SqlTable { TableName = TableName },
         Action = "GetRowCount",
         SqlStatement = $@"
             CREATE OR ALTER PROCEDURE [dbo].[sp{TableName}_GetRowCount]
@@ -28,7 +28,7 @@ public class GeneralTableMsSql : IMsSqlEnforcedEntity
 
     public static readonly SqlStoredProcedure VerifyConnectivity = new()
     {
-        Table = new SqlTable() { TableName = TableName },
+        Table = new SqlTable { TableName = TableName },
         Action = "VerifyConnectivity",
         SqlStatement = $@"
             CREATE OR ALTER PROCEDURE [dbo].[sp{TableName}_VerifyConnectivity]

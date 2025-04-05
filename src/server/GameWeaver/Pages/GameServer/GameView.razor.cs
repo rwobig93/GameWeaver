@@ -285,8 +285,8 @@ public partial class GameView : ComponentBase
 
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {{"ReferenceResource", localResource}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"ReferenceResource", localResource}};
         var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -374,10 +374,10 @@ public partial class GameView : ComponentBase
         }
     }
 
-    private async Task LocalResourceAdd()
+    private async Task LocalResourceAdd(ResourceType resourceType)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {{"GameProfileId", _game.DefaultGameProfileId}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"GameProfileId", _game.DefaultGameProfileId}, {"ResourceType", resourceType}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -416,8 +416,8 @@ public partial class GameView : ComponentBase
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {
             {"Title", "Are you sure you want to delete this local resource?"},
             {"Content", $"You want to delete the resource '{localResource.Name}'?"}
         };
@@ -594,5 +594,10 @@ public partial class GameView : ComponentBase
     private void InjectDynamicValue(ConfigurationItemSlim item, string value)
     {
         item.Value = value;
+    }
+
+    private void InjectDynamicValue(LocalResourceSlim resource, string value)
+    {
+        resource.Args += $" {value}";
     }
 }

@@ -224,8 +224,8 @@
             <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-4 pt-3">
                 <MudPaper Elevation="10" Square="false">
                     <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
-                               OnClick="@(() => LocalResourceAdd())" FullWidth="true" Disabled="@(!_editMode)">
-                        Add Resource / File
+                               OnClick="@(() => LocalResourceAdd(ResourceType.ConfigFile))" FullWidth="true" Disabled="@(!_editMode)">
+                        Add Config File
                     </MudButton>
                 </MudPaper>
             </MudStack>
@@ -315,6 +315,79 @@
                 <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
                     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
                         <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Configuration Files Found</MudText>
+                    </MudItem>
+                </MudPaper>
+            }
+        </MudTabPanel>
+    }
+    @if (_canEditGame)
+    {
+        <MudTabPanel Text="Startup">
+            <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-4 pt-3">
+                <MudPaper Elevation="10" Square="false">
+                    <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                               OnClick="@(() => LocalResourceAdd(ResourceType.Executable))" FullWidth="true" Disabled="@(!_editMode)">
+                        Add Startup Executable
+                    </MudButton>
+                </MudPaper>
+                <MudPaper Elevation="10" Square="false">
+                    <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                               OnClick="@(() => LocalResourceAdd(ResourceType.ScriptFile))" FullWidth="true" Disabled="@(!_editMode)">
+                        Add Startup Script
+                    </MudButton>
+                </MudPaper>
+            </MudStack>
+            @foreach (var localResource in _localResources.Where(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile)
+                          .OrderBy(x => x.StartupPriority))
+            {
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4 gap-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudStack Row="true" Justify="Justify.Center" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
+                            <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@localResource.Name</MudText>
+                        </MudStack>
+                    </MudItem>
+                    <MudStack Row="false" Justify="Justify.Center" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
+                        @if (_game.SupportsWindows)
+                        {
+                            <MudTextField T="string" Label="Windows Path" @bind-Value="localResource.PathWindows" FullWidth="true" Disabled="@(!_editMode)"
+                                          OnKeyDown="@(() => LocalResourceUpdate(localResource))"/>
+                        }
+                        @if (_game.SupportsLinux)
+                        {
+                            <MudTextField T="string" Label="Linux Path" @bind-Value="localResource.PathLinux" FullWidth="true" Disabled="@(!_editMode)"
+                                          OnKeyDown="@(() => LocalResourceUpdate(localResource))"/>
+                        }
+                        @if (_game.SupportsMac)
+                        {
+                            <MudTextField T="string" Label="Mac Path" @bind-Value="localResource.PathMac" FullWidth="true" Disabled="@(!_editMode)"
+                                          OnKeyDown="@(() => LocalResourceUpdate(localResource))"/>
+                        }
+                    </MudStack>
+                    @* TODO: If this is a script add a button to edit the script contents, we will then update the script contents on the host *@
+                    <MudContainer Class="d-flex flex-column gap-1">
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 pa-0">
+                            <MudTextField T="string" Label="Value" @bind-Value="localResource.Args" FullWidth="true" Disabled="@(!_editMode)"
+                                          OnKeyDown="@(() => LocalResourceUpdate(localResource))"/>
+                            <MudButtonGroup Variant="Variant.Text">
+                                <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%PASSWORD%%%"))">Server Password</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%QUERY_PORT%%%"))">Query Port</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%GAME_PORT%%%"))">Game Port</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%GAME_PORT_PEER%%%"))">Game Peer Port</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
+                                </MudMenu>
+                            </MudButtonGroup>
+                        </MudStack>
+                    </MudContainer>
+                </MudPaper>
+            }
+            @if (_localResources.Count(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile) <= 0)
+            {
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Startup Executables Or Scripts Found</MudText>
                     </MudItem>
                 </MudPaper>
             }

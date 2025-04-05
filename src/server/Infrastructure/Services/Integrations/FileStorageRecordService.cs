@@ -235,7 +235,7 @@ public class FileStorageRecordService : IFileStorageRecordService
             }
 
             var fileHash = FileHelpers.ComputeFileContentSha256Hash(filePath);
-            var recordUpdate = await _recordRepository.UpdateAsync(new FileStorageRecordUpdate() {Id = recordCreate.Result, HashSha256 = fileHash});
+            var recordUpdate = await _recordRepository.UpdateAsync(new FileStorageRecordUpdate {Id = recordCreate.Result, HashSha256 = fileHash});
             if (recordUpdate.Succeeded) return await Result<Guid>.SuccessAsync(recordCreate.Result);
             {
                 var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.FileStorage, recordCreate.Result, requestUserId,

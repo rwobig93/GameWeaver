@@ -140,7 +140,7 @@ public partial class Login
 
     private async Task ForgotPassword()
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         await DialogService.ShowAsync<ForgotPasswordDialog>("Forgot Password", dialogOptions);
     }
@@ -218,8 +218,8 @@ public partial class Login
 
         if (!foundUser.Data.TwoFactorEnabled) return true;
 
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters()
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters
         {
             {"VerifyCodeMessage", "Please enter your MFA code to login"},
             {"MfaKey", foundUser.Data.TwoFactorKey}

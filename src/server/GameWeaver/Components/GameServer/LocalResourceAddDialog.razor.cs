@@ -1,4 +1,5 @@
 using Application.Models.GameServer.LocalResource;
+using Domain.Enums.GameServer;
 
 namespace GameWeaver.Components.GameServer;
 
@@ -13,11 +14,26 @@ public partial class LocalResourceAddDialog : ComponentBase
     [Parameter] public int IconWidthPixels { get; set; } = 75;
     [Parameter] public int IconHeightPixels { get; set; } = 75;
     [Parameter] public Guid GameProfileId { get; set; }
+    [Parameter] public ResourceType ResourceType { get; set; }
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private readonly LocalResourceSlim _newLocalResource = new();
     private const int TooltipDelay = 500;
 
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UpdateResourceOnStartup();
+            await Task.CompletedTask;
+        }
+    }
+
+    private void UpdateResourceOnStartup()
+    {
+        _newLocalResource.Type = ResourceType;
+    }
 
     private void Submit()
     {
