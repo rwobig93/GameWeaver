@@ -51,8 +51,8 @@ public interface IGameServerService
     Task<IResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesAsync();
     Task<PaginatedResult<IEnumerable<GameProfileSlim>>> GetAllGameProfilesPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetGameProfileCountAsync();
-    Task<IResult<GameProfileSlim>> GetGameProfileByIdAsync(Guid id);
-    Task<IResult<GameProfileSlim>> GetGameProfileByFriendlyNameAsync(string friendlyName);
+    Task<IResult<GameProfileSlim?>> GetGameProfileByIdAsync(Guid id);
+    Task<IResult<GameProfileSlim?>> GetGameProfileByFriendlyNameAsync(string friendlyName);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByGameIdAsync(Guid id);
     Task<IResult<IEnumerable<GameProfileSlim>>> GetGameProfilesByOwnerIdAsync(Guid id);
     Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreateRequest request, Guid requestUserId);

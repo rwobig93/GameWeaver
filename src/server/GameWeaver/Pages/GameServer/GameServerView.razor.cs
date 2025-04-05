@@ -300,6 +300,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         foreach (var resource in _createdLocalResources)
         {
+            resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
+            resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
+            resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
             var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
 
@@ -418,6 +421,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 if (existingLocalResource is null)
                 {
                     var resourceCreateRequest = matchingLocalResource.ToCreate();
+                    resourceCreateRequest.PathWindows = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathWindows);
+                    resourceCreateRequest.PathLinux = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathLinux);
+                    resourceCreateRequest.PathMac = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathMac);
                     resourceCreateRequest.GameProfileId = _gameServer.GameProfileId;
                     var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
                     if (!createResourceResponse.Succeeded)
@@ -925,6 +931,16 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         await WebClientService.InvokeClipboardCopy(text);
         Snackbar.Add("Text copied to your clipboard!", Severity.Success);
+    }
+
+    private void ViewGame()
+    {
+        NavManager.NavigateTo(AppRouteConstants.GameServer.Games.ViewId(_game.Id));
+    }
+
+    private void ViewHost()
+    {
+        NavManager.NavigateTo(AppRouteConstants.GameServer.Hosts.ViewId(_host.Id));
     }
 
     private async Task<TableData<NotifyRecordSlim>> ServerEventsReload(TableState state, CancellationToken token)

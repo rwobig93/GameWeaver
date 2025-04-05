@@ -30,54 +30,64 @@
                     </MudStack>
                 </MudPaper>
             }
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
-                    <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Relative path to the resource (subdirectory/subdir2/file.txt), root is assumed">
-                        <MudTextField @bind-Value="_newLocalResource.PathWindows" Label="Windows Path" Variant="Variant.Outlined" Disabled="false"/>
-                    </MudTooltip>
-                </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
-                    <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Relative path to the resource (subdirectory/subdir2/file.txt), root is assumed">
-                        <MudTextField @bind-Value="_newLocalResource.PathLinux" Label="Linux Path" Variant="Variant.Outlined" Disabled="false"/>
-                    </MudTooltip>
-                </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
-                    <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Relative path to the resource (subdirectory/subdir2/file.txt), root is assumed">
-                        <MudTextField @bind-Value="_newLocalResource.PathMac" Label="Macintosh Path" Variant="Variant.Outlined" Disabled="false"/>
-                    </MudTooltip>
-                </MudStack>
-            </MudPaper>
+            @if (_game.SupportsWindows)
+            {
+                <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                    <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                        <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Relative path to the resource (subdirectory/subdir2/file.txt), root is assumed">
+                            <MudTextField @bind-Value="_newLocalResource.PathWindows" Label="Windows Path" Variant="Variant.Outlined" Disabled="false"/>
+                        </MudTooltip>
+                    </MudStack>
+                </MudPaper>
+            }
+            @if (_game.SupportsLinux)
+            {
+                <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                    <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                        <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Relative path to the resource (subdirectory/subdir2/file.txt), root is assumed">
+                            <MudTextField @bind-Value="_newLocalResource.PathLinux" Label="Linux Path" Variant="Variant.Outlined" Disabled="false"/>
+                        </MudTooltip>
+                    </MudStack>
+                </MudPaper>
+            }
+            @if (_game.SupportsMac)
+            {
+                <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                    <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                        <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Relative path to the resource (subdirectory/subdir2/file.txt), root is assumed">
+                            <MudTextField @bind-Value="_newLocalResource.PathMac" Label="Macintosh Path" Variant="Variant.Outlined" Disabled="false"/>
+                        </MudTooltip>
+                    </MudStack>
+                </MudPaper>
+            }
             @if (_newLocalResource.Type is ResourceType.Executable or ResourceType.ScriptFile)
             {
-                // TODO: Add injectable dynamic variables to the end of the args w/ the same button as the config replacements
                 <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
                     <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
                         <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Arguments to pass to an executable script or binary">
                             <MudTextField @bind-Value="_newLocalResource.Args" Label="Arguments" Variant="Variant.Outlined" Disabled="false"/>
                         </MudTooltip>
+                        <MudButtonGroup Variant="Variant.Text">
+                            <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Size="Size.Medium" IconColor="Color.Info">
+                                <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
+                                <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%PASSWORD%%%"))">Server Password</MudMenuItem>
+                                <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%QUERY_PORT%%%"))">Query Port</MudMenuItem>
+                                <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%GAME_PORT%%%"))">Game Port</MudMenuItem>
+                                <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%GAME_PORT_PEER%%%"))">Game Peer Port</MudMenuItem>
+                                <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
+                                <MudMenuItem OnClick="@(() => InjectDynamicValue("%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
+                            </MudMenu>
+                        </MudButtonGroup>
                     </MudStack>
                 </MudPaper>
             }
-            @if (_newLocalResource.Type is ResourceType.Executable or ResourceType.ScriptFile or ResourceType.ConfigFile)
+            @if (_newLocalResource.Type is  ResourceType.ConfigFile)
             {
                 <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3 pb-1">
                     <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
-                        @if (_newLocalResource.Type is ResourceType.Executable or ResourceType.ScriptFile)
-                        {
-                            <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Order / priority to start this resource on startup">
-                                <MudTextField @bind-Value="_newLocalResource.StartupPriority" Label="Startup Priority" Variant="Variant.Outlined" Disabled="false"/>
-                            </MudTooltip>
-                        }
-                        @if (_newLocalResource.Type is ResourceType.ConfigFile)
-                        {
-                            <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Whether to merge existing local config or replace it">
-                                <MudCheckBox @bind-Value="_newLocalResource.LoadExisting" Label="Load Existing Config"/>
-                            </MudTooltip>
-                        }
+                        <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Whether to merge existing local config or replace it">
+                            <MudCheckBox @bind-Value="_newLocalResource.LoadExisting" Label="Load Existing Config"/>
+                        </MudTooltip>
                     </MudStack>
                 </MudPaper>
             }

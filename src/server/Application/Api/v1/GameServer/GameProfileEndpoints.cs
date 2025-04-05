@@ -93,7 +93,7 @@ public static class GameProfileEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>Game profile object</returns>
     [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
-    private static async Task<IResult<GameProfileSlim>> GetById([FromQuery]Guid id, IGameServerService gameServerService)
+    private static async Task<IResult<GameProfileSlim?>> GetById([FromQuery]Guid id, IGameServerService gameServerService)
     {
         try
         {
@@ -101,7 +101,7 @@ public static class GameProfileEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameProfileSlim>.FailAsync(ex.Message);
+            return await Result<GameProfileSlim?>.FailAsync(ex.Message);
         }
     }
 
@@ -112,7 +112,7 @@ public static class GameProfileEndpoints
     /// <param name="gameServerService"></param>
     /// <returns>Game profile object</returns>
     [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
-    private static async Task<IResult<GameProfileSlim>> GetByFriendlyName([FromQuery]string friendlyName, IGameServerService gameServerService)
+    private static async Task<IResult<GameProfileSlim?>> GetByFriendlyName([FromQuery]string friendlyName, IGameServerService gameServerService)
     {
         try
         {
@@ -120,7 +120,7 @@ public static class GameProfileEndpoints
         }
         catch (Exception ex)
         {
-            return await Result<GameProfileSlim>.FailAsync(ex.Message);
+            return await Result<GameProfileSlim?>.FailAsync(ex.Message);
         }
     }
 

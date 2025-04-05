@@ -29,4 +29,14 @@ public static class FileHelpers
             return GetIntegrityHash(stream);
         }
     }
+
+    public static string SanitizeSecureFilename(string filename)
+    {
+        if (filename.StartsWith(':'))
+        {
+            filename = filename[1..];
+        }
+
+        return filename.Replace("\\", "/").Replace("\"", "").Replace("'", "");
+    }
 }

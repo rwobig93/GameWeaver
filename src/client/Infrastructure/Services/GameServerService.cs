@@ -472,14 +472,14 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(gameServerRequest.Messages);
 
         var gameServer = gameServerRequest.Data;
-        var startupBinaries = gameServer.Resources.Where(x => x is {Startup: true, Type: ResourceType.Executable}).ToList();
+        var startupResources = gameServer.Resources.Where(x => x is {Startup: true, Type: ResourceType.Executable or ResourceType.ScriptFile}).ToList();
         var failures = new List<string>();
 
-        foreach (var binary in startupBinaries)
+        foreach (var resource in startupResources)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(binary.Path))
+                if (string.IsNullOrWhiteSpace(resource.Path))
                 {
                     _logger.Error("Startup resource for gameserver has an empty path, I don't know what to start!: [{GameserverId}]{GameserverName}",
                         gameServer.Id, gameServer.ServerName);
@@ -488,7 +488,7 @@ public class GameServerService : IGameServerService
                 }
 
                 var gameServerDirectory = gameServer.GetInstallDirectory();
-                var fullPath = Path.Combine(gameServerDirectory, binary.Path);
+                var fullPath = Path.Combine(gameServerDirectory, FileHelpers.SanitizeSecureFilename(resource.Path));
 
                 if (!File.Exists(fullPath))
                 {
@@ -500,10 +500,10 @@ public class GameServerService : IGameServerService
 
                 var startedProcess = Process.Start(new ProcessStartInfo
                 {
-                    Arguments = gameServer.UpdateWithServerValues(binary.Args),
+                    Arguments = gameServer.UpdateWithServerValues(resource.Args),
                     CreateNoWindow = true,
                     FileName = fullPath,
-                    UseShellExecute = false,
+                    UseShellExecute = resource.Type is ResourceType.ScriptFile,
                     WindowStyle = ProcessWindowStyle.Hidden,
                     WorkingDirectory = gameServerDirectory
                 });

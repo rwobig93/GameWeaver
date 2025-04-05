@@ -46,4 +46,14 @@ public static class FileHelpers
     {
         return Path.Join(GetServerRootDirectory(), record.LinkedType.ToString(), record.LinkedId.ToString(), record.Id.ToString());
     }
+
+    public static string SanitizeSecureFilename(string filename)
+    {
+        if (filename.StartsWith(':'))
+        {
+            filename = filename[1..];
+        }
+
+        return filename.Replace("\\", "/").Replace("\"", "").Replace("'", "");
+    }
 }

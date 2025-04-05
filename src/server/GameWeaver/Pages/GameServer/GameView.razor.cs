@@ -175,6 +175,9 @@ public partial class GameView : ComponentBase
 
         foreach (var resource in _createdLocalResources)
         {
+            resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
+            resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
+            resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
             var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
 
@@ -200,6 +203,9 @@ public partial class GameView : ComponentBase
 
         foreach (var resource in _updatedLocalResources)
         {
+            resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
+            resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
+            resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
             var updateResourceResponse = await GameServerService.UpdateLocalResourceAsync(resource.ToUpdate(), _loggedInUserId);
             if (!updateResourceResponse.Succeeded) continue;
 
@@ -376,7 +382,7 @@ public partial class GameView : ComponentBase
 
     private async Task LocalResourceAdd(ResourceType resourceType)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true, FullWidth = true};
         var dialogParameters = new DialogParameters {{"GameProfileId", _game.DefaultGameProfileId}, {"ResourceType", resourceType}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -386,6 +392,9 @@ public partial class GameView : ComponentBase
         }
 
         var newResource = (LocalResourceSlim) dialogResult.Data;
+        var startupResourceCount = _localResources.Count(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile);
+        newResource.StartupPriority = startupResourceCount; // We start from 0 for priority so count is correct
+        newResource.Startup = true; // We'll assume since we just created it we would want this resource enabled
 
         _localResources.Add(newResource);
         _createdLocalResources.Add(newResource);
@@ -396,9 +405,11 @@ public partial class GameView : ComponentBase
         var matchingNewResource = _createdLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
         if (matchingNewResource is not null)
         {
+            matchingNewResource.Name = localResource.Name;
             matchingNewResource.PathWindows = localResource.PathWindows;
             matchingNewResource.PathLinux = localResource.PathLinux;
             matchingNewResource.PathMac = localResource.PathMac;
+            matchingNewResource.Args = localResource.Args;
             return;
         }
 
@@ -409,9 +420,11 @@ public partial class GameView : ComponentBase
             return;
         }
 
+        matchingUpdatedResource.Name = localResource.Name;
         matchingUpdatedResource.PathWindows = localResource.PathWindows;
         matchingUpdatedResource.PathLinux = localResource.PathLinux;
         matchingUpdatedResource.PathMac = localResource.PathMac;
+        matchingUpdatedResource.Args = localResource.Args;
     }
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
@@ -497,6 +510,9 @@ public partial class GameView : ComponentBase
             if (existingLocalResource is null)
             {
                 var resourceCreateRequest = matchingLocalResource.ToCreate();
+                resourceCreateRequest.PathWindows = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathWindows);
+                resourceCreateRequest.PathLinux = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathLinux);
+                resourceCreateRequest.PathMac = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathMac);
                 resourceCreateRequest.GameProfileId = _game.DefaultGameProfileId;
                 var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
                 if (!createResourceResponse.Succeeded)
