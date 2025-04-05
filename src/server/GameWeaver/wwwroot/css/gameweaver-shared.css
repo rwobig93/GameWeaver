@@ -290,3 +290,11 @@
 }
 
 /*#endregion*/
+/*region File Editor*/
+
+.file-editor-default {
+    height: 50vh;
+    width: 100%;
+}
+
+/*endregion*/

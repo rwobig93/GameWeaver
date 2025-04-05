@@ -11,6 +11,7 @@ using Application.Services.GameServer;
 using Application.Services.Integrations;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
+using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
@@ -605,6 +606,30 @@ public partial class GameView : ComponentBase
         }
 
         return false;
+    }
+
+    private async Task OpenScriptInEditor(LocalResourceSlim resource)
+    {
+        // TODO: Create the file on the host, even if it doesn't have config items (empty file)
+
+        var fileLanguage = resource.ContentType switch
+        {
+            ContentType.Ini => FileEditorLanguage.Ini,
+            ContentType.Json => FileEditorLanguage.Json,
+            ContentType.Xml => FileEditorLanguage.Xml,
+            _ => FileEditorLanguage.Plaintext
+        };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge, CloseOnEscapeKey = true, FullWidth = true};
+        var dialogParameters = new DialogParameters {{"Title", resource.Name}, {"FileContent", "\nSome Test Text!\n"}, {"Language", fileLanguage}, {"CanEdit", _canEditGame}};
+        var dialog = await DialogService.ShowAsync<FileEditorDialog>(null, dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        if (dialogResult?.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var updatedFileContent = (string) dialogResult.Data;
+        Snackbar.Add($"Updated file content: {resource.Name}", Severity.Success);
     }
 
     private void InjectDynamicValue(ConfigurationItemSlim item, string value)

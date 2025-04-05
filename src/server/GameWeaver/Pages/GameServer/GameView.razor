@@ -398,6 +398,7 @@
                                     <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
                                     <MudMenuItem OnClick="@(() => InjectDynamicValue(localResource, "%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
                                 </MudMenu>
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Medium" Color="Color.Tertiary" OnClick="@(() => OpenScriptInEditor(localResource))" />
                             </MudButtonGroup>
                         </MudStack>
                     </MudContainer>
