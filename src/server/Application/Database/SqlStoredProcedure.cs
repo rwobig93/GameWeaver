@@ -1,4 +1,5 @@
-using Application.Models.Database;
+
+using Domain.Enums.Database;
 
 namespace Application.Database;
 

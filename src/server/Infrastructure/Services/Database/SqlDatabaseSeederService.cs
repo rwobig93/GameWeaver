@@ -306,16 +306,13 @@ public class SqlDatabaseSeederService : IHostedService
             // Update the application version while keeping the database version for database migrations
             latestRecord.AppVersion = _serverState.ApplicationVersion.ToString();
         }
-        else
+
+        latestRecord ??= new ServerStateRecordDb
         {
-            // Create the first record for the database
-            latestRecord = new ServerStateRecordDb()
-            {
-                Timestamp = _dateTime.NowDatabaseTime,
-                AppVersion = _serverState.ApplicationVersion.ToString(),
-                DatabaseVersion = "0.0.0.0"
-            };
-        }
+            Timestamp = _dateTime.NowDatabaseTime,
+            AppVersion = _serverState.ApplicationVersion.ToString(),
+            DatabaseVersion = "0.0.0.0"
+        };
 
         var createRecordRequest = await _serverStateRepository.CreateAsync(latestRecord.ToCreate());
         if (!createRecordRequest.Succeeded)
