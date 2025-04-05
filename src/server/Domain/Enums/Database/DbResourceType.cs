@@ -1,4 +1,4 @@
-namespace Application.Models.Database;
+namespace Domain.Enums.Database;
 
 public enum DbResourceType
 {
