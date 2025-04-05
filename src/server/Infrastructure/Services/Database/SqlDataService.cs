@@ -12,6 +12,7 @@ using Domain.Contracts;
 using Domain.DatabaseEntities._Management;
 using Domain.Enums.Database;
 using Infrastructure.Database.MsSql._Management;
+using Infrastructure.Database.Shared;
 using Microsoft.Extensions.Options;
 using Microsoft.Data.SqlClient;
 
@@ -104,6 +105,36 @@ public class SqlDataService : ISqlDataService
         return await connection.QueryAsync(script.Path, map: joinMapping, param: parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds);
     }
 
+    public async Task<IEnumerable<TDataType>> ExecuteStatement<TDataType>(string statement, int timeoutSeconds = 5)
+    {
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
+
+        try
+        {
+            var response = await connection.QueryAsync<TDataType>(statement, commandTimeout: timeoutSeconds);
+            return response;
+        }
+        catch (Exception)
+        {
+            return [];
+        }
+    }
+
+    public async Task<TDataType?> ExecuteStatementScalar<TDataType>(string statement, int timeoutSeconds = 5)
+    {
+        using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
+
+        try
+        {
+            var response = await connection.ExecuteScalarAsync<TDataType>(statement, commandTimeout: timeoutSeconds);
+            return response;
+        }
+        catch (Exception)
+        {
+            return default;
+        }
+    }
+
     private async Task ExecuteSqlScriptObject(ISqlDatabaseScript dbEntity)
     {
         try
@@ -146,9 +177,24 @@ public class SqlDataService : ISqlDataService
                 string.Compare(scriptOne.FriendlyName, scriptTwo.FriendlyName, StringComparison.Ordinal);
         });
 
+        var storedProcedures = (await ExecuteStatement<string>(GenericSqlQueries.GetStoredProcedures("spEntityManagement"))).ToList();
+
         // Enforce database tables and stored procedures
         foreach (var script in databaseScripts)
         {
+            if (script.Type == DbResourceType.Table)
+            {
+                var tableExists = await ExecuteStatementScalar<int>(GenericSqlQueries.TableExists("EntityManagement"));
+                if (tableExists == 1)
+                {
+                    continue;
+                }
+            }
+
+            if (storedProcedures.Contains(script.Path))
+            {
+                continue;
+            }
             await ExecuteSqlScriptObject(script);
         }
     }
