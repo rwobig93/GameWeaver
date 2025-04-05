@@ -24,12 +24,12 @@ public static class WeaverWorkMappers
             LastModifiedOn = weaverWorkDb.LastModifiedOn
         };
     }
-    
+
     public static IEnumerable<WeaverWorkSlim> ToSlims(this IEnumerable<WeaverWorkDb> weaverWorkDbs)
     {
         return weaverWorkDbs.Select(ToSlim);
     }
-    
+
     public static WeaverWorkUpdate ToUpdate(this WeaverWorkDb weaverWorkDb)
     {
         return new WeaverWorkUpdate

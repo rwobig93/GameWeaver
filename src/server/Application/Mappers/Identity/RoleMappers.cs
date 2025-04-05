@@ -16,7 +16,7 @@ public static class RoleMappers
             Description = roleResponse.Description
         };
     }
-    
+
     public static AppRoleCreate ToCreateObject(this AppRoleDb appRole)
     {
         return new AppRoleCreate
@@ -38,7 +38,7 @@ public static class RoleMappers
             CreatedOn = default
         };
     }
-    
+
     public static AppRoleFull ToFull(this AppRoleDb roleDb)
     {
         return new AppRoleFull
@@ -68,7 +68,7 @@ public static class RoleMappers
             Permissions = []
         };
     }
-    
+
     public static AppRoleSlim ToSlim(this AppRoleDb appRoleDb)
     {
         return new AppRoleSlim
@@ -87,7 +87,7 @@ public static class RoleMappers
     {
         return appRoleDbs.Select(x => x.ToSlim());
     }
-    
+
     public static RoleResponse ToResponse(this AppRoleSlim appRole)
     {
         return new RoleResponse
@@ -97,12 +97,12 @@ public static class RoleMappers
             Description = appRole.Description
         };
     }
-    
+
     public static List<RoleResponse> ToResponses(this IEnumerable<AppRoleSlim> appRoles)
     {
         return appRoles.Select(x => x.ToResponse()).ToList();
     }
-    
+
     public static RoleFullResponse ToFullResponse(this AppRoleSlim appRole)
     {
         return new RoleFullResponse
@@ -113,12 +113,12 @@ public static class RoleMappers
             Permissions = []
         };
     }
-    
+
     public static List<RoleFullResponse> ToFullResponses(this IEnumerable<AppRoleSlim> appRoles)
     {
         return appRoles.Select(x => x.ToFullResponse()).ToList();
     }
-    
+
     public static AppRoleUpdate ToObject(this AppRoleDb appRole)
     {
         return new AppRoleUpdate

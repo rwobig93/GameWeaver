@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Application.Constants.Communication;
 using Application.Constants.GameServer;
 using Application.Constants.Identity;
+using Application.Constants.Lifecycle;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
 using Application.Helpers.GameServer;
@@ -30,6 +31,8 @@ using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
+using Domain.Models.Database;
+using Domain.Models.Identity;
 using Hangfire;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
@@ -117,7 +120,7 @@ public class HostService : IHostService
         };
 
         var convertedCreate = createRequest.ToCreateDb();
-        
+
         // Create host to get the GUID to bind the request to for registering this host
         var hostCreate = await _hostRepository.CreateAsync(convertedCreate);
         if (!hostCreate.Succeeded)
@@ -176,7 +179,7 @@ public class HostService : IHostService
         var endpointUri = new Uri(string.Concat(_appConfig.BaseUrl, ApiRouteConstants.GameServer.HostRegistration.Confirm));
         var registrationUriUser = QueryHelpers.AddQueryString(endpointUri.ToString(), HostConstants.QueryHostId, hostCreate.Result.ToString());
         var registrationUriFull = QueryHelpers.AddQueryString(registrationUriUser, HostConstants.QueryHostRegisterKey, registrationKey);
-        
+
         var response = new HostNewRegisterResponse
         {
             HostId = hostCreate.Result,
@@ -192,7 +195,7 @@ public class HostService : IHostService
         var foundRegistration = await _hostRepository.GetRegistrationByHostIdAndKeyAsync(request.HostId, request.Key);
         if (foundRegistration.Result is null)
         {
-            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, Guid.Empty, Guid.Empty, 
+            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, Guid.Empty, Guid.Empty,
                 "Invalid host registration was provided in an attempt to be confirmed", new Dictionary<string, string>
                 {
                     {"SenderIp", registrationIp},
@@ -215,7 +218,7 @@ public class HostService : IHostService
         convertedUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
         convertedUpdate.LastModifiedBy = _serverState.SystemUserId;
         convertedUpdate.ActivationPublicIp = registrationIp;
-        
+
         var registrationConfirm = await _hostRepository.UpdateRegistrationAsync(convertedUpdate);
         if (!registrationConfirm.Succeeded)
         {
@@ -270,7 +273,7 @@ public class HostService : IHostService
                 });
             return await Result<HostRegisterResponse>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
-        
+
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.WeaverWorks, foundRegistration.Result.Id, _serverState.SystemUserId,
             AuditAction.GameServerAction, null, new Dictionary<string, string>
             {
@@ -316,7 +319,7 @@ public class HostService : IHostService
 
         return await Result<HostRegisterResponse>.SuccessAsync(response);
     }
-    
+
     public async Task<IResult<HostAuthResponse>> GetToken(HostAuthRequest request)
     {
         try
@@ -326,13 +329,13 @@ public class HostService : IHostService
             {
                 return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
             }
-            
+
             var keyIsCorrect = await IsProvidedKeyCorrect(foundHost.Result.Id, request.HostToken);
             if (!keyIsCorrect.Succeeded)
             {
                 return await Result<HostAuthResponse>.FailAsync(ErrorMessageConstants.Authentication.CredentialsInvalidError);
             }
-            
+
             var token = JwtHelpers.GenerateHostJwtEncryptedToken(GetHostClaims(request.HostId), _dateTime, _securityConfig, _appConfig);
 
             var tokenExpiration = JwtHelpers.GetJwtExpirationTime(token);
@@ -343,7 +346,7 @@ public class HostService : IHostService
                 RefreshToken = token,
                 RefreshTokenExpiryTime = tokenExpiration
             };
-            
+
             return await Result<HostAuthResponse>.SuccessAsync(response);
         }
         catch (Exception ex)
@@ -407,7 +410,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<HostSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<HostSlim>>.SuccessAsync([]);
@@ -465,7 +468,7 @@ public class HostService : IHostService
     {
         request.CreatedBy = requestUserId;
         request.CreatedOn = _dateTime.NowDatabaseTime;
-        
+
         var hostCreate = await _hostRepository.CreateAsync(request.ToCreateDb());
         if (!hostCreate.Succeeded)
         {
@@ -491,7 +494,7 @@ public class HostService : IHostService
 
         request.LastModifiedOn = _dateTime.NowDatabaseTime;
         request.LastModifiedBy = requestUserId;
-        
+
         var hostUpdate = await _hostRepository.UpdateAsync(request.ToUpdateDb());
         if (!hostUpdate.Succeeded)
         {
@@ -540,7 +543,7 @@ public class HostService : IHostService
         }
 
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Hosts, foundHost.Result.Id, requestUserId, AuditAction.Delete, foundHost.Result);
-        
+
         return await Result.SuccessAsync();
     }
 
@@ -562,7 +565,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<HostSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<HostSlim>>.SuccessAsync([]);
@@ -595,7 +598,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<HostRegistrationFull>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync([]);
@@ -664,7 +667,7 @@ public class HostService : IHostService
         var foundRegistration = await _hostRepository.GetRegistrationByIdAsync(request.Id);
         if (foundRegistration.Result is null)
         {
-            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, Guid.Empty, requestUserId, 
+            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostRegistrations, Guid.Empty, requestUserId,
                 "Invalid host registration was provided in an attempt to be updated", new Dictionary<string, string>
                 {
                     {"ProvidedRegistrationId", request.Id.ToString()},
@@ -675,7 +678,7 @@ public class HostService : IHostService
 
         request.LastModifiedOn = _dateTime.NowDatabaseTime;
         request.LastModifiedBy = requestUserId;
-        
+
         var updateRegistrationRequest = await _hostRepository.UpdateRegistrationAsync(request);
         if (!updateRegistrationRequest.Succeeded)
         {
@@ -740,7 +743,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<HostRegistrationFull>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<HostRegistrationFull>>.SuccessAsync([]);
@@ -797,7 +800,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync([]);
@@ -860,10 +863,10 @@ public class HostService : IHostService
         {
             return await Result.FailAsync(ErrorMessageConstants.Generic.InvalidValueError);
         }
-        
+
         var checkInCreate = await _hostRepository.CreateCheckInAsync(request);
         if (checkInCreate.Succeeded) return await Result.SuccessAsync();
-        
+
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostCheckins, Guid.Empty,
             Guid.Empty, "Failed to create host checkin", new Dictionary<string, string>
             {
@@ -877,7 +880,7 @@ public class HostService : IHostService
     {
         var checkInsDelete = await _hostRepository.DeleteAllCheckInsForHostIdAsync(id);
         if (checkInsDelete.Succeeded) return await Result<int>.SuccessAsync(checkInsDelete.Result);
-        
+
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostCheckins, Guid.Empty, requestUserId,
             "Failed to delete all checkins for host", new Dictionary<string, string>
             {
@@ -891,7 +894,7 @@ public class HostService : IHostService
     {
         var checkInDelete = await _hostRepository.DeleteAllOldCheckInsAsync(olderThan);
         if (checkInDelete.Succeeded) return await Result<int>.SuccessAsync(checkInDelete.Result);
-        
+
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.HostCheckins, Guid.Empty, requestUserId,
             "Failed to delete old checkins for a given timeframe", new Dictionary<string, string>
             {
@@ -919,7 +922,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<HostCheckInFull>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<HostCheckInFull>>.SuccessAsync([]);
@@ -952,7 +955,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync([]);
@@ -1060,7 +1063,7 @@ public class HostService : IHostService
 
         var workCreate = await _hostRepository.CreateWeaverWorkAsync(request);
         if (workCreate.Succeeded) return await Result<int>.SuccessAsync(workCreate.Result);
-        
+
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty, requestUserId,
             "Failed to create weaver work", new Dictionary<string, string>
             {
@@ -1132,7 +1135,7 @@ public class HostService : IHostService
                             Message = message,
                             Detail = null
                         });
-            
+
                         _eventService.TriggerNotify("HostServiceStatusUpdate", new NotifyTriggeredEvent
                         {
                             EntityId = recordId,
@@ -1184,7 +1187,7 @@ public class HostService : IHostService
         {
             return await Result.SuccessAsync();
         }
-        
+
         var workUpdate = await _hostRepository.UpdateWeaverWorkAsync(request);
         if (!workUpdate.Succeeded)
         {
@@ -1213,7 +1216,7 @@ public class HostService : IHostService
             {
                 return await Result.FailAsync(ErrorMessageConstants.WeaverWork.InvalidWorkData);
             }
-        
+
             var deserializedData = _serializerService.DeserializeMemory<HostDetailUpdate>(request.WorkData);
             if (deserializedData is null)
             {
@@ -1234,39 +1237,15 @@ public class HostService : IHostService
             convertedRequest.PublicIp = sourceIp;
             if (convertedRequest.PublicIp == "::1")
             {
-                _logger.Debug("Host public ip is local, attempting to get public ip address: [{HostId}] {PublicIp}", request.HostId, convertedRequest.PublicIp);
-                var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.GeneralWeb);
-                var publicIpResponse = await httpClient.GetAsync(ApiConstants.GeneralExternal.UrlGetPublicIp);
-                switch (publicIpResponse.IsSuccessStatusCode)
-                {
-                    case false:
-                        _logger.Error("Failed to update local host public ip, couldn't get public ip from ip service: [{HostId}] {PublicIp}", request.HostId, convertedRequest.PublicIp);
-                        break;
-                    case true:
-                    {
-                        var parsedPublicIp = await publicIpResponse.Content.ReadAsStringAsync();
-                        var sanitizedPublicIp = parsedPublicIp.Trim();
-                        _logger.Information("Updated local host public ip: [{HostId}] {PublicIpBefore} => {PublicIpAfter}",
-                            request.HostId, convertedRequest.PublicIp, sanitizedPublicIp);
-                        convertedRequest.PublicIp = sanitizedPublicIp;
-                        break;
-                    }
-                }
+                await HostDetailUpdatePublicIp(request, convertedRequest);
             }
 
             var hostUpdate = await _hostRepository.UpdateAsync(convertedRequest.ToUpdateDb());
             if (!hostUpdate.Succeeded)
             {
-                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty,
-                    foundHost.Result.Id, "Failed to update host from weaver work host detail", new Dictionary<string, string>
-                    {
-                        {"WorkId", request.Id.ToString()},
-                        {"HostId", request.HostId.ToString() ?? ""},
-                        {"Error", hostUpdate.ErrorMessage}
-                    });
-                return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+                return await HostDetailGenerateTshoot(request, foundHost, hostUpdate, "Failed to update host from weaver work host detail");
             }
-            
+
             var updatedHost = await _hostRepository.GetByIdAsync(foundHost.Result.Id);
             await _auditRepository.CreateAuditTrail(_serverState, _dateTime, AuditTableName.Hosts, foundHost.Result.Id, AuditAction.Update,
                 foundHost.Result, updatedHost.Result);
@@ -1274,14 +1253,7 @@ public class HostService : IHostService
             var hostGameServers = _gameServerRepository.GetByHostIdAsync(convertedRequest.Id);
             if (!hostGameServers.Result.Succeeded || hostGameServers.Result.Result is null)
             {
-                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty,
-                    foundHost.Result.Id, "Failed to get gameservers to update ip addresses from weaver work host detail", new Dictionary<string, string>
-                    {
-                        {"WorkId", request.Id.ToString()},
-                        {"HostId", request.HostId.ToString() ?? ""},
-                        {"Error", hostUpdate.ErrorMessage}
-                    });
-                return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+                return await HostDetailGenerateTshoot(request, foundHost, hostUpdate, "Failed to get gameservers to update ip addresses from weaver work host detail");
             }
 
             foreach (var gameserver in hostGameServers.Result.Result)
@@ -1307,13 +1279,46 @@ public class HostService : IHostService
         }
     }
 
+    private async Task HostDetailUpdatePublicIp(WeaverWorkUpdate request, HostUpdate convertedRequest)
+    {
+        _logger.Debug("Host public ip is local, attempting to get public ip address: [{HostId}] {PublicIp}", request.HostId, convertedRequest.PublicIp);
+        var publicIp = await _httpClientFactory.GetPublicIp();
+        if (string.IsNullOrWhiteSpace(publicIp))
+        {
+            _logger.Error("Failed to update local host public ip, couldn't get public ip from ip service: [{HostId}] {PublicIp}",
+                request.HostId, convertedRequest.PublicIp);
+            return;
+        }
+
+        if (convertedRequest.PublicIp == publicIp) // Public IP Address already matches so we'll move on
+        {
+            return;
+        }
+
+        _logger.Information("Updated local host public ip: [{HostId}] {PublicIpBefore} => {PublicIpAfter}", request.HostId, convertedRequest.PublicIp, publicIp);
+        convertedRequest.PublicIp = publicIp;
+    }
+
+    private async Task<IResult> HostDetailGenerateTshoot(WeaverWorkUpdate request, DatabaseActionResult<HostDb?> foundHost, DatabaseActionResult hostUpdate, string message)
+    {
+        var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty,
+            foundHost.Result!.Id, message, new Dictionary<string, string>
+            {
+                {"WorkId", request.Id.ToString()},
+                {"HostId", request.HostId.ToString() ?? ""},
+                {"Error", hostUpdate.ErrorMessage}
+            });
+        return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+    }
+
+    // ReSharper disable once MemberCanBePrivate.Global
     public async Task VerifyGameServerConnectable(GameServerDb gameServer)
     {
         // Multiple connectivity attempts w/ backoff timers to get a responsive experience, after that it's down to the normal connectable job
         foreach (var attemptTimeout in GameServerConstants.ConnectableCheckAttempts)
         {
             await Task.Delay(attemptTimeout);
-            
+
             var gameServerGame = await _gameRepository.GetByIdAsync(gameServer.GameId);
             if (!gameServerGame.Succeeded || gameServerGame.Result is null)
             {
@@ -1321,7 +1326,8 @@ public class HostService : IHostService
                 return;
             }
 
-            var gameServerCheck = gameServer.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !_serverState.IsRunningInDebugMode);
+            var serverIsLocal = _serverState.PublicIp == gameServer.PublicIp;  // If the gameserver has the same public IP as this server we'll assume it's local
+            var gameServerCheck = gameServer.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !serverIsLocal);
             var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
             if (!connectableResponse.Data)
             {
@@ -1337,7 +1343,16 @@ public class HostService : IHostService
                 _logger.Error("Update gameserver state for connectivity check error: {Error}", updateState.ErrorMessage);
                 return;
             }
-            
+
+            var serverStatusEvent = new GameServerStatusEvent
+            {
+                Id = gameServer.Id,
+                ServerName = gameServer.ServerName,
+                BuildVersionUpdated = false,
+                ServerState = ConnectivityState.Connectable,
+            };
+            _eventService.TriggerGameServerStatus("VerifyGameServerConnectable", serverStatusEvent);
+
             var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
             {
                 EntityId = gameServer.Id,
@@ -1347,14 +1362,14 @@ public class HostService : IHostService
             });
             if (!stateRecordCreate.Succeeded)
             {
-                await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, gameServer.Id, 
+                await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, gameServer.Id,
                     gameServer.HostId, "Failed to create state change notify record from weaver work for game server", new Dictionary<string, string>
                     {
                         {"Source", "VerifyGameServerConnectable"},
                         {"Error", updateState.ErrorMessage}
                     });
             }
-            
+
             _eventService.TriggerNotify("VerifyGameServerConnectable", new NotifyTriggeredEvent
             {
                 EntityId = gameServer.Id,
@@ -1362,13 +1377,13 @@ public class HostService : IHostService
                 Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
                 Detail = $"Server State Change: {gameServer.ServerState} => {gameServerUpdate.ServerState}"
             });
-            
+
             return;
         }
-        
+
         _logger.Information("Gameserver connectable check exhausted attempts and wasn't connectable [{GameserverId}]{GameserverState}", gameServer.Id, gameServer.ServerState);
     }
-    
+
     private async Task<IResult> HandleUpdateGameServerState(WeaverWorkUpdate request)
     {
         try
@@ -1377,7 +1392,7 @@ public class HostService : IHostService
             {
                 return await Result.FailAsync(ErrorMessageConstants.WeaverWork.InvalidWorkData);
             }
-        
+
             var deserializedData = _serializerService.DeserializeMemory<GameServerStateUpdate>(request.WorkData);
             if (deserializedData is null)
             {
@@ -1392,8 +1407,14 @@ public class HostService : IHostService
 
             request.HostId = foundServer.Result.HostId;
 
-            var gameServerUpdate = new GameServerUpdate {Id = foundServer.Result.Id, ServerState = deserializedData.ServerState};
-            
+            var gameServerUpdate = new GameServerUpdate
+            {
+                Id = foundServer.Result.Id,
+                ServerState = deserializedData.ServerState,
+                RunningConfigHash = deserializedData.RunningConfigHash,
+                StorageConfigHash = deserializedData.StorageConfigHash
+            };
+
             // Update the game server version to the latest if we just did a server update and it was successful
             if (deserializedData.BuildVersionUpdated)
             {
@@ -1401,75 +1422,20 @@ public class HostService : IHostService
                 if (gameServerGame.Result is not null)
                 {
                     gameServerUpdate.ServerBuildVersion = gameServerGame.Result.LatestBuildVersion;
+                    await GameServerBuildVersionUpdate(request, foundServer, gameServerUpdate);
                 }
             }
-            
+
             var updateGameServer = await _gameServerRepository.UpdateAsync(gameServerUpdate);
             if (!updateGameServer.Succeeded)
             {
-                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, foundServer.Result.Id, 
-                    foundServer.Result.HostId, "Failed to update game server state from weaver work", new Dictionary<string, string>
-                    {
-                        {"WorkId", request.Id.ToString()},
-                        {"Error", updateGameServer.ErrorMessage}
-                    });
-                return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+                return await GameServerUpdateGenerateTshoot(request, foundServer, updateGameServer);
             }
 
-            if (gameServerUpdate.ServerBuildVersion is not null)
+            if (gameServerUpdate.ServerState is not null && gameServerUpdate.ServerState != foundServer.Result.ServerState)
             {
-                var versionRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
-                {
-                    EntityId = foundServer.Result.Id,
-                    Timestamp = _dateTime.NowDatabaseTime,
-                    Message = "Server Version Updated",
-                    Detail = $"Build Version Updated To: {gameServerUpdate.ServerBuildVersion}"
-                });
-                if (!versionRecordCreate.Succeeded)
-                {
-                    await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, foundServer.Result.Id, foundServer.Result.HostId, 
-                        "Failed to create version change notify record from weaver work for game server", new Dictionary<string, string>
-                        {
-                            {"WorkId", request.Id.ToString()},
-                            {"Error", versionRecordCreate.ErrorMessage}
-                        });
-                }
-            
-                _eventService.TriggerNotify("HostServiceGameServerStateChange", new NotifyTriggeredEvent
-                {
-                    EntityId = foundServer.Result.Id,
-                    Timestamp = _dateTime.NowDatabaseTime,
-                    Message = "Server Version Updated",
-                    Detail = $"Build Version Updated To: {gameServerUpdate.ServerBuildVersion}"
-                });
-            }
-
-            if (gameServerUpdate.ServerState != foundServer.Result.ServerState)
-            {
-                var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
-                {
-                    EntityId = foundServer.Result.Id,
-                    Timestamp = _dateTime.NowDatabaseTime,
-                    Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
-                    Detail = $"Server State Change: {foundServer.Result.ServerState} => {gameServerUpdate.ServerState}"
-                });
-                if (!stateRecordCreate.Succeeded)
-                {
-                    await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, foundServer.Result.Id, 
-                        foundServer.Result.HostId, "Failed to create state change notify record from weaver work for game server", new Dictionary<string, string>
-                        {
-                            {"WorkId", request.Id.ToString()},
-                            {"Error", updateGameServer.ErrorMessage}
-                        });
-                }
-            
-                _eventService.TriggerNotify("HostServiceGameServerStateChange", new NotifyTriggeredEvent
-                {
-                    EntityId = foundServer.Result.Id,
-                    Timestamp = _dateTime.NowDatabaseTime,
-                    Message = $"Server State Changed To: {gameServerUpdate.ServerState}",
-                    Detail = $"Server State Change: {foundServer.Result.ServerState} => {gameServerUpdate.ServerState}"
-                });
+                await GameServerStateChange(foundServer.Result.Id, request.Id, foundServer.Result.HostId,
+                    foundServer.Result.ServerState, (ConnectivityState)gameServerUpdate.ServerState);
             }
 
             var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundServer.Result.Id);
@@ -1478,58 +1444,21 @@ public class HostService : IHostService
 
             var serverStatusEvent = deserializedData.ToStatusEvent();
             serverStatusEvent.ServerName = foundServer.Result.ServerName;
-            
+            serverStatusEvent.RunningConfigHash = deserializedData.RunningConfigHash ?? foundServer.Result.RunningConfigHash;
+            serverStatusEvent.StorageConfigHash = deserializedData.StorageConfigHash ?? foundServer.Result.StorageConfigHash;
+
             _eventService.TriggerGameServerStatus("HostServiceGameServerStateUpdate", serverStatusEvent);
 
             if (deserializedData.ServerState is ConnectivityState.InternallyConnectable)
             {
+                foundServer.Result.ServerState = (ConnectivityState)deserializedData.ServerState;
                 BackgroundJob.Enqueue(() => VerifyGameServerConnectable(foundServer.Result));
             }
 
             if (deserializedData.ServerState != ConnectivityState.Uninstalled) return await Result.SuccessAsync();
-            
+
             // State update is uninstalled, so we'll wrap up by deleting the game server
-            var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result.Id, _serverState.SystemUserId);
-            if (!deleteServerRequest.Succeeded)
-            {
-                return await Result.FailAsync(deleteServerRequest.ErrorMessage);
-            }
-        
-            await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, (Guid)foundServer.Result.LastModifiedBy!,
-                AuditAction.Delete, foundServer.Result);
-
-            var serverOwner = await _userRepository.GetByIdAsync(foundServer.Result.OwnerId);
-            if (serverOwner.Result is null)
-            {
-                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
-                    "Failed to find owner account during game server delete", new Dictionary<string, string> {{"UserID", foundServer.Result.OwnerId.ToString()}});
-                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
-            }
-
-            if (!_generalConfig.Value.UseCurrency) return await Result.SuccessAsync();
-            {
-                var serverHost = await _hostRepository.GetByIdAsync(foundServer.Result.HostId);
-                if (serverHost.Result?.OwnerId == foundServer.Result.OwnerId) return await Result<Guid>.SuccessAsync();
-                
-                var userUpdate = await _userRepository.UpdateAsync(new AppUserUpdate
-                {
-                    Currency = serverOwner.Result.Currency + 1,
-                    LastModifiedBy = _serverState.SystemUserId,
-                    LastModifiedOn = _dateTime.NowDatabaseTime
-                });
-                if (userUpdate.Succeeded) return await Result.SuccessAsync();
-                
-                var tshootId = await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
-                    "Deleted game server and profile but failed to update user currency",new Dictionary<string, string>
-                    {
-                        {"UserId", serverOwner.Result.Id.ToString()},
-                        {"Username", serverOwner.Result.Username},
-                        {"BeforeCurrency", serverOwner.Result.Currency.ToString()},
-                        {"IntendedCurrency", (serverOwner.Result.Currency + 1).ToString()},
-                        {"Error", userUpdate.ErrorMessage}
-                    });
-                return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
-            }
+            return await GameServerStateUninstall(foundServer);
         }
         catch (Exception ex)
         {
@@ -1544,6 +1473,123 @@ public class HostService : IHostService
         }
     }
 
+    private async Task<IResult> GameServerStateUninstall(DatabaseActionResult<GameServerDb?> foundServer)
+    {
+        var deleteServerRequest = await _gameServerRepository.DeleteAsync(foundServer.Result!.Id, _serverState.SystemUserId);
+        if (!deleteServerRequest.Succeeded)
+        {
+            return await Result.FailAsync(deleteServerRequest.ErrorMessage);
+        }
+
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, (Guid)foundServer.Result.LastModifiedBy!,
+            AuditAction.Delete, foundServer.Result);
+
+        var serverOwner = await _userRepository.GetByIdAsync(foundServer.Result.OwnerId);
+        if (serverOwner.Result is null)
+        {
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+                "Failed to find owner account during game server delete", new Dictionary<string, string> {{"UserID", foundServer.Result.OwnerId.ToString()}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+        }
+
+        if (!_generalConfig.Value.UseCurrency) return await Result.SuccessAsync();
+        {
+            return await GameServerUserCurrencyUpdate(foundServer, serverOwner);
+        }
+    }
+
+    private async Task<IResult> GameServerUserCurrencyUpdate(DatabaseActionResult<GameServerDb?> foundServer, DatabaseActionResult<AppUserSecurityDb> serverOwner)
+    {
+        var serverHost = await _hostRepository.GetByIdAsync(foundServer.Result!.HostId);
+        if (serverHost.Result?.OwnerId == foundServer.Result.OwnerId) return await Result<Guid>.SuccessAsync();
+
+        var userUpdate = await _userRepository.UpdateAsync(new AppUserUpdate
+        {
+            Currency = serverOwner.Result!.Currency + 1,
+            LastModifiedBy = _serverState.SystemUserId,
+            LastModifiedOn = _dateTime.NowDatabaseTime
+        });
+        if (userUpdate.Succeeded) return await Result.SuccessAsync();
+
+        var tshootId = await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
+            "Deleted game server and profile but failed to update user currency",new Dictionary<string, string>
+            {
+                {"UserId", serverOwner.Result.Id.ToString()},
+                {"Username", serverOwner.Result.Username},
+                {"BeforeCurrency", serverOwner.Result.Currency.ToString()},
+                {"IntendedCurrency", (serverOwner.Result.Currency + 1).ToString()},
+                {"Error", userUpdate.ErrorMessage}
+            });
+        return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+    }
+
+    private async Task GameServerStateChange(Guid serverId, int workId, Guid hostId, ConnectivityState before, ConnectivityState after)
+    {
+        var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+        {
+            EntityId = serverId,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = $"Server State Changed To: {after}",
+            Detail = $"Server State Change: {before} => {after}"
+        });
+        if (!stateRecordCreate.Succeeded)
+        {
+            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, serverId,
+                hostId, "Failed to create state change notify record from weaver work for game server", new Dictionary<string, string>
+                {
+                    {"WorkId", workId.ToString()},
+                    {"Error", stateRecordCreate.ErrorMessage}
+                });
+        }
+
+        _eventService.TriggerNotify("HostServiceGameServerStateChange", new NotifyTriggeredEvent
+        {
+            EntityId = serverId,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = $"Server State Changed To: {after}",
+            Detail = $"Server State Change: {before} => {after}"
+        });
+    }
+
+    private async Task GameServerBuildVersionUpdate(WeaverWorkUpdate request, DatabaseActionResult<GameServerDb?> foundServer, GameServerUpdate gameServerUpdate)
+    {
+        var versionRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+        {
+            EntityId = foundServer.Result!.Id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = NotifyRecordConstants.GameServerVersionUpdated,
+            Detail = $"Build Version Updated To: {gameServerUpdate.ServerBuildVersion}"
+        });
+        if (!versionRecordCreate.Succeeded)
+        {
+            await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, foundServer.Result.Id, foundServer.Result.HostId,
+                "Failed to create version change notify record from weaver work for game server", new Dictionary<string, string>
+                {
+                    {"WorkId", request.Id.ToString()},
+                    {"Error", versionRecordCreate.ErrorMessage}
+                });
+        }
+
+        _eventService.TriggerNotify("HostServiceGameServerStateChange", new NotifyTriggeredEvent
+        {
+            EntityId = foundServer.Result.Id,
+            Timestamp = _dateTime.NowDatabaseTime,
+            Message = "Server Version Updated",
+            Detail = $"Build Version Updated To: {gameServerUpdate.ServerBuildVersion}"
+        });
+    }
+
+    private async Task<IResult> GameServerUpdateGenerateTshoot(WeaverWorkUpdate request, DatabaseActionResult<GameServerDb?> foundServer, DatabaseActionResult updateGameServer)
+    {
+        var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, foundServer.Result!.Id,
+            foundServer.Result.HostId, "Failed to update game server state from weaver work", new Dictionary<string, string>
+            {
+                {"WorkId", request.Id.ToString()},
+                {"Error", updateGameServer.ErrorMessage}
+            });
+        return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+    }
+
     public async Task<IResult> DeleteWeaverWorkAsync(int id, Guid requestUserId)
     {
         var foundWork = await _hostRepository.GetWeaverWorkByIdAsync(id);
@@ -1554,7 +1600,7 @@ public class HostService : IHostService
 
         var workDelete = await _hostRepository.DeleteWeaverWorkAsync(id);
         if (workDelete.Succeeded) return await Result.SuccessAsync();
-        
+
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty, requestUserId,
             "Failed to delete weaver work", new Dictionary<string, string>
             {
@@ -1568,7 +1614,7 @@ public class HostService : IHostService
     {
         var workDelete = await _hostRepository.DeleteWeaverWorkForHostAsync(hostId);
         if (workDelete.Succeeded) return await Result.SuccessAsync();
-        
+
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty, requestUserId,
             "Failed to delete weaver work for host", new Dictionary<string, string>
             {
@@ -1585,7 +1631,7 @@ public class HostService : IHostService
         {
             return await Result<int>.SuccessAsync(workDelete.Result);
         }
-        
+
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, Guid.Empty, requestUserId,
             "Failed to delete weaver work for a given timeframe", new Dictionary<string, string>
             {
@@ -1613,7 +1659,7 @@ public class HostService : IHostService
         {
             return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.FailAsync(response.ErrorMessage);
         }
-        
+
         if (response.Result?.Data is null)
         {
             return await PaginatedResult<IEnumerable<WeaverWorkSlim>>.SuccessAsync([]);

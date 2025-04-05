@@ -20,8 +20,8 @@ public partial class GameWidget : ComponentBase
     private bool _imageLoaded = false;
     private string CardWidth => $"{WidthPx}px";
     private string CardHeight => $"{HeightPx}px";
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -52,7 +52,7 @@ public partial class GameWidget : ComponentBase
                 return;
             }
         }
-        
+
         _imageExists = false;
         _imageUrl = Vertical ? "/images/gameserver/game-default-vertical.jpg" : "/images/gameserver/game-default-horizontal.jpg";
     }
@@ -67,7 +67,7 @@ public partial class GameWidget : ComponentBase
         var response = await HttpClient.SendAsync(new HttpRequestMessage(HttpMethod.Head, url));
         return response.IsSuccessStatusCode;
     }
-    
+
     public async Task UpdateImage()
     {
         await UpdateImageUrl();

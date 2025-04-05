@@ -6,7 +6,7 @@ public interface IEventService
 {
     public event EventHandler<GameServerStatusEvent>? GameServerStatusChanged;
     public event EventHandler<WeaverWorkStatusEvent>? WeaverWorkStatusChanged;
-    public event EventHandler<GameVersionUpdatedEvent>? GameVersionUpdated; 
+    public event EventHandler<GameVersionUpdatedEvent>? GameVersionUpdated;
     public event EventHandler<NotifyTriggeredEvent>? NotifyTriggered;
 
     void TriggerGameServerStatus(string source, GameServerStatusEvent args);

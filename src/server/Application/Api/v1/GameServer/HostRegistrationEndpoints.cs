@@ -92,7 +92,7 @@ public static class HostRegistrationEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.GetAllRegistrationsPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -100,7 +100,7 @@ public static class HostRegistrationEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostRegistration.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostRegistration.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -110,7 +110,7 @@ public static class HostRegistrationEndpoints
             return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get active host registrations
     /// </summary>
@@ -128,7 +128,7 @@ public static class HostRegistrationEndpoints
             return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get inactive host registrations
     /// </summary>
@@ -146,7 +146,7 @@ public static class HostRegistrationEndpoints
             return await Result<IEnumerable<HostRegistrationFull>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get the count of all host registrations
     /// </summary>
@@ -203,7 +203,7 @@ public static class HostRegistrationEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.SearchRegistrationsPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -211,7 +211,7 @@ public static class HostRegistrationEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.HostRegistration.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.HostRegistration.Search, pageNumber, pageSize, result.TotalCount);
             return result;

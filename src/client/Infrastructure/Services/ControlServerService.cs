@@ -94,7 +94,7 @@ public class ControlServerService : IControlServerService
             {
                 return await Result<HostRegisterResponse>.FailAsync(tokenResult.Messages);
             }
-            
+
             return await Result<HostRegisterResponse>.SuccessAsync();
         }
 
@@ -134,7 +134,7 @@ public class ControlServerService : IControlServerService
         {
             return await Result<HostRegisterResponse>.FailAsync(generalSaveResponse.Messages);
         }
-        
+
         // Parse the successful registration, clear URL in settings and save HostId and Key for authenticating to the control server going forward
         var updatedAuthConfig = new AuthConfiguration
         {
@@ -148,7 +148,7 @@ public class ControlServerService : IControlServerService
         {
             return await Result<HostRegisterResponse>.FailAsync(authSaveResponse.Messages);
         }
-        
+
         return await Result<HostRegisterResponse>.SuccessAsync(convertedResponse);
     }
 
@@ -164,13 +164,13 @@ public class ControlServerService : IControlServerService
             _logger.Verbose("HostId and key is empty so we haven't registered yet, waiting for registration");
             return await Result<HostAuthResponse>.SuccessAsync();
         }
-        
+
         var hostIdIsValid = Guid.TryParse(_authConfig.CurrentValue.Host, out var parsedHostId);
         if (!hostIdIsValid || string.IsNullOrWhiteSpace(_authConfig.CurrentValue.Key))
         {
             return await Result<HostAuthResponse>.FailAsync("HostId or key is invalid, please fix the host/key pair or do a new registration");
         }
-        
+
         // Prep authentication request
         var tokenRequest = new HostAuthRequest
         {
@@ -195,7 +195,7 @@ public class ControlServerService : IControlServerService
         Authorization.RefreshToken = convertedResponse.Data.RefreshToken;
         Authorization.RefreshTokenExpiryTime = convertedResponse.Data.RefreshTokenExpiryTime;
         RegisteredWithServer = true;
-        
+
         return await Result<HostAuthResponse>.SuccessAsync(convertedResponse);
     }
 
@@ -212,14 +212,14 @@ public class ControlServerService : IControlServerService
         {
             return await Result.SuccessAsync();
         }
-        
+
         // Token is expired or within expiration threshold, so we'll get a new token
         var updateTokenRequest = await GetToken();
         if (!updateTokenRequest.Succeeded)
         {
             return await Result.FailAsync(updateTokenRequest.Messages);
         }
-        
+
         return await Result.SuccessAsync();
     }
 
@@ -231,7 +231,7 @@ public class ControlServerService : IControlServerService
     public async Task<IResult<IEnumerable<WeaverWork>?>> Checkin(HostCheckInRequest request)
     {
         if (!RegisteredWithServer) { return await Result<IEnumerable<WeaverWork>>.SuccessAsync(); }
-        
+
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
 
@@ -254,10 +254,10 @@ public class ControlServerService : IControlServerService
     public async Task<IResult> WorkStatusUpdate(WeaverWorkUpdateRequest request)
     {
         if (!RegisteredWithServer) { return await Result.SuccessAsync(); }
-        
+
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var payload = new StringContent(_serializerService.SerializeJson(request), Encoding.UTF8, "application/json");
-        
+
         var response = await httpClient.PostAsync(ApiConstants.GameServer.WeaverWork.UpdateStatus, payload);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
@@ -276,17 +276,17 @@ public class ControlServerService : IControlServerService
     public async Task<IResult<GameDownload>> DownloadManualClient(Guid gameId)
     {
         if (!RegisteredWithServer) { return await Result<GameDownload>.FailAsync("Not currently registered with a control server"); }
-        
+
         var httpClient = _httpClientFactory.CreateClient(HttpConstants.AuthenticatedServer);
         var downloadUrl = QueryHelpers.AddQueryString(ApiConstants.GameServer.Game.DownloadLatest, "gameId", gameId.ToString());
-        
+
         var response = await httpClient.GetAsync(downloadUrl);
         var responseContent = await response.Content.ReadAsStringAsync();
         if (!response.IsSuccessStatusCode)
         {
             return await Result<GameDownload>.FailAsync(responseContent);
         }
-        
+
         var deserializedResponse = _serializerService.DeserializeJson<GameDownloadResponse?>(responseContent);
         if (deserializedResponse is null)
         {

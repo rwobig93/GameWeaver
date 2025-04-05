@@ -14,7 +14,7 @@ public static class PermissionHelpers
     {
         if (permissionGroup is null || permissionName is null || permissionAccess is null)
             return null;
-        
+
         return $"Permissions.{permissionGroup}.{permissionName}.{permissionAccess}";
     }
 
@@ -36,7 +36,7 @@ public static class PermissionHelpers
     {
         return appRoles.Select(x => new Claim(ClaimTypes.Role, x.Name));
     }
-    
+
     /// <summary>
     /// Returns a list of all native permissions values
     /// </summary>
@@ -73,13 +73,13 @@ public static class PermissionHelpers
         [
             // Preferences
             PermissionConstants.Identity.Preferences.ChangeTheme,
-            
+
             // System
             PermissionConstants.System.Jobs.View,
             PermissionConstants.System.Audit.View,
             PermissionConstants.System.Audit.Search,
             PermissionConstants.System.Audit.Export,
-            
+
             // Permissions & Roles
             PermissionConstants.Identity.Permissions.View,
             PermissionConstants.Identity.Permissions.Add,
@@ -90,7 +90,7 @@ public static class PermissionHelpers
             PermissionConstants.Identity.Roles.Delete,
             PermissionConstants.Identity.Roles.Add,
             PermissionConstants.Identity.Roles.Remove,
-            
+
             // Users & Accounts
             PermissionConstants.Identity.Users.View,
             PermissionConstants.Identity.Users.Edit,
@@ -101,7 +101,7 @@ public static class PermissionHelpers
             PermissionConstants.Identity.Users.ResetPassword,
             PermissionConstants.Identity.Users.ChangeEmail,
             PermissionConstants.Identity.ServiceAccounts.View,
-            
+
             // Gameserver
             PermissionConstants.GameServer.Game.Get,
             PermissionConstants.GameServer.Game.Update,

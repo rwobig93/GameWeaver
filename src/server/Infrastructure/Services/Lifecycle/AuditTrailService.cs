@@ -29,7 +29,7 @@ public class AuditTrailService : IAuditTrailService
 
         if (string.IsNullOrWhiteSpace(auditTrailDb.After))
             return convertedTrail;
-        
+
         try
         {
             convertedTrail.Before = string.IsNullOrWhiteSpace(auditTrailDb.Before)
@@ -78,7 +78,7 @@ public class AuditTrailService : IAuditTrailService
             {
                 return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AuditTrailSlim>>.SuccessAsync([]);
@@ -213,7 +213,7 @@ public class AuditTrailService : IAuditTrailService
             {
                 return await PaginatedResult<IEnumerable<AuditTrailSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AuditTrailSlim>>.SuccessAsync([]);
@@ -240,7 +240,7 @@ public class AuditTrailService : IAuditTrailService
             var deleteTrails = await _auditRepository.DeleteOld(olderThan);
             if (!deleteTrails.Succeeded)
                 return await Result<int>.FailAsync(deleteTrails.ErrorMessage);
-            
+
             switch (deleteTrails.Result)
             {
                 case > 0:

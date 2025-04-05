@@ -13,10 +13,10 @@ public static class AuditHelpers
     public static AuditDiff GetAuditDiff<T>(T beforeObj, T afterObj)
     {
         var auditDiff = new AuditDiff();
-        
+
         var beforeDict = beforeObj?.GetType().GetProperties()
             .ToDictionary(prop => prop.Name, prop => prop.GetValue(beforeObj)?.ToString());
-        
+
         var afterDict = afterObj!.GetType().GetProperties()
             .ToDictionary(prop => prop.Name, prop => prop.GetValue(afterObj)?.ToString());
 
@@ -26,9 +26,9 @@ public static class AuditHelpers
             auditDiff.After = new Dictionary<string, string>();
             return auditDiff;
         }
-        
+
         var changedProps = beforeDict.Keys.Intersect(afterDict.Keys)
-            .Where(key => 
+            .Where(key =>
                 // Remove any keys we know we don't want to audit like Refresh token, LastModifiedBy, ect
                 !AuditTrailConstants.DiffPropertiesToIgnore.Contains(key) &&
                 afterDict[key] is not null &&
@@ -54,7 +54,7 @@ public static class AuditHelpers
     {
         before ??= new Dictionary<string, string>();
         after ??= new Dictionary<string, string>();
-        
+
         await auditService.CreateAsync(new AuditTrailCreate
         {
             Timestamp = dateTime.NowDatabaseTime,
@@ -73,7 +73,7 @@ public static class AuditHelpers
     {
         before ??= new Dictionary<string, string>();
         after ??= new Dictionary<string, string>();
-        
+
         await auditRepository.CreateAsync(new AuditTrailCreate
         {
             Timestamp = dateTime.NowDatabaseTime,

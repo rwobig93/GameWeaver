@@ -10,15 +10,15 @@ namespace GameWeaver.Pages.Account;
 public partial class AccountSettings
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
-    
+
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> GeneralConfig { get; init; } = null!;
-    
+
     private AppUserFull CurrentUser { get; set; } = new();
     private bool _processingEmailChange;
     private bool _canChangeEmail;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -64,7 +64,7 @@ public partial class AccountSettings
         {
             return;
         }
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"Title", "Confirm New Email Address"},

@@ -22,12 +22,12 @@ public static class GameProfileMappers
             DeletedOn = gameProfileDb.DeletedOn
         };
     }
-    
+
     public static IEnumerable<GameProfileSlim> ToSlims(this IEnumerable<GameProfileDb> gameProfileDbs)
     {
         return gameProfileDbs.Select(ToSlim);
     }
-    
+
     public static GameProfileUpdate ToUpdate(this GameProfileDb gameProfileDb)
     {
         return new GameProfileUpdate

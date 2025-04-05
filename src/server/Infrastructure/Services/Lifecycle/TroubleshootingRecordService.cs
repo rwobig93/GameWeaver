@@ -52,7 +52,7 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
             {
                 return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync([]);
@@ -219,7 +219,7 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
             {
                 return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<TroubleshootingRecordSlim>>.SuccessAsync([]);
@@ -248,7 +248,7 @@ public class TroubleshootingRecordService : ITroubleshootingRecordService
             {
                 return await Result<int>.FailAsync(deleteRecords.ErrorMessage);
             }
-            
+
             switch (deleteRecords.Result)
             {
                 case > 0:

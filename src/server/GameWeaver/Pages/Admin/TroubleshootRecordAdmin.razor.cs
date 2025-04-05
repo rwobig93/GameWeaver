@@ -15,7 +15,7 @@ public partial class TroubleshootRecordAdmin
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IExcelService ExcelService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     private MudTable<TroubleshootingRecordSlim> _table = new();
     private IEnumerable<TroubleshootingRecordSlim> _pagedData = new List<TroubleshootingRecordSlim>();
     private string _searchString = "";
@@ -27,7 +27,7 @@ public partial class TroubleshootRecordAdmin
     private bool _striped = true;
     private bool _bordered;
     private bool _canExportRecords;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -43,7 +43,7 @@ public partial class TroubleshootRecordAdmin
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canExportRecords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Troubleshooting.Export);
     }
-    
+
     private async Task<TableData<TroubleshootingRecordSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var trailResult = await TshootService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
@@ -85,7 +85,7 @@ public partial class TroubleshootRecordAdmin
     private async Task ExportToExcel()
     {
         if (!_canExportRecords) return;
-        
+
         var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
             _pagedData, dataMapping: new Dictionary<string, Func<TroubleshootingRecordSlim, object>>
         {

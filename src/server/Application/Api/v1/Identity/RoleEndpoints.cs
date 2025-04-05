@@ -32,7 +32,7 @@ public static class RoleEndpoints
         app.MapDelete(ApiRouteConstants.Identity.Role.Delete, DeleteRole).ApiVersionOne();
         app.MapPost(ApiRouteConstants.Identity.Role.Create, CreateRole).ApiVersionOne();
         app.MapPatch(ApiRouteConstants.Identity.Role.Update, UpdateRole).ApiVersionOne();
-        
+
         // Users
         app.MapGet(ApiRouteConstants.Identity.Role.GetRolesForUser, GetRolesForUser).ApiVersionOne();
         app.MapGet(ApiRouteConstants.Identity.Role.IsUserInRole, IsUserInRole).ApiVersionOne();
@@ -61,7 +61,7 @@ public static class RoleEndpoints
             {
                 return await PaginatedResult<IEnumerable<RoleResponse>>.FailAsync(result.Messages);
             }
-            
+
             var convertedResult = await PaginatedResult<IEnumerable<RoleResponse>>.SuccessAsync(
                 result.Data.ToResponses(),
                 result.StartPage,
@@ -217,7 +217,7 @@ public static class RoleEndpoints
             var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
             var roleResponse = await roleService.AddUserToRoleAsync(userId, roleId, currentUserId);
             if (!roleResponse.Succeeded) return await Result<bool>.FailAsync(roleResponse.Messages);
-            
+
             return await Result.SuccessAsync("Successfully added user to role!");
         }
         catch (Exception ex)
@@ -243,7 +243,7 @@ public static class RoleEndpoints
             var currentUserId = (await currentUserService.GetCurrentUserId()).GetFromNullable();
             var roleResponse = await roleService.RemoveUserFromRoleAsync(userId, roleId, currentUserId);
             if (!roleResponse.Succeeded) return await Result<bool>.FailAsync(roleResponse.Messages);
-            
+
             return await Result.SuccessAsync("Successfully removed user from role!");
         }
         catch (Exception ex)
@@ -265,7 +265,7 @@ public static class RoleEndpoints
         {
             var roleResponse = await roleService.GetRolesForUser(userId);
             if (!roleResponse.Succeeded) return await Result<List<RoleResponse>>.FailAsync(roleResponse.Messages);
-            
+
             return await Result<List<RoleResponse>>.SuccessAsync(roleResponse.Data.ToResponses());
         }
         catch (Exception ex)

@@ -14,7 +14,7 @@ public partial class CopyTextDialog
     [Parameter] public int IconHeightPixels { get; set; } = 75;
 
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
 
 
@@ -29,7 +29,7 @@ public partial class CopyTextDialog
 
         Snackbar.Add("Successfully copied to your clipboard!", Severity.Success);
     }
-    
+
     private void Close()
     {
         MudDialog.Cancel();

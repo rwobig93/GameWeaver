@@ -43,20 +43,20 @@ public class GameServerService : IGameServerService
         var steamCmdDir = OsHelpers.GetSteamCmdDirectory();
         var steamCmdPath = OsHelpers.GetSteamCmdPath();
         var steamCmdDownloadPath = Path.Combine(OsHelpers.GetSteamCachePath(), "steamcmd.zip");
-        
+
         if (!File.Exists(steamCmdPath))
         {
             SteamCmdUpdateInProgress = true;
             _logger.Information("SteamCMD doesn't exist, installing fresh");
             _logger.Debug("SteamCMD path: {File}", steamCmdPath);
-            
+
             var downloadResult = await DownloadSteamCmd(steamCmdDownloadPath);
             if (!downloadResult.Succeeded)
             {
                 SteamCmdUpdateInProgress = false;
                 return downloadResult;
             }
-            
+
             var extractResult = await ExtractSteamCmdArchive(steamCmdDownloadPath, steamCmdDir);
             if (!extractResult.Succeeded)
             {
@@ -67,7 +67,7 @@ public class GameServerService : IGameServerService
             SteamCmdUpdateInProgress = false;
             _logger.Information("Successfully installed SteamCMD at {Path}", steamCmdPath);
         }
-        
+
         _logger.Debug("SteamCMD is installed, checking for updates...");
         SteamCmdUpdateInProgress = true;
         var updateResult = await RunSteamCmdCommand(SteamConstants.CommandUpdate, true);
@@ -82,7 +82,7 @@ public class GameServerService : IGameServerService
         SteamCmdUpdateInProgress = true;
         var steamCmdDir = new DirectoryInfo(OsHelpers.GetSteamCmdDirectory());
         _logger.Information("Clearing SteamCMD data at: {Directory}", steamCmdDir);
-        
+
         foreach (var file in steamCmdDir.EnumerateFiles())
         {
             try
@@ -92,7 +92,7 @@ public class GameServerService : IGameServerService
                     _logger.Verbose("Skipping steamcmd binary: {File}", file.FullName);
                     continue;
                 }
-                
+
                 _logger.Debug("Deleting File: {File}", file.FullName);
                 file.Delete();
             }
@@ -116,7 +116,7 @@ public class GameServerService : IGameServerService
             }
         }
         _logger.Information("Finished deleting SteamCMD data directories");
-        
+
         RunSteamCmdCommand(SteamConstants.CommandUpdate, true).RunSynchronously();
     }
 
@@ -155,7 +155,7 @@ public class GameServerService : IGameServerService
         {
             Directory.CreateDirectory(destinationPath);
             _logger.Debug("Created SteamCMD directory for archive extraction: {Directory}", destinationPath);
-            
+
             ZipFile.ExtractToDirectory(archivePath, destinationPath);
             return await Result.SuccessAsync();
         }
@@ -217,7 +217,7 @@ public class GameServerService : IGameServerService
                 {
                     return;
                 }
-                
+
                 _logger.Debug("STEAMCMD_OUTPUT[{ProcessId}]: {SteamCmdReceived}", process.Id, received);
             }
 
@@ -246,7 +246,7 @@ public class GameServerService : IGameServerService
         var createRequest = await _gameServerRepository.CreateAsync(gameServer);
         if (!createRequest.Succeeded)
             return await Result<Guid>.FailAsync(createRequest.Messages);
-        
+
         return await Result<Guid>.SuccessAsync(gameServer.Id);
     }
 
@@ -269,7 +269,7 @@ public class GameServerService : IGameServerService
             {
                 return await Result.FailAsync(gameServerRequest.Messages);
             }
-            
+
             var gameServer = gameServerRequest.Data;
             if (!Directory.Exists(gameServer.GetInstallDirectory()))
             {
@@ -311,12 +311,12 @@ public class GameServerService : IGameServerService
             _logger.Debug("Deleted old manual server client: [{GameserverId}]{GameserverName} => {Filename}",
                 gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
         }
-                
+
         File.WriteAllBytes(clientDownloadPath, serverClientDownload.Data.Content);
         _logger.Debug("Successfully saved game server client to the local file system: [{GameserverId}]{GameserverName} => {Filename}",
             gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
 
-        var downloadedHash = FileHelpers.ComputeSha256Hash(clientDownloadPath);
+        var downloadedHash = FileHelpers.ComputeFileContentSha256Hash(clientDownloadPath);
         if (downloadedHash != serverClientDownload.Data.HashSha256)
         {
             if (secondRun)
@@ -328,7 +328,7 @@ public class GameServerService : IGameServerService
                 return await Result.FailAsync(
                     $"Second install / update failed and hash doesn't match [{gameServer.Id}]{gameServer.ServerName} => {serverClientDownload.Data.FileName}");
             }
-            
+
             _logger.Error("Integrity hash doesn't match for downloaded file: [{GameserverId}]{GameserverName} => {Filename}",
                 gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
             _logger.Error("  {Filename} expected hash: {IntegrityHash}", serverClientDownload.Data.FileName, serverClientDownload.Data.HashSha256);
@@ -337,7 +337,7 @@ public class GameServerService : IGameServerService
         }
 
         if (serverClientDownload.Data.Format != FileStorageFormat.ArchiveZip) return serverClientDownload;
-        
+
         ZipFile.ExtractToDirectory(clientDownloadPath, gameServer.GetInstallDirectory());
         _logger.Debug("Extracted zip archive directly into game server install directory: [{GameserverId}]{GameserverName} => {Filename}",
             gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
@@ -356,7 +356,7 @@ public class GameServerService : IGameServerService
                 return steamInstall;
             }
         }
-        
+
         _logger.Information("Successfully installed/updated gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
         return steamInstall;
     }
@@ -377,7 +377,7 @@ public class GameServerService : IGameServerService
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
                 return await Result.FailAsync(gameServerRequest.Messages);
-            
+
             _logger.Debug("Attempting to uninstall gameserver: {GameserverId}", id);
             Directory.Delete(gameServerRequest.Data.GetInstallDirectory(), true);
             _logger.Information("Successfully uninstalled gameserver: {GameserverId}", id);
@@ -405,7 +405,7 @@ public class GameServerService : IGameServerService
             .ToList();
 
         if (backupDirectories.Count <= _generalConfig.Value.GameserverBackupsToKeep) return;
-        
+
         var directoriesToDelete = backupDirectories.Take(backupDirectories.Count - _generalConfig.Value.GameserverBackupsToKeep);
         foreach (var directory in directoriesToDelete)
         {
@@ -428,7 +428,7 @@ public class GameServerService : IGameServerService
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
                 return await Result.FailAsync(gameServerRequest.Messages);
-            
+
             var gameServer = gameServerRequest.Data;
             var backupPaths = gameServer.Resources.Where(x => x.Type == ResourceType.BackupPath).ToList();
             if (backupPaths.Count == 0)
@@ -437,9 +437,9 @@ public class GameServerService : IGameServerService
                     gameServer.Id, gameServer.ServerName);
                 return await Result.SuccessAsync();
             }
-            
+
             _logger.Debug("Starting backup for gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            
+
             var backupRootPath = Path.Combine(OsHelpers.GetDefaultBackupPath(), gameServer.Id.ToString());
             var backupTimestamp = _dateTimeService.NowDatabaseTime.ToString("yyyyMMdd_HHmm");
             var backupIndex = 0;
@@ -453,9 +453,9 @@ public class GameServerService : IGameServerService
             }
 
             _logger.Information("Finished backing up gameserver: [{GameserverId}]{GameserverName}", gameServer.Id, gameServer.ServerName);
-            
+
             DeleteOldBackups(backupRootPath);
-            
+
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -470,7 +470,7 @@ public class GameServerService : IGameServerService
         var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
         if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
             return await Result.FailAsync(gameServerRequest.Messages);
-            
+
         var gameServer = gameServerRequest.Data;
         var startupBinaries = gameServer.Resources.Where(x => x is {Startup: true, Type: ResourceType.Executable}).ToList();
         var failures = new List<string>();
@@ -486,7 +486,7 @@ public class GameServerService : IGameServerService
                     failures.Add("Startup resource for gameserver has an empty path, I don't know what to start!");
                     continue;
                 }
-                
+
                 var gameServerDirectory = gameServer.GetInstallDirectory();
                 var fullPath = Path.Combine(gameServerDirectory, binary.Path);
 
@@ -497,7 +497,7 @@ public class GameServerService : IGameServerService
                     failures.Add($"Startup resource for gameserver doesn't exist: [{gameServer.Id}]{gameServer.ServerName} => {fullPath}");
                     continue;
                 }
-            
+
                 var startedProcess = Process.Start(new ProcessStartInfo
                 {
                     Arguments = binary.Args,
@@ -516,7 +516,7 @@ public class GameServerService : IGameServerService
                 }
 
                 startedProcess.PriorityClass = ProcessPriorityClass.High;
-            
+
                 _logger.Information("Started process for gameserver: [{GameserverId}]{GameserverName}: {ProcessId}",
                     gameServer.Id, gameServer.ServerName, startedProcess.Id);
             }
@@ -541,7 +541,7 @@ public class GameServerService : IGameServerService
             var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
             if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
                 return await Result.FailAsync(gameServerRequest.Messages);
-            
+
             var gameServer = gameServerRequest.Data;
             var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
             if (gameserverProcesses.Count == 0)
@@ -573,6 +573,22 @@ public class GameServerService : IGameServerService
         return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate {Id = id, ServerState = state});
     }
 
+    public async Task<IResult> UpdateState(Guid id, ServerState state, string storageConfigHash)
+    {
+        return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate {Id = id, ServerState = state, StorageConfigHash = storageConfigHash});
+    }
+
+    public async Task<IResult> UpdateState(Guid id, ServerState state, string runningConfigHash, string storageConfigHash)
+    {
+        return await _gameServerRepository.UpdateAsync(new GameServerLocalUpdate
+        {
+            Id = id,
+            ServerState = state,
+            RunningConfigHash = runningConfigHash,
+            StorageConfigHash = storageConfigHash
+        });
+    }
+
     public async Task<IResult> Housekeeping()
     {
         return await _gameServerRepository.SaveAsync();
@@ -587,14 +603,14 @@ public class GameServerService : IGameServerService
             {
                 return await Result<ServerState>.FailAsync(gameServerRequest.Messages);
             }
-            
+
             var gameServer = gameServerRequest.Data;
 
             if (!Directory.Exists(gameServer.GetInstallDirectory()))
             {
                 return await Result<ServerState>.SuccessAsync(ServerState.Uninstalled);
             }
-            
+
             var gameserverProcesses = OsHelpers.GetProcessesByDirectory(gameServer.GetInstallDirectory()).ToList();
             var gameserverListeningSockets = gameServer.GetListeningSockets();
 
@@ -645,7 +661,7 @@ public class GameServerService : IGameServerService
                 })
                 .ToList();
             var noPathIniItems = configFile.ConfigSets.Where(x => string.IsNullOrWhiteSpace(x.Path));
-            
+
             foreach (var config in pathIniItems)
             {
                 configFileContent.AddOrUpdateKey(config.Category, config.Key, $"({config.Value})");
@@ -666,7 +682,7 @@ public class GameServerService : IGameServerService
 
                 return await Result.FailAsync();
             }
-            
+
             _logger.Debug("Saved ini config file at {FilePath}", filePath);
             return await Result.SuccessAsync();
         }
@@ -735,7 +751,7 @@ public class GameServerService : IGameServerService
         {
             return await Result.FailAsync("XML config file is missing at least one root element, unable to create config file");
         }
-        
+
         var xmlDocument = new XDocument(new XElement(rootElement.Key));
         if (loadExisting && File.Exists(filePath))
         {
@@ -764,8 +780,8 @@ public class GameServerService : IGameServerService
                 .Where(x => x.Length == 2)
                 .Select(x => new XAttribute(x[0], x[1]));
             var currentElement = xmlDocument.Root;
-            
-            // Create parent elements if there are any and move to the direct 
+
+            // Create parent elements if there are any and move to the direct
             if (!string.IsNullOrWhiteSpace(configItem.Path))
             {
                 foreach (var element in parentElements)
@@ -790,11 +806,11 @@ public class GameServerService : IGameServerService
                 {
                     newElement.Add(configItemAttributes);
                 }
-                
+
                 currentElement.Add(newElement);
                 continue;
             }
-            
+
             // Update the existing element's value and attributes
             existingElement.Value = configItem.Value;
             existingElement.RemoveAttributes();
@@ -836,7 +852,7 @@ public class GameServerService : IGameServerService
         }
 
         var maxConfigItemLines = configFile.ConfigSets.Select(item => int.Parse(item.Key)).Max();
-        
+
         // Fill any config item gaps between lines, if nothing exists in the file at that line we will add an empty line
         foreach (var line in Enumerable.Range(0, maxConfigItemLines))
         {
@@ -844,7 +860,7 @@ public class GameServerService : IGameServerService
             {
                 continue;
             }
-            
+
             configFile.ConfigSets.Add(new ConfigurationItemLocal { Key = line.ToString(), Value = string.Empty });
         }
 
@@ -856,7 +872,7 @@ public class GameServerService : IGameServerService
                 // Existing line number isn't empty and our config item line is, so we'll leave the line value as it is
                 continue;
             }
-            
+
             fileContent[lineIndex] = configItem.Value;
         }
 
@@ -895,12 +911,12 @@ public class GameServerService : IGameServerService
                 _logger.Error("Failed to ensure config path exists: {Error}", ex.Message);
                 return await Result.FailAsync($"Failed to ensure config path exists: {ex.Message}");
             }
-            
+
             foreach (var item in configFile.ConfigSets)
             {
                 item.Value = gameServerRequest.Data.UpdateWithServerValues(item.Value);
             }
-            
+
             switch (configFile)
             {
                 case {ContentType: ContentType.Json}:

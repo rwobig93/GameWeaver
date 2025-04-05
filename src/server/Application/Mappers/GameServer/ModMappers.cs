@@ -24,7 +24,7 @@ public static class ModMappers
             DeletedOn = modDb.DeletedOn
         };
     }
-    
+
     public static IEnumerable<ModSlim> ToSlims(this IEnumerable<ModDb> modDbs)
     {
         return modDbs.Select(ToSlim);

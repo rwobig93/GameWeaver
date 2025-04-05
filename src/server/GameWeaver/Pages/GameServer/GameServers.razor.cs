@@ -12,11 +12,11 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
     [Inject] private IGameServerService GameServerService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
-    
+
     private IEnumerable<GameServerSlim> _pagedData = [];
     private AppUserPreferenceFull _userPreferences = new();
     private Guid _loggedInUserId = Guid.Empty;
-    
+
     private string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
@@ -36,7 +36,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
             await GetPermissions();
             await GetUserPreferences();
             await RefreshData();
-            
+
             _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
         }
     }
@@ -47,7 +47,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         await InvokeAsync(RefreshData);
     }
 
@@ -64,10 +64,10 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         _userPreferences = (await AccountService.GetPreferences(currentUserId.GetFromNullable())).Data;
     }
-    
+
     private async Task RefreshData()
     {
         var response = await GameServerService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize, _loggedInUserId);
@@ -83,7 +83,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         GetCurrentPageViewData();
         StateHasChanged();
     }
-    
+
     private string GetCurrentPageViewData()
     {
         var currentStart = 1;
@@ -104,7 +104,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
 
         return $"{currentStart}-{currentEnd} of {_totalItems}";
     }
-    
+
     private async Task PageChanged(int pageNumber)
     {
         _currentPage = pageNumber;
@@ -117,7 +117,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var dialog = await DialogService.ShowAsync<GameServerCreateDialog>("Create Gameserver", new DialogParameters(), dialogOptions);
         var dialogResult = await dialog.Result;
@@ -130,7 +130,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         Snackbar.Add("Successfully created new gameserver!", Severity.Success);
         NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(createdGameServerId));
     }
-    
+
     private async Task SearchKeyDown(KeyboardEventArgs keyArgs)
     {
         if (keyArgs.Code is "Enter" or "NumpadEnter")
@@ -144,7 +144,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         await RefreshData();
         await WebClientService.InvokeScrollToTop();
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         _timer?.Dispose();

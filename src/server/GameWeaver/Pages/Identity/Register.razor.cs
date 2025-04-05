@@ -17,7 +17,7 @@ public partial class Register
     private string DesiredPassword { get; set; } = "";
     private string ConfirmPassword { get; set; } = "";
     private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
-    
+
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _passwordConfirmInput = InputType.Password;
@@ -68,7 +68,7 @@ public partial class Register
     private bool IsRequiredInformationPresent()
     {
         var informationValid = true;
-        
+
         if (string.IsNullOrWhiteSpace(DesiredUsername)) {
             Snackbar.Add("Username field is empty", Severity.Error); informationValid = false; }
         if (string.IsNullOrWhiteSpace(DesiredEmail)) {
@@ -91,7 +91,7 @@ public partial class Register
             _passwordInputIcon = Icons.Material.Filled.Visibility;
             return;
         }
-        
+
         _passwordInput = InputType.Password;
         _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     }
@@ -104,7 +104,7 @@ public partial class Register
             _passwordConfirmInputIcon = Icons.Material.Filled.Visibility;
             return;
         }
-        
+
         _passwordConfirmInput = InputType.Password;
         _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
     }
@@ -116,14 +116,14 @@ public partial class Register
         DesiredPassword = "MZB*R*odX%Hy!J6b7Jrm6fK@PJ77v*dfWB$*9PtUV%zPTetSb!VP!uk";
         ConfirmPassword = "MZB*R*odX%Hy!J6b7Jrm6fK@PJ77v*dfWB$*9PtUV%zPTetSb!VP!uk";
     }
-    
+
     private IEnumerable<string> ValidatePasswordRequirements(string content)
     {
         var passwordIssues = AccountHelpers.GetAnyIssuesWithPassword(content);
         if (!string.IsNullOrEmpty(content) && passwordIssues.Any())
             yield return passwordIssues.First();
     }
-    
+
     private IEnumerable<string> ValidatePasswordsMatch(string content)
     {
         if (!string.IsNullOrEmpty(content) &&

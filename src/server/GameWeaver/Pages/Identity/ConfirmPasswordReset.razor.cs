@@ -9,9 +9,9 @@ public partial class ConfirmPasswordReset
 
     [Parameter] public string UserId { get; set; } = "";
     [Parameter] public string ConfirmationCode { get; set; } = "";
-    
+
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
-    
+
     private bool IsCodeValid { get; set; }
     private bool HasValidationRan { get; set; }
     private bool PasswordChanged { get; set; }
@@ -19,12 +19,12 @@ public partial class ConfirmPasswordReset
     private string DesiredPassword { get; set; } = "";
     private string ConfirmPassword { get; set; } = "";
     private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
-    
+
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     private InputType _passwordConfirmInput = InputType.Password;
     private string _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
-    
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -42,7 +42,7 @@ public partial class ConfirmPasswordReset
     {
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-        
+
         if (queryParameters.TryGetValue("userId", out var userId))
             UserId = userId!;
         if (queryParameters.TryGetValue("confirmationCode", out var confirmationCode))
@@ -78,7 +78,7 @@ public partial class ConfirmPasswordReset
             _passwordInputIcon = Icons.Material.Filled.Visibility;
             return;
         }
-        
+
         _passwordInput = InputType.Password;
         _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     }
@@ -91,7 +91,7 @@ public partial class ConfirmPasswordReset
             _passwordConfirmInputIcon = Icons.Material.Filled.Visibility;
             return;
         }
-        
+
         _passwordConfirmInput = InputType.Password;
         _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
     }
@@ -105,18 +105,18 @@ public partial class ConfirmPasswordReset
             confirmationResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         confirmationResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Success));
         PasswordChanged = true;
     }
-    
+
     private IEnumerable<string> ValidatePasswordRequirements(string content)
     {
         var passwordIssues = AccountHelpers.GetAnyIssuesWithPassword(content);
         if (!string.IsNullOrEmpty(content) && passwordIssues.Any())
             yield return passwordIssues.First();
     }
-    
+
     private IEnumerable<string> ValidatePasswordsMatch(string content)
     {
         if (!string.IsNullOrEmpty(content) &&

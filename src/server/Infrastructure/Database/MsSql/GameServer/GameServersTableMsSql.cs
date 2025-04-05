@@ -9,7 +9,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "GameServers";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GameServersTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 7,
@@ -39,6 +39,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     [Modded] BIT NOT NULL,
                     [Private] BIT NOT NULL,
                     [ServerState] INT NOT NULL,
+                    [RunningConfigHash] NVARCHAR(128) NOT NULL,
+                    [StorageConfigHash] NVARCHAR(128) NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] DATETIME2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -48,7 +50,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -65,7 +67,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -97,7 +99,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.ServerName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -113,7 +115,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,
@@ -129,7 +131,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostId = new()
     {
         Table = Table,
@@ -145,7 +147,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameId = new()
     {
         Table = Table,
@@ -161,7 +163,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameProfileId = new()
     {
         Table = Table,
@@ -178,7 +180,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByParentGameProfileId = new()
     {
         Table = Table,
@@ -195,7 +197,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByServerBuildVersion = new()
     {
         Table = Table,
@@ -212,7 +214,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByServerName = new()
     {
         Table = Table,
@@ -228,7 +230,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -256,6 +258,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @Modded BIT,
                 @Private BIT,
                 @ServerState INT,
+                @RunningConfigHash NVARCHAR(128),
+                @StorageConfigHash NVARCHAR(128),
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn DATETIME2,
                 @IsDeleted BIT
@@ -263,13 +267,14 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             begin
                 INSERT into dbo.[{Table.TableName}]  (Id, OwnerId, HostId, GameId, GameProfileId, ParentGameProfileId, ServerBuildVersion, ServerName, Password, PasswordRcon,
                                                       PasswordAdmin, PublicIp, PrivateIp, ExternalHostname, PortGame, PortPeer, PortQuery, PortRcon, Modded, Private, ServerState,
-                                                      CreatedBy, CreatedOn, IsDeleted)
+                                                      RunningConfigHash, StorageConfigHash, CreatedBy, CreatedOn, IsDeleted)
                 OUTPUT INSERTED.Id
                 VALUES (@Id, @OwnerId, @HostId, @GameId, @GameProfileId, @ParentGameProfileId, @ServerBuildVersion, @ServerName, @Password, @PasswordRcon, @PasswordAdmin,
-                        @PublicIp, @PrivateIp, @ExternalHostname, @PortGame, @PortPeer, @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @CreatedBy, @CreatedOn, @IsDeleted);
+                        @PublicIp, @PrivateIp, @ExternalHostname, @PortGame, @PortPeer, @PortQuery, @PortRcon, @Modded, @Private, @ServerState, @RunningConfigHash,
+                        @StorageConfigHash, @CreatedBy, @CreatedOn, @IsDeleted);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -297,7 +302,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     OR g.ServerName LIKE '%' + @SearchTerm + '%');
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -326,7 +331,7 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.ServerName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
@@ -354,6 +359,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 @Modded BIT = null,
                 @Private BIT = null,
                 @ServerState INT = null,
+                @RunningConfigHash NVARCHAR(128) = null,
+                @StorageConfigHash NVARCHAR(128) = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn DATETIME2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
@@ -370,7 +377,8 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                     PublicIp = COALESCE(@PublicIp, PublicIp), PrivateIp = COALESCE(@PrivateIp, PrivateIp), ExternalHostname = COALESCE(@ExternalHostname, ExternalHostname),
                     PortGame = COALESCE(@PortGame, PortGame), PortPeer = COALESCE(@PortPeer, PortPeer), PortQuery = COALESCE(@PortQuery, PortQuery),
                     PortRcon = COALESCE(@PortRcon, PortRcon), Modded = COALESCE(@Modded, Modded), Private = COALESCE(@Private, Private),
-                    ServerState = COALESCE(@ServerState, ServerState), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    ServerState = COALESCE(@ServerState, ServerState), RunningConfigHash = COALESCE(@RunningConfigHash, RunningConfigHash),
+                    StorageConfigHash = COALESCE(@StorageConfigHash, StorageConfigHash), CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;

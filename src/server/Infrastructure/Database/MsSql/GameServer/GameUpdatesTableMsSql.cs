@@ -9,7 +9,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "GameUpdates";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GameUpdatesTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -28,7 +28,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -42,7 +42,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteForGameId = new()
     {
         Table = Table,
@@ -56,7 +56,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 WHERE GameId = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -86,7 +86,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.BuildVersionReleased DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -101,7 +101,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 WHERE g.Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByGameId = new()
     {
         Table = Table,
@@ -116,7 +116,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 WHERE g.GameId = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -137,7 +137,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@Id, @GameId, @SupportsWindows, @SupportsLinux, @SupportsMac, @BuildVersion, @BuildVersionReleased);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -156,7 +156,7 @@ public class GameUpdatesTableMsSql : IMsSqlEnforcedEntity
                     OR g.BuildVersion LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,

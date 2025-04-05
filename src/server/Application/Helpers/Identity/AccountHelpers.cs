@@ -55,7 +55,7 @@ public static class AccountHelpers
             {
                 Dns.GetHostEntry(validEmail.Host);
             }
-            
+
             return true;
         }
         catch
@@ -149,7 +149,7 @@ public static class AccountHelpers
             return false;
         }
     }
-    
+
     public static bool IsApiAuthenticated(this IEnumerable<Claim> principalClaims)
     {
         try
@@ -164,7 +164,7 @@ public static class AccountHelpers
             return false;
         }
     }
-    
+
     public static bool IsHostOrApiAuthenticated(this IEnumerable<Claim> principalClaims)
     {
         try

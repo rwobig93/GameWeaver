@@ -76,14 +76,14 @@ public class ControlServerWorker : BackgroundService
     {
         var previousServerStatus = _serverService.ServerIsUp;
         var serverIsUp = await _serverService.CheckIfServerIsUp();
-        
+
         if (previousServerStatus != serverIsUp)
             _logger.Information("Server connectivity status changed, server connectivity is now: {ServerStatus}", serverIsUp);
 
         if (_serverService is {ServerIsUp: true, RegisteredWithServer: false})
         {
             var registerResponse = await _serverService.RegistrationConfirm();
-            
+
             // On a new registration we need to let the control server know about our host, same as on startup
             if (!string.IsNullOrWhiteSpace(registerResponse.Data?.Data.HostToken) && registerResponse.Data.Data.HostId != Guid.Empty)
             {
@@ -97,23 +97,23 @@ public class ControlServerWorker : BackgroundService
                     WorkData = null
                 });
             }
-            
+
             // Waiting on successful registration, we'll add a delay to not hammer the server waiting
             await Task.Delay(5000);
         }
-        
+
         _logger.Verbose("Control Server is up: {ServerStatus}", serverIsUp);
     }
 
     private async Task CheckInWithControlServer()
     {
         if (!_serverService.ServerIsUp || !_serverService.RegisteredWithServer) { return; }
-        
+
         var currentResourceUsage = HostWorker.CurrentHostResourceUsage;
-        
+
         if (currentResourceUsage.CpuUsage == 0 || currentResourceUsage.RamUsage == 0 || currentResourceUsage.Uptime == 0)
             return;
-        
+
         var checkInRequest = new HostCheckInRequest
         {
             SendTimestamp = _dateTimeService.NowDatabaseTime,
@@ -123,7 +123,7 @@ public class ControlServerWorker : BackgroundService
             NetworkOutBytes = currentResourceUsage.NetworkOutBytes,
             NetworkInBytes = currentResourceUsage.NetworkInBytes
         };
-        
+
         var checkInResponse = await _serverService.Checkin(checkInRequest);
         if (!checkInResponse.Succeeded)
         {
@@ -131,7 +131,7 @@ public class ControlServerWorker : BackgroundService
             return;
         }
         if (checkInResponse.Data is null) return;
-        
+
         foreach (var work in checkInResponse.Data.ToList())
         {
             var matchingWorkRequest = await _weaverWorkService.GetByIdAsync(work.Id);
@@ -140,17 +140,17 @@ public class ControlServerWorker : BackgroundService
                 _logger.Verbose("Already picked up work was sent again: [{WeaverworkId}]", work.Id);
                 continue;
             }
-            
+
             var createRequest = await _weaverWorkService.CreateAsync(work);
             if (!createRequest.Succeeded)
             {
                 _logger.Error("Failure occurred creating weaver work: {Error}", createRequest.Messages);
                 continue;
             }
-            
+
             _logger.Verbose("Successfully added weaver work: [{WeaverworkId}]{WeaverworkTarget}", work.Id, work.TargetType);
         }
-        
+
         _logger.Verbose("Successfully checked in with the control server");
     }
 
@@ -163,13 +163,13 @@ public class ControlServerWorker : BackgroundService
     private async Task SendOutQueueCommunication()
     {
         if (!_serverService.RegisteredWithServer) { return; }
-        
+
         if (WorkUpdateQueue.IsEmpty)
         {
             _logger.Verbose("Outgoing communication queue is empty, skipping...");
             return;
         }
-        
+
         if (!_serverService.ServerIsUp)
         {
             _logger.Warning("Server isn't up, skipping outgoing communication queue enumeration, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);
@@ -182,9 +182,9 @@ public class ControlServerWorker : BackgroundService
         {
             runAttemptsLeft -= 1;
             if (!WorkUpdateQueue.TryDequeue(out var work)) continue;
-            
+
             _logger.Debug("Sending outgoing communication => {WorkId}", work.Id);
-            
+
             var response = await _serverService.WorkStatusUpdate(work);
             if (response.Succeeded)
             {
@@ -193,7 +193,7 @@ public class ControlServerWorker : BackgroundService
                     // GameServerStateUpdate from realtime status checks won't be bound to work, so we'll skip the internal update
                     continue;
                 }
-                
+
                 var localUpdateRequest = await _weaverWorkService.UpdateStatusAsync(work.Id, work.Status);
                 if (!localUpdateRequest.Succeeded)
                 {
@@ -202,7 +202,7 @@ public class ControlServerWorker : BackgroundService
                         _logger.Error("Failure updating local weaver work status occurred: [{Weaverworkid}]{Error}", work.Id, message);
                     }
                 }
-                
+
                 _logger.Debug("Server successfully processed outgoing communication: {WorkId}", work.Id);
                 continue;
             }
@@ -213,12 +213,12 @@ public class ControlServerWorker : BackgroundService
                     work.AttemptCount, work.Id);
                 continue;
             }
-            
+
             _logger.Error("Got a failure response from outgoing communication, re-queueing: [{WorkId}]", work.Id);
             work.AttemptCount += 1;
             AddWeaverWorkUpdate(work);
         }
-        
+
         _logger.Debug("Finished parsing outgoing weaver communication queue, current items waiting: {OutCommItemCount}", WorkUpdateQueue.Count);
     }
 }

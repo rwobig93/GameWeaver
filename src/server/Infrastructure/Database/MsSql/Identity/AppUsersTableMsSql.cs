@@ -9,7 +9,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "AppUsers";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUsersTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 1,
@@ -42,7 +42,7 @@ public class AppUsersTableMsSql : IMsSqlEnforcedEntity
                 CREATE INDEX [IX_User_Email] ON [dbo].[{TableName}] ([Email])
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,

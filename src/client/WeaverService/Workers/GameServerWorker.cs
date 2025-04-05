@@ -1,4 +1,5 @@
-﻿using Application.Helpers;
+﻿using System.Text;
+using Application.Helpers;
 using Application.Mappers;
 using Application.Services;
 using Application.Settings;
@@ -43,7 +44,7 @@ public class GameServerWorker : BackgroundService
         _logger.Debug("Started {ServiceName} service", nameof(GameServerWorker));
 
         await CheckGameServersRealtimeState();
-        
+
         await base.StartAsync(stoppingToken);
     }
 
@@ -54,7 +55,7 @@ public class GameServerWorker : BackgroundService
             try
             {
                 _lastRuntime = _dateTimeService.NowDatabaseTime;
-                
+
                 await ProcessWorkQueue();
                 await BackupGameServers();
                 await CheckGameServersRealtimeState();
@@ -76,7 +77,7 @@ public class GameServerWorker : BackgroundService
         _logger.Debug("Stopping {ServiceName} service", nameof(GameServerWorker));
 
         await _gameServerService.Housekeeping();
-        
+
         _logger.Debug("Stopped {ServiceName} service", nameof(GameServerWorker));
         await base.StopAsync(stoppingToken);
     }
@@ -85,20 +86,20 @@ public class GameServerWorker : BackgroundService
     {
         var inProgressCount = await _weaverWorkService.GetCountInProgressGameserverAsync();
         var waitingCount = await _weaverWorkService.GetCountWaitingGameserverAsync();
-        
+
         if (inProgressCount.Data >= _generalConfig.Value.SimultaneousQueueWorkCountMax)
         {
             _logger.Verbose("In progress gameserver work [{InProgressWork}] is at max [{MaxWork}], moving on | Waiting: {WaitingWork}",
                 inProgressCount.Data, _generalConfig.Value.SimultaneousQueueWorkCountMax, waitingCount.Data);
             return;
         }
-        
+
         if (waitingCount.Data < 1)
         {
             _logger.Verbose("No gameserver work waiting, moving on");
             return;
         }
-        
+
         // Work is waiting, and we have available queue space, adding next work to the thread pool
         var attemptCount = 0;
         while (inProgressCount.Data < _generalConfig.Value.SimultaneousQueueWorkCountMax)
@@ -106,7 +107,7 @@ public class GameServerWorker : BackgroundService
             inProgressCount = await _weaverWorkService.GetCountInProgressGameserverAsync();
             waitingCount = await _weaverWorkService.GetCountWaitingGameserverAsync();
             if (waitingCount.Data < 1) break;
-            
+
             if (attemptCount >= 5)
             {
                 _logger.Error("Reached max attempt count in the gameserver work queue, quiting cycle queue processing");
@@ -129,7 +130,7 @@ public class GameServerWorker : BackgroundService
                 continue;
             }
             nextWork.Data.SendStatusUpdate(WeaverWorkState.InProgress, "Work is now in progress");
-            
+
             // ReSharper disable once AsyncVoidLambda
             ThreadHelper.QueueWork(async _ => await HandleWork(nextWork.Data));
         }
@@ -144,10 +145,10 @@ public class GameServerWorker : BackgroundService
         if (_dateTimeService.NowDatabaseTime < _lastBackupTime.Value.AddMinutes(_generalConfig.Value.GameserverBackupIntervalMinutes)) return;
 
         var allGameServers = await _gameServerService.GetAll();
-        
+
         foreach (var gameserver in allGameServers.Data)
             await _gameServerService.BackupGame(gameserver.Id);
-        
+
         _lastBackupTime = _dateTimeService.NowDatabaseTime;
     }
 
@@ -165,7 +166,7 @@ public class GameServerWorker : BackgroundService
         foreach (var gameServer in allGameServers.Data)
         {
             var realtimeState = (await _gameServerService.GetCurrentRealtimeState(gameServer.Id)).Data;
-            
+
             if (gameServer.ServerState == realtimeState)
             {
                 continue;
@@ -174,7 +175,7 @@ public class GameServerWorker : BackgroundService
             {
                 continue;
             }
-            
+
             switch (realtimeState)
             {
                 case ServerState.Shutdown when
@@ -201,7 +202,7 @@ public class GameServerWorker : BackgroundService
                 ServerState = realtimeState
             });
         }
-        
+
         _lastStateCheck = _dateTimeService.NowDatabaseTime;
     }
 
@@ -286,7 +287,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return await Result<GameServerLocal?>.FailAsync($"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
         }
-        
+
         var gameServerId = _serializerService.DeserializeMemory<Guid>(work.WorkData);
         var gameServerRequest = await _gameServerService.GetById(gameServerId);
         if (gameServerRequest is {Succeeded: true, Data: not null})
@@ -307,7 +308,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return await Result<GameServerLocal?>.FailAsync($"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
         }
-        
+
         var deserializedGameServer = _serializerService.DeserializeMemory<GameServerToHost>(work.WorkData);
         if (deserializedGameServer is null)
         {
@@ -320,7 +321,7 @@ public class GameServerWorker : BackgroundService
         var gameServerRequest = await _gameServerService.GetById(deserializedGameServer.Id);
         if (gameServerRequest is {Succeeded: true, Data: not null})
             return await Result<GameServerLocal?>.SuccessAsync(gameServerRequest.Data);
-        
+
         _logger.Error("Gameserver id provided doesn't match an active Gameserver? [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
         await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
         work.SendStatusUpdate(WeaverWorkState.Failed, "Gameserver id doesn't match an active gameserver this host manages");
@@ -338,7 +339,7 @@ public class GameServerWorker : BackgroundService
         }
         var deserializedServer = _serializerService.DeserializeMemory<GameServerToHost>(work.WorkData);
         if (deserializedServer is not null) return deserializedServer.ToLocal();
-        
+
         _logger.Error("Unable to deserialize work data payload: {WorkId}", work.Id);
         await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
         work.SendStatusUpdate(WeaverWorkState.Failed, $"Unable to deserialize work data payload: {work.Id}");
@@ -356,7 +357,7 @@ public class GameServerWorker : BackgroundService
         }
         var deserializedLocation = _serializerService.DeserializeMemory<LocalResource>(work.WorkData);
         if (deserializedLocation is not null) return deserializedLocation;
-        
+
         _logger.Error("Unable to deserialize work data payload: {WorkId}", work.Id);
         await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Failed);
         work.SendStatusUpdate(WeaverWorkState.Failed, $"Unable to deserialize work data payload: {work.Id}");
@@ -388,10 +389,29 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Failed to update server locally with new state from server [{work.Id}]: {gameServerLocal.Data.Id}");
             return;
         }
-        
+
         await _weaverWorkService.UpdateStatusAsync(work.Id, WeaverWorkState.Completed);
         work.SendStatusUpdate(WeaverWorkState.Completed, "Local gameserver state updated");
         await Task.CompletedTask;
+    }
+
+    private async Task<string> GetConfigurationIntegrityHash(IEnumerable<LocalResource> resources)
+    {
+        StringBuilder fullHashBuilder = new();
+
+        foreach (var resource in resources)
+        {
+            if (!File.Exists(resource.GetFullPath()))
+            {
+                fullHashBuilder.Append(string.Empty);
+                continue;
+            }
+
+            var fileContentHash = FileHelpers.ComputeFileContentSha256Hash(resource.GetFullPath());
+            fullHashBuilder.Append(fileContentHash ?? string.Empty);
+        }
+
+        return await Task.FromResult(FileHelpers.GetIntegrityHash(fullHashBuilder.ToString()));
     }
 
     private async Task StartGameServer(WeaverWork work)
@@ -406,7 +426,7 @@ public class GameServerWorker : BackgroundService
             ServerState = gameServerLocal.Data.ServerState,
             Resources = null
         });
-        
+
         var startResult = await _gameServerService.StartServer(gameServerLocal.Data.Id);
         if (!startResult.Succeeded)
         {
@@ -414,11 +434,11 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, startResult.Messages);
             return;
         }
-        
+
         _logger.Information("Started gameserver processes: [{GameserverId}]{GameserverName}", gameServerLocal.Data.Id, gameServerLocal.Data.ServerName);
 
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.SpinningUp);
-        
+
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
@@ -426,9 +446,9 @@ public class GameServerWorker : BackgroundService
             ServerState = ServerState.SpinningUp,
             Resources = null
         });
-        
+
         var waitingStartTime = _dateTimeService.NowDatabaseTime;
-        
+
         while (true)
         {
             if ((_dateTimeService.NowDatabaseTime - waitingStartTime).Minutes > 15)
@@ -457,16 +477,19 @@ public class GameServerWorker : BackgroundService
                 });
                 break;
             }
-            
+
             if (currentState.Data == ServerState.InternallyConnectable)
             {
-                await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.InternallyConnectable);
+                var configurationHash = await GetConfigurationIntegrityHash(gameServerLocal.Data.Resources);
+                await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.InternallyConnectable, configurationHash, configurationHash);
                 work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
                 {
                     Id = gameServerLocal.Data.Id,
                     BuildVersionUpdated = false,
                     ServerState = ServerState.InternallyConnectable,
-                    Resources = null
+                    Resources = null,
+                    RunningConfigHash = configurationHash,
+                    StorageConfigHash = configurationHash
                 });
                 break;
             }
@@ -476,7 +499,7 @@ public class GameServerWorker : BackgroundService
                 await Task.Delay(TimeSpan.FromMilliseconds(1000));
                 continue;
             }
-            
+
             await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Shutdown);
             work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
             {
@@ -502,7 +525,7 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.ShuttingDown);
-        
+
         var stopResult = await _gameServerService.StopServer(gameServerLocal.Data.Id);
         if (!stopResult.Succeeded)
         {
@@ -516,7 +539,7 @@ public class GameServerWorker : BackgroundService
             await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Unknown);
             return;
         }
-        
+
         _logger.Information("Stopped gameserver processes: [{GameserverId}]{GameserverName}", gameServerLocal.Data.Id, gameServerLocal.Data.ServerName);
 
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Shutdown);
@@ -551,10 +574,10 @@ public class GameServerWorker : BackgroundService
             Resources = null
         });
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Uninstalling);
-        
+
         await _gameServerService.UninstallGame(gameServerLocal.Data.Id);
         _logger.Information("Finished uninstalling gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Data.Id, gameServerLocal.Data.ServerName);
-        
+
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
@@ -578,10 +601,10 @@ public class GameServerWorker : BackgroundService
         });
 
         await _gameServerService.UpdateState(gameServerLocal.Data.Id, ServerState.Updating);
-        
+
         await _gameServerService.InstallOrUpdateGame(gameServerLocal.Data.Id, true);
         _logger.Information("Finished updating gameserver: [{GameserverId}]{GameserverName}", gameServerLocal.Data.Id, gameServerLocal.Data.ServerName);
-        
+
         work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
         {
             Id = gameServerLocal.Data.Id,
@@ -612,10 +635,10 @@ public class GameServerWorker : BackgroundService
 
         var createServerRequest = await _gameServerService.Create(deserializedGameServer);
         if (!createServerRequest.Succeeded) return;
-        
+
         var gameServerRequest = await _gameServerService.GetById(createServerRequest.Data);
         if (!gameServerRequest.Succeeded || gameServerRequest.Data is null) return;
-        
+
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
             Id = gameServerRequest.Data.Id,
@@ -627,9 +650,9 @@ public class GameServerWorker : BackgroundService
 
         var installRequest = await _gameServerService.InstallOrUpdateGame(gameServerRequest.Data.Id);
         if (!installRequest.Succeeded) return;
-        
+
         _logger.Information("Finished installing gameserver: [{GameserverId}]{GameserverName}", gameServerRequest.Data.Id, gameServerRequest.Data.ServerName);
-        
+
         // Start the server for a short time to generate any necessary config files then kill it to complete installation
         work.SendGameServerUpdate(WeaverWorkState.InProgress, new GameServerStateUpdate
         {
@@ -647,7 +670,7 @@ public class GameServerWorker : BackgroundService
         }
 
         await Task.Delay(TimeSpan.FromSeconds(20));
-        
+
         var stopResult = await _gameServerService.StopServer(gameServerRequest.Data.Id);
         if (!stopResult.Succeeded)
         {
@@ -655,7 +678,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, stopResult.Messages);
             return;
         }
-        
+
         var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerRequest.Data.Id);
         if (!configUpdateRequest.Succeeded)
         {
@@ -696,21 +719,19 @@ public class GameServerWorker : BackgroundService
         }
 
         gameServerUpdated.Resources.Add(updatedResource);
-
-        var gameServerLocalUpdateRequest = await _gameServerService.Update(gameServerUpdated.ToUpdate());
-        if (!gameServerLocalUpdateRequest.Succeeded)
-        {
-            work.SendStatusUpdate(WeaverWorkState.Failed, gameServerLocalUpdateRequest.Messages);
-            return;
-        }
-        
         var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
             return;
         }
-        
+
+        var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
+        gameServerUpdated.StorageConfigHash = configurationHash;
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
+
+        await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
+
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 
@@ -741,14 +762,20 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, gameServerLocalUpdateRequest.Messages);
             return;
         }
-        
+
         var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
             return;
         }
-        
+
+        var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
+        gameServerUpdated.StorageConfigHash = configurationHash;
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
+
+        await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
+
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 
@@ -764,7 +791,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, "Gameserver id doesn't match an active gameserver this host manages");
             return;
         }
-        
+
         var gameServerUpdated = foundGameServer.Data;
         gameServerUpdated.Resources = deserializedServer.Resources;
 
@@ -774,14 +801,20 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, gameServerLocalUpdateRequest.Messages);
             return;
         }
-        
+
         var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
             return;
         }
-        
+
+        var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
+        gameServerUpdated.StorageConfigHash = configurationHash;
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
+
+        await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
+
         work.SendStatusUpdate(WeaverWorkState.Completed, $"Gameserver [{gameServerUpdated.Id}] configuration updated");
     }
 }

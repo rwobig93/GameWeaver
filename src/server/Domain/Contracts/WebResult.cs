@@ -5,7 +5,7 @@ namespace Domain.Contracts;
 public class WebResult : IWebResult
 {
     public IResult Result { get; set; } = null!;
-    
+
     private int StatusCode { get; set; } = StatusCodes.Status200OK;
 
 
@@ -35,7 +35,7 @@ public class WebResult : IWebResult
         {
             statusCode = result.Succeeded ? StatusCodes.Status200OK : StatusCodes.Status500InternalServerError;
         }
-        
+
         return Task.FromResult(ResultGen(result, statusCode));
     }
 

@@ -12,7 +12,7 @@ public static class ApiHelpers
         apiMethod
             .WithApiVersionSet(ApiConstants.SupportsVersionOne!)
             .HasApiVersion(ApiConstants.Version1);
-    
+
     public static void ApiVersionTwo(this RouteHandlerBuilder apiMethod) =>
         apiMethod
             .WithApiVersionSet(ApiConstants.SupportsVersionOne!)
@@ -42,7 +42,7 @@ public static class ApiHelpers
         var endpointUrl = new Uri(string.Concat(baseUrl, endpoint));
         var pageNumberUri = QueryHelpers.AddQueryString(endpointUrl.ToString(), "pageNumber", pageNumber.ToString());
         var fullUri = QueryHelpers.AddQueryString(pageNumberUri, "pageSize", pageSize.ToString());
-        
+
         return fullUri;
     }
 
@@ -55,12 +55,12 @@ public static class ApiHelpers
     {
         return (pageNumber + 1) * pageSize < totalCount ? baseUrl.GetPaginatedUrl(endpoint, pageNumber + 1, pageSize) : null;
     }
-    
+
     public static string ToFullUrl(this string uri, string hostOrigin)
     {
         if (hostOrigin.EndsWith('/'))
             hostOrigin = hostOrigin[..^1];
-        
+
         return string.Concat(hostOrigin, uri);
     }
 }

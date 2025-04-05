@@ -29,7 +29,7 @@ public static class DeveloperEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.Developer.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Developer.Search, Search).ApiVersionOne();
     }
-    
+
     /// <summary>
     /// Get all developers with pagination
     /// </summary>
@@ -45,7 +45,7 @@ public static class DeveloperEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.GetAllDevelopersPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -53,7 +53,7 @@ public static class DeveloperEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Developer.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Developer.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -63,7 +63,7 @@ public static class DeveloperEndpoints
             return await Result<IEnumerable<DeveloperSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get count of total developers
     /// </summary>
@@ -81,7 +81,7 @@ public static class DeveloperEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a developers by id
     /// </summary>
@@ -100,7 +100,7 @@ public static class DeveloperEndpoints
             return await Result<DeveloperSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a developer by name
     /// </summary>
@@ -119,7 +119,7 @@ public static class DeveloperEndpoints
             return await Result<DeveloperSlim?>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get developers by game id
     /// </summary>
@@ -198,7 +198,7 @@ public static class DeveloperEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameService.SearchDevelopersPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -206,7 +206,7 @@ public static class DeveloperEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Developer.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Developer.Search, pageNumber, pageSize, result.TotalCount);
             return result;

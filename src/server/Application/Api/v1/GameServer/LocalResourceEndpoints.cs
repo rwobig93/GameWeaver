@@ -33,7 +33,7 @@ public static class LocalResourceEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.LocalResource.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.LocalResource.Search, Search).ApiVersionOne();
     }
-    
+
     /// <summary>
     /// Get all local resources with pagination
     /// </summary>
@@ -49,7 +49,7 @@ public static class LocalResourceEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.GetAllLocalResourcesPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -57,7 +57,7 @@ public static class LocalResourceEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.GetAllPaginated, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -67,7 +67,7 @@ public static class LocalResourceEndpoints
             return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total local resources count
     /// </summary>
@@ -85,7 +85,7 @@ public static class LocalResourceEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a local resource by id
     /// </summary>
@@ -104,7 +104,7 @@ public static class LocalResourceEndpoints
             return await Result<LocalResourceSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get local resources by game profile id
     /// </summary>
@@ -123,7 +123,7 @@ public static class LocalResourceEndpoints
             return await Result<IEnumerable<LocalResourceSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get local resources by game server id
     /// </summary>
@@ -228,7 +228,7 @@ public static class LocalResourceEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.SearchLocalResourcePaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -236,7 +236,7 @@ public static class LocalResourceEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.LocalResource.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.LocalResource.Search, pageNumber, pageSize, result.TotalCount);
             return result;

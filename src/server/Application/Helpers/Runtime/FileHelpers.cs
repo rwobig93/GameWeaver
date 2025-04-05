@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using System.Text;
 using Application.Models.Integrations;
 using Domain.DatabaseEntities.Integrations;
 
@@ -6,21 +7,28 @@ namespace Application.Helpers.Runtime;
 
 public static class FileHelpers
 {
-    public static string? ComputeSha256Hash(string filePath)
+    public static string GetIntegrityHash(string content)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(content));
+        return Convert.ToHexStringLower(hash);
+    }
+
+    public static string GetIntegrityHash(Stream stream)
+    {
+        var hash = SHA256.HashData(stream);
+        return Convert.ToHexStringLower(hash);
+    }
+
+    public static string? ComputeFileContentSha256Hash(string filePath)
     {
         if (!File.Exists(filePath))
         {
             return null;
         }
         
-        using (var sha256 = SHA256.Create())
+        using (var stream = File.OpenRead(filePath))
         {
-            using (var stream = File.OpenRead(filePath))
-            {
-                var hash = sha256.ComputeHash(stream);
-                var normalizedHash = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-                return normalizedHash;
-            }
+            return GetIntegrityHash(stream);
         }
     }
 

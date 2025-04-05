@@ -41,7 +41,7 @@ else
             </MudButton>
         }
     </MudPaper>
-    
+
     @if (_host.IsDeleted)
     {
         <MudPaper Elevation="10" Class="d-flex flex-wrap ma-4 pa-2 gap-5 justify-center align-center mud-text-align-center">
@@ -50,7 +50,7 @@ else
             </MudAlert>
         </MudPaper>
     }
-    
+
     <MudPaper Elevation="8" Style="position: relative;" Class="ma-4 pa-4 gap-4" MaxWidth="406" MaxHeight="276" >
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Realtime</MudText>
@@ -168,7 +168,7 @@ else
             <MudTextField T="string" Value="@StorageDisplay()" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
         </MudItem>
     </MudPaper>
-    
+
     <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center" Style="position: relative;">
         <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
             <MudPaper Outlined="true">
@@ -213,7 +213,7 @@ else
             </MudItem>
         </MudStack>
     </MudPaper>
-    
+
     <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
             <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Detail</MudText>
@@ -297,7 +297,7 @@ else
             </MudPaper>
         </MudItem>
     </MudPaper>
-    
+
     @if (_canViewGameServers)
     {
         <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">

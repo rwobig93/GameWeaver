@@ -7,9 +7,9 @@ public partial class SerializableList<T> : List<T>
 {
     public SerializableList()
     {
-        
+
     }
-    
+
     public SerializableList(IEnumerable<T> collection) : base(collection)
     {
     }

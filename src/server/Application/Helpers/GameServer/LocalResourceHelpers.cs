@@ -15,7 +15,7 @@ public static class LocalResourceHelpers
                 ((x.PathWindows.Length > 0 && x.PathWindows == resource.PathWindows) ||
                  (x.PathLinux.Length > 0 && x.PathLinux == resource.PathLinux) ||
                  (x.PathMac.Length > 0 && x.PathMac == resource.PathMac)));
-            
+
             if (matchingResource is null)
             {
                 existing.Add(resource);
@@ -33,7 +33,7 @@ public static class LocalResourceHelpers
             matchingResource.Startup = resource.Startup;
             matchingResource.StartupPriority = resource.StartupPriority;
             matchingResource.ContentType = resource.ContentType;
-            var updatedConfigSets = matchingResource.ConfigSets.ToList(); 
+            var updatedConfigSets = matchingResource.ConfigSets.ToList();
 
             foreach (var config in resource.ConfigSets)
             {
@@ -50,16 +50,16 @@ public static class LocalResourceHelpers
                         updatedConfigSets.Remove(matchingConfigDuplicate);
                         continue;
                     }
-                    
+
                     if (matchingConfigDuplicate is not null)
                     {
                         continue;
                     }
-                    
+
                     updatedConfigSets.Add(config);
                     continue;
                 }
-                
+
                 // Key is not a duplicate key
                 var matchingConfig = updatedConfigSets.FirstOrDefault(x =>
                     x.Category == config.Category &&

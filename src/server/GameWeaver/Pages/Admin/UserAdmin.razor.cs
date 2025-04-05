@@ -16,7 +16,7 @@ public partial class UserAdmin
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IExcelService ExcelService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     private MudTable<AppUserSlim> _table = new();
     private IEnumerable<AppUserSlim> _pagedData = new List<AppUserSlim>();
     private HashSet<AppUserSlim> _selectedItems = [];
@@ -57,7 +57,7 @@ public partial class UserAdmin
         {
             return;
         }
-        
+
         _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canResetPasswords = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.ResetPassword);
         _canDisableUsers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Users.Disable);
@@ -68,7 +68,7 @@ public partial class UserAdmin
 
         _allowUserSelection = _canResetPasswords || _canDisableUsers || _canEnableUsers || _canForceLogin;
     }
-    
+
     private async Task<TableData<AppUserSlim>> ServerReload(TableState state, CancellationToken token)
     {
         var usersResult = await UserService.SearchPaginatedAsync(_searchString, state.Page, state.PageSize);
@@ -95,7 +95,7 @@ public partial class UserAdmin
             "Notes" => _pagedData.OrderByDirection(state.SortDirection, o => o.Notes),
             _ => _pagedData
         };
-        
+
         return new TableData<AppUserSlim>() {TotalItems = _totalUsers, Items = _pagedData};
     }
 
@@ -177,7 +177,7 @@ public partial class UserAdmin
                     Severity.Error);
                 continue;
             }
-            
+
             var result = await AccountService.ForceUserPasswordReset(account.Id, _currentUserId);
             if (!result.Succeeded)
                 result.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -204,7 +204,7 @@ public partial class UserAdmin
                     Severity.Error);
                 continue;
             }
-            
+
             var result = await AccountService.ForceUserLogin(account.Id, _currentUserId);
             if (!result.Succeeded)
             {
@@ -233,7 +233,7 @@ public partial class UserAdmin
             Snackbar.Add("You don't have permission to create accounts, how'd you initiate this request!?", Severity.Error);
             return;
         }
-        
+
         var createParameters = new DialogParameters() { {"ServiceAccountId", Guid.Empty} };
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var createAccountDialog = await DialogService.ShowAsync<ServiceAccountAdminDialog>(
@@ -252,7 +252,7 @@ public partial class UserAdmin
             await ReloadSearch();
             return;
         }
-        
+
         var copyParameters = new DialogParameters()
         {
             {"Title", "Please copy the account password and save it somewhere safe"},
@@ -276,7 +276,7 @@ public partial class UserAdmin
     private async Task ExportSelectedToExcel()
     {
         if (!_canExportUsers) return;
-        
+
         var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
             _pagedData, dataMapping: new Dictionary<string, Func<AppUserSlim, object>>
             {
@@ -309,7 +309,7 @@ public partial class UserAdmin
             allUsers.Messages.ForEach(x => Snackbar.Add(x));
             return;
         }
-        
+
         var convertedExcelWorkbook = await ExcelService.ExportBase64Async(
             allUsers.Data, dataMapping: new Dictionary<string, Func<AppUserSlim, object>>
             {

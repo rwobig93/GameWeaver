@@ -43,7 +43,7 @@ public class WebClientService : IWebClientService
                 FileName = fileName,
                 MimeType = mimeType
             });
-            
+
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -57,7 +57,7 @@ public class WebClientService : IWebClientService
         try
         {
             await _jsRuntime.InvokeVoidAsync("scrollToTop");
-            
+
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -74,7 +74,7 @@ public class WebClientService : IWebClientService
             {
                 elementId = elementName
             });
-            
+
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -91,7 +91,7 @@ public class WebClientService : IWebClientService
             {
                 elementName
             });
-            
+
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -105,7 +105,7 @@ public class WebClientService : IWebClientService
         try
         {
             await _jsRuntime.InvokeVoidAsync("PlayAudio", new {elementName});
-            
+
             return await Result.SuccessAsync();
         }
         catch (Exception ex)

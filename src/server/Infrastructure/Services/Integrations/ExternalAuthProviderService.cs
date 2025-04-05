@@ -19,7 +19,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
     public bool ProviderEnabledGoogle => _enabledGoogle;
     public bool ProviderEnabledDiscord => _enabledDiscord;
     public bool ProviderEnabledSpotify => _enabledSpotify;
-    
+
     private static string? _redirectUri;
     private static bool _anyProvidersEnabled;
     private static bool _enabledGoogle;
@@ -34,7 +34,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
     {
         _logger = logger;
         _oauthConfig = oauthConfig.Value;
-        
+
         _redirectUri = new Uri(string.Concat(appConfig.Value.BaseUrl, AppRouteConstants.Identity.Login)).ToString();
         ConfigureDiscordClient();
         ConfigureGoogleClient();
@@ -60,7 +60,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
             _enabledDiscord = false;
             return;
         }
-        
+
         try
         {
             // Scopes: identify guilds
@@ -80,7 +80,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
             _enabledGoogle = false;
             return;
         }
-        
+
         try
         {
             _googleClient = new GoogleClient(new RequestFactory(), new OAuth2.Configuration.ClientConfiguration
@@ -108,7 +108,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
             _enabledSpotify = false;
             return;
         }
-        
+
         try
         {
             _spotifyClient = new SpotifyClient(new RequestFactory(), new OAuth2.Configuration.ClientConfiguration
@@ -132,19 +132,19 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
     public async Task<IResult<string>> GetLoginUri(ExternalAuthProvider provider, ExternalAuthRedirect redirect)
     {
         string loginUri;
-        
+
         switch (provider)
         {
             case ExternalAuthProvider.Discord:
                 if (!ProviderEnabledDiscord)
                     return await Result<string>.FailAsync($"{provider.ToString()} currently isn't enabled");
-                
+
                 loginUri = "";
                 break;
             case ExternalAuthProvider.Google:
                 if (!ProviderEnabledGoogle)
                     return await Result<string>.FailAsync($"{provider.ToString()} currently isn't enabled");
-                
+
                 loginUri = await _googleClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
                 break;
             case ExternalAuthProvider.Spotify:
@@ -166,7 +166,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
     public async Task<IResult<ExternalUserProfile>> GetUserProfile(ExternalAuthProvider provider, string oauthCode)
     {
         ExternalUserProfile externalProfile;
-        
+
         switch (provider)
         {
             case ExternalAuthProvider.Discord:
@@ -178,7 +178,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
             case ExternalAuthProvider.Google:
                 if (!ProviderEnabledGoogle)
                     return await Result<ExternalUserProfile>.FailAsync($"{provider.ToString()} currently isn't enabled");
-                
+
                 externalProfile =
                     (await _googleClient!.GetUserInfoAsync(new NameValueCollection() {{"code", oauthCode}})).ToExternalProfile();
                 break;

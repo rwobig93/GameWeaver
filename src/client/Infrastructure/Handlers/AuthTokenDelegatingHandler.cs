@@ -21,7 +21,7 @@ public class AuthTokenDelegatingHandler : DelegatingHandler
         var tokenEnforcement = await _serverService.EnsureAuthTokenIsUpdated();
         if (!tokenEnforcement.Succeeded)
             _logger.Error("Failed to enforce authorization token: {ErrorMessage}", tokenEnforcement.Messages);
-        
+
         // Add current valid token to the request headers
         request.Headers.Authorization =
             new AuthenticationHeaderValue(ApiConstants.AuthorizationScheme, _serverService.Authorization.Token);

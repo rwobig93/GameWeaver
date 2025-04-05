@@ -9,7 +9,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "Games";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GamesTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 5,
@@ -60,7 +60,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -77,7 +77,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -109,7 +109,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -125,7 +125,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.CreatedOn DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetBySteamName = new()
     {
         Table = Table,
@@ -141,7 +141,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.CreatedOn DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByFriendlyName = new()
     {
         Table = Table,
@@ -157,7 +157,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.CreatedOn DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetBySteamGameId = new()
     {
         Table = Table,
@@ -173,7 +173,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.CreatedOn DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetBySteamToolId = new()
     {
         Table = Table,
@@ -189,7 +189,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.CreatedOn DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetBySourceType = new()
     {
         Table = Table,
@@ -205,7 +205,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.FriendlyName ASC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -266,7 +266,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                         @SourceType, @ManualFileRecordId, @ManualVersionUrlCheck, @ManualVersionUrlDownload);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -292,7 +292,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.FriendlyName ASC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -320,7 +320,7 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY g.FriendlyName ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

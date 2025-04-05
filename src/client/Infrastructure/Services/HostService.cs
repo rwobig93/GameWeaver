@@ -29,7 +29,7 @@ public class HostService : IHostService
             HardwareInfo.RefreshVideoControllerList();
             HardwareInfo.RefreshDriveList();
             HardwareInfo.RefreshMemoryList();
-            
+
             _logger.Verbose("Successfully gathered current host detail");
         }
         catch (Exception ex)
@@ -47,7 +47,7 @@ public class HostService : IHostService
             HardwareInfo.RefreshMemoryStatus();
             HardwareInfo.RefreshCPUList();
             HardwareInfo.RefreshNetworkAdapterList(includeBytesPerSec: true);
-            
+
             _logger.Verbose("Successfully gathered current host resource usage");
         }
         catch (Exception ex)
@@ -64,7 +64,7 @@ public class HostService : IHostService
         {
             var totalCpuUsage = HardwareInfo.CpuList.Sum(socket => (double)socket.PercentProcessorTime);
             var cpuUsage = totalCpuUsage / HardwareInfo.CpuList.Count;
-        
+
             var ramUsed = HardwareInfo.MemoryStatus.TotalPhysical - HardwareInfo.MemoryStatus.AvailablePhysical;
             var ramUsage = (double) ramUsed / HardwareInfo.MemoryStatus.TotalPhysical;
 
@@ -77,7 +77,7 @@ public class HostService : IHostService
             hostResourceUsage.NetworkOutBytes = totalNetworkOutBytes;
             hostResourceUsage.NetworkInBytes = totalNetworkInBytes;
             hostResourceUsage.TimeStamp = _dateTimeService.NowDatabaseTime;
-            
+
             _logger.Verbose("Successfully gathered host resource usage: {CpuUsage} | {RamUsage} | {Uptime} | {NetInMb} | {NetOutMb}",
                 hostResourceUsage.CpuUsage, hostResourceUsage.RamUsage, TimeSpan.FromMilliseconds(hostResourceUsage.Uptime), hostResourceUsage.NetworkInBytes, hostResourceUsage.NetworkOutBytes);
         }

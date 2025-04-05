@@ -19,7 +19,7 @@ public partial class RoleUserDialog
     private HashSet<AppUserSlim> _removeUsers = [];
     private bool _canRemoveRoles;
     private bool _canAddRoles;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -71,7 +71,7 @@ public partial class RoleUserDialog
     private void AddUsers()
     {
         if (!_canAddRoles) return;
-        
+
         foreach (var user in _addUsers)
         {
             _availableUsers.Remove(user);
@@ -82,18 +82,18 @@ public partial class RoleUserDialog
     private void RemoveUsers()
     {
         if (!_canRemoveRoles) return;
-        
+
         foreach (var user in _removeUsers)
         {
             _assignedUsers.Remove(user);
             _availableUsers.Add(user);
         }
     }
-    
+
     private async Task Save()
     {
         if (!_canAddRoles && !_canRemoveRoles) return;
-        
+
         var currentUsers = await RoleService.GetUsersForRole(RoleId);
         if (!currentUsers.Succeeded)
         {
@@ -124,7 +124,7 @@ public partial class RoleUserDialog
 
             Snackbar.Add($"Successfully removed user {user.Username}", Severity.Success);
         }
-        
+
         MudDialog.Close(DialogResult.Ok(true));
     }
 

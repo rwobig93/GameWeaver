@@ -25,7 +25,7 @@ public partial class LocalResourceAddDialog : ComponentBase
         _newLocalResource.GameProfileId = GameProfileId;
         MudDialog.Close(DialogResult.Ok(_newLocalResource));
     }
-    
+
     private void Cancel()
     {
         MudDialog.Cancel();

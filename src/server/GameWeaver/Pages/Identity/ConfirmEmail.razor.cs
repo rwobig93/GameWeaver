@@ -3,12 +3,12 @@
 public partial class ConfirmEmail
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
-    
+
     [Parameter] public string UserId { get; set; } = "";
     [Parameter] public string ConfirmationCode { get; set; } = "";
-    
+
     [Inject] private IAppAccountService AccountService { get; set; } = null!;
-    
+
     private bool IsCodeValid { get; set; }
     private bool HasValidationRan { get; set; }
 
@@ -26,7 +26,7 @@ public partial class ConfirmEmail
     {
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-        
+
         if (queryParameters.TryGetValue("userId", out var userId))
             UserId = userId!;
         if (queryParameters.TryGetValue("confirmationCode", out var confirmationCode))
@@ -49,7 +49,7 @@ public partial class ConfirmEmail
             Snackbar.Add("The code provided is invalid, please contact the administrator", Severity.Error);
             return;
         }
-        
+
         var confirmationResponse = await AccountService.ConfirmEmailAsync(convertedUserId, ConfirmationCode);
         if (!confirmationResponse.Succeeded)
         {

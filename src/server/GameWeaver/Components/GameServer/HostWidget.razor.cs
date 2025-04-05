@@ -15,8 +15,8 @@ public partial class HostWidget : ComponentBase
     [Parameter] public HostSlim Host { get; set; } = null!;
     [Parameter] public TimeZoneInfo LocalTimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
-    
-    
+
+
     private double[] _cpuData = [0, 0];
     private double[] _ramData = [0, 0];
     private readonly List<TimeSeriesChartSeries> _netIn = [];
@@ -93,10 +93,10 @@ public partial class HostWidget : ComponentBase
             _checkins.Add(latestCheckin);
             if (_checkins.Count != 0)
             {
-                _checkins.Remove(_checkins.First());   
+                _checkins.Remove(_checkins.First());
             }
         }
-        
+
         UpdateThemeColors();
         UpdateStatus();
 
@@ -140,7 +140,7 @@ public partial class HostWidget : ComponentBase
             StatusColor = Color.Warning;
             return;
         }
-        
+
         var lastCheckinTime = _checkins.Last().ReceiveTimestamp;
         var currentTime = DateTimeService.NowDatabaseTime;
         if ((currentTime - lastCheckinTime).TotalSeconds > AppConfig.Value.HostOfflineAfterSeconds)
@@ -149,8 +149,8 @@ public partial class HostWidget : ComponentBase
             StatusColor = Color.Error;
             return;
         }
-        
-        // When ready we can set the status color for host warnings (disk space, resource usage, ect) 
+
+        // When ready we can set the status color for host warnings (disk space, resource usage, ect)
         // StatusColor = Color.Warning;
         IsOffline = false;
         StatusColor = Color.Success;
@@ -162,9 +162,9 @@ public partial class HostWidget : ComponentBase
         {
             return;
         }
-        
+
         _currentPalette = ParentLayout._selectedTheme.PaletteDark;
-        
+
         _chartOptionsCpu.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Primary.Value];
         _chartOptionsRam.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Secondary.Value];
         _chartOptionsNetwork.ChartPalette = [_currentPalette.Tertiary.Value, _currentPalette.Surface.Value];
@@ -179,31 +179,31 @@ public partial class HostWidget : ComponentBase
 
         var currentCpu = (double) (_checkins.LastOrDefault()?.CpuUsage ?? 0);
         var cpuLeftOver = 100 - currentCpu;
-        
+
         _cpuData = [cpuLeftOver, currentCpu];
-        
+
         var currentRam = (int) (_checkins.LastOrDefault()?.RamUsage ?? 0);
         var ramLeftOver = 100 - currentRam;
-        
+
         _ramData = [ramLeftOver, currentRam];
         await Task.CompletedTask;
     }
-    
+
     private async Task UpdateNetwork()
     {
         if (_checkins.Count == 0)
         {
             return;
         }
-        
+
         _netIn.Clear();
         _netOut.Clear();
-        
+
         var networkIn = _checkins.Select(x =>
             new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double)x.NetworkInBytes / 8_000))).Reverse().ToList();
         var networkOut = _checkins.Select(x =>
             new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double)x.NetworkOutBytes / 8_000))).Reverse().ToList();
-        
+
         _netIn.Add(new TimeSeriesChartSeries { Data = networkIn });
         _netOut.Add(new TimeSeriesChartSeries { Data = networkOut });
         await Task.CompletedTask;
@@ -213,7 +213,7 @@ public partial class HostWidget : ComponentBase
     {
         var freeSpace = Host.Storage?.Sum(x => (double) x.FreeSpace) ?? 0;
         var totalSpace = Host.Storage?.Sum(x => (double) x.TotalSpace) ?? 0;
-        
+
         StorageUsed = 100 - Math.Round(freeSpace / totalSpace * 100);
         StateHasChanged();
     }

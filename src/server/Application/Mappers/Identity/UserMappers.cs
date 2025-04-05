@@ -60,7 +60,7 @@ public static class UserMappers
     {
         return appUserDbs.Select(x => x.ToSlim());
     }
-    
+
     public static UserBasicResponse ToResponse(this AppUserSlim appUser)
     {
         return new UserBasicResponse
@@ -77,7 +77,7 @@ public static class UserMappers
     {
         return appUsers.Select(x => x.ToResponse()).ToList();
     }
-    
+
     public static UserFullResponse ToFullResponse(this AppUserFull appUser)
     {
         return new UserFullResponse
@@ -144,7 +144,7 @@ public static class UserMappers
             Currency = appUser.Currency
         };
     }
-    
+
     public static UserFullResponse ToResponse(this AppUserFull appUser)
     {
         return new UserFullResponse
@@ -164,7 +164,7 @@ public static class UserMappers
     {
         return appUsers.Select(x => x.ToResponse()).ToList();
     }
-    
+
     public static AppUserCreate ToCreateObject(this AppUserDb appUser)
     {
         return new AppUserCreate
@@ -188,7 +188,7 @@ public static class UserMappers
             Currency = appUser.Currency
         };
     }
-    
+
     public static AppUserCreate ToCreateObject(this UserCreateRequest appUser)
     {
         return new AppUserCreate
@@ -212,7 +212,7 @@ public static class UserMappers
             Currency = 0
         };
     }
-    
+
     public static AppUserExtendedAttributeSlim ToSlim(this AppUserExtendedAttributeDb extendedAttributeDb)
     {
         return new AppUserExtendedAttributeSlim
@@ -230,7 +230,7 @@ public static class UserMappers
     {
         return extendedAttributeDbs.Select(x => x.ToSlim());
     }
-    
+
     public static ExtendedAttributeResponse ToResponse(this AppUserExtendedAttributeSlim attribute)
     {
         return new ExtendedAttributeResponse
@@ -247,7 +247,7 @@ public static class UserMappers
     {
         return attributes.Select(x => x.ToResponse()).ToList();
     }
-    
+
     public static AppUserUpdate ToUpdate(this AppUserDb appUser)
     {
         return new AppUserUpdate
@@ -268,7 +268,7 @@ public static class UserMappers
             Currency = appUser.Currency
         };
     }
-    
+
     public static AppUserUpdate ToUpdate(this UserUpdateRequest appUser)
     {
         return new AppUserUpdate
@@ -374,7 +374,7 @@ public static class UserMappers
             TwoFactorKey = securityDb.TwoFactorKey
         };
     }
-    
+
     public static AppUserUpdate ToUserUpdate(this AppUserSecurityDb appUser)
     {
         return new AppUserUpdate
@@ -395,7 +395,7 @@ public static class UserMappers
             Currency = appUser.Currency
         };
     }
-    
+
     public static AppUserSecurityAttributeUpdate ToSecurityUpdate(this AppUserSecurityDb appUser)
     {
         return new AppUserSecurityAttributeUpdate
@@ -412,7 +412,7 @@ public static class UserMappers
             LastFullLogin = appUser.LastFullLogin
         };
     }
-    
+
     public static AppUserUpdate ToUserUpdate(this AppUserSecurityFull appUser)
     {
         return new AppUserUpdate
@@ -433,7 +433,7 @@ public static class UserMappers
             Currency = appUser.Currency
         };
     }
-    
+
     public static AppUserSecurityAttributeUpdate ToSecurityUpdate(this AppUserSecurityFull appUser)
     {
         return new AppUserSecurityAttributeUpdate

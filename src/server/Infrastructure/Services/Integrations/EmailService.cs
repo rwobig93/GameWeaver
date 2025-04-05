@@ -23,9 +23,9 @@ public class EmailService : IEmailService
         {
             var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
                 EmailConstants.PathRegistrationConfirmation);
-        
+
             var sendResponse = await _mailService.Subject("Registration Confirmation").To(emailAddress)
-                .UsingTemplateFromFile(templatePath, new EmailAction() 
+                .UsingTemplateFromFile(templatePath, new EmailAction()
                     {ActionUrl = confirmationUrl, Username = username})
                 .SendAsync();
             if (!sendResponse.Successful)
@@ -39,7 +39,7 @@ public class EmailService : IEmailService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to send registration email => {Email} | {Username} | {Url}", 
+            _logger.Error(ex, "Failed to send registration email => {Email} | {Username} | {Url}",
                 emailAddress, username, confirmationUrl);
             return new SendResponse
             {
@@ -48,16 +48,16 @@ public class EmailService : IEmailService
             };
         }
     }
-    
+
     public async Task<SendResponse> SendEmailChangeConfirmation(string emailAddress, string username, string confirmationUrl)
     {
         try
         {
             var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
                 EmailConstants.PathEmailChangeConfirmation);
-        
+
             var sendResponse = await _mailService.Subject("Email Change Confirmation").To(emailAddress)
-                .UsingTemplateFromFile(templatePath, new EmailAction() 
+                .UsingTemplateFromFile(templatePath, new EmailAction()
                     {ActionUrl = confirmationUrl, Username = username})
                 .SendAsync();
             if (!sendResponse.Successful)
@@ -71,7 +71,7 @@ public class EmailService : IEmailService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to send email address change email => {Email} | {Username} | {Url}", 
+            _logger.Error(ex, "Failed to send email address change email => {Email} | {Username} | {Url}",
                 emailAddress, username, confirmationUrl);
             return new SendResponse
             {
@@ -80,16 +80,16 @@ public class EmailService : IEmailService
             };
         }
     }
-    
+
     public async Task<SendResponse> SendPasswordResetEmail(string emailAddress, string username, string confirmationUrl)
     {
         try
         {
             var templatePath = Path.Combine(Directory.GetCurrentDirectory(), EmailConstants.TemplatesPath,
                 EmailConstants.PathPasswordReset);
-        
+
             var sendResponse = await _mailService.Subject("Password Reset Confirmation").To(emailAddress)
-                .UsingTemplateFromFile(templatePath, new EmailAction() 
+                .UsingTemplateFromFile(templatePath, new EmailAction()
                     {ActionUrl = confirmationUrl, Username = username})
                 .SendAsync();
             if (!sendResponse.Successful)
@@ -103,7 +103,7 @@ public class EmailService : IEmailService
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to send password reset email => {Email} | {Username} | {Url}", 
+            _logger.Error(ex, "Failed to send password reset email => {Email} | {Username} | {Url}",
                 emailAddress, username, confirmationUrl);
             return new SendResponse
             {

@@ -19,10 +19,10 @@ public partial class MainLayout
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
-    
+
 
     public ClaimsPrincipal CurrentUser { get; set; } = new();
-    
+
     public AppUserPreferenceFull _userPreferences = new();
     public readonly List<AppTheme> _availableThemes = AppThemes.GetAvailableThemes();
     public MudTheme _selectedTheme = AppThemes.DarkTheme.Theme;
@@ -91,12 +91,12 @@ public partial class MainLayout
     private async Task ChangeTheme(AppTheme theme)
     {
         if (!_canEditTheme) return;
-        
+
         try
         {
             _userPreferences.ThemePreference = theme.Id;
             _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
-            
+
             if (IsUserAuthenticated(CurrentUser))
             {
                 var userId = CurrentUserService.GetIdFromPrincipal(CurrentUser);
@@ -111,7 +111,7 @@ public partial class MainLayout
         {
             _selectedTheme = AppThemes.GetThemeById(theme.Id).Theme;
         }
-        
+
         StateHasChanged();
     }
 
@@ -141,7 +141,7 @@ public partial class MainLayout
         {
             var matchingTheme = _availableThemes.First(x => x.Id == customThemeId);
             var preferenceTheme = AppThemes.GetPreferenceCustomThemeFromId(_userPreferences, customThemeId);
-            
+
             matchingTheme.FriendlyName = preferenceTheme.ThemeName;
             matchingTheme.Description = preferenceTheme.ThemeDescription;
             matchingTheme.Theme.PaletteDark = new PaletteDark()
@@ -177,7 +177,7 @@ public partial class MainLayout
             _cssThemedText = "";
             return;
         }
-        
+
         _cssThemedText = "rainbow-text";
     }
 }

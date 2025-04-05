@@ -31,7 +31,7 @@ public static class ExternalAuthHelpers
         var isValidProvider = Enum.TryParse(provider, out ExternalAuthProvider parsedProvider);
         return !isValidProvider ? ExternalAuthProvider.Unknown : parsedProvider;
     }
-    
+
     public static string GetAuthRedirectState(ExternalAuthProvider provider, ExternalAuthRedirect redirect)
     {
         return string.Join("-", provider.ToString(), RedirectToString(redirect));

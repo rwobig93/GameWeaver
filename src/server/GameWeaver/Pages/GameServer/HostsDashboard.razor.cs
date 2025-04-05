@@ -14,7 +14,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     [Inject] private IWebClientService WebClientService { get; set; } = null!;
     [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
     [Inject] public IOptions<LifecycleConfiguration> LifecycleConfig { get; init; } = null!;
-    
+
     private IEnumerable<HostSlim> _pagedData = new List<HostSlim>();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private Timer? _timer;
@@ -40,9 +40,9 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             await GetClientTimezone();
             await RefreshData();
             await TimerDataUpdate();
-            
+
             _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
-            
+
             await Task.CompletedTask;
         }
     }
@@ -59,7 +59,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         foreach (var widget in _hostWidgets)
         {
             try
@@ -83,7 +83,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
 
         await InvokeAsync(StateHasChanged);
     }
-    
+
     private async Task RefreshData()
     {
         var response = await HostService.SearchPaginatedAsync(_searchText, _pageNumber, _pageSize);
@@ -97,10 +97,10 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         _pagedData = response.Data;
         _totalItems = response.TotalCount;
         _totalPages = response.EndPage;
-        
+
         StateHasChanged();
     }
-    
+
     private string GetCurrentPageViewData()
     {
         var currentStart = 1;
@@ -121,7 +121,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
 
         return $"{currentStart}-{currentEnd} of {_totalItems}";
     }
-    
+
     private async Task PageChanged(int pageNumber)
     {
         _pageNumber = pageNumber;
@@ -134,7 +134,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         await RefreshData();
         await WebClientService.InvokeScrollToTop();
     }
-    
+
     private async Task SearchKeyDown(KeyboardEventArgs keyArgs)
     {
         if (keyArgs.Code is "Enter" or "NumpadEnter")
@@ -142,7 +142,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             await RefreshData();
         }
     }
-    
+
     private async Task GetClientTimezone()
     {
         var clientTimezoneRequest = await WebClientService.GetClientTimezone();
@@ -158,7 +158,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var dialog = await DialogService.ShowAsync<HostRegisterDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions);
         var dialogResult = await dialog.Result;
@@ -173,7 +173,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             Snackbar.Add("Failed to retrieve the new host registration, please try again or reach out to an administrator", Severity.Error);
             return;
         }
-        
+
         Snackbar.Add("Successfully generated new host registration!", Severity.Success);
         var copyParameters = new DialogParameters()
         {
@@ -184,7 +184,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
         };
         await DialogService.ShowAsync<CopyTextDialog>("Copy New Host Registration", copyParameters, dialogOptions);
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         _timer?.Dispose();

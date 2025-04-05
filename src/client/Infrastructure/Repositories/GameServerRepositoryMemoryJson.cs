@@ -21,7 +21,7 @@ public class GameServerRepositoryMemoryJson : IGameServerRepository
 
         Task.Run(LoadAsync);
     }
-    
+
     private static List<GameServerLocal> _gameServers = [];
 
     public async Task<IResult> CreateAsync(GameServerLocal gameServer)
@@ -42,7 +42,7 @@ public class GameServerRepositoryMemoryJson : IGameServerRepository
         var existingGameserver = _gameServers.FirstOrDefault(x => x.Id == gameServerUpdate.Id);
         if (existingGameserver is null)
             return await Result.FailAsync($"Gameserver with Id [{gameServerUpdate.Id}] doesn't exist");
-        
+
         existingGameserver.SteamName = gameServerUpdate.SteamName ?? existingGameserver.SteamName;
         existingGameserver.SteamGameId = gameServerUpdate.SteamGameId ?? existingGameserver.SteamGameId;
         existingGameserver.SteamToolId = gameServerUpdate.SteamToolId ?? existingGameserver.SteamToolId;
@@ -75,7 +75,7 @@ public class GameServerRepositoryMemoryJson : IGameServerRepository
         var existingGameserver = _gameServers.FirstOrDefault(x => x.Id == id);
         if (existingGameserver is null)
             return await Result.FailAsync($"Gameserver with Id [{id}] doesn't exist");
-        
+
         _gameServers.Remove(existingGameserver);
         _logger.Information("Successfully deleted gameserver: [{GameserverID}]{GameserverName}", existingGameserver.Id, existingGameserver.ServerName);
         await SaveAsync();

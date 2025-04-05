@@ -18,7 +18,7 @@ public partial class ConfirmationDialog
     {
         MudDialog.Close(DialogResult.Ok(true));
     }
-    
+
     private void Cancel()
     {
         MudDialog.Cancel();

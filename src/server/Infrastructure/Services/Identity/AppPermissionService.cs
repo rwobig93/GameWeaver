@@ -60,7 +60,7 @@ public class AppPermissionService : IAppPermissionService
         {
             return true;
         }
-        
+
         // If the user is an admin we let them do whatever they want
         var modifyingUserIsAdmin = await IsUserAdmin(modifyingUserId);
         if (modifyingUserIsAdmin)
@@ -77,7 +77,7 @@ public class AppPermissionService : IAppPermissionService
                 return true;
             }
         }
-        
+
         // If a user has the permission, and they've been given access to add/remove permissions then they are good to go,
         //    otherwise they can't add/remove a permission they themselves don't have
         var invokingUserHasRequestingPermission = await UserIncludingRolesHasPermission(modifyingUserId, claimValue);
@@ -89,7 +89,7 @@ public class AppPermissionService : IAppPermissionService
         try
         {
             var allPermissions = new List<AppPermissionCreate>();
-            
+
             // Get all native/built-in permissions
             var allBuiltInPermissions = PermissionHelpers.GetAllBuiltInPermissions();
             allPermissions.AddRange(allBuiltInPermissions.ToAppPermissionCreates());
@@ -107,7 +107,7 @@ public class AppPermissionService : IAppPermissionService
         try
         {
             var allPermissions = new List<AppPermissionCreate>();
-            
+
             var allServiceAccountPermissions = PermissionHelpers.GetAllServiceAccountDynamicPermissions(id);
             allPermissions.AddRange(allServiceAccountPermissions.ToDynamicPermissionCreates());
 
@@ -124,7 +124,7 @@ public class AppPermissionService : IAppPermissionService
         try
         {
             var allPermissions = new List<AppPermissionCreate>();
-            
+
             var allGameServerPermissions = PermissionHelpers.GetAllGameServerDynamicPermissions(id);
             allPermissions.AddRange(allGameServerPermissions.ToDynamicPermissionCreates());
 
@@ -168,7 +168,7 @@ public class AppPermissionService : IAppPermissionService
             {
                 return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync([]);
@@ -225,7 +225,7 @@ public class AppPermissionService : IAppPermissionService
             {
                 return await PaginatedResult<IEnumerable<AppPermissionSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AppPermissionSlim>>.SuccessAsync([]);
@@ -353,7 +353,7 @@ public class AppPermissionService : IAppPermissionService
             var foundPermissions = await _permissionRepository.GetAllByNameAsync(roleName);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
@@ -374,7 +374,7 @@ public class AppPermissionService : IAppPermissionService
             var foundPermissions = await _permissionRepository.GetAllByGroupAsync(groupName);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
@@ -395,7 +395,7 @@ public class AppPermissionService : IAppPermissionService
             var foundPermissions = await _permissionRepository.GetAllByAccessAsync(accessName);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
@@ -416,7 +416,7 @@ public class AppPermissionService : IAppPermissionService
             var foundPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
@@ -437,7 +437,7 @@ public class AppPermissionService : IAppPermissionService
             var foundPermissions = await _permissionRepository.GetAllForRoleAsync(roleId);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
@@ -458,7 +458,7 @@ public class AppPermissionService : IAppPermissionService
             var foundPermissions = await _permissionRepository.GetAllDirectForUserAsync(userId);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
@@ -479,7 +479,7 @@ public class AppPermissionService : IAppPermissionService
             var foundPermissions = await _permissionRepository.GetAllIncludingRolesForUserAsync(userId);
             if (!foundPermissions.Succeeded)
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)
@@ -503,7 +503,7 @@ public class AppPermissionService : IAppPermissionService
 
         foreach (var clientId in userClientIds.Result)
             await _userRepository.UpdateExtendedAttributeAsync(clientId.Id, clientId.Value, UserClientIdState.ReAuthNeeded.ToString());
-            
+
         _logger.Debug("Updated clientId's for User to force refresh token re-auth: {UserId}", userId);
     }
 
@@ -517,7 +517,7 @@ public class AppPermissionService : IAppPermissionService
         }
 
         var usersToUpdate = roleUsers.Result?.ToSlims().ToList() ?? [];
-        
+
         _logger.Debug("Found {UserCount} users for role {RoleId} that need to re-auth for updated permissions", usersToUpdate.Count, roleId);
 
         // Update each user's userClientId with a re-auth description which will be checked to re-auth w/ a refresh token for updated permissions
@@ -528,7 +528,7 @@ public class AppPermissionService : IAppPermissionService
 
             foreach (var clientId in userClientIds.Result)
                 await _userRepository.UpdateExtendedAttributeAsync(clientId.Id, clientId.Value, UserClientIdState.ReAuthNeeded.ToString());
-            
+
             _logger.Debug("Updated clientId's for User to force refresh token re-auth: [{UserId}]{Username}", user.Id, user.Username);
         }
     }
@@ -550,7 +550,7 @@ public class AppPermissionService : IAppPermissionService
                 if (foundUser.Result is null)
                     return await Result<Guid>.FailAsync("UserId provided is invalid");
             }
-            
+
             if (createObject.RoleId != GuidHelpers.GetMax())
             {
                 var foundRole = await _roleRepository.GetByIdAsync(createObject.RoleId);
@@ -567,16 +567,16 @@ public class AppPermissionService : IAppPermissionService
             var createRequest = await _permissionRepository.CreateAsync(createObject);
             if (!createRequest.Succeeded)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
-            
-            
-            
+
+
+
             // Queue background job to update all users w/ permission or role permission to re-auth and have the latest permissions
             _logger.Debug("Kicking off job to update {PermissionClaimValue} claim userClientId's with re-auth string to force token refresh for updated permissions",
                 createObject.ClaimValue);
             var response = createObject.UserId == GuidHelpers.GetMax() ?
                 BackgroundJob.Enqueue(() => UpdateRoleUsersForPermissionChange(createObject.RoleId)) :
                 BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(createObject.UserId));
-            
+
             if (response is null)
             {
                 await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, createRequest.Result,
@@ -586,7 +586,7 @@ public class AppPermissionService : IAppPermissionService
                         {"PermissionId", createRequest.Result.ToString()}
                     });
             }
-            
+
             return await Result<Guid>.SuccessAsync(createRequest.Result);
         }
         catch (Exception ex)
@@ -639,11 +639,11 @@ public class AppPermissionService : IAppPermissionService
             var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
             if (!userCanDoAction)
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
-            
+
             var deleteRequest = await _permissionRepository.DeleteAsync(foundPermission.Result.Id, modifyingUserId);
             if (!deleteRequest.Succeeded)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
-            
+
             // Queue background job to update all users w/ permission or role permission to re-auth and have the latest permissions
             _logger.Debug("Kicking off job to update {PermissionClaimValue} claim userClientId's with re-auth string to force token refresh for updated permissions",
                 foundPermission.Result.ClaimValue);
@@ -651,7 +651,7 @@ public class AppPermissionService : IAppPermissionService
             var response = foundPermission.Result.UserId == GuidHelpers.GetMax() ?
                 BackgroundJob.Enqueue(() => UpdateRoleUsersForPermissionChange(foundPermission.Result.RoleId)) :
                 BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(foundPermission.Result.UserId));
-            
+
             if (response is null)
                 await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, permissionId,
                     "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>()
@@ -725,7 +725,7 @@ public class AppPermissionService : IAppPermissionService
             {
                 return await Result<IEnumerable<AppPermissionSlim>>.FailAsync(foundPermissions.ErrorMessage);
             }
-            
+
             var permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
                 .OrderBy(x => x.Group)
                 .ThenBy(x => x.Name)

@@ -35,7 +35,7 @@ public static class ModEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.Mod.Delete, Delete).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.Mod.Search, Search).ApiVersionOne();
     }
-    
+
     /// <summary>
     /// Get all mods with pagination
     /// </summary>
@@ -51,7 +51,7 @@ public static class ModEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.GetAllModsPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -59,7 +59,7 @@ public static class ModEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Mod.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Mod.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -69,7 +69,7 @@ public static class ModEndpoints
             return await Result<IEnumerable<ModSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get total mod count
     /// </summary>
@@ -87,7 +87,7 @@ public static class ModEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a mod by id
     /// </summary>
@@ -106,7 +106,7 @@ public static class ModEndpoints
             return await Result<ModSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a mod by it's integrity hash
     /// </summary>
@@ -125,7 +125,7 @@ public static class ModEndpoints
             return await Result<ModSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get mods by their friendly name
     /// </summary>
@@ -144,7 +144,7 @@ public static class ModEndpoints
             return await Result<IEnumerable<ModSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get mods by game id
     /// </summary>
@@ -163,7 +163,7 @@ public static class ModEndpoints
             return await Result<IEnumerable<ModSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get mods by steam game id
     /// </summary>
@@ -182,7 +182,7 @@ public static class ModEndpoints
             return await Result<IEnumerable<ModSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get mod by steam id
     /// </summary>
@@ -201,7 +201,7 @@ public static class ModEndpoints
             return await Result<ModSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get mods by steam tool id
     /// </summary>
@@ -262,7 +262,7 @@ public static class ModEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a mod
     /// </summary>
@@ -301,7 +301,7 @@ public static class ModEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.SearchModsPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -309,7 +309,7 @@ public static class ModEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Mod.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Mod.Search, pageNumber, pageSize, result.TotalCount);
             return result;

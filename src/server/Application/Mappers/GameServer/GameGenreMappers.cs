@@ -15,12 +15,12 @@ public static class GameGenreMappers
             Description = genreDb.Description
         };
     }
-    
+
     public static IEnumerable<GameGenreSlim> ToSlims(this IEnumerable<GameGenreDb> genreDbs)
     {
         return genreDbs.Select(ToSlim);
     }
-    
+
     public static GameGenreFull ToFull(this GameGenreDb genreDb)
     {
         return new GameGenreFull

@@ -9,7 +9,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "HostRegistrations";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(HostRegistrationsTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -32,7 +32,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -61,7 +61,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllActive = new()
     {
         Table = Table,
@@ -75,7 +75,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 WHERE h.Active = 1;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllInActive = new()
     {
         Table = Table,
@@ -89,7 +89,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 WHERE h.Active = 0;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -105,7 +105,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostId = new()
     {
         Table = Table,
@@ -121,7 +121,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostIdAndKey = new()
     {
         Table = Table,
@@ -138,7 +138,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetActiveByDescription = new()
     {
         Table = Table,
@@ -154,7 +154,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -179,7 +179,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@Id, @HostId, @Description, @Active, @Key, @ActivationDate, @ActivationPublicIp, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -200,7 +200,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                     OR h.ActivationPublicIp LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -222,7 +222,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
@@ -250,7 +250,7 @@ public class HostRegistrationsTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteOlderThan = new()
     {
         Table = Table,

@@ -10,11 +10,11 @@ public partial class RoleView
 {
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
-    
+
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     [Parameter] public Guid RoleId { get; set; }
 
     private Guid _currentUserId;
@@ -37,7 +37,7 @@ public partial class RoleView
     private bool _canAddPermissions;
     private bool _canRemovePermissions;
     private bool _canViewUsers;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -64,11 +64,11 @@ public partial class RoleView
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
         if (!queryParameters.TryGetValue("roleId", out var queryRoleId)) return;
-        
+
         var providedIdIsValid = Guid.TryParse(queryRoleId, out var parsedRoleId);
         if (!providedIdIsValid)
             throw new InvalidDataException("Invalid RoleId provided for role view");
-            
+
         RoleId = parsedRoleId;
     }
 
@@ -77,7 +77,7 @@ public partial class RoleView
         _viewingRole = (await RoleService.GetByIdFullAsync(RoleId)).Data!;
         _createdByUsername = (await UserService.GetByIdAsync(_viewingRole.CreatedBy)).Data?.Username;
         _createdOn = _viewingRole.CreatedOn.ConvertToLocal(_localTimeZone);
-        
+
         if (_viewingRole.LastModifiedBy is not null)
         {
             _modifiedByUsername = (await UserService.GetByIdAsync((Guid)_viewingRole.LastModifiedBy)).Data?.Username;
@@ -108,7 +108,7 @@ public partial class RoleView
             updateResult.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         ToggleEditMode();
         await GetViewingRole();
         Snackbar.Add("Role successfully updated!", Severity.Success);
@@ -118,7 +118,7 @@ public partial class RoleView
     private void ToggleEditMode()
     {
         if (!_canEditRoles) return;
-        
+
         _editMode = !_editMode;
 
         _editButtonText = _editMode ? "Disable Edit Mode" : "Enable Edit Mode";
@@ -132,7 +132,7 @@ public partial class RoleView
     private async Task EditUserMembership()
     {
         if (!_canAddRoles || !_canRemoveRoles) return;
-        
+
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
@@ -148,7 +148,7 @@ public partial class RoleView
     private async Task EditPermissions()
     {
         if (!_canAddPermissions || !_canRemovePermissions) return;
-        
+
         var dialogParameters = new DialogParameters() {{"RoleId", _viewingRole.Id}};
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
@@ -173,7 +173,7 @@ public partial class RoleView
     private async Task DeleteRole()
     {
         if (!_canDeleteRole) return;
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"Title", "Are you sure you want to delete this role?"},

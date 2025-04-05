@@ -37,7 +37,7 @@ public class ErrorHandlerMiddleware
             var response = context.Response;
             response.ContentType = "application/json";
             var errorMessage = _environment.IsDevelopment() ? error.Message : ErrorMessageConstants.Generic.ContactAdmin;
-            
+
             switch (error)
             {
                 case not null when error.InnerException is JsonException jsonException:
@@ -65,7 +65,7 @@ public class ErrorHandlerMiddleware
                     _logger.Error("Error occurred and handled by the middleware: {ErrorMessage}", errorMessage);
                     break;
             }
-            
+
             var responseModel = await Result<string>.FailAsync(errorMessage);
 
             var result = JsonSerializer.Serialize(responseModel);

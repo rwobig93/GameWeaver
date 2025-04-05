@@ -33,15 +33,15 @@ public partial class HostRegisterDialog : ComponentBase
     private UserBasicResponse _selectedOwner = new() {Username = ""};
     private readonly HostRegistrationCreateRequest _registerRequest = new();
     private string _allowedPortsRaw = string.Empty;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await GetAllUsers();
             await GetCurrentUser();
-                
+
             StateHasChanged();
         }
     }
@@ -82,7 +82,7 @@ public partial class HostRegisterDialog : ComponentBase
     {
         _allowedPortsRaw = "40000-44000";
     }
-    
+
     private async Task GenerateRegistration()
     {
         if (string.IsNullOrWhiteSpace(_registerRequest.Description))
@@ -90,7 +90,7 @@ public partial class HostRegisterDialog : ComponentBase
             Snackbar.Add("Description is empty and must have a unique value", Severity.Error);
             return;
         }
-        
+
         var allowedPortsConverted = _allowedPortsRaw.Split(",");
         var parsedPorts = NetworkHelpers.GetPortsFromRangeList(allowedPortsConverted);
         if (parsedPorts.Count < 3)
@@ -100,7 +100,7 @@ public partial class HostRegisterDialog : ComponentBase
         }
 
         _registerRequest.AllowedPorts = allowedPortsConverted.ToList();
-        
+
         if (_loggedInUserId == Guid.Empty)
         {
             var tshootId = await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.HostRegistrations, Guid.Empty, _loggedInUserId,
@@ -123,10 +123,10 @@ public partial class HostRegisterDialog : ComponentBase
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         MudDialog.Close(DialogResult.Ok(response.Data.RegisterUrl));
     }
-    
+
     private void Cancel()
     {
         MudDialog.Cancel();

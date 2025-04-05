@@ -14,7 +14,7 @@ public partial class SettingsMenu
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
-    
+
     [Parameter] public AppUserPreferenceFull UserPreferences { get; set; } = new();
     [Parameter] public ClaimsPrincipal CurrentUser { get; set; } = new();
     [Parameter] public AppUserFull UserFull { get; set; } = new();
@@ -42,7 +42,7 @@ public partial class SettingsMenu
             StateHasChanged();
         }
     }
-    
+
     private static bool IsUserAuthenticated(ClaimsPrincipal? principal)
     {
         return principal?.Identity is not null && principal.Identity.IsAuthenticated;
@@ -70,7 +70,7 @@ public partial class SettingsMenu
         var currentAppTheme = AvailableThemes.FirstOrDefault(x => x.Id == UserPreferences.ThemePreference)!;
         if (currentAppTheme.FriendlyName.Length <= 12)
             return currentAppTheme.FriendlyName;
-        
+
         return currentAppTheme.FriendlyName[..12];
     }
 
@@ -81,7 +81,7 @@ public partial class SettingsMenu
             _displayUsername = "";
             return;
         }
-        
+
         if (CurrentUser.Identity.Name.Length <= 18)
         {
             _displayUsername = CurrentUser.Identity.Name;
@@ -94,7 +94,7 @@ public partial class SettingsMenu
     private async Task ChangeThemeOnLayout(AppTheme theme)
     {
         if (!_canEditTheme) return;
-        
+
         await ThemeChanged.InvokeAsync(theme);
         GetAvailableThemes();
         StateHasChanged();
@@ -103,7 +103,7 @@ public partial class SettingsMenu
     private async Task ToggleGamerMode(bool enabled)
     {
         if (!_canEditTheme) return;
-        
+
         UserPreferences.GamerMode = enabled;
         var response = await AccountService.UpdatePreferences(UserFull.Id, UserPreferences.ToUpdate());
         if (!response.Succeeded)

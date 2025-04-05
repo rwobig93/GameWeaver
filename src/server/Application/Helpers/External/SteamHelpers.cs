@@ -15,7 +15,7 @@ public static class SteamHelpers
             var dynamicValueElement = root.EnumerateObject().First().Value;
 
             if (!dynamicValueElement.TryGetProperty("data", out var dataElement)) return null;
-            
+
             var dataJson = dataElement.GetRawText();
             var parsedResponse = serializer.DeserializeJson<SteamAppDetailResponseJson>(dataJson);
             return parsedResponse;

@@ -26,6 +26,8 @@ public class GameServerDb : IAuditableEntity<Guid>
     public bool Modded { get; set; } = false;
     public bool Private { get; set; } = true;
     public ConnectivityState ServerState { get; set; }
+    public string RunningConfigHash { get; set; } = "";
+    public string StorageConfigHash { get; set; } = "";
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }

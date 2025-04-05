@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Application.Helpers.Web;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Microsoft.Extensions.Options;
@@ -9,11 +10,13 @@ public class RunningServerState : IRunningServerState
 {
     private readonly IOptionsMonitor<AppConfiguration> _appConfig;
     private readonly ILogger _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public RunningServerState(IOptionsMonitor<AppConfiguration> appConfig, ILogger logger)
+    public RunningServerState(IOptionsMonitor<AppConfiguration> appConfig, ILogger logger, IHttpClientFactory httpClientFactory)
     {
         _appConfig = appConfig;
         _logger = logger;
+        _httpClientFactory = httpClientFactory;
 
         InitializationUpdate();
     }
@@ -22,8 +25,10 @@ public class RunningServerState : IRunningServerState
     public string ApplicationName { get; private set; } = "";
     public Guid SystemUserId { get; private set; } = Guid.Empty;
     public Version ApplicationVersion { get; private set; } = new();
-    
-    
+
+    public string PublicIp { get; private set; } = string.Empty;
+
+
     public void UpdateServerState()
     {
         UpdateApplicationConfiguration();
@@ -38,9 +43,16 @@ public class RunningServerState : IRunningServerState
                 SystemUserId, systemUserId);
             return;
         }
-        
+
         SystemUserId = systemUserId;
         _logger.Information("Running application system User Id Set: {SystemUserId}", SystemUserId);
+    }
+
+    public async Task UpdatePublicIp()
+    {
+        var publicIp = await _httpClientFactory.GetPublicIp();
+        _logger.Information("Updated public ip address: {PublicIpAddress}", publicIp);
+        PublicIp = publicIp;
     }
 
     private void InitializationUpdate()
@@ -48,6 +60,7 @@ public class RunningServerState : IRunningServerState
         UpdateRunningMode();
         UpdateApplicationVersion();
         UpdateServerState();
+        Task.Run(UpdatePublicIp);
     }
 
     private void UpdateApplicationVersion()

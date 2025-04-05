@@ -20,7 +20,7 @@ public static class AppThemes
             _ => DarkTheme
         };
     }
-    
+
     public static readonly AppTheme DarkTheme = new()
     {
         Id = AppThemeId.Dark,
@@ -29,7 +29,7 @@ public static class AppThemes
         Icon = Icons.Material.Filled.DarkMode,
         Theme = new MudTheme()
         {
-            
+
             PaletteDark = new PaletteDark()
             {
                 Primary = "#BB86FC",
@@ -55,7 +55,7 @@ public static class AppThemes
             LayoutProperties = AppLayouts.DefaultLayoutProperties
         }
     };
-    
+
     public static readonly AppTheme DarkerTheme = new()
     {
         Id = AppThemeId.Darker,
@@ -89,7 +89,7 @@ public static class AppThemes
             LayoutProperties = AppLayouts.DefaultLayoutProperties
         }
     };
-    
+
     public static readonly AppTheme HackerTheme = new()
     {
         Id = AppThemeId.Hacker,
@@ -123,7 +123,7 @@ public static class AppThemes
             LayoutProperties = AppLayouts.DefaultLayoutProperties
         }
     };
-    
+
     public static readonly AppTheme BrightTheme = new()
     {
         Id = AppThemeId.Bright,
@@ -146,7 +146,7 @@ public static class AppThemes
             LayoutProperties = AppLayouts.DefaultLayoutProperties
         }
     };
-    
+
     public static readonly AppTheme CustomThemeOne = new()
     {
         Id = AppThemeId.CustomOne,
@@ -159,7 +159,7 @@ public static class AppThemes
             LayoutProperties = AppLayouts.DefaultLayoutProperties
         }
     };
-    
+
     public static readonly AppTheme CustomThemeTwo = new()
     {
         Id = AppThemeId.CustomTwo,
@@ -172,7 +172,7 @@ public static class AppThemes
             LayoutProperties = AppLayouts.DefaultLayoutProperties
         }
     };
-    
+
     public static readonly AppTheme CustomThemeThree = new()
     {
         Id = AppThemeId.CustomThree,

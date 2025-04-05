@@ -46,8 +46,8 @@ public partial class GameView : ComponentBase
     private bool _canConfigureGame;
     private bool _canViewGameServers;
     private bool _canViewGameFiles;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -108,7 +108,7 @@ public partial class GameView : ComponentBase
         }
 
         _game = response.Data;
-        
+
         if (_game.Id == Guid.Empty)
         {
             _validIdProvided = false;
@@ -148,14 +148,14 @@ public partial class GameView : ComponentBase
         {
             return;
         }
-        
+
         var response = await GameServerService.GetLocalResourcesByGameProfileIdAsync(_game.DefaultGameProfileId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _localResources = response.Data.ToList();
     }
 
@@ -165,7 +165,7 @@ public partial class GameView : ComponentBase
         {
             return;
         }
-        
+
         var response = await GameService.UpdateAsync(_game.ToUpdate(), _loggedInUserId);
         if (!response.Succeeded)
         {
@@ -177,11 +177,11 @@ public partial class GameView : ComponentBase
         {
             var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
-            
+
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
         {
             if (await SaveNewConfigItems())
@@ -202,27 +202,27 @@ public partial class GameView : ComponentBase
         {
             var updateResourceResponse = await GameServerService.UpdateLocalResourceAsync(resource.ToUpdate(), _loggedInUserId);
             if (!updateResourceResponse.Succeeded) continue;
-            
+
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         foreach (var resource in _deletedLocalResources)
         {
             var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
             if (deleteResourceResponse.Succeeded) continue;
-            
+
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         _createdConfigItems.Clear();
         _updatedConfigItems.Clear();
         _deletedConfigItems.Clear();
         _createdLocalResources.Clear();
         _updatedLocalResources.Clear();
         _deletedLocalResources.Clear();
-        
+
         ToggleEditMode();
         await GetViewingGame();
         Snackbar.Add("Game successfully updated!", Severity.Success);
@@ -273,13 +273,13 @@ public partial class GameView : ComponentBase
 
         _manualVersionFiles = response.Data.ToList();
     }
-    
+
     private bool ConfigShouldBeShown(ConfigurationItemSlim item)
     {
         var shouldBeShown = item.FriendlyName.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
                             item.Key.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
                             item.Value.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase);
-        
+
         return shouldBeShown;
     }
 
@@ -295,11 +295,11 @@ public partial class GameView : ComponentBase
         }
 
         var newConfigItem = (ConfigurationItemSlim) dialogResult.Data;
-        
+
         _createdConfigItems.Add(newConfigItem);
         localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
     }
-    
+
     private void ConfigUpdated(ConfigurationItemSlim item)
     {
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
@@ -313,14 +313,14 @@ public partial class GameView : ComponentBase
             matchingNewConfig.DuplicateKey = item.DuplicateKey;
             return;
         }
-        
+
         var matchingUpdateConfig = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingUpdateConfig is null)
         {
             _updatedConfigItems.Add(item);
             return;
         }
-        
+
         matchingUpdateConfig.FriendlyName = item.FriendlyName;
         matchingUpdateConfig.Key = item.Key;
         matchingUpdateConfig.Value = item.Value;
@@ -336,7 +336,7 @@ public partial class GameView : ComponentBase
             _createdConfigItems.Remove(item);
             return;
         }
-        
+
         // Go through each resource config set and remove the targeted config item
         foreach (var resource in _localResources)
         {
@@ -355,17 +355,17 @@ public partial class GameView : ComponentBase
                 resource.ConfigSets = resourceConfigSets.ToList().Prepend(matchingActiveConfig);
                 continue;
             }
-            
+
             resource.ConfigSets = resourceConfigSets.Where(x => x.Id != item.Id).ToList();
         }
-        
+
         // Remove this config item from updated if it was updated and is now being deleted
         var matchingUpdateConfig = _updatedConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingUpdateConfig is not null)
         {
             _updatedConfigItems.Remove(item);
         }
-        
+
         // Add the config item to the update list to delete when saved
         var matchingDeleteConfig = _deletedConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingDeleteConfig is null)
@@ -386,7 +386,7 @@ public partial class GameView : ComponentBase
         }
 
         var newResource = (LocalResourceSlim) dialogResult.Data;
-        
+
         _localResources.Add(newResource);
         _createdLocalResources.Add(newResource);
     }
@@ -401,19 +401,19 @@ public partial class GameView : ComponentBase
             matchingNewResource.PathMac = localResource.PathMac;
             return;
         }
-        
+
         var matchingUpdatedResource = _updatedLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
         if (matchingUpdatedResource is null)
         {
             _updatedLocalResources.Add(localResource);
             return;
         }
-        
+
         matchingUpdatedResource.PathWindows = localResource.PathWindows;
         matchingUpdatedResource.PathLinux = localResource.PathLinux;
         matchingUpdatedResource.PathMac = localResource.PathMac;
     }
-    
+
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
     {
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
@@ -433,19 +433,19 @@ public partial class GameView : ComponentBase
         {
             return;
         }
-        
+
         var matchingNewResource = _createdLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
         if (matchingNewResource is not null)
         {
             _createdLocalResources.Remove(matchingNewResource);
         }
-        
+
         var matchingUpdatedResource = _updatedLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
         if (matchingUpdatedResource is not null)
         {
             _updatedLocalResources.Remove(matchingUpdatedResource);
         }
-        
+
         _localResources.Remove(localResource);
         _deletedLocalResources.Add(localResource);
         foreach (var configItem in localResource.ConfigSets)
@@ -472,10 +472,10 @@ public partial class GameView : ComponentBase
                 _updatedConfigItems.Add(matchingIgnoreItem);
                 continue;
             }
-            
+
             var createConfigResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
             if (createConfigResponse.Succeeded) continue;
-            
+
             createConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return true;
         }
@@ -504,17 +504,17 @@ public partial class GameView : ComponentBase
                     createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                     return true;
                 }
-                
+
                 configItem.LocalResourceId = createResourceResponse.Data;
             }
             else
             {
                 configItem.LocalResourceId = existingLocalResource.Id;
             }
-            
+
             var updateConfigResponse = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(), _loggedInUserId);
             if (updateConfigResponse.Succeeded) continue;
-            
+
             updateConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return true;
         }
@@ -537,10 +537,10 @@ public partial class GameView : ComponentBase
                     createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                     return true;
                 }
-                
+
                 configItem.LocalResourceId = createResourceResponse.Data;
                 configItem.Ignore = true;
-                
+
                 var ignoreCreateResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
                 if (!ignoreCreateResponse.Succeeded)
                 {
@@ -551,7 +551,7 @@ public partial class GameView : ComponentBase
 
             var deleteConfigResponse = await GameServerService.DeleteConfigurationItemAsync(configItem.Id, _loggedInUserId);
             if (deleteConfigResponse.Succeeded) continue;
-            
+
             deleteConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return true;
         }

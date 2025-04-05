@@ -1406,7 +1406,7 @@
         </member>
         <member name="M:Application.Api.v1.Identity.PermissionEndpoints.RemovePermissionFromRole(Application.Requests.Identity.Permission.PermissionRemoveFromRoleRequest,Application.Services.Identity.IAppPermissionService)">
             <summary>
-            Remove the specified permission from the specified role 
+            Remove the specified permission from the specified role
             </summary>
             <param name="permissionRequest">Detail used to remove a permission from a role</param>
             <param name="permissionService"></param>
@@ -1803,6 +1803,8 @@
             <b>string</b> ManualRootUrl<br/>
             <b>string</b> ServerProcessName<br/>
             <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>string</b> RunningConfigHash<br/>
+            <b>string</b> StorageConfigHash<br/>
             <b>Domain.Enums.GameServer.GameSource</b> Source<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.Mod.ModSlim&gt;</b> ModList<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceHost&gt;</b> Resources<br/>
@@ -1844,8 +1846,10 @@
             <code>
             <b>System.Guid</b> Id<br/>
             <b>bool</b> BuildVersionUpdated<br/>
-            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>Domain.Enums.GameServer.ConnectivityState?</b> ServerState<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
+            <b>string</b> RunningConfigHash<br/>
+            <b>string</b> StorageConfigHash<br/>
             </code>
             </remarks>
         </member>

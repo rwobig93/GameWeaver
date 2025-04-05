@@ -49,9 +49,13 @@ public partial class GameServerToHost
     [MemoryPackOrder(19)]
     public ServerState ServerState { get; set; }
     [MemoryPackOrder(20)]
-    public GameSource Source { get; set; }
+    public string RunningConfigHash { get; set; } = "";
     [MemoryPackOrder(21)]
-    public SerializableList<Mod> ModList { get; set; } = [];
+    public string StorageConfigHash { get; set; } = "";
     [MemoryPackOrder(22)]
+    public GameSource Source { get; set; }
+    [MemoryPackOrder(23)]
+    public SerializableList<Mod> ModList { get; set; } = [];
+    [MemoryPackOrder(24)]
     public SerializableList<LocalResource> Resources { get; set; } = [];
 }

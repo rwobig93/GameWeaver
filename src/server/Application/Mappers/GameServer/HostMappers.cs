@@ -78,7 +78,7 @@ public static class HostMappers
             DeletedOn = host.DeletedOn
         };
     }
-    
+
     public static HostUpdate ToUpdate(this HostDb hostDb)
     {
         return new HostUpdate

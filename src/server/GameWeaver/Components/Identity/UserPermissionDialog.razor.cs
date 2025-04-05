@@ -12,7 +12,7 @@ public partial class UserPermissionDialog
     [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
 
     [Parameter] public Guid UserId { get; set; }
-    
+
     private List<AppPermissionSlim> _assignedPermissions = [];
     private List<AppPermissionCreate> _availablePermissions = [];
     private HashSet<AppPermissionCreate> _addPermissions = [];
@@ -20,7 +20,7 @@ public partial class UserPermissionDialog
     private Guid _currentUserId;
     private bool _canRemovePermissions;
     private bool _canAddPermissions;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -77,7 +77,7 @@ public partial class UserPermissionDialog
                 .ToList();
         }
     }
-    
+
     private readonly TableGroupDefinition<AppPermissionSlim> _groupDefinitionDb = new()
     {
         GroupName = "Category",
@@ -86,7 +86,7 @@ public partial class UserPermissionDialog
         IsInitiallyExpanded = false,
         Selector = (p) => p.Name
     };
-    
+
     private readonly TableGroupDefinition<AppPermissionCreate> _groupDefinitionCreate = new()
     {
         GroupName = "Category",
@@ -99,11 +99,11 @@ public partial class UserPermissionDialog
     private void AddPermissions()
     {
         if (!_canAddPermissions) return;
-        
+
         foreach (var permission in _addPermissions)
         {
             _availablePermissions.Remove(permission);
-            
+
             var permissionConverted = permission.ToSlim();
             permissionConverted.CreatedBy = _currentUserId;
 
@@ -114,22 +114,22 @@ public partial class UserPermissionDialog
     private void RemovePermissions()
     {
         if (!_canRemovePermissions) return;
-        
+
         foreach (var permission in _removePermissions)
         {
             _assignedPermissions.Remove(permission);
-            
+
             var permissionConverted = permission.ToCreate();
             permissionConverted.CreatedBy = _currentUserId;
-            
+
             _availablePermissions.Add(permissionConverted);
         }
     }
-    
+
     private async Task Save()
     {
         if (!_canAddPermissions && !_canRemovePermissions) return;
-        
+
         var currentPermissions = await PermissionService.GetAllDirectForUserAsync(UserId);
         if (!currentPermissions.Succeeded)
         {
@@ -150,7 +150,7 @@ public partial class UserPermissionDialog
                 Description = permission.Description,
                 CreatedBy = _currentUserId
             }, _currentUserId);
-            
+
             if (!addPermission.Succeeded)
             {
                 addPermission.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -171,7 +171,7 @@ public partial class UserPermissionDialog
 
             Snackbar.Add($"Successfully removed permission {permission.Group}.{permission.Name}.{permission.Access}", Severity.Success);
         }
-        
+
         MudDialog.Close(DialogResult.Ok(true));
     }
 

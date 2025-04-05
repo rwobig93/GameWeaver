@@ -36,7 +36,7 @@ public class AppRoleService : IAppRoleService
         var foundUsers = await _roleRepository.GetUsersForRole(roleDb.Id);
         if (!foundUsers.Succeeded)
             return await Result<AppRoleFull?>.FailAsync(foundUsers.ErrorMessage);
-            
+
         fullRole.Users = (foundUsers.Result?.ToSlims() ?? new List<AppUserSlim>())
             .OrderBy(x => x.Username)
             .ToList();
@@ -44,7 +44,7 @@ public class AppRoleService : IAppRoleService
         var foundPermissions = await _permissionRepository.GetAllForRoleAsync(roleDb.Id);
         if (!foundPermissions.Succeeded)
             return await Result<AppRoleFull?>.FailAsync(foundPermissions.ErrorMessage);
-            
+
         fullRole.Permissions = (foundPermissions.Result?.ToSlims() ?? new List<AppPermissionSlim>())
             .OrderBy(x => x.Group)
             .ThenBy(x => x.Name)
@@ -67,7 +67,7 @@ public class AppRoleService : IAppRoleService
         {
             return true;
         }
-        
+
         // If the user is an admin we let them do whatever they want
         var modifyingUserIsAdmin = await IsUserAdmin(modifyingUserId);
         if (modifyingUserIsAdmin)
@@ -90,7 +90,7 @@ public class AppRoleService : IAppRoleService
         // We are assuming permission to edit roles is already verified, so we let all other actions be allowed
         return true;
     }
-    
+
     public async Task<IResult<IEnumerable<AppRoleSlim>>> GetAllAsync()
     {
         try
@@ -118,7 +118,7 @@ public class AppRoleService : IAppRoleService
             {
                 return await PaginatedResult<IEnumerable<AppRoleSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AppRoleSlim>>.SuccessAsync([]);
@@ -215,7 +215,7 @@ public class AppRoleService : IAppRoleService
             var foundRole = await _roleRepository.GetByNameAsync(roleName);
             if (!foundRole.Succeeded)
                 return await Result<AppRoleFull?>.FailAsync(foundRole.ErrorMessage);
-            
+
             if (foundRole.Result is null)
                 return await Result<AppRoleFull?>.FailAsync(foundRole.Result?.ToFull());
 
@@ -257,7 +257,7 @@ public class AppRoleService : IAppRoleService
             {
                 return await PaginatedResult<IEnumerable<AppRoleSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AppRoleSlim>>.SuccessAsync([]);
@@ -286,20 +286,20 @@ public class AppRoleService : IAppRoleService
         {
             if (createObject.Name.Length < RoleConstants.RoleNameMinimumLength)
                 return await Result<Guid>.FailAsync($"Role name must be longer than {RoleConstants.RoleNameMinimumLength} characters");
-            
+
             if (string.IsNullOrWhiteSpace(createObject.Description))
                 return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
 
             var existingRoleWithName = await _roleRepository.GetByNameAsync(createObject.Name);
             if (!existingRoleWithName.Succeeded)
                 return await Result<Guid>.FailAsync(existingRoleWithName.ErrorMessage);
-            
+
             if (existingRoleWithName.Result is not null)
                 return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
 
             createObject.CreatedBy = modifyingUserId;
             createObject.CreatedOn = _dateTimeService.NowDatabaseTime;
-            
+
             var createRequest = await _roleRepository.CreateAsync(createObject);
             if (!createRequest.Succeeded)
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
@@ -327,12 +327,12 @@ public class AppRoleService : IAppRoleService
             {
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.Roles.CannotAdministrateAdminRole);
             }
-            
+
             if (updateObject.Name is not null && updateObject.Name.Length < RoleConstants.RoleNameMinimumLength)
             {
                 return await Result<Guid>.FailAsync($"Role name must be longer than {RoleConstants.RoleNameMinimumLength} characters");
             }
-            
+
             if (string.IsNullOrWhiteSpace(updateObject.Description))
             {
                 return await Result<Guid>.FailAsync("Role description must have something in it - please use a descriptive description");
@@ -346,13 +346,13 @@ public class AppRoleService : IAppRoleService
                 {
                     return await Result.FailAsync("The role you are attempting to modify cannot have it's name changed");
                 }
-                
+
                 var existingRoleWithName = await _roleRepository.GetByNameAsync(updateObject.Name!);
                 if (!existingRoleWithName.Succeeded)
                 {
                     return await Result<Guid>.FailAsync(existingRoleWithName.ErrorMessage);
                 }
-                
+
                 if (existingRoleWithName.Result is not null)
                 {
                     return await Result<Guid>.FailAsync("A role with that name already exists, please use a different name");
@@ -393,7 +393,7 @@ public class AppRoleService : IAppRoleService
 
             if (RoleConstants.NoTouchRoles.Contains(foundRole.Data.Name))
                 return await Result.FailAsync("The role you are attempting to delete is a built-in role and cannot be deleted");
-            
+
             var deleteRequest = await _roleRepository.DeleteAsync(id, modifyingUserId);
             if (!deleteRequest.Succeeded)
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
@@ -480,11 +480,11 @@ public class AppRoleService : IAppRoleService
 
             if (adminRoleCheck.Result)
                 return await Result<bool>.SuccessAsync(adminRoleCheck.Result);
-            
+
             var modRoleCheck = await _roleRepository.IsUserInRoleAsync(userId, RoleConstants.DefaultRoles.ModeratorName);
             if (!modRoleCheck.Succeeded)
                 return await Result<bool>.FailAsync(modRoleCheck.ErrorMessage);
-            
+
             return await Result<bool>.SuccessAsync(modRoleCheck.Result);
         }
         catch (Exception ex)
@@ -507,7 +507,7 @@ public class AppRoleService : IAppRoleService
             {
                 return await Result.FailAsync(ErrorMessageConstants.Roles.RoleUsersAreStatic);
             }
-            
+
             var userAdd = await _roleRepository.AddUserToRoleAsync(userId, roleId, modifyingUserId);
             if (!userAdd.Succeeded)
             {
@@ -536,7 +536,7 @@ public class AppRoleService : IAppRoleService
             {
                 return await Result.FailAsync(ErrorMessageConstants.Roles.RoleUsersAreStatic);
             }
-            
+
             var userRemove = await _roleRepository.RemoveUserFromRoleAsync(userId, roleId, modifyingUserId);
             if (!userRemove.Succeeded)
             {

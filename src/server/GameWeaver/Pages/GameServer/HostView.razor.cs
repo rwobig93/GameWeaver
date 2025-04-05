@@ -144,8 +144,8 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private bool _canViewGameServers;
     private bool _canDeleteHost;
     private bool _canChangeOwnership;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -154,7 +154,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             {
                 _checkinsDateSelection = _resourceHistoryChoices.First();
                 _checkinsAfterDate = DateTimeService.NowDatabaseTime.AddMinutes(-2);
-                
+
                 await GetPermissions();
                 await GetClientTimezone();
                 await GetViewingHost();
@@ -162,9 +162,9 @@ public partial class HostView : ComponentBase, IAsyncDisposable
                 await GetGameServers();
                 UpdateHostNetworkDetails();
                 UpdateHostPortCounts();
-                
+
                 StateHasChanged();
-            
+
                 _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
             }
         }
@@ -179,13 +179,13 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         await UpdateCheckins();
         UpdateThemeColors();
         UpdateStatus();
-        
+
         if (!IsOffline)
         {
             UpdateNetwork();
             UpdateCompute();
         }
-        
+
         await InvokeAsync(StateHasChanged);
     }
 
@@ -219,7 +219,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         }
 
         _host = response.Data;
-        
+
         if (_host.Id == Guid.Empty)
         {
             _validIdProvided = false;
@@ -274,18 +274,18 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         _canDeleteHost = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Hosts.Delete) || _host.OwnerId == _loggedInUserId;
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Hosts.ChangeOwnership) || _host.OwnerId == _loggedInUserId;
     }
-    
+
     private async Task Save()
     {
         if (!_canEditHost) return;
-        
+
         var response = await HostService.UpdateAsync(_host.ToUpdateRequest(), _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         ToggleEditMode();
         await GetViewingHost();
         Snackbar.Add("Host successfully updated!", Severity.Success);
@@ -298,7 +298,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"ConfirmButtonText", "Change Host Owner"},
@@ -341,7 +341,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"Title", $"Allowed Host Ports for {_host.FriendlyName}"},
@@ -376,7 +376,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         var dialogParameters = new DialogParameters()
         {
             {"Title", "Are you sure you want to delete this host?"},
@@ -499,11 +499,11 @@ public partial class HostView : ComponentBase, IAsyncDisposable
                     response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                     return;
                 }
-                
+
                 _checkins.Add(response.Data.First());
                 if (_checkins.Count != 0)
                 {
-                    _checkins.Remove(_checkins.First());   
+                    _checkins.Remove(_checkins.First());
                 }
                 break;
             default:
@@ -519,7 +519,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
                     // Host is offline longer than the timespan we are getting checkins for, so we will get the latest checkins to get the offline time
                     response = await HostService.GetCheckInsLatestByHostIdAsync(_host.Id, 100);
                 }
-                
+
                 _checkins = response.Data.ToList();
                 _checkins.Reverse();
                 break;
@@ -557,7 +557,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         if (primaryInterface is null) return;
 
         var interfaceSpeed = (int)(primaryInterface.Speed / 8_000);
-        
+
         _chartOptionsNetworkLong.MaxNumYAxisTicks = interfaceSpeed;
         _chartOptionsNetworkLong.YAxisTicks = interfaceSpeed;
     }
@@ -569,7 +569,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             IsOffline = false;
             return;
         }
-        
+
         var lastCheckinTime = _checkins.Last().ReceiveTimestamp;
         var currentTime = DateTimeService.NowDatabaseTime;
         if ((currentTime - lastCheckinTime).TotalSeconds > 3)
@@ -577,7 +577,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             IsOffline = true;
             return;
         }
-        
+
         IsOffline = false;
     }
 
@@ -587,9 +587,9 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         {
             return;
         }
-        
+
         _currentPalette = ParentLayout._selectedTheme.PaletteDark;
-        
+
         _chartOptionsCpu.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Primary.Value];
         _chartOptionsCpuLong.ChartPalette = [_currentPalette.Primary.Value, _currentPalette.Surface.Value];
         _chartOptionsRam.ChartPalette = [_currentPalette.Surface.Value, _currentPalette.Secondary.Value];
@@ -619,24 +619,24 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         _ram.Clear();
         _ram.Add(new ChartSeries { Data = _checkins.Select(x => Math.Round(x.RamUsage, 0)).Reverse().ToArray() });
     }
-    
+
     private void UpdateNetwork()
     {
         if (_checkins.Count == 0)
         {
             return;
         }
-        
+
         _netInShort.Clear();
         _netInLong.Clear();
         _netOutShort.Clear();
         _netOutLong.Clear();
-        
+
         var networkIn = _checkins.Select(x =>
             new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(_localTimeZone), (double)x.NetworkInBytes / 8_000)).Reverse().ToList();
         var networkOut = _checkins.Select(x =>
             new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(_localTimeZone), (double)x.NetworkOutBytes / 8_000)).Reverse().ToList();
-        
+
         _netInShort.Add(new TimeSeriesChartSeries { Data = networkIn.TakeLast(100).ToList() });
         _netInLong.Add(new TimeSeriesChartSeries { Data = networkIn });
         _netOutShort.Add(new TimeSeriesChartSeries { Data = networkOut.TakeLast(100).ToList() });
@@ -685,7 +685,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
         await UpdateCheckins();
         StateHasChanged();
     }
-    
+
     public async ValueTask DisposeAsync()
     {
         _timer?.Dispose();

@@ -33,12 +33,12 @@ public static class LocalResourceMappers
             ConfigSets = []
         };
     }
-    
+
     public static IEnumerable<LocalResourceSlim> ToSlims(this IEnumerable<LocalResourceDb> localResourceDbs)
     {
         return localResourceDbs.Select(ToSlim);
     }
-    
+
     public static LocalResourceUpdate ToUpdate(this LocalResourceDb localResource)
     {
         return new LocalResourceUpdate

@@ -17,7 +17,7 @@ public class PayloadParser : IPayloadParser
         _payload = payload;
         PayloadLength = _payload.Length - 1;
     }
-    
+
     /// <inheritdoc />
     public int CurrentPayloadPosition { get; private set; } = -1;
 
@@ -51,7 +51,7 @@ public class PayloadParser : IPayloadParser
         {
             throw new EndOfStreamException();
         }
-        
+
         return _payload[CurrentPayloadPosition];
     }
 
@@ -69,7 +69,7 @@ public class PayloadParser : IPayloadParser
                 throw new EndOfStreamException();
             }
         }
-        
+
         return Encoding.UTF8.GetString(_payload, stringStartIndex, CurrentPayloadPosition - stringStartIndex);
     }
 

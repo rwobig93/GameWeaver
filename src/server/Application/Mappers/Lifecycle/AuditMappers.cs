@@ -33,7 +33,7 @@ public static class AuditMappers
             After = auditTrailCreate.After
         };
     }
-    
+
     public static AuditTrailSlim ToSlim(this AuditTrailWithUserDb auditTrailDb)
     {
         return new AuditTrailSlim

@@ -11,18 +11,18 @@ public partial class GameServerWidget : ComponentBase
     [Parameter] public int WidthPx { get; set; } = 400;
     [Parameter] public int HeightPx { get; set; } = 100;
     [Parameter] public bool GamerMode { get; set; } = false;
-    
+
     [Inject] public IGameService GameService { get; init; } = null!;
 
     private GameSlim _game = new() { Id = Guid.Empty, FriendlyName = "Unknown" };
     private string _cssBorderBase = "rounded-lg justify-center align-center mud-text-align-center";
     private string _cssBorderStatus = " border-status-default";
     private string _cssTextStatus = "";
-    
-    
+
+
     private string Width => $"{WidthPx}px";
     private string Height => $"{HeightPx}px";
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -47,14 +47,14 @@ public partial class GameServerWidget : ComponentBase
                 _cssTextStatus = "rainbow-text";
                 return;
             }
-            
+
             _cssBorderStatus = " border-status-success";
             return;
         }
-        
+
         _cssBorderStatus = " border-status-error";
     }
-    
+
     private async Task GetGame()
     {
         var response = await GameService.GetByIdAsync(GameServer.GameId);

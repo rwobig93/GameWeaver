@@ -25,6 +25,8 @@ public class GameServerUpdate
     public bool? Modded { get; set; }
     public bool? Private { get; set; }
     public ConnectivityState? ServerState { get; set; }
+    public string? RunningConfigHash { get; set; }
+    public string? StorageConfigHash { get; set; }
     public Guid? CreatedBy { get; set; }
     public DateTime? CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }

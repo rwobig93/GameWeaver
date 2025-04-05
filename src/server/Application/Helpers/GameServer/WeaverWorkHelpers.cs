@@ -24,7 +24,7 @@ public static class WeaverWorkHelpers
             LastModifiedOn = null
         });
     }
-    
+
     public static Task<DatabaseActionResult<int>> SendGameserverStateUpdate(this IHostRepository repository, Guid hostId,
         GameServerToHost gameServer, Guid modifyingUserId, DateTime createdOn)
     {

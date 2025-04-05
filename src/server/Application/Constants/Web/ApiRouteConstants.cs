@@ -12,7 +12,7 @@ public static class ApiRouteConstants
     {
         public const string Health = "/_health";
     }
-    
+
     public static class Identity
     {
         public static class User
@@ -40,7 +40,7 @@ public static class ApiRouteConstants
             public const string Delete = "/api/identity/role";
             public const string Create = "/api/identity/role";
             public const string Update = "/api/identity/role";
-        
+
             public const string GetRolesForUser = "/api/identity/roles/user";
             public const string IsUserInRole = "/api/identity/role/user/has";
             public const string AddUserToRole = "/api/identity/role/user/add";
@@ -53,13 +53,13 @@ public static class ApiRouteConstants
             public const string GetById = "/api/identity/permission";
             public const string Delete = "/api/identity/permission";
             public const string Update = "/api/identity/permission";
-        
+
             public const string GetDirectPermissionsForUser = "/api/identity/permissions/user/direct";
             public const string GetAllPermissionsForUser = "/api/identity/permissions/user/all";
             public const string AddPermissionToUser = "/api/identity/permission/user/add";
             public const string RemovePermissionFromUser = "/api/identity/permission/user/remove";
             public const string DoesUserHavePermission = "/api/identity/permission/user/has";
-        
+
             public const string GetAllPermissionsForRole = "/api/identity/permission/role";
             public const string AddPermissionToRole = "/api/identity/permission/role/add";
             public const string RemovePermissionFromRole = "/api/identity/permission/role/remove";
@@ -277,7 +277,7 @@ public static class ApiRouteExtensions
     {
         if (hostOrigin.EndsWith('/'))
             hostOrigin = hostOrigin[..^1];
-        
+
         return string.Concat(hostOrigin, uri);
     }
 }

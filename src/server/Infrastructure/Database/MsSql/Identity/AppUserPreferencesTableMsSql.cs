@@ -9,7 +9,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "AppUserPreferences";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserPreferencesTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
@@ -29,7 +29,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -44,7 +44,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteForUser = new()
     {
         Table = Table,
@@ -59,7 +59,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 WHERE OwnerId = @OwnerId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -72,7 +72,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}];
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -88,7 +88,7 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,

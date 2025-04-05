@@ -26,6 +26,8 @@ public class GameServerLocal
     public string ServerProcessName { get; set; } = "";
     public DateTime LastStateUpdate { get; set; } = DateTime.Now.ToLocalTime();
     public ServerState ServerState { get; set; } = ServerState.Unknown;
+    public string RunningConfigHash { get; set; } = "";
+    public string StorageConfigHash { get; set; } = "";
     public GameSource Source { get; set; }
     public SerializableList<Mod> ModList { get; set; } = [];
     public SerializableList<LocalResource> Resources { get; set; } = [];

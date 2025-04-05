@@ -20,13 +20,13 @@ public static class OsHelpers
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             return OsType.Windows;
-        
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             return OsType.Linux;
-        
+
         if (RuntimeInformation.IsOSPlatform(OSPlatform.FreeBSD))
             return OsType.Linux;
-        
+
         return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? OsType.Mac : OsType.Unknown;
     }
 
@@ -74,7 +74,7 @@ public static class OsHelpers
     {
         if (string.IsNullOrWhiteSpace(instancePath))
             instancePath = GetSteamCmdDirectory();
-        
+
         return Path.Combine(instancePath, ".Source");
     }
 

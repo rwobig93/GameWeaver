@@ -15,7 +15,7 @@ public class AppThemeCustom
     public string ColorInfo { get; set; } = "#2196f3";
     public string ColorWarning { get; set; } = "#ff9800";
     public string ColorError { get; set; } = "#df0808";
-    
+
     public static AppThemeCustom GetExampleCustomOne()
     {
         return new AppThemeCustom
@@ -32,7 +32,7 @@ public class AppThemeCustom
             ColorError = "#df0808"
         };
     }
-    
+
     public static AppThemeCustom GetExampleCustomTwo()
     {
         return new AppThemeCustom
@@ -49,7 +49,7 @@ public class AppThemeCustom
             ColorError = "#df0808"
         };
     }
-    
+
     public static AppThemeCustom GetExampleCustomThree()
     {
         return new AppThemeCustom

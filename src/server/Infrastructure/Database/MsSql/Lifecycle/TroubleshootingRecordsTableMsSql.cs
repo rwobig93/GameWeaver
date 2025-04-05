@@ -188,7 +188,7 @@ public class TroubleshootingRecordsTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY Timestamp DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteOlderThan = new()
     {
         Table = Table,

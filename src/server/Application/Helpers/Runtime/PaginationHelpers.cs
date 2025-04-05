@@ -8,7 +8,7 @@ public static class PaginationHelpers
     {
         if (pageNumber < 1)
             return 0;
-        
+
         return (pageNumber - 1) * pageSize;
     }
 
@@ -20,13 +20,13 @@ public static class PaginationHelpers
             entity.PageSize = 0;
             return;
         }
-        
+
         entity.CurrentPage = pageNumber;
         entity.PageSize = pageSize;
         entity.StartPage = 1;
         entity.EndPage = (entity.TotalCount / pageSize) + 1;
     }
-    
+
     public static List<int> GetPageSizes(bool large = false)
     {
         if (large)
@@ -40,7 +40,7 @@ public static class PaginationHelpers
                 500
             ];
         }
-        
+
         return
         [
             10,

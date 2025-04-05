@@ -56,9 +56,9 @@ public static class DependencyInjection
     public static WebApplicationBuilder AddInfrastructure(this WebApplicationBuilder builder)
     {
         // Replace default logger w/ Serilog, configure via appsettings.json - uses the "Serilog" section
-        builder.Host.UseSerilog((ctx, logConfig) => 
+        builder.Host.UseSerilog((ctx, logConfig) =>
             logConfig.ReadFrom.Configuration(ctx.Configuration), preserveStaticLogger: false);
-        
+
         builder.Services.AddBlazorServerCommon();
         builder.Services.AddSettingsConfiguration(builder.Configuration);
         builder.Services.AddSystemServices(builder.Configuration);
@@ -109,7 +109,7 @@ public static class DependencyInjection
     private static void AddSystemServices(this IServiceCollection services, IConfiguration configuration)
     {
         var databaseSettings = configuration.GetDatabaseSettings();
-        
+
         services.AddHangfire(x =>
         {
             x.UseSerilogLogProvider();
@@ -142,7 +142,7 @@ public static class DependencyInjection
             config.SnackbarConfiguration.ShowTransitionDuration = 500;
             config.SnackbarConfiguration.SnackbarVariant = Variant.Outlined;
         });
-        
+
         services.AddBlazoredLocalStorage();
         services.AddHttpClient(ApiConstants.Clients.GameWeaverDefault, options =>
         {
@@ -179,7 +179,7 @@ public static class DependencyInjection
         {
             return;
         }
-        
+
         httpClientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
         {
             return new HttpClientHandler()
@@ -197,7 +197,7 @@ public static class DependencyInjection
         services.AddSingleton<IAppUserService, AppUserService>();
         services.AddSingleton<IAppRoleService, AppRoleService>();
         services.AddSingleton<IAppPermissionService, AppPermissionService>();
-        
+
         services.AddScoped<AuthStateProvider>();
         services.AddTransient<AuthenticationStateProvider, AuthStateProvider>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -208,7 +208,7 @@ public static class DependencyInjection
         services.AddScoped<IAuthorizationHandler, DynamicAuthorizationHandler>();
 
         services.AddSingleton<IExternalAuthProviderService, ExternalAuthProviderService>();
-        
+
         services.AddJwtAuthentication(configuration);
         services.AddAuthorization();
         services.Configure<SecurityStampValidatorOptions>(options =>
@@ -227,10 +227,10 @@ public static class DependencyInjection
         // Integration Services
         services.AddSingleton<IExcelService, ExcelService>();
         services.AddTransient<IEmailService, EmailService>();
-        
+
         // System Services
         services.AddSingleton<IFileStorageRecordService, FileStorageRecordService>();
-        
+
         // Web Service Services
         services.AddTransient<IMfaService, MfaService>();
         services.AddTransient<IQrCodeService, QrCodeService>();
@@ -241,7 +241,7 @@ public static class DependencyInjection
         services.AddSingleton<IGameService, GameService>();
         services.AddSingleton<IGameServerService, GameServerService>();
         services.AddSingleton<INetworkService, NetworkService>();
-        
+
         // External Services
         services.AddSingleton<ISteamApiService, SteamApiService>();
     }
@@ -267,7 +267,7 @@ public static class DependencyInjection
                 new UrlSegmentApiVersionReader());
         });
         services.AddEndpointsApiExplorer();
-        
+
         services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("Database");
     }
 
@@ -275,7 +275,7 @@ public static class DependencyInjection
     {
         // Add core SQL database service
         services.AddSingleton<ISqlDataService, SqlDataService>();
-        
+
         // Add repositories based on the desired database provider
         var databaseProvider = configuration.GetDatabaseSettings().Provider;
         switch (databaseProvider)
@@ -306,12 +306,12 @@ public static class DependencyInjection
         // Seeds the targeted database using the indicated provider on startup
         services.AddHostedService<SqlDatabaseSeederService>();
     }
-    
+
     private static void AddJwtAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var securityConfig = configuration.GetSecuritySettings();
         var appConfig = configuration.GetApplicationSettings();
-        
+
         services
             .AddAuthentication(authentication =>
             {
@@ -326,7 +326,7 @@ public static class DependencyInjection
                 bearer.TokenValidationParameters = JwtHelpers.GetJwtValidationParameters(securityConfig, appConfig);
                 bearer.AutomaticRefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
                 bearer.RefreshInterval = TimeSpan.FromMinutes(securityConfig.UserTokenExpirationMinutes - 1);
-                
+
                 bearer.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = auth =>
@@ -358,7 +358,7 @@ public static class DependencyInjection
                     {
                         context.HandleResponse();
                         if (context.Response.HasStarted) return Task.CompletedTask;
-                        
+
                         context.Response.StatusCode = (int) HttpStatusCode.Unauthorized;
                         context.Response.ContentType = "application/json";
                         var permissionFailure = JsonConvert.SerializeObject(Result.Fail(ErrorMessageConstants.Permissions.PermissionError));

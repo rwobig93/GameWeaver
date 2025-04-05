@@ -14,12 +14,12 @@ public static class PublisherMappers
             Name = publisherDb.Name
         };
     }
-    
+
     public static IEnumerable<PublisherSlim> ToSlims(this IEnumerable<PublisherDb> publisherDbs)
     {
         return publisherDbs.Select(x => x.ToSlim()).ToList();
     }
-    
+
     public static PublisherFull ToFull(this PublisherDb publisherDb)
     {
         return new PublisherFull
@@ -30,7 +30,7 @@ public static class PublisherMappers
             Games = []
         };
     }
-    
+
     public static IEnumerable<PublisherFull> ToFulls(this IEnumerable<PublisherDb> publisherDbs)
     {
         return publisherDbs.Select(x => x.ToFull()).ToList();

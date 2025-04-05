@@ -50,7 +50,7 @@ public class NotifyRecordService : INotifyRecordService
             {
                 return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.SuccessAsync([]);
@@ -133,7 +133,7 @@ public class NotifyRecordService : INotifyRecordService
             {
                 return await Result<int>.FailAsync(response.ErrorMessage);
             }
-            
+
             _eventService.TriggerNotify("NotifyServiceCreate", new NotifyTriggeredEvent
             {
                 EntityId = createObject.EntityId,
@@ -179,7 +179,7 @@ public class NotifyRecordService : INotifyRecordService
             {
                 return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.SuccessAsync([]);
@@ -210,7 +210,7 @@ public class NotifyRecordService : INotifyRecordService
             {
                 return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<NotifyRecordSlim>>.SuccessAsync([]);

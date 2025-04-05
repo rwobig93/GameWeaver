@@ -11,14 +11,14 @@ public partial class AuditTrailView
     [Inject] private IAuditTrailService AuditService { get; init; } = null!;
     [Inject] private ISerializerService Serializer { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    
+
     [Parameter] public Guid TrailId { get; set; }
 
     private AuditTrailSlim _viewingTrail = new();
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
 
     private bool _invalidDataProvided;
-    
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -44,11 +44,11 @@ public partial class AuditTrailView
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
         if (!queryParameters.TryGetValue("trailId", out var queryTrailId)) return;
-        
+
         var providedIdIsValid = Guid.TryParse(queryTrailId, out var parsedTrailId);
         if (!providedIdIsValid)
             throw new InvalidDataException("Invalid TrailId provided for audit trail view");
-            
+
         TrailId = parsedTrailId;
     }
 

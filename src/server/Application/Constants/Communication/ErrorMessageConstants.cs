@@ -22,11 +22,11 @@ public static class ErrorMessageConstants
             "Your account is locked out due to bad password attempts, please contact the administrator or wait for the lockout expiration to end";
         public const string EmailNotConfirmedError = "Your email has not been confirmed, please confirm your email";
         public const string UserNotFoundError = "Was unable to find a user with the provided information";
-        public const string ServiceAccountOnly = "This action is meant for service accounts. " + 
+        public const string ServiceAccountOnly = "This action is meant for service accounts. " +
             "Please contact the administrator for a service account or generate your own token from the account page";
         public const string UserAccountOnly = "This action is meant for user accounts. Please login with a user account or register to get your own";
     }
-    
+
     public static class Authentication
     {
         public const string CredentialsInvalidError = "The username and password combination provided is invalid";
@@ -111,7 +111,7 @@ public static class ErrorMessageConstants
     {
         public const string NotFound = "Was unable to find a game server using the information provided";
         public const string DefaultProfileAssignment = "The default profile for a game cannot be assigned to a game server";
-        
+
         public static string InsufficientCurrency(string currencyName) => $"You don't have enough {currencyName} to create a game server";
     }
 

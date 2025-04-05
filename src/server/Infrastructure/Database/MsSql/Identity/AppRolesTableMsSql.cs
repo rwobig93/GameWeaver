@@ -9,7 +9,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "AppRoles";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppRolesTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 1,
@@ -28,7 +28,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -43,7 +43,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -72,7 +72,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY r.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -88,7 +88,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY r.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByName = new()
     {
         Table = Table,
@@ -104,7 +104,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY r.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -125,7 +125,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@Id, @Name, @Description, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -143,7 +143,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                     OR r.Description LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -162,7 +162,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY r.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,
@@ -184,7 +184,7 @@ public class AppRolesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = COALESCE(@Id, Id);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SetCreatedById = new()
     {
         Table = Table,

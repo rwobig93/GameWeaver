@@ -9,7 +9,7 @@ public class GeneralTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "General";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GeneralTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlStoredProcedure GetRowCount = new()
     {
         Table = new SqlTable() { TableName = TableName },
@@ -25,7 +25,7 @@ public class GeneralTableMsSql : IMsSqlEnforcedEntity
                 AND spart.index_id < 2;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure VerifyConnectivity = new()
     {
         Table = new SqlTable() { TableName = TableName },

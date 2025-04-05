@@ -62,7 +62,7 @@ public class FileStorageRecordService : IFileStorageRecordService
             {
                 return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.SuccessAsync([]);
@@ -188,7 +188,7 @@ public class FileStorageRecordService : IFileStorageRecordService
             convertedRecord.CreatedBy = requestUserId;
             convertedRecord.CreatedOn = _dateTime.NowDatabaseTime;
             convertedRecord.HashSha256 = "";
-            
+
             var recordCreate = await _recordRepository.CreateAsync(convertedRecord);
             if (!recordCreate.Succeeded)
             {
@@ -234,7 +234,7 @@ public class FileStorageRecordService : IFileStorageRecordService
                 return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
 
-            var fileHash = FileHelpers.ComputeSha256Hash(filePath);
+            var fileHash = FileHelpers.ComputeFileContentSha256Hash(filePath);
             var recordUpdate = await _recordRepository.UpdateAsync(new FileStorageRecordUpdate() {Id = recordCreate.Result, HashSha256 = fileHash});
             if (recordUpdate.Succeeded) return await Result<Guid>.SuccessAsync(recordCreate.Result);
             {
@@ -280,7 +280,7 @@ public class FileStorageRecordService : IFileStorageRecordService
                     });
                 return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
             }
-            
+
             var recordDelete = await _recordRepository.DeleteAsync(id, requestUserId);
             if (recordDelete.Succeeded) return await Result<Guid>.SuccessAsync();
             {
@@ -329,7 +329,7 @@ public class FileStorageRecordService : IFileStorageRecordService
             {
                 return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<FileStorageRecordSlim>>.SuccessAsync([]);
@@ -356,7 +356,7 @@ public class FileStorageRecordService : IFileStorageRecordService
             var convertedRecord = request.ToUpdate();
             convertedRecord.LastModifiedBy = requestUserId;
             convertedRecord.LastModifiedOn = _dateTime.NowDatabaseTime;
-            
+
             var updateRecord = await _recordRepository.UpdateAsync(convertedRecord);
             if (!updateRecord.Succeeded)
             {

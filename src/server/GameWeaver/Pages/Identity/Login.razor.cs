@@ -21,7 +21,7 @@ public partial class Login
     [Parameter] public string RedirectReason { get; set; } = "";
     [Parameter] public string OauthCode { get; set; } = "";
     [Parameter] public string OauthState { get; set; } = "";
-    
+
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
@@ -40,8 +40,8 @@ public partial class Login
     private List<string> AuthResults { get; set; } = [];
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    
-    
+
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -57,13 +57,13 @@ public partial class Login
     {
         var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
-        
+
         if (queryParameters.TryGetValue(LoginRedirectConstants.RedirectParameter, out var redirectReason))
             RedirectReason = redirectReason!;
-        
+
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthCode, out var oauthCode))
             OauthCode = oauthCode!;
-        
+
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthState, out var oauthState))
             OauthState = oauthState!;
     }
@@ -115,21 +115,21 @@ public partial class Login
             {
                 return;
             }
-            
+
             var authResponse = await AccountService.LoginGuiAsync(new UserLoginRequest
             {
                 Username = Username,
                 Password = Password
             });
-            
+
             if (!authResponse.Succeeded)
             {
                 authResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
-            
+
             Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);
-            
+
             NavManager.NavigateTo(AppSettings.Value.BaseUrl, true);
         }
         catch (Exception ex)
@@ -148,7 +148,7 @@ public partial class Login
     private bool IsRequiredInformationPresent()
     {
         var informationValid = true;
-        
+
         if (string.IsNullOrWhiteSpace(Username)) {
             Snackbar.Add("Username field is empty", Severity.Error); informationValid = false;
         }
@@ -167,7 +167,7 @@ public partial class Login
             _passwordInputIcon = Icons.Material.Filled.Visibility;
             return;
         }
-        
+
         _passwordInput = InputType.Password;
         _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     }
@@ -188,19 +188,19 @@ public partial class Login
     {
         ShowAuth = !ShowAuth;
     }
-    
+
     private void DebugFillAdminCredentials()
     {
         Username = UserConstants.DefaultUsers.AdminUsername;
         Password = UserConstants.DefaultUsers.AdminPassword;
     }
-    
+
     private void DebugFillModeratorCredentials()
     {
         Username = UserConstants.DefaultUsers.ModeratorUsername;
         Password = UserConstants.DefaultUsers.ModeratorPassword;
     }
-    
+
     private void DebugFillBasicCredentials()
     {
         Username = UserConstants.DefaultUsers.BasicUsername;
@@ -217,7 +217,7 @@ public partial class Login
         }
 
         if (!foundUser.Data.TwoFactorEnabled) return true;
-        
+
         var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var dialogParameters = new DialogParameters()
         {
@@ -244,7 +244,7 @@ public partial class Login
             providerLoginUriRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        
+
         NavManager.NavigateTo(providerLoginUriRequest.Data);
     }
 
@@ -271,15 +271,15 @@ public partial class Login
             if (redirectState.redirect == ExternalAuthRedirect.Security)
             {
                 var securityUriState =
-                    QueryHelpers.AddQueryString(AppRouteConstants.Account.Security, LoginRedirectConstants.OauthCode, 
+                    QueryHelpers.AddQueryString(AppRouteConstants.Account.Security, LoginRedirectConstants.OauthCode,
                         redirectState.provider.ToString());
                 var securityUriFull =
                     QueryHelpers.AddQueryString(securityUriState, LoginRedirectConstants.OauthState, externalProfileRequest.Data.Id);
-                
+
                 NavManager.NavigateTo(securityUriFull);
                 return;
             }
-            
+
             var authResponse = await AccountService.LoginExternalAuthAsync(new UserExternalAuthLoginRequest
             {
                 Provider = redirectState.provider,
@@ -304,7 +304,7 @@ public partial class Login
             var mfaIsHandled = await IsMfaHandled();
             if (!mfaIsHandled)
                 return;
-            
+
             Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);
             NavManager.NavigateTo(AppSettings.Value.BaseUrl, true);
         }

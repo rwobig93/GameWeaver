@@ -57,14 +57,14 @@ public static class GameServerEndpoints
     /// <param name="currentUserService"></param>
     /// <returns>List of game servers</returns>
     [Authorize(PermissionConstants.GameServer.Gameserver.GetAllPaginated)]
-    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameServerService gameServerService, 
+    private static async Task<IResult<IEnumerable<GameServerSlim>>> GetAllPaginated([FromQuery]int pageNumber, [FromQuery]int pageSize, IGameServerService gameServerService,
         IOptions<AppConfiguration> appConfig, ICurrentUserService currentUserService)
     {
         try
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.GetAllPaginatedAsync(pageNumber, pageSize, currentUserId);
             if (!result.Succeeded)
             {
@@ -72,7 +72,7 @@ public static class GameServerEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -82,7 +82,7 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get the total game server count
     /// </summary>
@@ -268,7 +268,7 @@ public static class GameServerEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Delete a game server
     /// </summary>
@@ -309,7 +309,7 @@ public static class GameServerEndpoints
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await gameServerService.SearchPaginatedAsync(searchText, pageNumber, pageSize, currentUserId);
             if (!result.Succeeded)
             {
@@ -317,7 +317,7 @@ public static class GameServerEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.Gameserver.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.Gameserver.Search, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -350,19 +350,19 @@ public static class GameServerEndpoints
             {
                 return await Result.FailAsync(ErrorMessageConstants.Permissions.PermissionError);
             }
-            
+
             var serverResponse = await gameServerService.GetByIdAsync(gameServerId, currentUserId);
             if (!serverResponse.Succeeded || serverResponse.Data is null)
             {
                 return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
             }
-            
+
             var userResponse = await userService.GetByIdAsync(newOwnerId);
             if (!userResponse.Succeeded || userResponse.Data is null)
             {
                 return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
             }
-            
+
             var serverUpdate = serverResponse.Data.ToUpdate();
             serverUpdate.OwnerId = newOwnerId;
             var updateResponse = await gameServerService.UpdateAsync(serverUpdate, currentUserId);
@@ -370,7 +370,7 @@ public static class GameServerEndpoints
             {
                 return await Result.FailAsync(updateResponse.Messages);
             }
-            
+
             return await Result.SuccessAsync();
         }
         catch (Exception ex)
@@ -399,7 +399,7 @@ public static class GameServerEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Stop a game server
     /// </summary>
@@ -420,7 +420,7 @@ public static class GameServerEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Restart a game server
     /// </summary>
@@ -441,7 +441,7 @@ public static class GameServerEndpoints
             return await Result.FailAsync(ex.Message);
         }
     }
-        
+
     /// <summary>
     /// Update the local resource for the game server on the host
     /// </summary>
@@ -464,7 +464,7 @@ public static class GameServerEndpoints
             return await Result<IEnumerable<GameServerSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update all local resources for the game server on the host
     /// </summary>

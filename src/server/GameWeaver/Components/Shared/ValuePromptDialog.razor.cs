@@ -19,7 +19,7 @@ public partial class ValuePromptDialog
     {
         MudDialog.Close(DialogResult.Ok(_returnValue));
     }
-    
+
     private void Cancel()
     {
         MudDialog.Cancel();

@@ -17,8 +17,8 @@ public partial class ConfigAddDialog : ComponentBase
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private readonly ConfigurationItemSlim _newConfigItem = new() { Id = Guid.CreateVersion7() };
-    
-    
+
+
     private void InjectDynamicValue(string value)
     {
         _newConfigItem.Value = value;
@@ -30,7 +30,7 @@ public partial class ConfigAddDialog : ComponentBase
         _newConfigItem.LocalResourceId = ReferenceResource.Id;
         MudDialog.Close(DialogResult.Ok(_newConfigItem));
     }
-    
+
     private void Cancel()
     {
         MudDialog.Cancel();

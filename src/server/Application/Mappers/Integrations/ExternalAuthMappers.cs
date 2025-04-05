@@ -9,7 +9,7 @@ public static class ExternalAuthMappers
     {
         if (userProfile is null)
             return new ExternalUserProfile();
-        
+
         return new ExternalUserProfile
         {
             Id = userProfile.Id,

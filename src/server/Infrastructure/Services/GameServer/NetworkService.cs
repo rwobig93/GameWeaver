@@ -42,7 +42,7 @@ public class NetworkService : INetworkService
                 {
                     return await Result<bool>.SuccessAsync(false);
                 }
-                
+
                 var serverInfoResult = await serverQuery.GetInfo();
                 var midTime = Stopwatch.GetElapsedTime(startTime);
                 if (!serverInfoResult.Succeeded || serverInfoResult.Response is null)
@@ -80,7 +80,7 @@ public class NetworkService : INetworkService
             {
                 return await Result<bool>.FailAsync(false, "Failed to parse provided IP or Hostname into a usable IP Address");
             }
-            
+
             switch (protocol)
             {
                 case NetworkProtocol.Tcp:
@@ -104,7 +104,7 @@ public class NetworkService : INetworkService
                     var receiveTask = udpClient.BeginReceive(null, null);
                     var responseReceived = receiveTask.AsyncWaitHandle.WaitOne(timeoutMilliseconds);
                     udpClient.Close();
-                    
+
                     return await Result<bool>.SuccessAsync(responseReceived);
                 }
                 default:

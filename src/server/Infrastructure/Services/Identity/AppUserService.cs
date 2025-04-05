@@ -39,9 +39,9 @@ public class AppUserService : IAppUserService
     {
         if (userFullDb is null)
             return await Result<AppUserFull?>.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
-        
+
         var fullUser = userFullDb.ToFull();
-        
+
         fullUser.Roles = userFullDb.Roles.ToSlims()
             .OrderBy(x => x.Name)
             .ToList();
@@ -51,7 +51,7 @@ public class AppUserService : IAppUserService
             .ThenBy(x => x.Name)
             .ThenBy(x => x.Value)
             .ToList();
-        
+
         fullUser.Permissions = userFullDb.Permissions.ToSlims()
             .OrderBy(x => x.Group)
             .ThenBy(x => x.Name)
@@ -88,7 +88,7 @@ public class AppUserService : IAppUserService
             {
                 return await PaginatedResult<IEnumerable<AppUserSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AppUserSlim>>.SuccessAsync([]);
@@ -276,7 +276,7 @@ public class AppUserService : IAppUserService
 
             if (foundUser.Data.AccountType != AccountType.Service) return await Result.SuccessAsync();
             if (updateObject.Username is not null && foundUser.Data.Username == updateObject.Username) return await Result.SuccessAsync();
-            
+
             // Service Accounts have dynamic permissions, so we need to update assigned permissions if the account name changed
             var claimValue = PermissionConstants.Identity.ServiceAccounts.Dynamic(foundUser.Data.Id, DynamicPermissionLevel.Admin);
             var serviceAccountPermissions = await _permissionRepository.GetAllByClaimValueAsync(claimValue);
@@ -293,14 +293,14 @@ public class AppUserService : IAppUserService
             }
 
             List<string> errorMessages = [];
-            
+
             foreach (var permission in serviceAccountPermissions.Result)
             {
                 var permissionUpdate = permission.ToUpdate();
                 permissionUpdate.Name = updateObject.Username;
                 permissionUpdate.LastModifiedBy = _serverState.SystemUserId;
                 permissionUpdate.LastModifiedOn = _dateTime.NowDatabaseTime;
-                
+
                 var updatePermissionRequest = await _permissionRepository.UpdateAsync(permissionUpdate);
                 if (!updatePermissionRequest.Succeeded)
                     errorMessages.Add(updatePermissionRequest.ErrorMessage);
@@ -318,7 +318,7 @@ public class AppUserService : IAppUserService
                         {"Username After", updateObject.Username ?? ""},
                         {"Error", message}
                     });
-            
+
             return await Result.FailAsync(ErrorMessageConstants.Generic.ContactAdmin);
         }
         catch (Exception ex)
@@ -334,7 +334,7 @@ public class AppUserService : IAppUserService
             var foundUser = await GetByIdAsync(userId);
             if (!foundUser.Succeeded || foundUser.Data is null)
                 return await Result.FailAsync(ErrorMessageConstants.Users.UserNotFoundError);
-            
+
             var deleteUser = await _userRepository.DeleteAsync(userId, modifyingUserId);
             if (!deleteUser.Succeeded)
                 return await Result.FailAsync(deleteUser.ErrorMessage);
@@ -377,7 +377,7 @@ public class AppUserService : IAppUserService
             {
                 return await PaginatedResult<IEnumerable<AppUserSlim>>.FailAsync(response.ErrorMessage);
             }
-        
+
             if (response.Result?.Data is null)
             {
                 return await PaginatedResult<IEnumerable<AppUserSlim>>.SuccessAsync([]);
@@ -405,7 +405,7 @@ public class AppUserService : IAppUserService
             if (matchingEmail is not null)
                 return await Result<Guid>.FailAsync(
                     $"The email address {createObject.Email} is already in use, are you sure you don't have an account already?");
-        
+
             var matchingUserName = (await _userRepository.GetByUsernameAsync(createObject.Username)).Result;
             if (matchingUserName != null)
             {
@@ -413,7 +413,7 @@ public class AppUserService : IAppUserService
             }
 
             createObject.CreatedBy = modifyingUserId;
-            
+
             var createUser = await _userRepository.CreateAsync(createObject);
             if (!createUser.Succeeded)
                 return await Result<Guid>.FailAsync(createUser.ErrorMessage);
@@ -501,7 +501,7 @@ public class AppUserService : IAppUserService
             var preferencesFull = preferenceRequest.Result?.ToFull();
             if (preferencesFull is null)
                 return await Result<AppUserPreferenceFull?>.FailAsync(preferencesFull);
-            
+
             preferencesFull.CustomThemeOne = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceRequest.Result!.CustomThemeOne!)!;
             preferencesFull.CustomThemeTwo = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceRequest.Result!.CustomThemeTwo!)!;
             preferencesFull.CustomThemeThree = JsonConvert.DeserializeObject<AppThemeCustom>(preferenceRequest.Result!.CustomThemeThree!)!;

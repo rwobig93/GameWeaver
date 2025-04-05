@@ -50,13 +50,17 @@ public partial class GameServerToHost
     [MemoryPackAllowSerialize]
     [MemoryPackOrder(19)]
     public ConnectivityState ServerState { get; set; }
-    [MemoryPackAllowSerialize]
     [MemoryPackOrder(20)]
-    public GameSource Source { get; set; }
-    [MemoryPackAllowSerialize]
+    public string RunningConfigHash { get; set; } = "";
     [MemoryPackOrder(21)]
-    public SerializableList<ModSlim> ModList { get; set; } = [];
+    public string StorageConfigHash { get; set; } = "";
     [MemoryPackAllowSerialize]
     [MemoryPackOrder(22)]
+    public GameSource Source { get; set; }
+    [MemoryPackAllowSerialize]
+    [MemoryPackOrder(23)]
+    public SerializableList<ModSlim> ModList { get; set; } = [];
+    [MemoryPackAllowSerialize]
+    [MemoryPackOrder(24)]
     public SerializableList<LocalResourceHost> Resources { get; set; } = [];
 }

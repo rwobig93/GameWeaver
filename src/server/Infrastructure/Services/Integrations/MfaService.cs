@@ -21,7 +21,7 @@ public class MfaService : IMfaService
     public bool IsPasscodeCorrect(string passcode, string totpKey, out long timeStampMatched)
     {
         _totpProvider ??= new Totp(Base32Encoding.ToBytes(totpKey), step: 30, mode: OtpHashMode.Sha1, totpSize: 6);
-        
+
         return _totpProvider.VerifyTotp(passcode, out timeStampMatched, VerificationWindow.RfcSpecifiedNetworkDelay);
     }
 
@@ -50,7 +50,7 @@ public class MfaService : IMfaService
         int digits = 6, int secondsAlive = 30)
     {
         var algorithmString = GetTotpAlgorithmString(algorithm);
-        
+
         // TOTP Syntax: otpauth://totp/Name:email@example.com?secret=<code>&&issuer=Name&algorithm=SHA512&digits=6&period=30
         var totpAuthString =
             $"otpauth://totp/{appName}:{accountIdentifier}?secret={totpSecret}" +

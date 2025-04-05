@@ -9,7 +9,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "AppUserExtendedAttributes";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(AppUserExtendedAttributesTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 3,
@@ -27,7 +27,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Delete = new()
     {
         Table = Table,
@@ -42,7 +42,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteAllForOwner = new()
     {
         Table = Table,
@@ -57,7 +57,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE OwnerId = @OwnerId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -73,7 +73,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY e.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,
@@ -88,7 +88,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE e.OwnerId = @OwnerId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByName = new()
     {
         Table = Table,
@@ -103,7 +103,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE e.Name = @Name;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByTypeAndValue = new()
     {
         Table = Table,
@@ -120,7 +120,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY e.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByTypeAndValueForOwner = new()
     {
         Table = Table,
@@ -138,7 +138,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY e.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -151,7 +151,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 FROM dbo.[{Table.TableName}] e;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllOfType = new()
     {
         Table = Table,
@@ -166,7 +166,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE e.Type = @Type;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllOfTypeForOwner = new()
     {
         Table = Table,
@@ -182,7 +182,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE e.OwnerId = @OwnerId AND e.Type = @Type;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllOfNameForOwner = new()
     {
         Table = Table,
@@ -198,7 +198,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 WHERE e.OwnerId = @OwnerId AND e.Name = @Name;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -218,7 +218,7 @@ public class AppUserExtendedAttributesTableMsSql : IMsSqlEnforcedEntity
                 values (@Id, @OwnerId, @Name, @Value, @Description, @Type);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Update = new()
     {
         Table = Table,

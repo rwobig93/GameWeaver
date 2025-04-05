@@ -39,7 +39,7 @@ public static class WeaverWorkEndpoints
         app.MapDelete(ApiRouteConstants.GameServer.WeaverWork.DeleteOld, DeleteOld).ApiVersionOne();
         app.MapGet(ApiRouteConstants.GameServer.WeaverWork.Search, Search).ApiVersionOne();
     }
-        
+
     /// <summary>
     /// Get all weaver work with pagination
     /// </summary>
@@ -55,7 +55,7 @@ public static class WeaverWorkEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.GetAllWeaverWorkPaginatedAsync(pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -63,7 +63,7 @@ public static class WeaverWorkEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.WeaverWork.GetAll, pageNumber, pageSize, result.TotalCount);
             return result;
@@ -73,7 +73,7 @@ public static class WeaverWorkEndpoints
             return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get count of total weaver work
     /// </summary>
@@ -91,7 +91,7 @@ public static class WeaverWorkEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get a unit of weaver work by id
     /// </summary>
@@ -110,7 +110,7 @@ public static class WeaverWorkEndpoints
             return await Result<WeaverWorkSlim>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get weaver work by status
     /// </summary>
@@ -129,7 +129,7 @@ public static class WeaverWorkEndpoints
             return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Get weaver work by target type
     /// </summary>
@@ -149,7 +149,7 @@ public static class WeaverWorkEndpoints
             return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Gets the 10 oldest waiting Weaver work jobs for a given host id
     /// </summary>
@@ -168,7 +168,7 @@ public static class WeaverWorkEndpoints
             return await Result<IEnumerable<WeaverWorkSlim>>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Gets all of the currently waiting weaver work jobs for a given host id
     /// </summary>
@@ -208,7 +208,7 @@ public static class WeaverWorkEndpoints
             return await Result<int>.FailAsync(ex.Message);
         }
     }
-    
+
     /// <summary>
     /// Update weaver work properties
     /// </summary>
@@ -246,7 +246,7 @@ public static class WeaverWorkEndpoints
         {
             var currentUserId = await currentUserService.GetApiCurrentUserId();
             var initiatorIp = context.GetConnectionIp();
-            
+
             request.CreatedBy = null;
             request.CreatedOn = null;
             request.LastModifiedBy = currentUserId;
@@ -319,7 +319,7 @@ public static class WeaverWorkEndpoints
         try
         {
             pageSize = pageSize < 0 || pageSize > appConfig.Value.ApiPaginatedMaxPageSize ? appConfig.Value.ApiPaginatedMaxPageSize : pageSize;
-            
+
             var result = await hostService.SearchWeaverWorkPaginatedAsync(searchText, pageNumber, pageSize);
             if (!result!.Succeeded)
             {
@@ -327,7 +327,7 @@ public static class WeaverWorkEndpoints
             }
 
             if (result.TotalCount <= 0) return result;
-            
+
             result.Previous = appConfig.Value.BaseUrl.GetPaginatedPreviousUrl(ApiRouteConstants.GameServer.WeaverWork.Search, pageNumber, pageSize);
             result.Next = appConfig.Value.BaseUrl.GetPaginatedNextUrl(ApiRouteConstants.GameServer.WeaverWork.Search, pageNumber, pageSize, result.TotalCount);
             return result;

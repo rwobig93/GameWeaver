@@ -8,7 +8,7 @@ public static class DateTimeHelpers
     {
         return TimeZoneInfo.ConvertTimeFromUtc(originalDateTime, timeZone);
     }
-    
+
     public static DateTime ConvertToLocal(this IDateTimeService dateTimeService, TimeZoneInfo timeZone)
     {
         return TimeZoneInfo.ConvertTimeFromUtc(dateTimeService.NowDatabaseTime, timeZone);

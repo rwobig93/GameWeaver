@@ -9,7 +9,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
     private const string TableName = "HostCheckIns";
 
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(HostCheckInTableMsSql).GetDbScriptsFromClass();
-    
+
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 10,
@@ -30,7 +30,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 )
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -59,7 +59,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAllAfter = new()
     {
         Table = Table,
@@ -75,7 +75,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.ReceiveTimestamp DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetAfterByHostId = new()
     {
         Table = Table,
@@ -92,7 +92,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.ReceiveTimestamp DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetById = new()
     {
         Table = Table,
@@ -108,7 +108,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostId = new()
     {
         Table = Table,
@@ -124,7 +124,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure GetByHostIdLatest = new()
     {
         Table = Table,
@@ -141,7 +141,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.SendTimestamp DESC;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Insert = new()
     {
         Table = Table,
@@ -163,7 +163,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 VALUES (@HostId, @SendTimestamp, @ReceiveTimestamp, @CpuUsage, @RamUsage, @Uptime, @NetworkOutBytes, @NetworkInBytes);
             end"
     };
-    
+
     public static readonly SqlStoredProcedure Search = new()
     {
         Table = Table,
@@ -181,7 +181,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                     OR h.HostId LIKE '%' + @SearchTerm + '%';
             end"
     };
-    
+
     public static readonly SqlStoredProcedure SearchPaginated = new()
     {
         Table = Table,
@@ -200,7 +200,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 ORDER BY h.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteAllForHostId = new()
     {
         Table = Table,
@@ -215,7 +215,7 @@ public class HostCheckInTableMsSql : IMsSqlEnforcedEntity
                 WHERE HostId = @HostId;
             end"
     };
-    
+
     public static readonly SqlStoredProcedure DeleteOlderThan = new()
     {
         Table = Table,

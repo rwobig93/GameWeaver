@@ -2,5 +2,5 @@
 
 public partial class NotAuthorized
 {
-    
+
 }

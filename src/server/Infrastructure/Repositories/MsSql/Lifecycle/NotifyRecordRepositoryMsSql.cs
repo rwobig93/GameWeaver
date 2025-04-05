@@ -49,9 +49,9 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<NotifyRecordDb, dynamic>(
                 NotifyRecordsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)
@@ -122,7 +122,7 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
         try
         {
             createObject.Timestamp = _dateTimeService.NowDatabaseTime;
-            
+
             var createdId = await _database.SaveDataReturnIntId(NotifyRecordsTableMsSql.Insert, createObject);
             actionReturn.Succeed(createdId);
         }
@@ -162,9 +162,9 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
             var response =
                 await _database.LoadDataPaginated<NotifyRecordDb, dynamic>(
                     NotifyRecordsTableMsSql.SearchPaginated, new { SearchTerm = searchTerm, Offset = offset, PageSize = pageSize });
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)
@@ -185,9 +185,9 @@ public class NotifyRecordRepositoryMsSql : INotifyRecordRepository
             var response =
                 await _database.LoadDataPaginated<NotifyRecordDb, dynamic>(
                     NotifyRecordsTableMsSql.SearchPaginatedByEntityId, new { Id = id, SearchTerm = searchTerm, Offset = offset, PageSize = pageSize });
-            
+
             response.UpdatePaginationProperties(pageNumber, pageSize);
-            
+
             actionReturn.Succeed(response);
         }
         catch (Exception ex)

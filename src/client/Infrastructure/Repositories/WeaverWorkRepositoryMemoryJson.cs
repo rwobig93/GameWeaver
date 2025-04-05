@@ -28,7 +28,7 @@ public class WeaverWorkRepositoryMemoryJson : IWeaverWorkRepository
         var matchingWeaverWork = _weaverWork.FirstOrDefault(x => x.Id == work.Id);
         if (matchingWeaverWork is not null)
             return await Result.FailAsync($"Weaver work with Id [{work.Id}] already exists");
-        
+
         _weaverWork.Add(work);
         _logger.Debug("Added weaver work: [{WeaverworkId}]{WeaverworkTarget}", work.Id, work.TargetType);
         return await Result.SuccessAsync();
@@ -41,7 +41,7 @@ public class WeaverWorkRepositoryMemoryJson : IWeaverWorkRepository
             return await Result.FailAsync($"Weaver work with Id [{workUpdate.Id}] doesn't exist");
 
         matchingWeaverWork.Status = workUpdate.Status;
-        
+
         _logger.Debug("Updated weaver work: [{WeaverworkId}]{WeaverworkTarget}", matchingWeaverWork.Id, matchingWeaverWork.TargetType);
         return await Result.SuccessAsync();
     }
@@ -64,7 +64,7 @@ public class WeaverWorkRepositoryMemoryJson : IWeaverWorkRepository
             var removedCount = _weaverWork.RemoveAll(x => x.Status is WeaverWorkState.Completed or
                 WeaverWorkState.Failed or
                 WeaverWorkState.Cancelled);
-        
+
             _logger.Information("Removed {WeaverworkCount} units of completed weaver work from the repository", removedCount);
             return await Result.SuccessAsync();
         }
