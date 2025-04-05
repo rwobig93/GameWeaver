@@ -500,7 +500,7 @@ public class GameServerService : IGameServerService
 
                 var startedProcess = Process.Start(new ProcessStartInfo
                 {
-                    Arguments = binary.Args,
+                    Arguments = gameServer.UpdateWithServerValues(binary.Args),
                     CreateNoWindow = true,
                     FileName = fullPath,
                     UseShellExecute = false,
