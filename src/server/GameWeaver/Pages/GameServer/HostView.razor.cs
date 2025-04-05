@@ -4,6 +4,7 @@ using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Mappers.Identity;
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
@@ -24,6 +25,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
 
     [Inject] public IHostService HostService { get; init; } = null!;
     [Inject] public IGameServerService GameServerService { get; init; } = null!;
+    [Inject] public IGameService GameService { get; init; } = null!;
     [Inject] public IAppUserService AppUserService { get; init; } = null!;
     [Inject] public IWebClientService WebClientService { get; init; } = null!;
 
@@ -42,6 +44,7 @@ public partial class HostView : ComponentBase, IAsyncDisposable
     private Timer? _timer;
     private List<GameServerSlim> _runningGameservers = [];
     private readonly List<Guid> _viewableGameServers = [];
+    private readonly List<GameSlim> _gameServerGames = [];
     private List<HostCheckInFull> _checkins = [];
     private readonly HostPortStats _hostPortStats = new();
     private PaletteDark _currentPalette = new();
@@ -258,6 +261,12 @@ public partial class HostView : ComponentBase, IAsyncDisposable
 
         foreach (var server in _runningGameservers)
         {
+            var gameServerGame = await GameService.GetByIdAsync(server.GameId);
+            if (gameServerGame.Data is not null)
+            {
+                _gameServerGames.Add(gameServerGame.Data);
+            }
+
             if (await CanViewGameServer(server.Id))
             {
                 _viewableGameServers.Add(server.Id);
