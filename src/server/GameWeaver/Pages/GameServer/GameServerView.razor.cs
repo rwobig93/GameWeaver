@@ -464,6 +464,22 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 continue;
             }
 
+            // Config item comes from inherited profile resource and that resource doesn't exist on the game server so we'll create it then assign our item to it
+            if (configItem.LocalResourceId == Guid.Empty)
+            {
+                var matchingLocalResource = _localResources.First(x => x.ConfigSets.Any(c => c.Id == configItem.Id));
+                var resourceCreateRequest = matchingLocalResource.ToCreate();
+                resourceCreateRequest.GameProfileId = _gameServer.GameProfileId;
+                var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
+                if (!createResourceResponse.Succeeded)
+                {
+                    createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    return true;
+                }
+
+                configItem.LocalResourceId = createResourceResponse.Data;
+            }
+
             var createConfigResponse = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
             if (createConfigResponse.Succeeded) continue;
 
@@ -556,7 +572,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private void ConfigUpdated(ConfigurationItemSlim item, LocalResourceSlim localResource)
     {
-        // TODO: The provided config information matches an already existing config, please verify the information provided
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingNewConfig is not null)
         {
@@ -957,7 +972,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _gameServer.ServerState = args.ServerState;
+        _gameServer.ServerState = args.ServerState ?? _gameServer.ServerState;
         _gameServer.RunningConfigHash = args.RunningConfigHash;
         _gameServer.StorageConfigHash = args.StorageConfigHash;
 

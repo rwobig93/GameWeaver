@@ -35,6 +35,8 @@ public static class GameServerMappers
             Modded = gameServerDb.Modded,
             Private = gameServerDb.Private,
             ServerState = gameServerDb.ServerState,
+            RunningConfigHash = gameServerDb.RunningConfigHash,
+            StorageConfigHash = gameServerDb.StorageConfigHash,
             CreatedBy = gameServerDb.CreatedBy,
             CreatedOn = gameServerDb.CreatedOn,
             LastModifiedBy = gameServerDb.LastModifiedBy,
@@ -74,6 +76,8 @@ public static class GameServerMappers
             Modded = gameServerDb.Modded,
             Private = gameServerDb.Private,
             ServerState = gameServerDb.ServerState,
+            RunningConfigHash = gameServerDb.RunningConfigHash,
+            StorageConfigHash = gameServerDb.StorageConfigHash,
             CreatedBy = gameServerDb.CreatedBy,
             CreatedOn = gameServerDb.CreatedOn,
             LastModifiedBy = gameServerDb.LastModifiedBy,
@@ -108,6 +112,8 @@ public static class GameServerMappers
             Modded = gameServerDb.Modded,
             Private = gameServerDb.Private,
             ServerState = gameServerDb.ServerState,
+            RunningConfigHash = gameServerDb.RunningConfigHash,
+            StorageConfigHash = gameServerDb.StorageConfigHash,
             CreatedBy = gameServerDb.CreatedBy,
             CreatedOn = gameServerDb.CreatedOn,
             LastModifiedBy = gameServerDb.LastModifiedBy,
@@ -141,6 +147,8 @@ public static class GameServerMappers
             ManualRootUrl = "",
             ServerProcessName = "",
             ServerState = ConnectivityState.Unknown,
+            RunningConfigHash = gameServerDb.RunningConfigHash,
+            StorageConfigHash = gameServerDb.StorageConfigHash,
             Source = GameSource.Steam,
             ModList = [],
             Resources = []
@@ -165,9 +173,10 @@ public static class GameServerMappers
         return new GameServerStatusEvent
         {
             Id = update.Id,
-            ServerName = "",
             BuildVersionUpdated = update.BuildVersionUpdated,
-            ServerState = update.ServerState
+            ServerState = update.ServerState,
+            RunningConfigHash = update.RunningConfigHash ?? "",
+            StorageConfigHash = update.StorageConfigHash ?? "",
         };
     }
 
@@ -261,6 +270,8 @@ public static class GameServerMappers
             Modded = gameServer.Modded,
             Private = gameServer.Private,
             ServerState = gameServer.ServerState,
+            RunningConfigHash = GameServerConstants.NoAccessValue,
+            StorageConfigHash = GameServerConstants.NoAccessValue,
             CreatedBy = gameServer.CreatedBy,
             CreatedOn = gameServer.CreatedOn,
             LastModifiedBy = gameServer.LastModifiedBy,

@@ -284,7 +284,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        matchingServer.ServerState = args.ServerState;
+        matchingServer.ServerState = args.ServerState ?? matchingServer.ServerState;
         matchingServer.RunningConfigHash = args.RunningConfigHash;
         matchingServer.StorageConfigHash = args.StorageConfigHash;
 

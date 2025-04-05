@@ -1846,7 +1846,7 @@
             <code>
             <b>System.Guid</b> Id<br/>
             <b>bool</b> BuildVersionUpdated<br/>
-            <b>Domain.Enums.GameServer.ConnectivityState</b> ServerState<br/>
+            <b>Domain.Enums.GameServer.ConnectivityState?</b> ServerState<br/>
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
             <b>string</b> RunningConfigHash<br/>
             <b>string</b> StorageConfigHash<br/>

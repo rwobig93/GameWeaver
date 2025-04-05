@@ -49,10 +49,7 @@
 
 <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Game Info</MudText>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">@_game.FriendlyName</MudText>
+        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@_game.FriendlyName</MudText>
     </MudItem>
     @if (!string.IsNullOrWhiteSpace(_game.UrlLogo))
     {

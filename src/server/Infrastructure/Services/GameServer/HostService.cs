@@ -1295,8 +1295,8 @@ public class HostService : IHostService
             return;
         }
 
-        convertedRequest.PublicIp = publicIp;
         _logger.Information("Updated local host public ip: [{HostId}] {PublicIpBefore} => {PublicIpAfter}", request.HostId, convertedRequest.PublicIp, publicIp);
+        convertedRequest.PublicIp = publicIp;
     }
 
     private async Task<IResult> HostDetailGenerateTshoot(WeaverWorkUpdate request, DatabaseActionResult<HostDb?> foundHost, DatabaseActionResult hostUpdate, string message)
@@ -1311,6 +1311,7 @@ public class HostService : IHostService
         return await Result<int>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
     }
 
+    // ReSharper disable once MemberCanBePrivate.Global
     public async Task VerifyGameServerConnectable(GameServerDb gameServer)
     {
         // Multiple connectivity attempts w/ backoff timers to get a responsive experience, after that it's down to the normal connectable job
@@ -1431,9 +1432,10 @@ public class HostService : IHostService
                 return await GameServerUpdateGenerateTshoot(request, foundServer, updateGameServer);
             }
 
-            if (gameServerUpdate.ServerState != foundServer.Result.ServerState)
+            if (gameServerUpdate.ServerState is not null && gameServerUpdate.ServerState != foundServer.Result.ServerState)
             {
-                await GameServerStateChange(foundServer.Result.Id, request.Id, foundServer.Result.HostId, foundServer.Result.ServerState, deserializedData.ServerState);
+                await GameServerStateChange(foundServer.Result.Id, request.Id, foundServer.Result.HostId,
+                    foundServer.Result.ServerState, (ConnectivityState)gameServerUpdate.ServerState);
             }
 
             var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundServer.Result.Id);
@@ -1442,12 +1444,14 @@ public class HostService : IHostService
 
             var serverStatusEvent = deserializedData.ToStatusEvent();
             serverStatusEvent.ServerName = foundServer.Result.ServerName;
+            serverStatusEvent.RunningConfigHash = deserializedData.RunningConfigHash ?? foundServer.Result.RunningConfigHash;
+            serverStatusEvent.StorageConfigHash = deserializedData.StorageConfigHash ?? foundServer.Result.StorageConfigHash;
 
             _eventService.TriggerGameServerStatus("HostServiceGameServerStateUpdate", serverStatusEvent);
 
             if (deserializedData.ServerState is ConnectivityState.InternallyConnectable)
             {
-                foundServer.Result.ServerState = deserializedData.ServerState;
+                foundServer.Result.ServerState = (ConnectivityState)deserializedData.ServerState;
                 BackgroundJob.Enqueue(() => VerifyGameServerConnectable(foundServer.Result));
             }
 

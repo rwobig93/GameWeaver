@@ -728,14 +728,7 @@ public class GameServerWorker : BackgroundService
 
         var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
         gameServerUpdated.StorageConfigHash = configurationHash;
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
-        {
-            Id = gameServerUpdated.Id,
-            BuildVersionUpdated = false,
-            ServerState = gameServerUpdated.ServerState,
-            Resources = null,
-            StorageConfigHash = configurationHash
-        });
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
 
         await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
 
@@ -779,14 +772,7 @@ public class GameServerWorker : BackgroundService
 
         var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
         gameServerUpdated.StorageConfigHash = configurationHash;
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
-        {
-            Id = gameServerUpdated.Id,
-            BuildVersionUpdated = false,
-            ServerState = gameServerUpdated.ServerState,
-            Resources = null,
-            StorageConfigHash = configurationHash
-        });
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
 
         await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
 
@@ -825,14 +811,7 @@ public class GameServerWorker : BackgroundService
 
         var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
         gameServerUpdated.StorageConfigHash = configurationHash;
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate
-        {
-            Id = gameServerUpdated.Id,
-            BuildVersionUpdated = false,
-            ServerState = gameServerUpdated.ServerState,
-            Resources = null,
-            StorageConfigHash = configurationHash
-        });
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
 
         await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
 
