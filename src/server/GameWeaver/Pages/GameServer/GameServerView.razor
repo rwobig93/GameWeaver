@@ -1,4 +1,5 @@
 ﻿@using Application.Constants.Communication
+@using Application.Constants.GameServer
 @using Application.Constants.Identity
 @using Application.Helpers.GameServer
 @using Application.Helpers.Runtime
@@ -241,7 +242,7 @@
 </MudPaper>
 
 @* Game Server Events History *@
-<MudTable ServerData="@ServerEventsReload" Dense="true" Hover="true" Bordered="false" Striped="true" Height="200px" FixedFooter="true" FixedHeader="true"
+<MudTable ServerData="@ServerEventsReload" Dense="true" Hover="false" Bordered="false" Striped="true" Height="200px" FixedFooter="true" FixedHeader="true"
           @ref="_notifyTable" Class="ma-4 pa-4" >
     <ColGroup>
         <col style="width: auto;" />
@@ -358,13 +359,10 @@
                                 {
                                     <MudButtonGroup Variant="Variant.Text">
                                         <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
-                                            <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
-                                            <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD%%%"))">Server Password</MudMenuItem>
-                                            <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%QUERY_PORT%%%"))">Query Port</MudMenuItem>
-                                            <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT%%%"))">Game Port</MudMenuItem>
-                                            <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT_PEER%%%"))">Game Peer Port</MudMenuItem>
-                                            <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
-                                            <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
+                                            @foreach (var dynamicVariable in ConfigurationItemConstants.DynamicVariables)
+                                            {
+                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, dynamicVariable.Variable))">@dynamicVariable.FriendlyName</MudMenuItem>
+                                            }
                                         </MudMenu>
                                         <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
                                                        OnClick="@(() => ConfigDeleted(configItem))"/>
@@ -493,13 +491,10 @@
                                                       OnKeyDown="@(() => ConfigUpdated(configItem, localResource))"/>
                                         <MudButtonGroup Variant="Variant.Text">
                                             <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!_editMode)" Size="Size.Medium" IconColor="Color.Info">
-                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%SERVER_NAME%%%"))">Server Name</MudMenuItem>
-                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD%%%"))">Server Password</MudMenuItem>
-                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%QUERY_PORT%%%"))">Query Port</MudMenuItem>
-                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT%%%"))">Game Port</MudMenuItem>
-                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%GAME_PORT_PEER%%%"))">Game Peer Port</MudMenuItem>
-                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_ADMIN%%%"))">Admin Password</MudMenuItem>
-                                                <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, "%%%PASSWORD_RCON%%%"))">RCON Password</MudMenuItem>
+                                                @foreach (var dynamicVariable in ConfigurationItemConstants.DynamicVariables)
+                                                {
+                                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, dynamicVariable.Variable))">@dynamicVariable.FriendlyName</MudMenuItem>
+                                                }
                                             </MudMenu>
                                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!_editMode)"
                                                            OnClick="@(() => ConfigDeleted(configItem))" />

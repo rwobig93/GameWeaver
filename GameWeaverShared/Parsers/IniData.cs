@@ -67,15 +67,19 @@ public class IniData
     {
         var builder = new StringBuilder();
 
+        var lastSection = Sections.LastOrDefault();
         foreach (var section in Sections)
         {
-            builder.Append($"[{section.Name}]");
+            builder.Append($"[{section.Name}]{Environment.NewLine}");
             foreach (var keyValuePair in section.Keys)
             {
-                builder.Append($"{keyValuePair.Key}={keyValuePair.Value}");
+                builder.Append($"{keyValuePair.Key}={keyValuePair.Value}{Environment.NewLine}");
             }
 
-            builder.Append(Environment.NewLine); // New line for readability between Sections
+            if (lastSection is not null && section != lastSection)  // Skip the last section newline so there aren't two line breaks
+            {
+                builder.Append(Environment.NewLine); // New line for readability between Sections
+            }
         }
 
         return builder.ToString();

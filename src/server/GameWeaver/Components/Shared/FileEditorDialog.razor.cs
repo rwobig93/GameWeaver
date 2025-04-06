@@ -13,8 +13,10 @@ public partial class FileEditorDialog : ComponentBase
     [Parameter] public FileEditorLanguage Language { get; set; } = FileEditorLanguage.Json;
     [Parameter] public FileEditorTheme Theme { get; set; } = FileEditorTheme.Dark;
     [Parameter] public bool CanEdit { get; set; } = true;
+    [Parameter] public bool ShowGameQuickActions { get; set; }
 
-    [Inject] public IJSRuntime JsRuntime { get; set; } = null!;
+    [Inject] public IJSRuntime JsRuntime { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
 
     private StandaloneCodeEditor _editor = null!;
     private bool _initialized;
@@ -57,6 +59,13 @@ public partial class FileEditorDialog : ComponentBase
     {
         _initialized = true;
         await _editor.SetValue(FileContent);
+        await _editor.UpdateOptions(new EditorUpdateOptions {ReadOnly = !CanEdit});
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await WebClientService.InvokeClipboardCopy(text);
+        Snackbar.Add("Text copied to your clipboard!", Severity.Success);
     }
 
     private async Task Confirm()

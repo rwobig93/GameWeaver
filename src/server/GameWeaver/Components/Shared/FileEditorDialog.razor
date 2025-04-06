@@ -1,3 +1,4 @@
+@using Application.Constants.GameServer
 @using BlazorMonaco.Editor
 @using Domain.Enums.Integrations
 @attribute [AllowAnonymous]
@@ -9,14 +10,27 @@
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5" Class="pt-0 mt-0">@Title</MudText>
                 <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Baseline" Wrap="Wrap.Wrap" Class="pa-0" Style="width: 100%;">
                     <MudSpacer />
-                    <MudSelect T="FileEditorTheme" @bind-Value="Theme" Class="d-flex" Label="Theme" OpenIcon="@Icons.Material.Filled.ColorLens" AdornmentColor="Color.Secondary"
+                    <MudSelect T="FileEditorTheme" @bind-Value="Theme" Class="d-flex" Label="Theme" OpenIcon="@Icons.Material.Filled.ColorLens" AdornmentColor="Color.Primary"
                                SelectedValuesChanged="@(themes => EditorThemeChanged(themes))">
                         @foreach (FileEditorTheme theme in Enum.GetValues(typeof(FileEditorTheme)))
                         {
                             <MudSelectItem Value="@theme">@theme.ToString()</MudSelectItem>
                         }
                     </MudSelect>
-                    <MudSpacer/>
+                    @if (ShowGameQuickActions)
+                    {
+                        <MudMenu Size="Size.Medium" IconColor="Color.Info" Variant="Variant.Outlined" Label="Copy Dynamic Variable"
+                                 EndIcon="@Icons.Material.Filled.DriveFileRenameOutline">
+                            @foreach (var dynamicVariable in ConfigurationItemConstants.DynamicVariables)
+                            {
+                                <MudMenuItem OnClick="@(() => CopyToClipboard(dynamicVariable.Variable))">@dynamicVariable.FriendlyName</MudMenuItem>
+                            }
+                        </MudMenu>
+                    }
+                    else
+                    {
+                        <MudSpacer/>
+                    }
                     <MudSelect T="FileEditorLanguage" @bind-Value="Language" Class="d-flex" Label="Language" OpenIcon="@Icons.Material.Filled.Language" AdornmentColor="Color.Tertiary"
                                SelectedValuesChanged="@(languages => EditorLanguageChanged(languages))">
                         @foreach (FileEditorLanguage language in Enum.GetValues(typeof(FileEditorLanguage)))

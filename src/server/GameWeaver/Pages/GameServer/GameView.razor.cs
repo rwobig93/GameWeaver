@@ -13,6 +13,7 @@ using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
+using GameWeaver.Helpers;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -608,26 +609,72 @@ public partial class GameView : ComponentBase
         return false;
     }
 
-    private async Task OpenScriptInEditor(LocalResourceSlim resource)
+    private async Task OpenScriptInEditor(LocalResourceSlim resource, bool edit = true)
     {
-        var fileLanguage = resource.ContentType switch
+        if (resource.Type != ResourceType.ScriptFile)
         {
-            ContentType.Ini => FileEditorLanguage.Ini,
-            ContentType.Json => FileEditorLanguage.Json,
-            ContentType.Xml => FileEditorLanguage.Xml,
-            _ => FileEditorLanguage.Plaintext
+            return;
+        }
+
+        var usablePath = resource switch
+        {
+            _ when !string.IsNullOrWhiteSpace(resource.PathWindows) => resource.PathWindows,
+            _ when !string.IsNullOrWhiteSpace(resource.PathLinux) => resource.PathLinux,
+            _ when !string.IsNullOrWhiteSpace(resource.PathMac) => resource.PathMac,
+            _ => string.Empty
         };
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraLarge, CloseOnEscapeKey = true, FullWidth = true};
-        var dialogParameters = new DialogParameters {{"Title", resource.Name}, {"FileContent", "\nSome Test Text!\n"}, {"Language", fileLanguage}, {"CanEdit", _canEditGame}};
-        var dialog = await DialogService.ShowAsync<FileEditorDialog>(null, dialogParameters, dialogOptions);
-        var dialogResult = await dialog.Result;
-        if (dialogResult?.Data is null || dialogResult.Canceled)
+
+        var scriptContent = string.Join(Environment.NewLine, resource.ConfigSets.ToRaw());
+        var fileLanguage = FileHelpers.GetLanguageFromName(usablePath);
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, scriptContent, fileLanguage, edit, true);
+        if (dialogResult.Data is null || dialogResult.Canceled)
         {
             return;
         }
 
         var updatedFileContent = (string) dialogResult.Data;
-        Snackbar.Add($"Updated file content: {resource.Name}", Severity.Success);
+        // TODO: Translate script contents to config items, create/update/delete for the local resource
+        // TODO: Enforce script contents on the host same as the config files
+    }
+
+    private async Task OpenConfigInEditor(LocalResourceSlim resource, bool edit = true)
+    {
+        if (resource.Type != ResourceType.ConfigFile)
+        {
+            return;
+        }
+
+        var usablePath = resource switch
+        {
+            _ when !string.IsNullOrWhiteSpace(resource.PathWindows) => resource.PathWindows,
+            _ when !string.IsNullOrWhiteSpace(resource.PathLinux) => resource.PathLinux,
+            _ when !string.IsNullOrWhiteSpace(resource.PathMac) => resource.PathMac,
+            _ => string.Empty
+        };
+
+        var fileLanguage = resource.ContentType switch
+        {
+            ContentType.Ini => FileEditorLanguage.Ini,
+            ContentType.Json => FileEditorLanguage.Json,
+            ContentType.Xml => FileEditorLanguage.Xml,
+            _ => FileHelpers.GetLanguageFromName(usablePath)
+        };
+        // TODO: Ini config isn't showing duplicate keys in the editor, only one
+        var configContent = resource.ContentType switch
+        {
+            ContentType.Raw => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw()),
+            ContentType.Ini => resource.ConfigSets.ToIni().ToString(),
+            ContentType.Xml => resource.ConfigSets.ToXml()?.ToString() ?? string.Empty,
+            _ => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw())
+        };
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, configContent, fileLanguage, edit, true);
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var updatedFileContent = (string) dialogResult.Data;
+        // TODO: Translate config contents to config items, create/update/delete for the local resource
     }
 
     private void InjectDynamicValue(ConfigurationItemSlim item, string value)
