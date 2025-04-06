@@ -3,7 +3,6 @@ using System.IO.Compression;
 using System.Text;
 using System.Xml.Linq;
 using Application.Constants;
-using Application.Handlers;
 using Application.Helpers;
 using Application.Models.GameServer;
 using Application.Repositories;
@@ -12,6 +11,7 @@ using Application.Settings;
 using Domain.Contracts;
 using Domain.Enums;
 using Domain.Models.GameServer;
+using GameWeaverShared.Parsers;
 using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services;
@@ -649,28 +649,8 @@ public class GameServerService : IGameServerService
                 _logger.Debug("Existing ini file exists, loaded config contents: {FilePath}", filePath);
             }
 
-            var pathIniItems = configFile.ConfigSets
-                .Where(item => !string.IsNullOrWhiteSpace(item.Path))
-                .GroupBy(item => new { item.Path, item.Category })
-                .Select(g => new ConfigurationItemLocal
-                {
-                    Path = g.Key.Path,
-                    Key = g.Key.Path,
-                    Value = string.Join(",", g.Select(item => $"{item.Key}={item.Value}")),
-                    Category = g.Key.Category
-                })
-                .ToList();
-            var noPathIniItems = configFile.ConfigSets.Where(x => string.IsNullOrWhiteSpace(x.Path));
-
-            foreach (var config in pathIniItems)
-            {
-                configFileContent.AddOrUpdateKey(config.Category, config.Key, $"({config.Value})");
-            }
-
-            foreach (var config in noPathIniItems)
-            {
-                configFileContent.AddOrUpdateKey(config.Category, config.Key, config.Value);
-            }
+            var iniFromResource = configFile.ConfigSets.ToIni();
+            configFileContent.AggregateFrom(iniFromResource);
 
             var saveRequest = await configFileContent.Save(filePath);
             if (!saveRequest.Succeeded)
@@ -712,22 +692,7 @@ public class GameServerService : IGameServerService
             }
         }
 
-        foreach (var configItem in configFile.ConfigSets)
-        {
-            if (!configFileContent.ContainsKey(configItem.Key))
-            {
-                configFileContent.Add(configItem.Key, configItem.Value);
-                continue;
-            }
-
-            _ = configFileContent.TryGetValue(configItem.Key, out var keyValue);
-            if (keyValue == configItem.Value)
-            {
-                continue;
-            }
-
-            configFileContent[configItem.Key] = configItem.Value;
-        }
+        configFileContent.AggregateJsonReadyFrom(configFileContent);
 
         try
         {
@@ -772,54 +737,14 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync("XML Document is missing a root element, unable to modify or save XML file");
         }
 
-        foreach (var configItem in configFile.ConfigSets)
+        var resourceConfigXml = configFile.ConfigSets.ToXml();
+        if (resourceConfigXml?.Root is null)
         {
-            var parentElements = configItem.Path.Split('/');
-            var configItemAttributes = configItem.Category.Split(',')
-                .Select(x => x.Split(':'))
-                .Where(x => x.Length == 2)
-                .Select(x => new XAttribute(x[0], x[1]));
-            var currentElement = xmlDocument.Root;
-
-            // Create parent elements if there are any and move to the direct
-            if (!string.IsNullOrWhiteSpace(configItem.Path))
-            {
-                foreach (var element in parentElements)
-                {
-                    var nextElement = currentElement.Element(element);
-                    if (nextElement == null)
-                    {
-                        nextElement = new XElement(element);
-                        currentElement.Add(nextElement);
-                    }
-                    currentElement = nextElement;
-                }
-            }
-
-            var existingElement = currentElement.Elements(configItem.Key).FirstOrDefault();
-            if (existingElement is null)
-            {
-                // Element doesn't exist, so we'll create a new one
-                var newElement = new XElement(configItem.Key, configItem.Value);
-
-                if (configItemAttributes.Any())
-                {
-                    newElement.Add(configItemAttributes);
-                }
-
-                currentElement.Add(newElement);
-                continue;
-            }
-
-            // Update the existing element's value and attributes
-            existingElement.Value = configItem.Value;
-            existingElement.RemoveAttributes();
-
-            if (configItemAttributes.Any())
-            {
-                existingElement.Add(configItemAttributes);
-            }
+            return await Result.FailAsync("Failed to convert local resource config to a valid XML file, likely due to missing root element");
         }
+
+        // Merge any existing loaded XML or our elements into the empty XML document if nothing has been loaded
+        xmlDocument.Root.Add(resourceConfigXml.Root.Elements());
 
         try
         {
@@ -833,17 +758,19 @@ public class GameServerService : IGameServerService
         }
     }
 
-    private async Task<IResult> UpdateRawFile(LocalResource configFile, bool loadExisting = true)
+    private async Task<IResult> UpdateRawFile(LocalResource configFile, bool loadExisting = false)
     {
         var filePath = configFile.GetFullPath();
         List<string> fileContent = [];
 
+        // Merging / 'loadExisting' for Raw/text files is unlikely to ever be useful, but we have the option in case it ever is
         if (loadExisting && File.Exists(filePath))
         {
             _logger.Debug("Existing config file found and desired to merge, attempting to load: {FilePath}", filePath);
             try
             {
                 fileContent = [..File.ReadAllLines(filePath)];
+                fileContent.AggregateRawFrom(configFile.ConfigSets);
             }
             catch (Exception ex)
             {
@@ -851,29 +778,9 @@ public class GameServerService : IGameServerService
             }
         }
 
-        var maxConfigItemLines = configFile.ConfigSets.Select(item => int.Parse(item.Key)).Max();
-
-        // Fill any config item gaps between lines, if nothing exists in the file at that line we will add an empty line
-        foreach (var line in Enumerable.Range(0, maxConfigItemLines))
+        if (!loadExisting || !File.Exists(filePath))
         {
-            if (configFile.ConfigSets.Any(x => x.Key == line.ToString()))
-            {
-                continue;
-            }
-
-            configFile.ConfigSets.Add(new ConfigurationItemLocal { Key = line.ToString(), Value = string.Empty });
-        }
-
-        foreach (var configItem in configFile.ConfigSets)
-        {
-            var lineIndex = int.Parse(configItem.Key);
-            if (fileContent.ElementAtOrDefault(lineIndex) is not null && string.IsNullOrWhiteSpace(configItem.Value))
-            {
-                // Existing line number isn't empty and our config item line is, so we'll leave the line value as it is
-                continue;
-            }
-
-            fileContent[lineIndex] = configItem.Value;
+            fileContent = configFile.ConfigSets.ToRaw();
         }
 
         try

@@ -610,8 +610,6 @@ public partial class GameView : ComponentBase
 
     private async Task OpenScriptInEditor(LocalResourceSlim resource)
     {
-        // TODO: Create the file on the host, even if it doesn't have config items (empty file)
-
         var fileLanguage = resource.ContentType switch
         {
             ContentType.Ini => FileEditorLanguage.Ini,

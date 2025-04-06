@@ -1,11 +1,12 @@
-﻿using Application.Models.Handlers;
-using Domain.Contracts;
+﻿using System.Text;
+using GameWeaverShared.Contracts;
+using GameWeaverShared.Parsers.Models;
 
-namespace Application.Handlers;
+namespace GameWeaverShared.Parsers;
 
 public class IniData
 {
-    public List<IniSection> Sections { get; private set; } = [];
+    public List<IniSection> Sections { get; } = [];
     private readonly bool _allowDuplicates;
 
     public IniData(string? filePath = null, bool allowDuplicates = false)
@@ -60,6 +61,24 @@ public class IniData
             var value = keyAndValue[1].Trim();
             AddOrUpdateKey(currentSection.Name, key, value);
         }
+    }
+
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+
+        foreach (var section in Sections)
+        {
+            builder.Append($"[{section.Name}]");
+            foreach (var keyValuePair in section.Keys)
+            {
+                builder.Append($"{keyValuePair.Key}={keyValuePair.Value}");
+            }
+
+            builder.Append(Environment.NewLine); // New line for readability between Sections
+        }
+
+        return builder.ToString();
     }
 
     public async Task<IResult> Save(string filePath)
@@ -173,6 +192,17 @@ public class IniData
         foreach (var matchingKey in matchingKeys)
         {
             selectedSection.Keys.Remove(matchingKey);
+        }
+    }
+
+    public void AggregateFrom(IniData source)
+    {
+        foreach (var section in source.Sections)
+        {
+            foreach (var keyValuePair in section.Keys)
+            {
+                AddOrUpdateKey(section.Name, keyValuePair.Key, keyValuePair.Value);
+            }
         }
     }
 }

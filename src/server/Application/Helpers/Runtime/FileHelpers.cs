@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Application.Models.Integrations;
 using Domain.DatabaseEntities.Integrations;
+using Domain.Enums.GameServer;
 
 namespace Application.Helpers.Runtime;
 
@@ -25,7 +26,7 @@ public static class FileHelpers
         {
             return null;
         }
-        
+
         using (var stream = File.OpenRead(filePath))
         {
             return GetIntegrityHash(stream);
@@ -55,5 +56,23 @@ public static class FileHelpers
         }
 
         return filename.Replace("\\", "/").Replace("\"", "").Replace("'", "");
+    }
+
+    public static string GetFileExtension(this ContentType contentType)
+    {
+        return contentType switch
+        {
+            ContentType.Raw => "txt",
+            ContentType.Ini => "ini",
+            ContentType.Json => "json",
+            ContentType.Xml => "xml",
+            ContentType.Ignore => "",
+            ContentType.Batch => "bat",
+            ContentType.Lua => "lua",
+            ContentType.Powershell => "ps1",
+            ContentType.Python => "py",
+            ContentType.VisualBasic => "vb",
+            _ => ""
+        };
     }
 }
