@@ -1,0 +1,97 @@
+@using Application.Constants.GameServer
+@attribute [AllowAnonymous]
+
+<MudPaper Elevation="10" Class="ma-4 pa-4 gap-4">
+    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+        <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
+            @if (!EditMode)
+            {
+                <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@LocalResource.Name</MudText>
+                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.RemoveRedEye"
+                           OnClick="@(() => OpenInEditor(LocalResource))">
+                    View Config In Editor
+                </MudButton>
+            }
+            else
+            {
+                <MudTextField T="string" Label="Friendly Name" @bind-Value="LocalResource.Name" AutoGrow="false" Disabled="@(!EditMode)" Class="px-8"
+                              OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+            }
+        </MudStack>
+    </MudItem>
+    <MudStack Row="false" Justify="Justify.Center" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
+        @if (Game.SupportsWindows)
+        {
+            <MudTextField T="string" Label="Windows Path" @bind-Value="LocalResource.PathWindows" FullWidth="true" Disabled="@(!EditMode)"
+                          OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+        }
+        @if (Game.SupportsLinux)
+        {
+            <MudTextField T="string" Label="Linux Path" @bind-Value="LocalResource.PathLinux" FullWidth="true" Disabled="@(!EditMode)"
+                          OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+        }
+        @if (Game.SupportsMac)
+        {
+            <MudTextField T="string" Label="Mac Path" @bind-Value="LocalResource.PathMac" FullWidth="true" Disabled="@(!EditMode)"
+                          OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+        }
+    </MudStack>
+    @if (EditMode)
+    {
+        <MudStack Row="true" Justify="Justify.SpaceEvenly" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                       OnClick="@(() => AddConfigItem(LocalResource))" Disabled="@(!EditMode)">
+                Add Config
+            </MudButton>
+            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.Edit"
+                       OnClick="@(() => OpenInEditor(LocalResource))" Disabled="@(!EditMode)">
+                Edit Config In Editor
+            </MudButton>
+            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                       OnClick="@(() => DeleteLocalResource(LocalResource))" Disabled="@(!EditMode)">
+                Delete Resource
+            </MudButton>
+        </MudStack>
+    }
+    <MudContainer Class="d-flex flex-column gap-1">
+        @foreach (var configItem in LocalResource.ConfigSets.OrderBy(x => x.FriendlyName))
+        {
+            @if (!ConfigShouldBeShown(configItem))
+            {
+                continue;
+            }
+
+            <div class="border-solid border rounded pa-1 ma-1">
+                <MudStack Row="false" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Class="ma-0 pa-1">
+                    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
+                        <MudTextField T="string" Label="Friendly Name" @bind-Value="configItem.FriendlyName" FullWidth="true" Disabled="@(!EditMode)"
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                        <MudTextField T="string" Label="Key" @bind-Value="configItem.Key" FullWidth="true" Disabled="@(!EditMode)"
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                    </MudStack>
+                    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
+                        <MudTextField T="string" Label="Path" @bind-Value="configItem.Path" FullWidth="true" Disabled="@(!EditMode)"
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                        <MudTextField T="string" Label="Category" @bind-Value="configItem.Category" FullWidth="true" Disabled="@(!EditMode)"
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                        <MudCheckBox @bind-Value="configItem.DuplicateKey" Label="Is Duplicate Key" Dense="true"/>
+                    </MudStack>
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 pa-0">
+                        <MudTextField T="string" Label="Value" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!EditMode)"
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                        <MudButtonGroup Variant="Variant.Text">
+                            <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!EditMode)" Size="Size.Medium" IconColor="Color.Info">
+                                @foreach (var dynamicVariable in ConfigurationItemConstants.DynamicVariables)
+                                {
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, dynamicVariable.Variable))">@dynamicVariable.FriendlyName</MudMenuItem>
+                                }
+                            </MudMenu>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!EditMode)"
+                                           OnClick="@(() => DeleteConfigItem(configItem))"/>
+                        </MudButtonGroup>
+                    </MudStack>
+                </MudStack>
+            </div>
+        }
+    </MudContainer>
+</MudPaper>

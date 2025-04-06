@@ -1,6 +1,5 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
-using Application.Constants.Lifecycle;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
@@ -18,7 +17,9 @@ using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
+using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
+using GameWeaver.Helpers;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -51,6 +52,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
     private readonly List<LocalResourceSlim> _createdLocalResources = [];
+    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
     private readonly List<LocalResourceSlim> _deletedLocalResources = [];
     private bool _updateIsAvailable;
     private MudTable<NotifyRecordSlim> _notifyTable = new();
@@ -576,7 +578,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         localResource.ConfigSets = localResource.ConfigSets.ToList().Prepend(newConfigItem);
     }
 
-    private void ConfigUpdated(ConfigurationItemSlim item, LocalResourceSlim localResource)
+    private void ConfigUpdated(ConfigurationItemSlim item)
     {
         var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
         if (matchingNewConfig is not null)
@@ -594,7 +596,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (item.Id == Guid.Empty)
         {
             item.Id = Guid.CreateVersion7();
-            item.LocalResourceId = localResource.Id;
             _createdConfigItems.Add(item);
             return;
         }
@@ -663,10 +664,10 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
     }
 
-    private async Task LocalResourceAdd()
+    private async Task LocalResourceAdd(ResourceType resourceType)
     {
         var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters {{"GameProfileId", _gameServer.GameProfileId}, {"ResourceType", ResourceType.ConfigFile}};
+        var dialogParameters = new DialogParameters {{"GameProfileId", _gameServer.GameProfileId}, {"ResourceType", resourceType}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -678,6 +679,45 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         _localResources.Add(newResource);
         _createdLocalResources.Add(newResource);
+    }
+
+    private void LocalResourceUpdate(LocalResourceSlim localResource)
+    {
+        // If the local resource is from a parent profile, add as a new resource instead
+        if (localResource.Id == Guid.Empty)
+        {
+            localResource.Id = Guid.CreateVersion7();
+            foreach (var configItem in localResource.ConfigSets)  // Update the config items to point to our new resource ID
+            {
+                configItem.LocalResourceId = localResource.Id;
+            }
+            _createdLocalResources.Add(localResource);
+            return;
+        }
+
+        var matchingNewResource = _createdLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
+        if (matchingNewResource is not null)
+        {
+            matchingNewResource.Name = localResource.Name;
+            matchingNewResource.PathWindows = localResource.PathWindows;
+            matchingNewResource.PathLinux = localResource.PathLinux;
+            matchingNewResource.PathMac = localResource.PathMac;
+            matchingNewResource.Args = localResource.Args;
+            return;
+        }
+
+        var matchingUpdatedResource = _updatedLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
+        if (matchingUpdatedResource is null)
+        {
+            _updatedLocalResources.Add(localResource);
+            return;
+        }
+
+        matchingUpdatedResource.Name = localResource.Name;
+        matchingUpdatedResource.PathWindows = localResource.PathWindows;
+        matchingUpdatedResource.PathLinux = localResource.PathLinux;
+        matchingUpdatedResource.PathMac = localResource.PathMac;
+        matchingUpdatedResource.Args = localResource.Args;
     }
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
@@ -700,6 +740,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
+        _createdLocalResources.Remove(localResource);
+        _updatedLocalResources.Remove(localResource);
         _localResources.Remove(localResource);
         _deletedLocalResources.Add(localResource);
         foreach (var configItem in localResource.ConfigSets)
@@ -941,6 +983,74 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private void ViewHost()
     {
         NavManager.NavigateTo(AppRouteConstants.GameServer.Hosts.ViewId(_host.Id));
+    }
+
+    private async Task OpenScriptInEditor(LocalResourceSlim resource)
+    {
+        if (resource.Type != ResourceType.ScriptFile)
+        {
+            return;
+        }
+
+        var usablePath = resource switch
+        {
+            _ when !string.IsNullOrWhiteSpace(resource.PathWindows) => resource.PathWindows,
+            _ when !string.IsNullOrWhiteSpace(resource.PathLinux) => resource.PathLinux,
+            _ when !string.IsNullOrWhiteSpace(resource.PathMac) => resource.PathMac,
+            _ => string.Empty
+        };
+
+        var scriptContent = string.Join(Environment.NewLine, resource.ConfigSets.ToRaw());
+        var fileLanguage = FileHelpers.GetLanguageFromName(usablePath);
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, scriptContent, fileLanguage, _editMode, true);
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var updatedFileContent = (string) dialogResult.Data;
+        // TODO: Translate script contents to config items, create/update/delete for the local resource
+        // TODO: Enforce script contents on the host same as the config files
+    }
+
+    private async Task OpenConfigInEditor(LocalResourceSlim resource)
+    {
+        if (resource.Type != ResourceType.ConfigFile)
+        {
+            return;
+        }
+
+        var usablePath = resource switch
+        {
+            _ when !string.IsNullOrWhiteSpace(resource.PathWindows) => resource.PathWindows,
+            _ when !string.IsNullOrWhiteSpace(resource.PathLinux) => resource.PathLinux,
+            _ when !string.IsNullOrWhiteSpace(resource.PathMac) => resource.PathMac,
+            _ => string.Empty
+        };
+
+        var fileLanguage = resource.ContentType switch
+        {
+            ContentType.Ini => FileEditorLanguage.Ini,
+            ContentType.Json => FileEditorLanguage.Json,
+            ContentType.Xml => FileEditorLanguage.Xml,
+            _ => FileHelpers.GetLanguageFromName(usablePath)
+        };
+
+        var configContent = resource.ContentType switch
+        {
+            ContentType.Raw => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw()),
+            ContentType.Ini => resource.ConfigSets.ToIni().ToString(),
+            ContentType.Xml => resource.ConfigSets.ToXml()?.ToString() ?? string.Empty,
+            _ => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw())
+        };
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, configContent, fileLanguage, _editMode, true);
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var updatedFileContent = (string) dialogResult.Data;
+        // TODO: Translate config contents to config items, create/update/delete for the local resource
     }
 
     private async Task<TableData<NotifyRecordSlim>> ServerEventsReload(TableState state, CancellationToken token)

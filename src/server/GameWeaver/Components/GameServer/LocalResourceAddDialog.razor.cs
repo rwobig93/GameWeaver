@@ -2,7 +2,6 @@ using Application.Models.GameServer.Game;
 using Application.Models.GameServer.LocalResource;
 using Application.Services.GameServer;
 using Domain.Enums.GameServer;
-using Infrastructure.Services.GameServer;
 
 namespace GameWeaver.Components.GameServer;
 

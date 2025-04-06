@@ -28,7 +28,6 @@ public partial class GameView : ComponentBase
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
-    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameSlim _game = new() { Id = Guid.Empty };
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
@@ -57,7 +56,6 @@ public partial class GameView : ComponentBase
             if (firstRender)
             {
                 await GetPermissions();
-                await GetClientTimezone();
                 await GetViewingGame();
                 await GetGameVersionFiles();
                 await GetGameServers();
@@ -79,18 +77,6 @@ public partial class GameView : ComponentBase
         _canConfigureGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Configure);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
         _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
-    }
-
-    private async Task GetClientTimezone()
-    {
-        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
-        if (!clientTimezoneRequest.Succeeded)
-        {
-            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-
-        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
     }
 
     private async Task GetViewingGame()
@@ -280,15 +266,6 @@ public partial class GameView : ComponentBase
         }
 
         _manualVersionFiles = response.Data.ToList();
-    }
-
-    private bool ConfigShouldBeShown(ConfigurationItemSlim item)
-    {
-        var shouldBeShown = item.FriendlyName.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Key.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Value.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase);
-
-        return shouldBeShown;
     }
 
     private async Task ConfigAdd(LocalResourceSlim localResource)
@@ -609,7 +586,7 @@ public partial class GameView : ComponentBase
         return false;
     }
 
-    private async Task OpenScriptInEditor(LocalResourceSlim resource, bool edit = true)
+    private async Task OpenScriptInEditor(LocalResourceSlim resource)
     {
         if (resource.Type != ResourceType.ScriptFile)
         {
@@ -626,7 +603,7 @@ public partial class GameView : ComponentBase
 
         var scriptContent = string.Join(Environment.NewLine, resource.ConfigSets.ToRaw());
         var fileLanguage = FileHelpers.GetLanguageFromName(usablePath);
-        var dialogResult = await DialogService.FileEditorDialog(usablePath, scriptContent, fileLanguage, edit, true);
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, scriptContent, fileLanguage, _editMode, true);
         if (dialogResult.Data is null || dialogResult.Canceled)
         {
             return;
@@ -637,7 +614,7 @@ public partial class GameView : ComponentBase
         // TODO: Enforce script contents on the host same as the config files
     }
 
-    private async Task OpenConfigInEditor(LocalResourceSlim resource, bool edit = true)
+    private async Task OpenConfigInEditor(LocalResourceSlim resource)
     {
         if (resource.Type != ResourceType.ConfigFile)
         {
@@ -659,7 +636,7 @@ public partial class GameView : ComponentBase
             ContentType.Xml => FileEditorLanguage.Xml,
             _ => FileHelpers.GetLanguageFromName(usablePath)
         };
-        // TODO: Ini config isn't showing duplicate keys in the editor, only one
+
         var configContent = resource.ContentType switch
         {
             ContentType.Raw => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw()),
@@ -667,7 +644,7 @@ public partial class GameView : ComponentBase
             ContentType.Xml => resource.ConfigSets.ToXml()?.ToString() ?? string.Empty,
             _ => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw())
         };
-        var dialogResult = await DialogService.FileEditorDialog(usablePath, configContent, fileLanguage, edit, true);
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, configContent, fileLanguage, _editMode, true);
         if (dialogResult.Data is null || dialogResult.Canceled)
         {
             return;
@@ -675,11 +652,6 @@ public partial class GameView : ComponentBase
 
         var updatedFileContent = (string) dialogResult.Data;
         // TODO: Translate config contents to config items, create/update/delete for the local resource
-    }
-
-    private void InjectDynamicValue(ConfigurationItemSlim item, string value)
-    {
-        item.Value = value;
     }
 
     private void InjectDynamicValue(LocalResourceSlim resource, string value)

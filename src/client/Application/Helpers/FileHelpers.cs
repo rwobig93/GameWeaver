@@ -86,7 +86,7 @@ public static class FileHelpers
         };
     }
 
-    public static IniData ToIni(this IEnumerable<ConfigurationItemLocal> configItems, bool allowDuplicates = false)
+    public static IniData ToIni(this IEnumerable<ConfigurationItemLocal> configItems, bool allowDuplicates = true)
     {
         var iniFile = new IniData(allowDuplicates: allowDuplicates);
         var configurationItemLocals = configItems.ToList();

@@ -1,0 +1,38 @@
+@attribute [AllowAnonymous]
+
+<MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
+    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+        <MudTable Items="@GameServers" Hover="false" Dense="true" Striped="true" Class="d-flex flex-wrap">
+            <HeaderContent>
+                <MudTh></MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Modded</MudTh>
+                <MudTh>State</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
+                <MudTd DataLabel="Name">@context.ServerName</MudTd>
+                <MudTd DataLabel="Modded">@context.Modded</MudTd>
+                <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
+                <MudTd DataLabel="Button">
+                    @if (ViewableGameServers.Contains(context.Id))
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@(() => ViewGameServer(context.Id))" Class="rounded-lg">
+                            View
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" Disabled="true" Class="rounded-lg">
+                            No Access
+                        </MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudItem>
+</MudPaper>
