@@ -862,7 +862,8 @@ public partial class DeveloperTesting : IAsyncDisposable
             FriendlyName = friendlyName,
             Filename = Guid.NewGuid().ToString(),
             Description = $"{friendlyName} @ {fileName}",
-            Version = "v1.0.0"
+            Version = "v1.0.0",
+            SizeBytes = file.Size
         }, file.OpenReadStream(50_000_000_000), _loggedInUser.Id);
         if (!uploadRequest.Succeeded)
         {

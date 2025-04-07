@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using GameWeaverShared.Contracts;
 using GameWeaverShared.Parsers.Models;
 
 namespace GameWeaverShared.Parsers;
@@ -18,6 +17,12 @@ public class IniData
         }
     }
 
+    public IniData(IEnumerable<string> fileContent, bool allowDuplicates = false)
+    {
+        _allowDuplicates = allowDuplicates;
+        Load(fileContent, true);
+    }
+
     public void Load(string filePath, bool loadClean = false)
     {
         if (loadClean)
@@ -30,15 +35,27 @@ public class IniData
             return;
         }
 
-        IniSection? currentSection = null;
         var lines = File.ReadAllLines(filePath);
+        Load(lines, loadClean);
+    }
 
-        foreach (var line in lines)
+    public void Load(IEnumerable<string> content, bool loadClean = false)
+    {
+        if (loadClean)
+        {
+            Sections.Clear();
+        }
+
+        IniSection? currentSection = null;
+
+        foreach (var line in content)
         {
             var trimmedLine = line.Trim();
 
             if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith($";"))
+            {
                 continue; // Skip comments and empty lines
+            }
 
             if (trimmedLine.StartsWith($"[") && trimmedLine.EndsWith($"]"))
             {
@@ -85,7 +102,7 @@ public class IniData
         return builder.ToString();
     }
 
-    public async Task<IResult> Save(string filePath)
+    public async Task<ParserResult> Save(string filePath)
     {
         try
         {
@@ -101,11 +118,11 @@ public class IniData
                 file.WriteLine(); // New line for readability between Sections
             }
 
-            return await Result.SuccessAsync();
+            return await Task.FromResult(new ParserResult {Succeeded = true});
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync(ex.Message);
+            return await Task.FromResult(new ParserResult {Succeeded = false, Messages = [ex.Message]});
         }
     }
 

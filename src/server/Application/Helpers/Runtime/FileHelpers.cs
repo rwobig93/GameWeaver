@@ -1,12 +1,15 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
+using Application.Constants.Runtime;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.Integrations;
+using Domain.Contracts;
 using Domain.DatabaseEntities.Integrations;
 using Domain.Enums.GameServer;
 using Domain.Enums.Integrations;
 using GameWeaverShared.Parsers;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace Application.Helpers.Runtime;
 
@@ -287,6 +290,29 @@ public static class FileHelpers
             }
 
             original[lineIndex] = configItem.Value;
+        }
+    }
+
+    public static async Task<IResult<string?>> GetContent(this IBrowserFile? file, int maxSizeBytes = 10_000_000, int bufferSize = FileConstants.BufferSize)
+    {
+        if (file is null)
+        {
+            return await Result<string?>.FailAsync("File is empty or null");
+        }
+
+        try
+        {
+            var builder = new StringBuilder();
+            using (var stream = new StreamReader(file.OpenReadStream(maxSizeBytes), Encoding.UTF8, true, bufferSize, false))
+            {
+                builder.Append(await stream.ReadToEndAsync());
+            }
+
+            return await Result<string?>.SuccessAsync(builder.ToString());
+        }
+        catch (Exception ex)
+        {
+            return await Result<string?>.FailAsync($"Failure occurred reading file data stream: {ex.Message}");
         }
     }
 }

@@ -1,5 +1,8 @@
-﻿using Application.Constants.Communication;
+﻿using System.Xml.Linq;
+using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Constants.Runtime;
+using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigurationItem;
@@ -14,6 +17,8 @@ using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
 using GameWeaver.Helpers;
+using GameWeaverShared.Parsers;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -21,10 +26,11 @@ public partial class GameView : ComponentBase
 {
     [Parameter] public Guid GameId { get; set; } = Guid.Empty;
 
-    [Inject] public IGameService GameService { get; set; } = null!;
-    [Inject] public IGameServerService GameServerService { get; set; } = null!;
-    [Inject] public IFileStorageRecordService FileStorageService { get; set; } = null!;
-    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public IGameService GameService { get; init; } = null!;
+    [Inject] public IGameServerService GameServerService { get; init; } = null!;
+    [Inject] public IFileStorageRecordService FileStorageService { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public ISerializerService SerializerService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
@@ -161,6 +167,15 @@ public partial class GameView : ComponentBase
             return;
         }
 
+        foreach (var resource in _deletedLocalResources)
+        {
+            var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
+            if (deleteResourceResponse.Succeeded) continue;
+
+            deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
         foreach (var resource in _createdLocalResources)
         {
             resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
@@ -198,15 +213,6 @@ public partial class GameView : ComponentBase
             if (!updateResourceResponse.Succeeded) continue;
 
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-
-        foreach (var resource in _deletedLocalResources)
-        {
-            var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
-            if (deleteResourceResponse.Succeeded) continue;
-
-            deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
@@ -555,11 +561,6 @@ public partial class GameView : ComponentBase
         return false;
     }
 
-    private void ViewGameServer(Guid id)
-    {
-        NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(id));
-    }
-
     private async Task<bool> CanViewGameServer(Guid id)
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
@@ -654,8 +655,104 @@ public partial class GameView : ComponentBase
         // TODO: Translate config contents to config items, create/update/delete for the local resource
     }
 
-    private void InjectDynamicValue(LocalResourceSlim resource, string value)
+    private async Task ConfigSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
     {
-        resource.Args += $" {value}";
+        if (importFiles is null || !importFiles.Any())
+        {
+            return;
+        }
+
+        List<IBrowserFile> configToImport = [];
+        foreach (var file in importFiles)
+        {
+            if (file is null)
+            {
+                continue;
+            }
+
+            if (file.Size > 10_000_000)
+            {
+                Snackbar.Add($"File is over the max size of 10MB: {file.Name}");
+                continue;
+            }
+
+            configToImport.Add(file);
+        }
+
+        var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
+                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}" +
+                          $"{Environment.NewLine}  NOTE: Imports won't be complete until you save";
+        var importConfirmation = await DialogService.ConfirmDialog($"Import {configToImport.Count} config files", confirmText);
+        if (importConfirmation.Canceled)
+        {
+            return;
+        }
+
+        await ImportConfigFiles(configToImport);
+    }
+
+    private async Task ImportConfigFiles(IEnumerable<IBrowserFile> importFiles)
+    {
+        var importCount = 0;
+
+        foreach (var file in importFiles)
+        {
+            var matchingResource = _localResources.FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.PathWindows) && x.PathWindows.ToLower().EndsWith(file.Name.ToLower()) ||
+                !string.IsNullOrWhiteSpace(x.PathLinux) && x.PathLinux.ToLower().EndsWith(file.Name.ToLower()) ||
+                !string.IsNullOrWhiteSpace(x.PathMac) && x.PathMac.ToLower().EndsWith(file.Name.ToLower()));
+            if (matchingResource is not null)
+            {
+                var confirmText = $"The existing resource {matchingResource.Name} will be replaced if you import this file: {file.Name}, are you sure you want to continue?";
+                var replaceConfirmation = await DialogService.ConfirmDialog("Replace existing config file?", confirmText);
+                if (replaceConfirmation.Canceled)
+                {
+                    Snackbar.Add($"File {file.Name} import was cancelled", Severity.Warning);
+                    continue;
+                }
+
+                await LocalResourceDelete(matchingResource);
+            }
+
+            var newResource = new LocalResourceSlim
+            {
+                Id = Guid.CreateVersion7(),
+                GameProfileId = _game.DefaultGameProfileId,
+                Name = file.Name.Split('.').First(),
+                PathWindows = _game.SupportsWindows ? file.Name : string.Empty,
+                PathLinux = _game.SupportsLinux ? file.Name : string.Empty,
+                PathMac = _game.SupportsMac ? file.Name : string.Empty,
+                Startup = false,
+                StartupPriority = 0,
+                Type = ResourceType.ConfigFile,
+                ContentType = FileHelpers.GetContentTypeFromName(file.Name),
+                Args = string.Empty,
+                LoadExisting = false
+            };
+
+            var fileContent = await file.GetContent();  // Max import size per file is 10MB by default
+            if (!fileContent.Succeeded || fileContent.Data is null)
+            {
+                fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                continue;
+            }
+
+            var fileContentLines = fileContent.Data.Split(Environment.NewLine);
+            var configItems = newResource.ContentType switch
+            {
+                ContentType.Raw => fileContentLines.ToConfigItems(newResource.Id),
+                ContentType.Ini => new IniData(fileContentLines).ToConfigItems(newResource.Id),
+                ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(fileContent.Data).ToConfigItems(newResource.Id),
+                ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(newResource.Id),
+                _ => fileContentLines.ToConfigItems(newResource.Id)
+            };
+
+            _createdConfigItems.AddRange(configItems);
+            newResource.ConfigSets = configItems;
+            _createdLocalResources.Add(newResource);
+            importCount++;
+        }
+
+        Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
     }
 }

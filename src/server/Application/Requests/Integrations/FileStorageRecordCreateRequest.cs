@@ -11,4 +11,5 @@ public class FileStorageRecordCreateRequest
     public string Filename { get; set; } = null!;
     public string Description { get; set; } = "";
     public string Version { get; set; } = "";
+    public long SizeBytes { get; set; }
 }
