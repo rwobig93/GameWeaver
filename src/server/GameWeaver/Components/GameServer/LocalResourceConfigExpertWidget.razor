@@ -19,20 +19,20 @@
             }
         </MudStack>
     </MudItem>
-    <MudStack Row="false" Justify="Justify.Center" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
+    <MudStack Row="false" Justify="Justify.Center" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Class="px-8" Style="width: 100%;">
         @if (Game.SupportsWindows)
         {
-            <MudTextField T="string" Label="Windows Path" @bind-Value="LocalResource.PathWindows" FullWidth="true" Disabled="@(!EditMode)"
+            <MudTextField T="string" Label="Windows Path" @bind-Value="LocalResource.PathWindows" FullWidth="true" Disabled="@(!EditMode)" Class="px-4"
                           OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
         }
         @if (Game.SupportsLinux)
         {
-            <MudTextField T="string" Label="Linux Path" @bind-Value="LocalResource.PathLinux" FullWidth="true" Disabled="@(!EditMode)"
+            <MudTextField T="string" Label="Linux Path" @bind-Value="LocalResource.PathLinux" FullWidth="true" Disabled="@(!EditMode)" Class="px-4"
                           OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
         }
         @if (Game.SupportsMac)
         {
-            <MudTextField T="string" Label="Mac Path" @bind-Value="LocalResource.PathMac" FullWidth="true" Disabled="@(!EditMode)"
+            <MudTextField T="string" Label="Mac Path" @bind-Value="LocalResource.PathMac" FullWidth="true" Disabled="@(!EditMode)" Class="px-4"
                           OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
         }
     </MudStack>

@@ -33,57 +33,11 @@ public static class LocalResourceHelpers
             matchingResource.Startup = resource.Startup;
             matchingResource.StartupPriority = resource.StartupPriority;
             matchingResource.ContentType = resource.ContentType;
-            var updatedConfigSets = matchingResource.ConfigSets.ToList();
 
-            foreach (var config in resource.ConfigSets)
-            {
-                if (config.DuplicateKey)
-                {
-                    var matchingConfigDuplicate = updatedConfigSets.FirstOrDefault(x =>
-                        x.Category == config.Category &&
-                        x.Path == config.Path &&
-                        x.Key == config.Key &&
-                        x.Value == config.Value);
+            var existingConfigSets = matchingResource.ConfigSets.ToList();
+            var mergedConfigSets = existingConfigSets.MergeConfiguration(resource.ConfigSets);
 
-                    if (config.Ignore && matchingConfigDuplicate is not null)
-                    {
-                        updatedConfigSets.Remove(matchingConfigDuplicate);
-                        continue;
-                    }
-
-                    if (matchingConfigDuplicate is not null)
-                    {
-                        continue;
-                    }
-
-                    updatedConfigSets.Add(config);
-                    continue;
-                }
-
-                // Key is not a duplicate key
-                var matchingConfig = updatedConfigSets.FirstOrDefault(x =>
-                    x.Category == config.Category &&
-                    x.Path == config.Path &&
-                    x.Key == config.Key);
-
-                if (config.Ignore && matchingConfig is not null)
-                {
-                    updatedConfigSets.Remove(matchingConfig);
-                    continue;
-                }
-
-                if (matchingConfig is not null)
-                {
-                    matchingConfig.Id = config.Id;
-                    matchingConfig.LocalResourceId = config.LocalResourceId;
-                    matchingConfig.Value = config.Value;
-                    continue;
-                }
-
-                updatedConfigSets.Add(config);
-            }
-
-            matchingResource.ConfigSets = updatedConfigSets;
+            matchingResource.ConfigSets = mergedConfigSets;
         }
     }
 }

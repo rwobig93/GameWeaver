@@ -93,4 +93,97 @@ public static class ConfigurationItemHelpers
 
         return configItems;
     }
+
+    public static List<ConfigurationItemSlim> MergeConfiguration(this IEnumerable<ConfigurationItemSlim> existing, IEnumerable<ConfigurationItemSlim> priorityItems,
+        bool keepExistingIds = false)
+    {
+        var updatedConfiguration = existing.ToList();
+
+        foreach (var priorityConfig in priorityItems)
+        {
+            if (priorityConfig.DuplicateKey)
+            {
+                var matchingConfigDuplicate = updatedConfiguration.FirstOrDefault(x =>
+                    x.Category == priorityConfig.Category &&
+                    x.Path == priorityConfig.Path &&
+                    x.Key == priorityConfig.Key &&
+                    x.Value == priorityConfig.Value);
+
+                if (priorityConfig.Ignore && matchingConfigDuplicate is not null)
+                {
+                    updatedConfiguration.Remove(matchingConfigDuplicate);
+                    continue;
+                }
+
+                if (matchingConfigDuplicate is not null)
+                {
+                    continue;
+                }
+
+                updatedConfiguration.Add(priorityConfig);
+                continue;
+            }
+
+            // Key is not a duplicate key
+            var matchingConfig = updatedConfiguration.FirstOrDefault(x =>
+                x.Category == priorityConfig.Category &&
+                x.Path == priorityConfig.Path &&
+                x.Key == priorityConfig.Key);
+
+            if (priorityConfig.Ignore && matchingConfig is not null)
+            {
+                updatedConfiguration.Remove(matchingConfig);
+                continue;
+            }
+
+            if (matchingConfig is not null)
+            {
+                matchingConfig.Id = keepExistingIds ? matchingConfig.Id : priorityConfig.Id;
+                matchingConfig.LocalResourceId = priorityConfig.LocalResourceId;
+                matchingConfig.Value = priorityConfig.Value;
+                continue;
+            }
+
+            updatedConfiguration.Add(priorityConfig);
+        }
+
+        return updatedConfiguration;
+    }
+
+    public static void UpdateMatchingConfigItemIds(this IEnumerable<ConfigurationItemSlim> sourceItems, IEnumerable<ConfigurationItemSlim> updateFrom)
+    {
+        var updateFromItems = updateFrom.ToList();
+        foreach (var sourceItem in sourceItems)
+        {
+            if (sourceItem.DuplicateKey)
+            {
+                var matchingConfigDuplicate = updateFromItems.FirstOrDefault(x =>
+                    x.Category == sourceItem.Category &&
+                    x.Path == sourceItem.Path &&
+                    x.Key == sourceItem.Key &&
+                    x.Value == sourceItem.Value);
+
+                if (matchingConfigDuplicate is null)
+                {
+                    continue;
+                }
+
+                sourceItem.Id = matchingConfigDuplicate.Id;
+                continue;
+            }
+
+            // Key is not a duplicate key
+            var matchingConfig = updateFromItems.FirstOrDefault(x =>
+                x.Category == sourceItem.Category &&
+                x.Path == sourceItem.Path &&
+                x.Key == sourceItem.Key);
+
+            if (matchingConfig is null)
+            {
+                continue;
+            }
+
+            sourceItem.Id = matchingConfig.Id;
+        }
+    }
 }
