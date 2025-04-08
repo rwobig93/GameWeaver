@@ -679,7 +679,7 @@ public class GameServerWorker : BackgroundService
             return;
         }
 
-        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerRequest.Data.Id);
+        var configUpdateRequest = await _gameServerService.UpdateConfigItemFiles(gameServerRequest.Data.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
@@ -719,7 +719,7 @@ public class GameServerWorker : BackgroundService
         }
 
         gameServerUpdated.Resources.Add(updatedResource);
-        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
+        var configUpdateRequest = await _gameServerService.UpdateConfigItemFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
@@ -763,7 +763,7 @@ public class GameServerWorker : BackgroundService
             return;
         }
 
-        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
+        var configUpdateRequest = await _gameServerService.UpdateConfigItemFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);
@@ -802,7 +802,7 @@ public class GameServerWorker : BackgroundService
             return;
         }
 
-        var configUpdateRequest = await _gameServerService.UpdateConfigurationFiles(gameServerUpdated.Id);
+        var configUpdateRequest = await _gameServerService.UpdateConfigItemFiles(gameServerUpdated.Id);
         if (!configUpdateRequest.Succeeded)
         {
             work.SendStatusUpdate(WeaverWorkState.Failed, configUpdateRequest.Messages);

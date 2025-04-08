@@ -1,5 +1,7 @@
-﻿using Application.Constants.Communication;
+﻿using System.Xml.Linq;
+using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigurationItem;
@@ -11,7 +13,11 @@ using Application.Services.GameServer;
 using Application.Services.Integrations;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
+using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
+using GameWeaver.Helpers;
+using GameWeaverShared.Parsers;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -19,14 +25,14 @@ public partial class GameView : ComponentBase
 {
     [Parameter] public Guid GameId { get; set; } = Guid.Empty;
 
-    [Inject] public IGameService GameService { get; set; } = null!;
-    [Inject] public IGameServerService GameServerService { get; set; } = null!;
-    [Inject] public IFileStorageRecordService FileStorageService { get; set; } = null!;
-    [Inject] private IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public IGameService GameService { get; init; } = null!;
+    [Inject] public IGameServerService GameServerService { get; init; } = null!;
+    [Inject] public IFileStorageRecordService FileStorageService { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public ISerializerService SerializerService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
-    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private GameSlim _game = new() { Id = Guid.Empty };
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
@@ -55,7 +61,6 @@ public partial class GameView : ComponentBase
             if (firstRender)
             {
                 await GetPermissions();
-                await GetClientTimezone();
                 await GetViewingGame();
                 await GetGameVersionFiles();
                 await GetGameServers();
@@ -77,18 +82,6 @@ public partial class GameView : ComponentBase
         _canConfigureGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Configure);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
         _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
-    }
-
-    private async Task GetClientTimezone()
-    {
-        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
-        if (!clientTimezoneRequest.Succeeded)
-        {
-            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-
-        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
     }
 
     private async Task GetViewingGame()
@@ -173,9 +166,23 @@ public partial class GameView : ComponentBase
             return;
         }
 
+        foreach (var resource in _deletedLocalResources)
+        {
+            var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
+            if (deleteResourceResponse.Succeeded) continue;
+
+            deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
         foreach (var resource in _createdLocalResources)
         {
-            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
+            resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
+            resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
+            resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
+            var createResourceRequest = resource.ToCreate();
+            createResourceRequest.Id = resource.Id;
+            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(createResourceRequest, _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
 
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -200,19 +207,13 @@ public partial class GameView : ComponentBase
 
         foreach (var resource in _updatedLocalResources)
         {
+            resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
+            resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
+            resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
             var updateResourceResponse = await GameServerService.UpdateLocalResourceAsync(resource.ToUpdate(), _loggedInUserId);
             if (!updateResourceResponse.Succeeded) continue;
 
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-
-        foreach (var resource in _deletedLocalResources)
-        {
-            var deleteResourceResponse = await GameServerService.DeleteLocalResourceAsync(resource.Id, _loggedInUserId);
-            if (deleteResourceResponse.Succeeded) continue;
-
-            deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
@@ -274,19 +275,10 @@ public partial class GameView : ComponentBase
         _manualVersionFiles = response.Data.ToList();
     }
 
-    private bool ConfigShouldBeShown(ConfigurationItemSlim item)
-    {
-        var shouldBeShown = item.FriendlyName.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Key.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Value.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase);
-
-        return shouldBeShown;
-    }
-
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {{"ReferenceResource", localResource}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"ReferenceResource", localResource}};
         var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -374,10 +366,10 @@ public partial class GameView : ComponentBase
         }
     }
 
-    private async Task LocalResourceAdd()
+    private async Task LocalResourceAdd(ResourceType resourceType)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {{"GameProfileId", _game.DefaultGameProfileId}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true, FullWidth = true};
+        var dialogParameters = new DialogParameters {{"GameProfileId", _game.DefaultGameProfileId}, {"ResourceType", resourceType}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -386,6 +378,9 @@ public partial class GameView : ComponentBase
         }
 
         var newResource = (LocalResourceSlim) dialogResult.Data;
+        var startupResourceCount = _localResources.Count(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile);
+        newResource.StartupPriority = startupResourceCount; // We start from 0 for priority so count is correct
+        newResource.Startup = true; // We'll assume since we just created it we would want this resource enabled
 
         _localResources.Add(newResource);
         _createdLocalResources.Add(newResource);
@@ -396,9 +391,11 @@ public partial class GameView : ComponentBase
         var matchingNewResource = _createdLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
         if (matchingNewResource is not null)
         {
+            matchingNewResource.Name = localResource.Name;
             matchingNewResource.PathWindows = localResource.PathWindows;
             matchingNewResource.PathLinux = localResource.PathLinux;
             matchingNewResource.PathMac = localResource.PathMac;
+            matchingNewResource.Args = localResource.Args;
             return;
         }
 
@@ -409,15 +406,17 @@ public partial class GameView : ComponentBase
             return;
         }
 
+        matchingUpdatedResource.Name = localResource.Name;
         matchingUpdatedResource.PathWindows = localResource.PathWindows;
         matchingUpdatedResource.PathLinux = localResource.PathLinux;
         matchingUpdatedResource.PathMac = localResource.PathMac;
+        matchingUpdatedResource.Args = localResource.Args;
     }
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters() {
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {
             {"Title", "Are you sure you want to delete this local resource?"},
             {"Content", $"You want to delete the resource '{localResource.Name}'?"}
         };
@@ -497,6 +496,9 @@ public partial class GameView : ComponentBase
             if (existingLocalResource is null)
             {
                 var resourceCreateRequest = matchingLocalResource.ToCreate();
+                resourceCreateRequest.PathWindows = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathWindows);
+                resourceCreateRequest.PathLinux = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathLinux);
+                resourceCreateRequest.PathMac = FileHelpers.SanitizeSecureFilename(resourceCreateRequest.PathMac);
                 resourceCreateRequest.GameProfileId = _game.DefaultGameProfileId;
                 var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
                 if (!createResourceResponse.Succeeded)
@@ -560,11 +562,6 @@ public partial class GameView : ComponentBase
         return false;
     }
 
-    private void ViewGameServer(Guid id)
-    {
-        NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(id));
-    }
-
     private async Task<bool> CanViewGameServer(Guid id)
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
@@ -591,8 +588,238 @@ public partial class GameView : ComponentBase
         return false;
     }
 
-    private void InjectDynamicValue(ConfigurationItemSlim item, string value)
+    private async Task OpenScriptInEditor(LocalResourceSlim resource)
     {
-        item.Value = value;
+        if (resource.Type != ResourceType.ScriptFile)
+        {
+            return;
+        }
+
+        var usablePath = resource switch
+        {
+            _ when !string.IsNullOrWhiteSpace(resource.PathWindows) => resource.PathWindows,
+            _ when !string.IsNullOrWhiteSpace(resource.PathLinux) => resource.PathLinux,
+            _ when !string.IsNullOrWhiteSpace(resource.PathMac) => resource.PathMac,
+            _ => string.Empty
+        };
+
+        var scriptContent = string.Join(Environment.NewLine, resource.ConfigSets.ToRaw());
+        var fileLanguage = FileHelpers.GetLanguageFromName(usablePath);
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, scriptContent, fileLanguage, _editMode, true);
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var updatedFileContent = (string) dialogResult.Data;
+        var fileContentLines = updatedFileContent.Split(Environment.NewLine);
+        var editorConfigItems = resource.ContentType switch
+        {
+            ContentType.Raw => fileContentLines.ToConfigItems(resource.Id),
+            ContentType.Ini => new IniData(fileContentLines).ToConfigItems(resource.Id),
+            ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(updatedFileContent).ToConfigItems(resource.Id),
+            ContentType.Xml => XDocument.Parse(updatedFileContent).ToConfigItems(resource.Id),
+            _ => fileContentLines.ToConfigItems(resource.Id)
+        };
+
+        // Updated raw file has desired state, we'll use existing ID's for existing items then add/delete based on provided state
+        editorConfigItems.UpdateEditorConfigFromExisting(resource.ConfigSets);
+        var newConfigItems = editorConfigItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        var updateConfigItems = editorConfigItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();
+        var deleteConfigItems = resource.ConfigSets.Where(x => editorConfigItems.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        resource.ConfigSets = editorConfigItems;
+
+        AddOrUpdateConfiguration(_createdConfigItems, newConfigItems);
+        AddOrUpdateConfiguration(_updatedConfigItems, updateConfigItems);
+        AddOrUpdateConfiguration(_deletedConfigItems, deleteConfigItems);
+        Snackbar.Add("Script updated, changes won't be made until you save", Severity.Warning);
+        StateHasChanged();
+    }
+
+    private async Task OpenConfigInEditor(LocalResourceSlim resource)
+    {
+        if (resource.Type != ResourceType.ConfigFile)
+        {
+            return;
+        }
+
+        var usablePath = resource switch
+        {
+            _ when !string.IsNullOrWhiteSpace(resource.PathWindows) => resource.PathWindows,
+            _ when !string.IsNullOrWhiteSpace(resource.PathLinux) => resource.PathLinux,
+            _ when !string.IsNullOrWhiteSpace(resource.PathMac) => resource.PathMac,
+            _ => string.Empty
+        };
+
+        var fileLanguage = resource.ContentType switch
+        {
+            ContentType.Ini => FileEditorLanguage.Ini,
+            ContentType.Json => FileEditorLanguage.Json,
+            ContentType.Xml => FileEditorLanguage.Xml,
+            _ => FileHelpers.GetLanguageFromName(usablePath)
+        };
+
+        var configContent = resource.ContentType switch
+        {
+            ContentType.Raw => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw()),
+            ContentType.Ini => resource.ConfigSets.ToIni().ToString(),
+            ContentType.Xml => resource.ConfigSets.ToXml()?.ToString() ?? string.Empty,
+            _ => string.Join(Environment.NewLine, resource.ConfigSets.ToRaw())
+        };
+        var dialogResult = await DialogService.FileEditorDialog(usablePath, configContent, fileLanguage, _editMode, true);
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var updatedFileContent = (string) dialogResult.Data;
+        var fileContentLines = updatedFileContent.Split(Environment.NewLine);
+        var configItems = resource.ContentType switch
+        {
+            ContentType.Raw => fileContentLines.ToConfigItems(resource.Id),
+            ContentType.Ini => new IniData(fileContentLines).ToConfigItems(resource.Id),
+            ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(updatedFileContent).ToConfigItems(resource.Id),
+            ContentType.Xml => XDocument.Parse(updatedFileContent).ToConfigItems(resource.Id),
+            _ => fileContentLines.ToConfigItems(resource.Id)
+        };
+
+        // Updated raw file has desired state, we'll use existing ID's for existing items then add/delete based on provided state
+        configItems.UpdateEditorConfigFromExisting(resource.ConfigSets);
+        var newConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        var updateConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();
+        var deleteConfigItems = resource.ConfigSets.Where(x => configItems.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        resource.ConfigSets = configItems;
+
+        AddOrUpdateConfiguration(_createdConfigItems, newConfigItems);
+        AddOrUpdateConfiguration(_updatedConfigItems, updateConfigItems);
+        AddOrUpdateConfiguration(_deletedConfigItems, deleteConfigItems);
+        Snackbar.Add("Configuration file updated, changes won't be made until you save", Severity.Warning);
+        StateHasChanged();
+    }
+
+    private static void AddOrUpdateConfiguration(List<ConfigurationItemSlim> existingItems, List<ConfigurationItemSlim> updatedItems)
+    {
+        foreach (var updatedItem in updatedItems)
+        {
+            var matchingItem = existingItems.FirstOrDefault(x => x.Id == updatedItem.Id);
+            if (matchingItem is null)
+            {
+                existingItems.Add(updatedItem);
+                continue;
+            }
+
+            matchingItem.FriendlyName = updatedItem.FriendlyName;
+            matchingItem.Key = updatedItem.Key;
+            matchingItem.Value = updatedItem.Value;
+            matchingItem.Category = updatedItem.Category;
+            matchingItem.Path = updatedItem.Path;
+            matchingItem.DuplicateKey = updatedItem.DuplicateKey;
+        }
+    }
+
+    private async Task ConfigSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
+    {
+        if (importFiles is null || !importFiles.Any())
+        {
+            return;
+        }
+
+        List<IBrowserFile> configToImport = [];
+        foreach (var file in importFiles)
+        {
+            if (file is null)
+            {
+                continue;
+            }
+
+            if (file.Size > 10_000_000)
+            {
+                Snackbar.Add($"File is over the max size of 10MB: {file.Name}");
+                continue;
+            }
+
+            configToImport.Add(file);
+        }
+
+        var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
+                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}" +
+                          $"{Environment.NewLine}NOTE: Imports won't be complete until you save";
+        var importConfirmation = await DialogService.ConfirmDialog($"Import {configToImport.Count} config files", confirmText);
+        if (importConfirmation.Canceled)
+        {
+            return;
+        }
+
+        await ImportConfigFiles(configToImport);
+    }
+
+    private async Task ImportConfigFiles(IEnumerable<IBrowserFile> importFiles)
+    {
+        var importCount = 0;
+
+        foreach (var file in importFiles)
+        {
+            var matchingResource = _localResources.FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.PathWindows) && x.PathWindows.ToLower().EndsWith(file.Name.ToLower()) ||
+                !string.IsNullOrWhiteSpace(x.PathLinux) && x.PathLinux.ToLower().EndsWith(file.Name.ToLower()) ||
+                !string.IsNullOrWhiteSpace(x.PathMac) && x.PathMac.ToLower().EndsWith(file.Name.ToLower()));
+            if (matchingResource is not null)
+            {
+                var confirmText = $"The existing resource {matchingResource.Name} will be replaced if you import this file: {file.Name}, are you sure you want to continue?";
+                var replaceConfirmation = await DialogService.ConfirmDialog("Replace existing config file?", confirmText);
+                if (replaceConfirmation.Canceled)
+                {
+                    Snackbar.Add($"File {file.Name} import was cancelled", Severity.Warning);
+                    continue;
+                }
+
+                await LocalResourceDelete(matchingResource);
+            }
+
+            var newResource = new LocalResourceSlim
+            {
+                Id = Guid.CreateVersion7(),
+                GameProfileId = _game.DefaultGameProfileId,
+                Name = file.Name.Split('.').First(),
+                PathWindows = _game.SupportsWindows ? file.Name : string.Empty,
+                PathLinux = _game.SupportsLinux ? file.Name : string.Empty,
+                PathMac = _game.SupportsMac ? file.Name : string.Empty,
+                Startup = false,
+                StartupPriority = 0,
+                Type = ResourceType.ConfigFile,
+                ContentType = FileHelpers.GetContentTypeFromName(file.Name),
+                Args = string.Empty,
+                LoadExisting = false
+            };
+
+            var fileContent = await file.GetContent();  // Max import size per file is 10MB by default
+            if (!fileContent.Succeeded || fileContent.Data is null)
+            {
+                fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                continue;
+            }
+
+            var fileContentLines = fileContent.Data.Split(Environment.NewLine);
+            var configItems = newResource.ContentType switch
+            {
+                ContentType.Raw => fileContentLines.ToConfigItems(newResource.Id),
+                ContentType.Ini => new IniData(fileContentLines).ToConfigItems(newResource.Id),
+                ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(fileContent.Data).ToConfigItems(newResource.Id),
+                ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(newResource.Id),
+                _ => fileContentLines.ToConfigItems(newResource.Id)
+            };
+
+            newResource.ConfigSets = configItems;
+            _createdLocalResources.Add(newResource);
+            _localResources.Add(newResource);
+            _createdConfigItems.AddRange(configItems);
+            importCount++;
+        }
+
+        if (importCount <= 0)
+        {
+            return;
+        }
+        Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
     }
 }

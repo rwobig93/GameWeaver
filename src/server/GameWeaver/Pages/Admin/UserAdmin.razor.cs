@@ -96,7 +96,7 @@ public partial class UserAdmin
             _ => _pagedData
         };
 
-        return new TableData<AppUserSlim>() {TotalItems = _totalUsers, Items = _pagedData};
+        return new TableData<AppUserSlim> {TotalItems = _totalUsers, Items = _pagedData};
     }
 
     private async Task SearchText(string text)
@@ -234,8 +234,8 @@ public partial class UserAdmin
             return;
         }
 
-        var createParameters = new DialogParameters() { {"ServiceAccountId", Guid.Empty} };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var createParameters = new DialogParameters { {"ServiceAccountId", Guid.Empty} };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var createAccountDialog = await DialogService.ShowAsync<ServiceAccountAdminDialog>(
             "Create Service Account", createParameters, dialogOptions);
         var dialogResult = await createAccountDialog.Result;
@@ -253,7 +253,7 @@ public partial class UserAdmin
             return;
         }
 
-        var copyParameters = new DialogParameters()
+        var copyParameters = new DialogParameters
         {
             {"Title", "Please copy the account password and save it somewhere safe"},
             {"FieldLabel", "Service Account Password"},

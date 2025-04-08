@@ -239,7 +239,7 @@
         position: fixed;
         top: 0;
         left: 0;
-        width: max(100vw, 100%);
+        width: max(98vw, 100%);
         height: max(100vh, 100%);
         z-index: -1;
         background: linear-gradient(45deg, var(--mud-palette-surface), var(--mud-palette-background), var(--mud-palette-primary));
@@ -260,7 +260,7 @@
     bottom: 0;
     background: conic-gradient(from 180deg at 50% 70%, hsla(0,0%,98%,1) 0deg, var(--mud-palette-primary) 72.0000010728836deg,
         var(--mud-palette-secondary) 144.0000021457672deg, var(--mud-palette-tertiary) 216.00000858306885deg, var(--mud-palette-error) 288.0000042915344deg, hsla(0,0%,98%,1) 1turn);
-    width: max(100vw, 100%);
+    width: max(98vw, 100%);
     height: max(100vh, 100%);
     mask:
             radial-gradient(circle at 50% 50%, white 2px, transparent 2.5px) 50% 50% / var(--perlin-noise-dot-size) var(--perlin-noise-dot-size),
@@ -290,3 +290,11 @@
 }
 
 /*#endregion*/
+/*region File Editor*/
+
+.file-editor-default {
+    height: 50vh;
+    width: 100%;
+}
+
+/*endregion*/

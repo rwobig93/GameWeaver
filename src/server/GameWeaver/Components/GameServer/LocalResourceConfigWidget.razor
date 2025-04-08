@@ -1,0 +1,37 @@
+@using Application.Constants.GameServer
+@attribute [AllowAnonymous]
+
+<MudPaper Elevation="10" Class="ma-4 pa-4 gap-4">
+    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@LocalResource.Name</MudText>
+    </MudItem>
+    <MudContainer Class="d-flex flex-column gap-1">
+        @foreach (var configItem in LocalResource.ConfigSets.OrderBy(x => x.FriendlyName))
+        {
+            @if (!ConfigShouldBeShown(configItem))
+            {
+                continue;
+            }
+
+            <div class="border-solid rounded-pill border pa-0 ma-1">
+                <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                    <MudText Color="Color.Primary" Align="Align.Center" Class="ms-4 justify-center">@configItem.FriendlyName</MudText>
+                    <MudTextField T="string" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!EditMode)" OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                    @if (CanEdit)
+                    {
+                        <MudButtonGroup Variant="Variant.Text">
+                            <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!EditMode)" Size="Size.Medium" IconColor="Color.Info">
+                                @foreach (var dynamicVariable in ConfigurationItemConstants.DynamicVariables)
+                                {
+                                    <MudMenuItem OnClick="@(() => InjectDynamicValue(configItem, dynamicVariable.Variable))">@dynamicVariable.FriendlyName</MudMenuItem>
+                                }
+                            </MudMenu>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!EditMode)"
+                                           OnClick="@(() => DeleteConfigItem(configItem))"/>
+                        </MudButtonGroup>
+                    }
+                </MudStack>
+            </div>
+        }
+    </MudContainer>
+</MudPaper>

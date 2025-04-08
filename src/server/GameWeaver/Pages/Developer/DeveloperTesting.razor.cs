@@ -252,9 +252,9 @@ public partial class DeveloperTesting : IAsyncDisposable
         if (matchingGameRequest.Data is not null)
         {
             var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGameRequest.Data.DefaultGameProfileId);
-            if (matchingProfile.Succeeded)
+            if (!matchingProfile.Succeeded)
             {
-                _defaultProfile.Id = matchingProfile.Data.Id;
+                Snackbar.Add("Failure occurred finding default game profile", Severity.Error);
             }
         }
     }
@@ -463,7 +463,7 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         };
         var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGame.Data.DefaultGameProfileId);
-        if (!matchingProfile.Succeeded)
+        if (!matchingProfile.Succeeded || matchingProfile.Data is null)
         {
             var createProfileRequest = await GameServerService.CreateGameProfileAsync(profileCreate, _loggedInUser.Id);
             if (!createProfileRequest.Succeeded)
@@ -487,6 +487,11 @@ public partial class DeveloperTesting : IAsyncDisposable
             }
             Snackbar.Add($"Created default game profile: [{createProfileRequest.Data}]{profileCreate.Name}", Severity.Success);
             matchingProfile = await GameServerService.GetGameProfileByIdAsync(createProfileRequest.Data);
+            if (!matchingProfile.Succeeded || matchingProfile.Data is null)
+            {
+                Snackbar.Add("Failed to create default game profile", Severity.Error);
+                return;
+            }
             _defaultProfile.Id = matchingProfile.Data.Id;
         }
 
@@ -829,7 +834,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             _ => _fileRecords
         };
 
-        return new TableData<FileStorageRecordSlim>() {TotalItems = _totalFileRecords, Items = _fileRecords};
+        return new TableData<FileStorageRecordSlim> {TotalItems = _totalFileRecords, Items = _fileRecords};
     }
 
     private void RefreshFileRecords()
@@ -857,7 +862,8 @@ public partial class DeveloperTesting : IAsyncDisposable
             FriendlyName = friendlyName,
             Filename = Guid.NewGuid().ToString(),
             Description = $"{friendlyName} @ {fileName}",
-            Version = "v1.0.0"
+            Version = "v1.0.0",
+            SizeBytes = file.Size
         }, file.OpenReadStream(50_000_000_000), _loggedInUser.Id);
         if (!uploadRequest.Succeeded)
         {

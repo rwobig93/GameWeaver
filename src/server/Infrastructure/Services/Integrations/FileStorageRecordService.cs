@@ -1,4 +1,5 @@
 using Application.Constants.Communication;
+using Application.Constants.Runtime;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.Integrations;
@@ -201,6 +202,7 @@ public class FileStorageRecordService : IFileStorageRecordService
                         {"Version", request.Version},
                         {"LinkedId", request.LinkedId.ToString()},
                         {"LinkedType", request.LinkedType.ToString()},
+                        {"SizeInBytes", request.SizeBytes.ToString()},
                         {"Error", recordCreate.ErrorMessage}
                     });
                 return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
@@ -211,7 +213,8 @@ public class FileStorageRecordService : IFileStorageRecordService
             try
             {
                 Directory.CreateDirectory(new FileInfo(filePath).DirectoryName!);
-                await using (var stream = new FileStream(createdRecord.Result!.GetLocalFilePath(), FileMode.Create))
+                await using (var stream = new FileStream(createdRecord.Result!.GetLocalFilePath(), FileMode.Create, FileAccess.Write, FileShare.None,
+                                 FileConstants.BufferSize, FileConstants.IsLargeFile(request.SizeBytes)))
                 {
                     await content.CopyToAsync(stream);
                 }
@@ -235,7 +238,7 @@ public class FileStorageRecordService : IFileStorageRecordService
             }
 
             var fileHash = FileHelpers.ComputeFileContentSha256Hash(filePath);
-            var recordUpdate = await _recordRepository.UpdateAsync(new FileStorageRecordUpdate() {Id = recordCreate.Result, HashSha256 = fileHash});
+            var recordUpdate = await _recordRepository.UpdateAsync(new FileStorageRecordUpdate {Id = recordCreate.Result, HashSha256 = fileHash});
             if (recordUpdate.Succeeded) return await Result<Guid>.SuccessAsync(recordCreate.Result);
             {
                 var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.FileStorage, recordCreate.Result, requestUserId,

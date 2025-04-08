@@ -33,6 +33,7 @@
     <a class="dismiss">🗙</a>
 </div>
 
+@* Custom Javascript Scripts *@
 <script src="js/clipboard.js" asp-append-version="true"></script>
 <script src="js/scroll.js" asp-append-version="true"></script>
 <script src="js/scrollToTop.js" asp-append-version="true"></script>
@@ -41,7 +42,15 @@
 <script src="js/timezone.js" asp-append-version="true"></script>
 <script src="js/ensureImageExists.js" asp-append-version="true"></script>
 <script src="js/openExternalUrl.js" asp-append-version="true"></script>
+
+@* BlazorMonaco Scripts *@
+<script src="_content/BlazorMonaco/jsInterop.js" asp-append-version="true"></script>
+<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js" asp-append-version="true"></script>
+<script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js" asp-append-version="true"></script>
+
+@* Blazor Common Required Scripts *@
 <script src="_framework/blazor.server.js" asp-append-version="true"></script>
 <script src="_content/MudBlazor/MudBlazor.min.js" asp-append-version="true"></script>
+
 </body>
 </html>

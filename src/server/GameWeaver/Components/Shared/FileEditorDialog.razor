@@ -1,0 +1,58 @@
+@using Application.Constants.GameServer
+@using BlazorMonaco.Editor
+@using Domain.Enums.Integrations
+@attribute [AllowAnonymous]
+
+<MudDialog Class="pa-4 justify-center my-4 mud-text-align-center">
+    <DialogContent>
+        <MudContainer Class="mt-0 pt-0" Style="width: 100%; height: 100%;">
+            <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Class="pa-0 ma-0" Style="width: 100%; height: 100%;">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5" Class="pt-0 mt-0">@Title</MudText>
+                <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Baseline" Wrap="Wrap.Wrap" Class="pa-0" Style="width: 100%;">
+                    <MudSpacer />
+                    <MudSelect T="FileEditorTheme" @bind-Value="Theme" Class="d-flex" Label="Theme" OpenIcon="@Icons.Material.Filled.ColorLens" AdornmentColor="Color.Primary"
+                               SelectedValuesChanged="@(themes => EditorThemeChanged(themes))">
+                        @foreach (FileEditorTheme theme in Enum.GetValues(typeof(FileEditorTheme)))
+                        {
+                            <MudSelectItem Value="@theme">@theme.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                    @if (ShowGameQuickActions)
+                    {
+                        <MudMenu Size="Size.Medium" IconColor="Color.Info" Variant="Variant.Outlined" Label="Copy Dynamic Variable"
+                                 EndIcon="@Icons.Material.Filled.DriveFileRenameOutline">
+                            @foreach (var dynamicVariable in ConfigurationItemConstants.DynamicVariables)
+                            {
+                                <MudMenuItem OnClick="@(() => CopyToClipboard(dynamicVariable.Variable))">@dynamicVariable.FriendlyName</MudMenuItem>
+                            }
+                        </MudMenu>
+                    }
+                    else
+                    {
+                        <MudSpacer/>
+                    }
+                    <MudSelect T="FileEditorLanguage" @bind-Value="Language" Class="d-flex" Label="Language" OpenIcon="@Icons.Material.Filled.Language" AdornmentColor="Color.Tertiary"
+                               SelectedValuesChanged="@(languages => EditorLanguageChanged(languages))">
+                        @foreach (FileEditorLanguage language in Enum.GetValues(typeof(FileEditorLanguage)))
+                        {
+                            <MudSelectItem Value="@language">@language.ToString()</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudSpacer />
+                </MudStack>
+                <StandaloneCodeEditor @ref="_editor" Id="file-editor-dialog" ConstructionOptions="EditorOptions" CssClass="file-editor-default" OnDidInit="@EditorInitialize"/>
+            </MudStack>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.Wrap">
+                @if (CanEdit)
+                {
+                    <MudButton Color="Color.Success" OnClick="@Confirm">Confirm</MudButton>
+                }
+                <MudButton Color="Color.Error" OnClick="@Cancel">@(CanEdit ? "Cancel" : "Go Back")</MudButton>
+            </MudStack>
+        </MudContainer>
+    </DialogActions>
+</MudDialog>

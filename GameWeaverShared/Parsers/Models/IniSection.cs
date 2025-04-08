@@ -1,4 +1,4 @@
-﻿namespace Application.Models.Handlers;
+﻿namespace GameWeaverShared.Parsers.Models;
 
 public class IniSection
 {

@@ -19,7 +19,7 @@ public static class AuthorizationHelpers
     public static async Task<bool> UserHasDynamicPermission(this IAuthorizationService authService, ClaimsPrincipal? currentUser, DynamicPermissionGroup group,
         DynamicPermissionLevel level, Guid entityId)
     {
-        return (await authService.AuthorizeAsync(currentUser!, null, new List<IAuthorizationRequirement>()
+        return (await authService.AuthorizeAsync(currentUser!, null, new List<IAuthorizationRequirement>
         {
             new DynamicRequirement { EntityId = entityId, Group = group, Level = level }
         })).Succeeded;

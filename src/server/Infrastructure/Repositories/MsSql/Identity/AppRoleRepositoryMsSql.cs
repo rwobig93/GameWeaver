@@ -316,7 +316,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 new {UserId = userId, RoleId = roleId});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
-                modifyingUserId, AuditAction.Update, null, new Dictionary<string, string>()
+                modifyingUserId, AuditAction.Update, null, new Dictionary<string, string>
                 {
                     {"User Addition", userId.ToString()}
                 });
@@ -341,7 +341,7 @@ public class AppRoleRepositoryMsSql : IAppRoleRepository
                 new {UserId = userId, RoleId = roleId});
 
             await _auditRepository.CreateAuditTrail(_dateTimeService, AuditTableName.Roles, roleId,
-                modifyingUserId, AuditAction.Update, null, new Dictionary<string, string>()
+                modifyingUserId, AuditAction.Update, null, new Dictionary<string, string>
                 {
                     {"User Removal", userId.ToString()}
                 });

@@ -1302,24 +1302,32 @@ public class GameServerService : IGameServerService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    public async Task<IResult<GameProfileSlim>> GetGameProfileByIdAsync(Guid id)
+    public async Task<IResult<GameProfileSlim?>> GetGameProfileByIdAsync(Guid id)
     {
         var request = await _gameServerRepository.GetGameProfileByIdAsync(id);
         if (!request.Succeeded)
+        {
             return await Result<GameProfileSlim>.FailAsync(request.ErrorMessage);
+        }
         if (request.Result is null)
+        {
             return await Result<GameProfileSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
 
         return await Result<GameProfileSlim>.SuccessAsync(request.Result.ToSlim());
     }
 
-    public async Task<IResult<GameProfileSlim>> GetGameProfileByFriendlyNameAsync(string friendlyName)
+    public async Task<IResult<GameProfileSlim?>> GetGameProfileByFriendlyNameAsync(string friendlyName)
     {
         var request = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(friendlyName);
         if (!request.Succeeded)
+        {
             return await Result<GameProfileSlim>.FailAsync(request.ErrorMessage);
+        }
         if (request.Result is null)
+        {
             return await Result<GameProfileSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
+        }
 
         return await Result<GameProfileSlim>.SuccessAsync(request.Result.ToSlim());
     }

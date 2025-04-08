@@ -27,10 +27,10 @@ public static class AppThemes
         FriendlyName = "Dark",
         Description = "Easy on the eyes and awesome, don't forget awesome",
         Icon = Icons.Material.Filled.DarkMode,
-        Theme = new MudTheme()
+        Theme = new MudTheme
         {
 
-            PaletteDark = new PaletteDark()
+            PaletteDark = new PaletteDark
             {
                 Primary = "#BB86FC",
                 Secondary = "#03DAC6",
@@ -62,9 +62,9 @@ public static class AppThemes
         FriendlyName = "Darker",
         Description = "I get it, you wanna go darker, I don't blame you",
         Icon = Icons.Material.Outlined.Lightbulb,
-        Theme = new MudTheme()
+        Theme = new MudTheme
         {
-            PaletteDark = new PaletteDark()
+            PaletteDark = new PaletteDark
             {
                 Primary = "#BB86FC",
                 Secondary = "#03DAC6",
@@ -96,9 +96,9 @@ public static class AppThemes
         FriendlyName = "Hackerman",
         Description = "I'm not normal and I never will be, no matter what world I'm in",
         Icon = Icons.Material.Filled.Code,
-        Theme = new MudTheme()
+        Theme = new MudTheme
         {
-            PaletteDark = new PaletteDark()
+            PaletteDark = new PaletteDark
             {
                 Primary = "#00bf00",
                 Secondary = "#800080",
@@ -130,9 +130,9 @@ public static class AppThemes
         FriendlyName = "Bright",
         Description = "I mean if you're into that sort of thing, we still gave you that option",
         Icon = Icons.Material.Filled.WbSunny,
-        Theme = new MudTheme()
+        Theme = new MudTheme
         {
-            PaletteDark = new PaletteDark()
+            PaletteDark = new PaletteDark
             {
                 Primary = "#1E88E5",
                 AppbarBackground = "#1E88E5",
@@ -153,7 +153,7 @@ public static class AppThemes
         FriendlyName = "Custom 1",
         Description = "First custom theme",
         Icon = Icons.Material.Filled.LooksOne,
-        Theme = new MudTheme()
+        Theme = new MudTheme
         {
             Typography = AppTypographies.DefaultTypography,
             LayoutProperties = AppLayouts.DefaultLayoutProperties
@@ -166,7 +166,7 @@ public static class AppThemes
         FriendlyName = "Custom 2",
         Description = "Second custom theme",
         Icon = Icons.Material.Filled.LooksTwo,
-        Theme = new MudTheme()
+        Theme = new MudTheme
         {
             Typography = AppTypographies.DefaultTypography,
             LayoutProperties = AppLayouts.DefaultLayoutProperties
@@ -179,7 +179,7 @@ public static class AppThemes
         FriendlyName = "Custom 3",
         Description = "Third custom theme",
         Icon = Icons.Material.Filled.Looks3,
-        Theme = new MudTheme()
+        Theme = new MudTheme
         {
             Typography = AppTypographies.DefaultTypography,
             LayoutProperties = AppLayouts.DefaultLayoutProperties

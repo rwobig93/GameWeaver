@@ -177,7 +177,7 @@ public class AppAccountService : IAppAccountService
         var token = await GenerateJwtAsync(userSecurity.ToUserDb());
         var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
         var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
-        var response = new UserLoginResponse() { ClientId = clientId, Token = token, RefreshToken = refreshToken,
+        var response = new UserLoginResponse { ClientId = clientId, Token = token, RefreshToken = refreshToken,
             RefreshTokenExpiryTime = refreshTokenExpiration };
 
         // Create audit log for login if configured
@@ -185,8 +185,8 @@ public class AppAccountService : IAppAccountService
         {
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
                 _serverState.SystemUserId, AuditAction.Login,
-                new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
-                new Dictionary<string, string>()
+                new Dictionary<string, string> {{"Username", ""}, {"AuthState", ""}},
+                new Dictionary<string, string>
                     {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
         }
 
@@ -270,7 +270,7 @@ public class AppAccountService : IAppAccountService
         var token = await GenerateJwtAsync(userSecurity.ToUserDb());
         var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
         var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
-        var response = new UserLoginResponse() { ClientId = clientId, Token = token, RefreshToken = refreshToken,
+        var response = new UserLoginResponse { ClientId = clientId, Token = token, RefreshToken = refreshToken,
             RefreshTokenExpiryTime = refreshTokenExpiration };
 
         var result = await CacheTokensAndAuthAsync(response);
@@ -282,8 +282,8 @@ public class AppAccountService : IAppAccountService
         {
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userSecurity.Id,
                 _serverState.SystemUserId, AuditAction.Login,
-                new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}},
-                new Dictionary<string, string>()
+                new Dictionary<string, string> {{"Username", ""}, {"AuthState", ""}},
+                new Dictionary<string, string>
                     {{"Username", userSecurity.Username}, {"AuthState", userSecurity.AuthState.ToString()}});
         }
 
@@ -368,7 +368,7 @@ public class AppAccountService : IAppAccountService
         }
 
         var token = await GenerateJwtAsync(userSecurity.ToUserDb(), true);
-        var response = new ApiTokenResponse() {Token = token, TokenExpiration = JwtHelpers.GetJwtExpirationTime(token)};
+        var response = new ApiTokenResponse {Token = token, TokenExpiration = JwtHelpers.GetJwtExpirationTime(token)};
 
         return await Result<ApiTokenResponse>.SuccessAsync(response);
     }
@@ -402,7 +402,7 @@ public class AppAccountService : IAppAccountService
             return await Result<ApiTokenResponse>.FailAsync(updateSecurity.ErrorMessage);
 
         var token = await GenerateJwtAsync(userSecurity.ToUserDb(), true);
-        var response = new ApiTokenResponse() {Token = token, TokenExpiration = JwtHelpers.GetJwtExpirationTime(token)};
+        var response = new ApiTokenResponse {Token = token, TokenExpiration = JwtHelpers.GetJwtExpirationTime(token)};
 
         return await Result<ApiTokenResponse>.SuccessAsync(response);
     }
@@ -443,13 +443,13 @@ public class AppAccountService : IAppAccountService
             if (!_lifecycleConfig.AuditLoginLogout) return await Result.SuccessAsync();
 
             var user = (await _userRepository.GetByIdAsync(userId)).Result ??
-                       new AppUserSecurityDb() {Username = "Unknown", Email = "User@Unknown.void"};
+                       new AppUserSecurityDb {Username = "Unknown", Email = "User@Unknown.void"};
 
             await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.AuthState, userId,
                 _serverState.SystemUserId, AuditAction.Logout,
-                new Dictionary<string, string>()
+                new Dictionary<string, string>
                     {{"Username", user.Username}, {"AuthState", user.AuthState.ToString()}},
-                new Dictionary<string, string>() {{"Username", ""}, {"AuthState", ""}});
+                new Dictionary<string, string> {{"Username", ""}, {"AuthState", ""}});
 
             return await Result.SuccessAsync();
         }
@@ -571,7 +571,7 @@ public class AppAccountService : IAppAccountService
             return await Result.FailAsync(issuesWithPassword);
         }
 
-        var newUser = new AppUserDb()
+        var newUser = new AppUserDb
         {
             Email = registerRequest.Email,
             Username = registerRequest.Username,
@@ -725,7 +725,7 @@ public class AppAccountService : IAppAccountService
         if (string.IsNullOrWhiteSpace(confirmationUrl))
         {
             await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
-                foundUserRequest.Result.Id, "Was unable to generate confirmation Url", new Dictionary<string, string>()
+                foundUserRequest.Result.Id, "Was unable to generate confirmation Url", new Dictionary<string, string>
                 {
                     {"UserId", foundUserRequest.Result.Id.ToString()},
                     {"Username", foundUserRequest.Result.Username},
@@ -740,7 +740,7 @@ public class AppAccountService : IAppAccountService
         if (response is not null) return await Result.SuccessAsync("Email confirmation sent to the email address provided");
 
         await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.IdentityConfirmation,
-            foundUserRequest.Result.Id, $"Failure occurred sending email confirmation to {newEmail}", new Dictionary<string, string>()
+            foundUserRequest.Result.Id, $"Failure occurred sending email confirmation to {newEmail}", new Dictionary<string, string>
             {
                 {"UserId", foundUserRequest.Result.Id.ToString()},
                 {"Username", foundUserRequest.Result.Username},
@@ -831,7 +831,7 @@ public class AppAccountService : IAppAccountService
             // No currently pending forgot password request exists, so we'll generate a new one, add it to the provided user
             //   and return the generated reset uri
             var confirmationCode = UrlHelpers.GenerateToken();
-            var newExtendedAttribute = new AppUserExtendedAttributeCreate()
+            var newExtendedAttribute = new AppUserExtendedAttributeCreate
             {
                 OwnerId = foundUser.Id,
                 Name = "ForgotPasswordReset",
@@ -995,7 +995,7 @@ public class AppAccountService : IAppAccountService
         }
 
         await SetUserPassword(userId, UrlHelpers.GenerateToken());
-        return await ForgotPasswordAsync(new ForgotPasswordRequest() { Email = userSecurity.Result!.Email });
+        return await ForgotPasswordAsync(new ForgotPasswordRequest { Email = userSecurity.Result!.Email });
     }
 
     public async Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled)
@@ -1208,7 +1208,7 @@ public class AppAccountService : IAppAccountService
         var userApiToken = UrlHelpers.GenerateToken(_securityConfig.UserApiTokenSizeInBytes);
         var tokenExpiration = UserApiHelpers.GetUserApiTokenExpirationTime(_dateTime, timeframe);
 
-        var newExtendedAttribute = new AppUserExtendedAttributeCreate()
+        var newExtendedAttribute = new AppUserExtendedAttributeCreate
         {
             OwnerId = foundUserRequest.Result.Id,
             Name = tokenExpiration.ToString(CultureInfo.CurrentCulture),

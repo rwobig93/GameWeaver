@@ -170,8 +170,8 @@ public partial class UserView
 
     private async Task EditRoles()
     {
-        var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"UserId", _viewingUser.Id}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<UserRoleDialog>("Edit User Roles", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -184,8 +184,8 @@ public partial class UserView
 
     private async Task EditPermissions()
     {
-        var dialogParameters = new DialogParameters() {{"UserId", _viewingUser.Id}};
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"UserId", _viewingUser.Id}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
 
         var dialog = await DialogService.ShowAsync<UserPermissionDialog>("Edit User Permissions", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -215,8 +215,8 @@ public partial class UserView
             return;
         }
 
-        var updateParameters = new DialogParameters() { {"ServiceAccountId", _viewingUser.Id} };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var updateParameters = new DialogParameters { {"ServiceAccountId", _viewingUser.Id} };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         var updateAccountDialog = await DialogService.ShowAsync<ServiceAccountAdminDialog>("Update Service Account", updateParameters, dialogOptions);
         var dialogResult = await updateAccountDialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -231,7 +231,7 @@ public partial class UserView
             return;
         }
 
-        var copyParameters = new DialogParameters()
+        var copyParameters = new DialogParameters
         {
             {"Title", "Please copy the account password and save it somewhere safe"},
             {"FieldLabel", "Service Account Password"},
@@ -248,12 +248,12 @@ public partial class UserView
     {
         if (!_canAdminEmail) return;
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"Title", "Confirm New Email Address"},
             {"FieldLabel", "New Email Address"}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var newEmailPrompt = await DialogService.ShowAsync<ValuePromptDialog>("Confirm New Email", dialogParameters, dialogOptions);
         var dialogResult = await newEmailPrompt.Result;
         if (string.IsNullOrWhiteSpace((string?)dialogResult?.Data) || dialogResult.Canceled)

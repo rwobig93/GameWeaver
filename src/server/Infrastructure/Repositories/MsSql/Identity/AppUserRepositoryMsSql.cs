@@ -690,7 +690,7 @@ public class AppUserRepositoryMsSql : IAppUserRepository
 
             if (existingPreference is null)
             {
-                var newPreferences = new AppUserPreferenceCreate() {OwnerId = userId};
+                var newPreferences = new AppUserPreferenceCreate {OwnerId = userId};
                 var createdId = await _database.SaveDataReturnId(
                     AppUserPreferencesTableMsSql.Insert, newPreferences);
                 existingPreference = (await _database.LoadData<AppUserPreferenceDb, dynamic>(

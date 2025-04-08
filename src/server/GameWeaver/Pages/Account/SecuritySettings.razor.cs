@@ -360,8 +360,8 @@ public partial class SecuritySettings
     {
         if (!_canGenerateApiTokens) return;
 
-        var dialogParameters = new DialogParameters() {{"ApiTokenId", Guid.Empty}};
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"ApiTokenId", Guid.Empty}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
         await DialogService.ShowAsync<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions);
 
         await GetUserApiTokens();
@@ -373,8 +373,8 @@ public partial class SecuritySettings
         if (!_canGenerateApiTokens) return;
         if (_selectedApiTokens.Count != 1) return;
 
-        var dialogParameters = new DialogParameters() {{"ApiTokenId", _selectedApiTokens.FirstOrDefault()!.Id}};
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters {{"ApiTokenId", _selectedApiTokens.FirstOrDefault()!.Id}};
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         await DialogService.ShowAsync<UserApiTokenDialog>("Update API Token", dialogParameters, dialogOptions);
 
         await GetUserApiTokens();
@@ -387,12 +387,12 @@ public partial class SecuritySettings
 
         var tokensList = _selectedApiTokens.Select(x => $"Token: [{x.Value[^4..]}] {x.Description}").ToArray();
 
-        var dialogParameters = new DialogParameters()
+        var dialogParameters = new DialogParameters
         {
             {"Title", $"Are you sure you want to delete these {_selectedApiTokens.Count} API Tokens?"},
             {"Content", string.Join(Environment.NewLine, tokensList)}
         };
-        var dialogOptions = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
         var confirmation = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Deletion", dialogParameters, dialogOptions);
         var dialogResult = await confirmation.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)

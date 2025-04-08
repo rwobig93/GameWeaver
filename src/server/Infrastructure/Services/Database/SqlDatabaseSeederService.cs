@@ -161,7 +161,7 @@ public class SqlDatabaseSeederService : IHostedService
         if (existingRole.Result is not null)
             return existingRole;
 
-        var createdRole = await _roleRepository.CreateAsync(new AppRoleCreate()
+        var createdRole = await _roleRepository.CreateAsync(new AppRoleCreate
         {
             Name = roleName,
             Description = roleDescription,

@@ -23,7 +23,7 @@ public class ThreadRunner
                 InitializeThreadRunner();
             }
 
-            AddThreadedMethodToQueue(new RunSteamThreadDto()
+            AddThreadedMethodToQueue(new RunSteamThreadDto
             {
                 RunSteamMethod = callbackMethod,
                 SteamDto = steamDto

@@ -1,4 +1,7 @@
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.LocalResource;
+using Application.Services.GameServer;
+using Domain.Enums.GameServer;
 
 namespace GameWeaver.Components.GameServer;
 
@@ -13,16 +16,67 @@ public partial class LocalResourceAddDialog : ComponentBase
     [Parameter] public int IconWidthPixels { get; set; } = 75;
     [Parameter] public int IconHeightPixels { get; set; } = 75;
     [Parameter] public Guid GameProfileId { get; set; }
+    [Parameter] public ResourceType ResourceType { get; set; }
+
+    [Inject] public IGameService GameService { get; set; } = null!;
+    [Inject] public IGameServerService GameServerService { get; set; } = null!;
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private readonly LocalResourceSlim _newLocalResource = new();
+    private bool _fileShouldBeDeleted;
+    private GameSlim _game = new() {Id = Guid.Empty};
     private const int TooltipDelay = 500;
 
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            UpdateResourceOnStartup();
+            await GetGame();
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetGame()
+    {
+        var gameProfile = await GameServerService.GetGameProfileByIdAsync(GameProfileId);
+        if (!gameProfile.Succeeded || gameProfile.Data is null)
+        {
+            gameProfile.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            Cancel();
+            return;
+        }
+
+        var profileGame = await GameService.GetByIdAsync(gameProfile.Data.GameId);
+        if (!profileGame.Succeeded || profileGame.Data is null)
+        {
+            profileGame.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            Cancel();
+            return;
+        }
+
+        _game = profileGame.Data;
+    }
+
+    private void UpdateResourceOnStartup()
+    {
+        _newLocalResource.Type = ResourceType;
+    }
+
+    private void InjectDynamicValue(string value)
+    {
+        _newLocalResource.Args += $" {value}";
+    }
 
     private void Submit()
     {
         _newLocalResource.Id = Guid.CreateVersion7();
         _newLocalResource.GameProfileId = GameProfileId;
+        if (_fileShouldBeDeleted)
+        {
+            _newLocalResource.ContentType = ContentType.Deleted;
+        }
         MudDialog.Close(DialogResult.Ok(_newLocalResource));
     }
 

@@ -67,7 +67,7 @@ public partial class AuditTrailAdmin
             _ => _pagedData
         };
 
-        return new TableData<AuditTrailSlim>() {TotalItems = _totalTrails, Items = _pagedData};
+        return new TableData<AuditTrailSlim> {TotalItems = _totalTrails, Items = _pagedData};
     }
 
     private void OnSearch(string text)

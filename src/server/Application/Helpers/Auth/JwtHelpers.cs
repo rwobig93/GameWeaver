@@ -86,7 +86,7 @@ public static class JwtHelpers
 
     private static TokenValidationParameters GetJwtValidationParameters(byte[] jwtSecretKey, string issuer, string audience)
     {
-        return new TokenValidationParameters()
+        return new TokenValidationParameters
         {
             ValidIssuer = issuer,
             ValidAudience = audience,

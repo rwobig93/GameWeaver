@@ -144,7 +144,7 @@ public partial class MainLayout
 
             matchingTheme.FriendlyName = preferenceTheme.ThemeName;
             matchingTheme.Description = preferenceTheme.ThemeDescription;
-            matchingTheme.Theme.PaletteDark = new PaletteDark()
+            matchingTheme.Theme.PaletteDark = new PaletteDark
             {
                 Primary = preferenceTheme.ColorPrimary,
                 Secondary = preferenceTheme.ColorSecondary,

@@ -1,11 +1,11 @@
-﻿using Application.Models.Handlers;
-using Domain.Contracts;
+﻿using System.Text;
+using GameWeaverShared.Parsers.Models;
 
-namespace Application.Handlers;
+namespace GameWeaverShared.Parsers;
 
 public class IniData
 {
-    public List<IniSection> Sections { get; private set; } = [];
+    public List<IniSection> Sections { get; } = [];
     private readonly bool _allowDuplicates;
 
     public IniData(string? filePath = null, bool allowDuplicates = false)
@@ -15,6 +15,12 @@ public class IniData
         {
             Load(filePath, true);
         }
+    }
+
+    public IniData(IEnumerable<string> fileContent, bool allowDuplicates = false)
+    {
+        _allowDuplicates = allowDuplicates;
+        Load(fileContent, true);
     }
 
     public void Load(string filePath, bool loadClean = false)
@@ -29,15 +35,27 @@ public class IniData
             return;
         }
 
-        IniSection? currentSection = null;
         var lines = File.ReadAllLines(filePath);
+        Load(lines, loadClean);
+    }
 
-        foreach (var line in lines)
+    public void Load(IEnumerable<string> content, bool loadClean = false)
+    {
+        if (loadClean)
+        {
+            Sections.Clear();
+        }
+
+        IniSection? currentSection = null;
+
+        foreach (var line in content)
         {
             var trimmedLine = line.Trim();
 
             if (string.IsNullOrEmpty(trimmedLine) || trimmedLine.StartsWith($";"))
+            {
                 continue; // Skip comments and empty lines
+            }
 
             if (trimmedLine.StartsWith($"[") && trimmedLine.EndsWith($"]"))
             {
@@ -62,7 +80,29 @@ public class IniData
         }
     }
 
-    public async Task<IResult> Save(string filePath)
+    public override string ToString()
+    {
+        var builder = new StringBuilder();
+
+        var lastSection = Sections.LastOrDefault();
+        foreach (var section in Sections)
+        {
+            builder.Append($"[{section.Name}]{Environment.NewLine}");
+            foreach (var keyValuePair in section.Keys)
+            {
+                builder.Append($"{keyValuePair.Key}={keyValuePair.Value}{Environment.NewLine}");
+            }
+
+            if (lastSection is not null && section != lastSection)  // Skip the last section newline so there aren't two line breaks
+            {
+                builder.Append(Environment.NewLine); // New line for readability between Sections
+            }
+        }
+
+        return builder.ToString();
+    }
+
+    public async Task<ParserResult> Save(string filePath)
     {
         try
         {
@@ -78,11 +118,11 @@ public class IniData
                 file.WriteLine(); // New line for readability between Sections
             }
 
-            return await Result.SuccessAsync();
+            return await Task.FromResult(new ParserResult {Succeeded = true});
         }
         catch (Exception ex)
         {
-            return await Result.FailAsync(ex.Message);
+            return await Task.FromResult(new ParserResult {Succeeded = false, Messages = [ex.Message]});
         }
     }
 
@@ -173,6 +213,17 @@ public class IniData
         foreach (var matchingKey in matchingKeys)
         {
             selectedSection.Keys.Remove(matchingKey);
+        }
+    }
+
+    public void AggregateFrom(IniData source)
+    {
+        foreach (var section in source.Sections)
+        {
+            foreach (var keyValuePair in section.Keys)
+            {
+                AddOrUpdateKey(section.Name, keyValuePair.Key, keyValuePair.Value);
+            }
         }
     }
 }
