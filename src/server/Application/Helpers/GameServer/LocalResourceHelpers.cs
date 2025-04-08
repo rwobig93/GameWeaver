@@ -25,6 +25,7 @@ public static class LocalResourceHelpers
             if (resource.ContentType == ContentType.Ignore)
             {
                 existing.Remove(matchingResource);
+                existing.Add(resource);
                 continue;
             }
 

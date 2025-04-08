@@ -161,7 +161,7 @@
             }
             @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
             {
-                @if (localResource.ContentType is ContentType.Ignore)
+                @if (localResource.ContentType is ContentType.Ignore or ContentType.Deleted)
                 {
                     continue;
                 }
@@ -254,7 +254,7 @@
                           .OrderBy(x => x.StartupPriority))
             {
                 <LocalResourceStartupWidget LocalResource="@localResource" Game="@_game" EditMode="@_editMode" ResourceUpdate="@LocalResourceUpdate"
-                                            OpenScriptEditor="@OpenScriptInEditor" />
+                                            OpenScriptEditor="@OpenScriptInEditor" ResourceDelete="@LocalResourceDelete" />
             }
             @if (_localResources.Count(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile) <= 0)
             {

@@ -12,5 +12,6 @@ public enum ContentType
     Powershell = 7,
     Python = 8,
     VisualBasic = 9,
-    Binary = 10
+    Binary = 10,
+    Deleted = 11
 }

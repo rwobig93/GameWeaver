@@ -97,7 +97,7 @@
         </MudPaper>
     </MudStack>
 }
-@if (!_gameServer.IsDeleted && _gameServer.RunningConfigHash != _gameServer.StorageConfigHash)
+@if (!_gameServer.IsDeleted && _gameServer.ServerState.IsRunning() && _gameServer.RunningConfigHash != _gameServer.StorageConfigHash)
 {
     <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-2">
         <MudPaper Elevation="10" Square="false">
@@ -337,7 +337,7 @@
             }
             @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
             {
-                @if (localResource.ContentType is ContentType.Ignore)
+                @if (localResource.ContentType is ContentType.Ignore or ContentType.Deleted)
                 {
                     continue;
                 }
@@ -381,6 +381,16 @@
                             Add Config File
                         </MudButton>
                     </MudPaper>
+                    <MudPaper Elevation="10" Square="false">
+                        <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ConfigSelectedForImport(files))"
+                                       Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))">
+                            <ActivatorContent>
+                                <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                    Import Config Files
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudPaper>
                 </MudStack>
             }
             @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
@@ -420,7 +430,7 @@
                           .OrderBy(x => x.StartupPriority))
             {
                 <LocalResourceStartupWidget LocalResource="@localResource" Game="@_game" EditMode="@_editMode" ResourceUpdate="@LocalResourceUpdate"
-                                            OpenScriptEditor="@OpenScriptInEditor" />
+                                            OpenScriptEditor="@OpenScriptInEditor" ResourceDelete="@LocalResourceDelete" />
             }
             @if (_localResources.Count(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile) <= 0)
             {

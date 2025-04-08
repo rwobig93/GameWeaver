@@ -1,4 +1,5 @@
 @using Application.Constants.GameServer
+@using Domain.Enums.GameServer
 @attribute [AllowAnonymous]
 
 <MudPaper Elevation="10" Class="ma-4 pa-4 gap-4">
@@ -7,15 +8,30 @@
             @if (!EditMode)
             {
                 <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@LocalResource.Name</MudText>
-                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.RemoveRedEye"
-                           OnClick="@(() => OpenInEditor(LocalResource))">
-                    View Config In Editor
-                </MudButton>
+                @if (LocalResource.ContentType is ContentType.Deleted or ContentType.Ignore)
+                {
+                    <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined"
+                             Text="@(LocalResource.ContentType is ContentType.Deleted ? "Enforced Not To Exist" : "Ignored From Inherited Game & Profile")" />
+                }
+                else
+                {
+                    <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.RemoveRedEye"
+                               OnClick="@(() => OpenInEditor(LocalResource))">
+                        View Config In Editor
+                    </MudButton>
+                }
             }
             else
             {
-                <MudTextField T="string" Label="Friendly Name" @bind-Value="LocalResource.Name" AutoGrow="false" Disabled="@(!EditMode)" Class="px-8"
-                              OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+                <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Spacing="3" Wrap="Wrap.NoWrap" Style="width: 100%;">
+                    <MudTextField T="string" Label="Friendly Name" @bind-Value="LocalResource.Name" AutoGrow="false" FullWidth="true" Disabled="@(!EditMode)" Class="px-8"
+                                  OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+                    @if (LocalResource.ContentType is ContentType.Deleted or ContentType.Ignore)
+                    {
+                        <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined"
+                                 Text="@(LocalResource.ContentType is ContentType.Deleted ? "Enforced Not To Exist" : "Ignored From Inherited Game & Profile")" />
+                    }
+                </MudStack>
             }
         </MudStack>
     </MudItem>
@@ -39,14 +55,17 @@
     @if (EditMode)
     {
         <MudStack Row="true" Justify="Justify.SpaceEvenly" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
-            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
-                       OnClick="@(() => AddConfigItem(LocalResource))" Disabled="@(!EditMode)">
-                Add Config
-            </MudButton>
-            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.Edit"
-                       OnClick="@(() => OpenInEditor(LocalResource))" Disabled="@(!EditMode)">
-                Edit Config In Editor
-            </MudButton>
+            @if (LocalResource.ContentType != ContentType.Ignore && LocalResource.ContentType != ContentType.Deleted)
+            {
+                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                           OnClick="@(() => AddConfigItem(LocalResource))" Disabled="@(!EditMode)">
+                    Add Config
+                </MudButton>
+                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.Edit"
+                           OnClick="@(() => OpenInEditor(LocalResource))" Disabled="@(!EditMode)">
+                    Edit Config In Editor
+                </MudButton>
+            }
             <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
                        OnClick="@(() => DeleteLocalResource(LocalResource))" Disabled="@(!EditMode)">
                 Delete Resource

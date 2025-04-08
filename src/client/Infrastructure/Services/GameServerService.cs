@@ -795,7 +795,7 @@ public class GameServerService : IGameServerService
         }
     }
 
-    public async Task<IResult> UpdateConfigurationFiles(Guid id, bool loadExisting = true)
+    public async Task<IResult> UpdateConfigItemFiles(Guid id, bool loadExisting = true)
     {
         var gameServerRequest = await _gameServerRepository.GetByIdAsync(id);
         if (!gameServerRequest.Succeeded || gameServerRequest.Data is null)
@@ -804,10 +804,30 @@ public class GameServerService : IGameServerService
         }
 
         List<string> errorMessages = [];
-        var configurationFiles = gameServerRequest.Data.Resources.Where(x => x.Type == ResourceType.ConfigFile).ToList();
+        var configItemFiles = gameServerRequest.Data.Resources.Where(x =>
+            x.Type is ResourceType.ConfigFile or ResourceType.ScriptFile).ToList();
 
-        foreach (var configFile in configurationFiles)
+        foreach (var configFile in configItemFiles)
         {
+            if (configFile.ContentType is ContentType.Deleted)  // Local resource is an ignore file so we'll delete it since we don't want it
+            {
+                try
+                {
+                    if (File.Exists(configFile.GetFullPath()))
+                    {
+                        _logger.Debug("File is a delete file and exists, deleting: {FilePath}", configFile.GetFullPath());
+                        File.Delete(configFile.GetFullPath());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error("Failed to delete ignore file: {Error}", ex.Message);
+                    return await Result.FailAsync($"Failed to delete ignore file: {ex.Message}");
+                }
+
+                continue;
+            }
+
             try
             {
                 var directoryPath = Path.GetDirectoryName(configFile.GetFullPath()) ?? "./";

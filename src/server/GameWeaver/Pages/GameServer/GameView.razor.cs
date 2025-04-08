@@ -613,7 +613,7 @@ public partial class GameView : ComponentBase
 
         var updatedFileContent = (string) dialogResult.Data;
         var fileContentLines = updatedFileContent.Split(Environment.NewLine);
-        var configItems = resource.ContentType switch
+        var editorConfigItems = resource.ContentType switch
         {
             ContentType.Raw => fileContentLines.ToConfigItems(resource.Id),
             ContentType.Ini => new IniData(fileContentLines).ToConfigItems(resource.Id),
@@ -622,18 +622,17 @@ public partial class GameView : ComponentBase
             _ => fileContentLines.ToConfigItems(resource.Id)
         };
 
-        // TODO: Enforce script contents on the host same as the config files
         // Updated raw file has desired state, we'll use existing ID's for existing items then add/delete based on provided state
-        configItems.UpdateMatchingConfigItemIds(resource.ConfigSets);
-        var newConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
-        var updateConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();
-        var deleteConfigItems = resource.ConfigSets.Where(x => configItems.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
-        resource.ConfigSets = configItems;
+        editorConfigItems.UpdateEditorConfigFromExisting(resource.ConfigSets);
+        var newConfigItems = editorConfigItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        var updateConfigItems = editorConfigItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();
+        var deleteConfigItems = resource.ConfigSets.Where(x => editorConfigItems.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        resource.ConfigSets = editorConfigItems;
 
-        // TODO: Saved config for script has lines out of order, this obviously can't happen so we need to fix it
         AddOrUpdateConfiguration(_createdConfigItems, newConfigItems);
         AddOrUpdateConfiguration(_updatedConfigItems, updateConfigItems);
         AddOrUpdateConfiguration(_deletedConfigItems, deleteConfigItems);
+        Snackbar.Add("Script updated, changes won't be made until you save", Severity.Warning);
         StateHasChanged();
     }
 
@@ -684,11 +683,9 @@ public partial class GameView : ComponentBase
             _ => fileContentLines.ToConfigItems(resource.Id)
         };
 
-        // TODO: Was unable to find a configuration item using the information provided, please verify the information provided
         // Updated raw file has desired state, we'll use existing ID's for existing items then add/delete based on provided state
-        configItems.UpdateMatchingConfigItemIds(resource.ConfigSets);
+        configItems.UpdateEditorConfigFromExisting(resource.ConfigSets);
         var newConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
-        // TODO: Updated items, we should only update items that have changed, the ones that have should only have their value changed, not everything
         var updateConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();
         var deleteConfigItems = resource.ConfigSets.Where(x => configItems.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
         resource.ConfigSets = configItems;
@@ -696,7 +693,7 @@ public partial class GameView : ComponentBase
         AddOrUpdateConfiguration(_createdConfigItems, newConfigItems);
         AddOrUpdateConfiguration(_updatedConfigItems, updateConfigItems);
         AddOrUpdateConfiguration(_deletedConfigItems, deleteConfigItems);
-        Snackbar.Add($"Configuration file updated, , changes won't be made until you save", Severity.Success);
+        Snackbar.Add("Configuration file updated, changes won't be made until you save", Severity.Warning);
         StateHasChanged();
     }
 
@@ -812,7 +809,6 @@ public partial class GameView : ComponentBase
                 _ => fileContentLines.ToConfigItems(newResource.Id)
             };
 
-            // TODO: Saving the file says a resource wasn't found
             newResource.ConfigSets = configItems;
             _createdLocalResources.Add(newResource);
             _localResources.Add(newResource);

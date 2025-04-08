@@ -36,12 +36,17 @@ public static class FileHelpers
 
     public static string SanitizeSecureFilename(string filename)
     {
-        if (filename.StartsWith(':'))
+        if (filename.StartsWith(':'))  // Remove any attempts to jump outside our managed path
         {
             filename = filename[1..];
         }
 
-        return filename.Replace("\\", "/").Replace("\"", "").Replace("'", "");
+        return filename
+            .Replace("\\", "/")  // Standardize slashes, we normalize these per OS when applied on that OS anyway
+            .Replace("\"", "")  // Remove any quote characters that could scope paths and aren't valid anyway
+            .Replace("'", "")  // Remove any quote characters that could scope paths and aren't valid anyway
+            .Trim('.')  // Remove any attempts to jump outside our managed path
+            .Trim('/');  // Remove any attempts to jump outside our managed path
     }
 
     public static int GetSizeInBytes(string content)
@@ -225,10 +230,16 @@ public static class FileHelpers
         return xmlDocument;
     }
 
+    public static int ExtractNumberFromString(string rawLineNumber)
+    {
+        _ = int.TryParse(string.Concat(rawLineNumber.Where(char.IsDigit)), out var parsedNumber);
+        return parsedNumber;
+    }
+
     public static List<string> ToRaw(this IEnumerable<ConfigurationItemLocal> configItems)
     {
-        // Raw config item keys are expected to be 'Line#' and 'Line#.#' for long lines
-        return configItems.OrderBy(x => x.Key).Select(x => x.Value).ToList();
+        // Raw config item keys are expected to be the line number '#' and '#.#' for long lines
+        return configItems.OrderBy(x => ExtractNumberFromString(x.Key)).Select(x => x.Value).ToList();
     }
 
     public static void AggregateRawFrom(this List<string> original, IEnumerable<ConfigurationItemLocal> source)

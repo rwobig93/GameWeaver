@@ -1,4 +1,5 @@
-﻿using Application.Constants.Communication;
+﻿using System.Xml.Linq;
+using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
@@ -20,6 +21,8 @@ using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
 using GameWeaver.Helpers;
+using GameWeaverShared.Parsers;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace GameWeaver.Pages.GameServer;
 
@@ -31,11 +34,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     [Inject] public IGameServerService GameServerService { get; init; } = null!;
     [Inject] public IGameService GameService { get; init; } = null!;
     [Inject] public IHostService HostService { get; init; } = null!;
-    [Inject] private IWebClientService WebClientService { get; init; } = null!;
-    [Inject] private IEventService EventService { get; init; } = null!;
-    [Inject] private INotifyRecordService NotifyRecordService { get; init; } = null!;
-    [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
-    [Inject] private IAppUserService UserService { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public IEventService EventService { get; init; } = null!;
+    [Inject] public INotifyRecordService NotifyRecordService { get; init; } = null!;
+    [Inject] public IAppPermissionService PermissionService { get; init; } = null!;
+    [Inject] public IAppUserService UserService { get; init; } = null!;
+    [Inject] public ISerializerService SerializerService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
@@ -1009,8 +1013,28 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         var updatedFileContent = (string) dialogResult.Data;
-        // TODO: Translate script contents to config items, create/update/delete for the local resource
-        // TODO: Enforce script contents on the host same as the config files
+        var fileContentLines = updatedFileContent.Split(Environment.NewLine);
+        var editorConfigItems = resource.ContentType switch
+        {
+            ContentType.Raw => fileContentLines.ToConfigItems(resource.Id),
+            ContentType.Ini => new IniData(fileContentLines).ToConfigItems(resource.Id),
+            ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(updatedFileContent).ToConfigItems(resource.Id),
+            ContentType.Xml => XDocument.Parse(updatedFileContent).ToConfigItems(resource.Id),
+            _ => fileContentLines.ToConfigItems(resource.Id)
+        };
+
+        // Updated raw file has desired state, we'll use existing ID's for existing items then add/delete based on provided state
+        editorConfigItems.UpdateEditorConfigFromExisting(resource.ConfigSets);
+        var newConfigItems = editorConfigItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        var updateConfigItems = editorConfigItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();
+        var deleteConfigItems = resource.ConfigSets.Where(x => editorConfigItems.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        resource.ConfigSets = editorConfigItems;
+
+        AddOrUpdateConfiguration(_createdConfigItems, newConfigItems);
+        AddOrUpdateConfiguration(_updatedConfigItems, updateConfigItems);
+        AddOrUpdateConfiguration(_deletedConfigItems, deleteConfigItems);
+        Snackbar.Add("Script updated, changes won't be made until you save", Severity.Warning);
+        StateHasChanged();
     }
 
     private async Task OpenConfigInEditor(LocalResourceSlim resource)
@@ -1050,7 +1074,154 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         var updatedFileContent = (string) dialogResult.Data;
-        // TODO: Translate config contents to config items, create/update/delete for the local resource
+        var fileContentLines = updatedFileContent.Split(Environment.NewLine);
+        var configItems = resource.ContentType switch
+        {
+            ContentType.Raw => fileContentLines.ToConfigItems(resource.Id),
+            ContentType.Ini => new IniData(fileContentLines).ToConfigItems(resource.Id),
+            ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(updatedFileContent).ToConfigItems(resource.Id),
+            ContentType.Xml => XDocument.Parse(updatedFileContent).ToConfigItems(resource.Id),
+            _ => fileContentLines.ToConfigItems(resource.Id)
+        };
+
+        // Updated raw file has desired state, we'll use existing ID's for existing items then add/delete based on provided state
+        configItems.UpdateEditorConfigFromExisting(resource.ConfigSets);
+        var newConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        var updateConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();
+        var deleteConfigItems = resource.ConfigSets.Where(x => configItems.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
+        resource.ConfigSets = configItems;
+
+        AddOrUpdateConfiguration(_createdConfigItems, newConfigItems);
+        AddOrUpdateConfiguration(_updatedConfigItems, updateConfigItems);
+        AddOrUpdateConfiguration(_deletedConfigItems, deleteConfigItems);
+        Snackbar.Add("Configuration file updated, changes won't be made until you save", Severity.Warning);
+        StateHasChanged();
+    }
+
+    private static void AddOrUpdateConfiguration(List<ConfigurationItemSlim> existingItems, List<ConfigurationItemSlim> updatedItems)
+    {
+        foreach (var updatedItem in updatedItems)
+        {
+            var matchingItem = existingItems.FirstOrDefault(x => x.Id == updatedItem.Id);
+            if (matchingItem is null)
+            {
+                existingItems.Add(updatedItem);
+                continue;
+            }
+
+            matchingItem.FriendlyName = updatedItem.FriendlyName;
+            matchingItem.Key = updatedItem.Key;
+            matchingItem.Value = updatedItem.Value;
+            matchingItem.Category = updatedItem.Category;
+            matchingItem.Path = updatedItem.Path;
+            matchingItem.DuplicateKey = updatedItem.DuplicateKey;
+        }
+    }
+
+    private async Task ConfigSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
+    {
+        if (importFiles is null || !importFiles.Any())
+        {
+            return;
+        }
+
+        List<IBrowserFile> configToImport = [];
+        foreach (var file in importFiles)
+        {
+            if (file is null)
+            {
+                continue;
+            }
+
+            if (file.Size > 10_000_000)
+            {
+                Snackbar.Add($"File is over the max size of 10MB: {file.Name}");
+                continue;
+            }
+
+            configToImport.Add(file);
+        }
+
+        var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
+                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}" +
+                          $"{Environment.NewLine}NOTE: Imports won't be complete until you save";
+        var importConfirmation = await DialogService.ConfirmDialog($"Import {configToImport.Count} config files", confirmText);
+        if (importConfirmation.Canceled)
+        {
+            return;
+        }
+
+        await ImportConfigFiles(configToImport);
+    }
+
+    private async Task ImportConfigFiles(IEnumerable<IBrowserFile> importFiles)
+    {
+        var importCount = 0;
+
+        foreach (var file in importFiles)
+        {
+            var matchingResource = _localResources.FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.PathWindows) && x.PathWindows.ToLower().EndsWith(file.Name.ToLower()) ||
+                !string.IsNullOrWhiteSpace(x.PathLinux) && x.PathLinux.ToLower().EndsWith(file.Name.ToLower()) ||
+                !string.IsNullOrWhiteSpace(x.PathMac) && x.PathMac.ToLower().EndsWith(file.Name.ToLower()));
+            if (matchingResource is not null)
+            {
+                var confirmText = $"The existing resource {matchingResource.Name} will be replaced if you import this file: {file.Name}, are you sure you want to continue?";
+                var replaceConfirmation = await DialogService.ConfirmDialog("Replace existing config file?", confirmText);
+                if (replaceConfirmation.Canceled)
+                {
+                    Snackbar.Add($"File {file.Name} import was cancelled", Severity.Warning);
+                    continue;
+                }
+
+                await LocalResourceDelete(matchingResource);
+            }
+
+            var newResource = new LocalResourceSlim
+            {
+                Id = Guid.CreateVersion7(),
+                GameProfileId = _game.DefaultGameProfileId,
+                Name = file.Name.Split('.').First(),
+                PathWindows = _game.SupportsWindows ? file.Name : string.Empty,
+                PathLinux = _game.SupportsLinux ? file.Name : string.Empty,
+                PathMac = _game.SupportsMac ? file.Name : string.Empty,
+                Startup = false,
+                StartupPriority = 0,
+                Type = ResourceType.ConfigFile,
+                ContentType = FileHelpers.GetContentTypeFromName(file.Name),
+                Args = string.Empty,
+                LoadExisting = false
+            };
+
+            var fileContent = await file.GetContent();  // Max import size per file is 10MB by default
+            if (!fileContent.Succeeded || fileContent.Data is null)
+            {
+                fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                continue;
+            }
+
+            var fileContentLines = fileContent.Data.Split(Environment.NewLine);
+            var configItems = newResource.ContentType switch
+            {
+                ContentType.Raw => fileContentLines.ToConfigItems(newResource.Id),
+                ContentType.Ini => new IniData(fileContentLines).ToConfigItems(newResource.Id),
+                ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(fileContent.Data).ToConfigItems(newResource.Id),
+                ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(newResource.Id),
+                _ => fileContentLines.ToConfigItems(newResource.Id)
+            };
+
+            newResource.ConfigSets = configItems;
+            _createdLocalResources.Add(newResource);
+            _localResources.Add(newResource);
+            _createdConfigItems.AddRange(configItems);
+            importCount++;
+        }
+
+        if (importCount <= 0)
+        {
+            return;
+        }
+        Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
     }
 
     private async Task<TableData<NotifyRecordSlim>> ServerEventsReload(TableState state, CancellationToken token)

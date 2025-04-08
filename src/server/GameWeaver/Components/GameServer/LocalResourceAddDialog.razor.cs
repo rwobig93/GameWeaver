@@ -23,6 +23,7 @@ public partial class LocalResourceAddDialog : ComponentBase
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private readonly LocalResourceSlim _newLocalResource = new();
+    private bool _fileShouldBeDeleted;
     private GameSlim _game = new() {Id = Guid.Empty};
     private const int TooltipDelay = 500;
 
@@ -72,6 +73,10 @@ public partial class LocalResourceAddDialog : ComponentBase
     {
         _newLocalResource.Id = Guid.CreateVersion7();
         _newLocalResource.GameProfileId = GameProfileId;
+        if (_fileShouldBeDeleted)
+        {
+            _newLocalResource.ContentType = ContentType.Deleted;
+        }
         MudDialog.Close(DialogResult.Ok(_newLocalResource));
     }
 

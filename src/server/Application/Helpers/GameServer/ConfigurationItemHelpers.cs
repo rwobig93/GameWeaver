@@ -85,7 +85,7 @@ public static class ConfigurationItemHelpers
                 Ignore = false,
                 Path = string.Empty,
                 Category = string.Empty,
-                Key = $"Line{lineNumber}",
+                Key = lineNumber.ToString(),
                 Value = line,
                 FriendlyName = $"Line{lineNumber}"
             });
@@ -150,7 +150,7 @@ public static class ConfigurationItemHelpers
         return updatedConfiguration;
     }
 
-    public static void UpdateMatchingConfigItemIds(this IEnumerable<ConfigurationItemSlim> sourceItems, IEnumerable<ConfigurationItemSlim> updateFrom)
+    public static void UpdateEditorConfigFromExisting(this IEnumerable<ConfigurationItemSlim> sourceItems, IEnumerable<ConfigurationItemSlim> updateFrom)
     {
         var updateFromItems = updateFrom.ToList();
         foreach (var sourceItem in sourceItems)
@@ -169,6 +169,8 @@ public static class ConfigurationItemHelpers
                 }
 
                 sourceItem.Id = matchingConfigDuplicate.Id;
+                sourceItem.FriendlyName = matchingConfigDuplicate.FriendlyName;
+                sourceItem.Ignore = matchingConfigDuplicate.Ignore;
                 continue;
             }
 
@@ -184,6 +186,8 @@ public static class ConfigurationItemHelpers
             }
 
             sourceItem.Id = matchingConfig.Id;
+            sourceItem.FriendlyName = matchingConfig.FriendlyName;
+            sourceItem.Ignore = matchingConfig.Ignore;
         }
     }
 }

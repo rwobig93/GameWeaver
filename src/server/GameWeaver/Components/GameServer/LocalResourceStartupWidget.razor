@@ -53,6 +53,7 @@
                     <MudIconButton Icon="@(EditMode ? Icons.Material.Filled.Edit : Icons.Material.Filled.RemoveRedEye)" Size="Size.Medium" Color="Color.Tertiary"
                                    OnClick="@(() => OpenInEditor(LocalResource))" />
                 }
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" OnClick="@(() => DeleteLocalResource(LocalResource))" />
             </MudButtonGroup>
         </MudStack>
     </MudContainer>
