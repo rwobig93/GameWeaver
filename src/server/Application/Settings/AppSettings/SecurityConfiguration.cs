@@ -29,7 +29,7 @@ public class SecurityConfiguration : IAppSettingsSection
     public int UserApiTokenSizeInBytes { get; init; } = 128;
 
     [Range(0, 86_400)]
-    public int SessionIdleTimeoutMinutes { get; init; } = 240;
+    public int SessionIdleTimeoutMinutes { get; init; } = 240;  // Not currently used, will be with added javascript method
 
     [Range(0, 86_400)]
     public int ForceLoginIntervalMinutes { get; init; } = 1440;

@@ -1155,7 +1155,7 @@ public class AppAccountService : IAppAccountService
             }
 
             // If configured force login time has passed since last full login we want the user to login again
-            if (userSecurity.Result!.LastFullLogin!.Value.AddMinutes(_securityConfig.ForceLoginIntervalMinutes + 1) < _dateTime.NowDatabaseTime)
+            if (userSecurity.Result!.LastFullLogin!.Value.AddMinutes(_securityConfig.ForceLoginIntervalMinutes) < _dateTime.NowDatabaseTime)
             {
                 return await Result<bool>.SuccessAsync(true);
             }

@@ -35,7 +35,7 @@ public class SqlDataService : ISqlDataService
 
     public void EnforceDatabaseStructure()
     {
-        Task.WhenAll(EnforceDatabaseEntities());
+        EnforceDatabaseEntities().GetAwaiter().GetResult();
     }
 
     private string GetCurrentConnectionString()

@@ -71,7 +71,7 @@ public static class JwtHelpers
     public static DateTime GetJwtRefreshTokenExpirationTime(IDateTimeService dateTime, SecurityConfiguration securityConfig)
     {
         // Add additional buffer for refresh token to be used, since refresh JWT is used automatically Idle applies to this calculation
-        return dateTime.NowDatabaseTime.AddMinutes(securityConfig.UserTokenExpirationMinutes + securityConfig.SessionIdleTimeoutMinutes);
+        return dateTime.NowDatabaseTime.AddMinutes(securityConfig.UserTokenExpirationMinutes);
     }
 
     public static DateTime GetJwtExpirationTime(string token)

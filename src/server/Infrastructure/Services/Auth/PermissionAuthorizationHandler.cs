@@ -31,6 +31,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
     {
         if (!context.User.Identity?.IsAuthenticated ?? true)
         {
+            // TODO: User is showing as not authenticated after JWT expiration rather than having the JWT w/ an expired Principal/Identity
             context.Fail();
             return;
         }
@@ -38,7 +39,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         // Validate host and api authentications to short-circuit more decision-making if the auth is short-lived and wouldn't have local storage
         if (context.User.Claims.IsHostOrApiAuthenticated())
         {
-            await ValidatePrincipalPermissions(context, requirement);
+            await ValidatePermissionClaims(context, requirement);
             return;
         }
 
@@ -93,7 +94,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
             return;
         }
 
-        await ValidatePrincipalPermissions(context, requirement);
+        await ValidatePermissionClaims(context, requirement);
     }
 
     private async Task LogoutUserWithRedirect(AuthorizationHandlerContext context, Guid userId)
@@ -111,7 +112,7 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
         _navigationManager.NavigateTo(_appSettings.Value.GetLoginRedirect(redirectReason), true);
     }
 
-    private static async Task ValidatePrincipalPermissions(AuthorizationHandlerContext context, PermissionRequirement requirement)
+    private static async Task ValidatePermissionClaims(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
         // If active session is valid and not expired validate permissions via claims
         var permissions = context.User.Claims.Where(x =>
