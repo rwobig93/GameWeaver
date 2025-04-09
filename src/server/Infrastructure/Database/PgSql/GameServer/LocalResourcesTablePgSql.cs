@@ -1,10 +1,11 @@
 using Application.Database;
 using Application.Database.MsSql;
+using Application.Database.PgSql;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.PgSql.GameServer;
 
-public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
+public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
 {
     private const string TableName = "LocalResources";
 
@@ -15,27 +16,24 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         EnforcementOrder = 9,
         TableName = TableName,
         SqlStatement = $@"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
-            begin
-                CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
-                    [GameProfileId] UNIQUEIDENTIFIER NOT NULL,
-                    [Name] NVARCHAR(128) NOT NULL,
-                    [PathWindows] NVARCHAR(128) NOT NULL,
-                    [PathLinux] NVARCHAR(128) NOT NULL,
-                    [PathMac] NVARCHAR(128) NOT NULL,
-                    [Startup] BIT NOT NULL,
-                    [StartupPriority] int NOT NULL,
-                    [Type] INT NOT NULL,
-                    [ContentType] INT NOT NULL,
-                    [Args] NVARCHAR(128) NOT NULL,
-                    [LoadExisting] BIT NOT NULL,
-                    [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
-                    [CreatedOn] DATETIME2 NOT NULL,
-                    [LastModifiedBy] UNIQUEIDENTIFIER NULL,
-                    [LastModifiedOn] DATETIME2 NULL
-                )
-            end"
+            CREATE TABLE IF NOT EXISTS ""{TableName}"" (
+                ""Id"" UUID PRIMARY KEY,
+                ""GameProfileId"" UUID NOT NULL,
+                ""Name"" VARCHAR(128) NOT NULL,
+                ""PathWindows"" VARCHAR(128) NOT NULL,
+                ""PathLinux"" VARCHAR(128) NOT NULL,
+                ""PathMac"" VARCHAR(128) NOT NULL,
+                ""Startup"" BIT NOT NULL,
+                ""StartupPriority"" INT NOT NULL,
+                ""Type"" INT NOT NULL,
+                ""ContentType"" INT NOT NULL,
+                ""Args"" VARCHAR(128) NOT NULL,
+                ""LoadExisting"" BIT NOT NULL,
+                ""CreatedBy"" UUID NOT NULL,
+                ""CreatedOn"" TIMESTAMP NOT NULL,
+                ""LastModifiedBy"" UUID NULL,
+                ""LastModifiedOn"" TIMESTAMP NULL
+            );"
     };
     
     public static readonly SqlStoredProcedure Delete = new()
@@ -43,13 +41,17 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Delete",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
-                @Id UNIQUEIDENTIFIER
-            AS
-            begin
-                DELETE FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Delete"" (
+                p_Id UUID,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                DELETE FROM ""{Table.TableName}""
+                WHERE ""Id"" = p_Id;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure GetAll = new()
@@ -57,13 +59,18 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetAll",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
-            AS
-            begin
-                SELECT l.*
-                FROM dbo.[{Table.TableName}] l
-                ORDER BY l.Name ASC;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAll"" (
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}""
+                ORDER BY ""Name"" ASC;
+            END;
+            $$;"
     };
 
     public static readonly SqlStoredProcedure GetAllPaginated = new()
@@ -71,15 +78,21 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetAllPaginated",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                SELECT COUNT(*) OVER() AS TotalCount, l.*
-                FROM dbo.[{Table.TableName}] l
-                ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
+                p_Offset INT,
+                p_PageSize INT,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                FROM ""{Table.TableName}""
+                ORDER BY ""Name"" ASC
+                OFFSET p_Offset LIMIT p_PageSize;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure GetById = new()
@@ -87,15 +100,19 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetById",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
-                @Id UNIQUEIDENTIFIER
-            AS
-            begin
-                SELECT TOP 1 l.*
-                FROM dbo.[{Table.TableName}] l
-                WHERE l.Id = @Id
-                ORDER BY l.Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById"" (
+                p_Id UUID,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                SELECT *
+                FROM ""{Table.TableName}""
+                WHERE ""Id"" = p_Id
+                ORDER BY ""Id"";
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure GetByGameProfileId = new()
@@ -103,15 +120,20 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetByGameProfileId",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByGameProfileId]
-                @GameProfileId UNIQUEIDENTIFIER
-            AS
-            begin
-                SELECT l.*
-                FROM dbo.[{Table.TableName}] l
-                WHERE l.GameProfileId = @GameProfileId
-                ORDER BY l.Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByGameProfileId"" (
+                p_GameProfileId UUID,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}""
+                WHERE ""GameProfileId"" = p_GameProfileId
+                ORDER BY ""Id"";
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure Insert = new()
@@ -119,31 +141,39 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Insert",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
-                @Id UNIQUEIDENTIFIER,
-                @GameProfileId UNIQUEIDENTIFIER,
-                @Name NVARCHAR(128),
-                @PathWindows NVARCHAR(128),
-                @PathLinux NVARCHAR(128),
-                @PathMac NVARCHAR(128),
-                @Startup BIT,
-                @StartupPriority INT,
-                @Type INT,
-                @ContentType INT,
-                @Args NVARCHAR(128),
-                @LoadExisting INT,
-                @CreatedBy UNIQUEIDENTIFIER,
-                @CreatedOn DATETIME2,
-                @LastModifiedBy UNIQUEIDENTIFIER,
-                @LastModifiedOn DATETIME2
-            AS
-            begin
-                INSERT into dbo.[{Table.TableName}] (Id, GameProfileId, Name, PathWindows, PathLinux, PathMac, Startup, StartupPriority, Type, ContentType, Args, LoadExisting,
-                                                     CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn)
-                OUTPUT INSERTED.Id
-                VALUES (@Id, @GameProfileId, @Name, @PathWindows, @PathLinux, @PathMac, @Startup, @StartupPriority, @Type, @ContentType, @Args, @LoadExisting, @CreatedBy,
-                        @CreatedOn, @LastModifiedBy, @LastModifiedOn);
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
+                p_Id UUID,
+                p_GameProfileId UUID,
+                p_Name VARCHAR(128),
+                p_PathWindows VARCHAR(128),
+                p_PathLinux VARCHAR(128),
+                p_PathMac VARCHAR(128),
+                p_Startup BIT,
+                p_StartupPriority INT,
+                p_Type INT,
+                p_ContentType INT,
+                p_Args VARCHAR(128),
+                p_LoadExisting INT,
+                p_CreatedBy UUID,
+                p_CreatedOn TIMESTAMP,
+                p_LastModifiedBy UUID,
+                p_LastModifiedOn TIMESTAMP,
+                OUT p_ UUID
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                INSERT into ""{Table.TableName}"" (
+                    ""Id"","" GameProfileId"", ""Name"", ""PathWindows"", ""PathLinux"", ""PathMac"", ""Startup"", ""StartupPriority"", ""Type"", ""ContentType"", ""Args"", ""LoadExisting"",
+                    ""CreatedBy"", ""CreatedOn"", ""LastModifiedBy"", ""LastModifiedOn""
+                    )
+                VALUES (
+                    p_Id, p_GameProfileId, p_Name, p_PathWindows, p_PathLinux, p_PathMac, p_Startup, p_StartupPriority, p_Type, p_ContentType, p_Args, p_LoadExisting, p_CreatedBy,
+                    p_CreatedOn, p_LastModifiedBy, p_LastModifiedOn
+                )
+                RETURNING ""ID"" INTO p_;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure Search = new()
@@ -151,22 +181,26 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Search",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
-                @SearchTerm NVARCHAR(256)
-            AS
-            begin
-                SET nocount on;
-                
-                SELECT l.*
-                FROM dbo.[{Table.TableName}] l
-                WHERE l.Id LIKE '%' + @SearchTerm + '%'
-                    OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR l.Name LIKE '%' + @SearchTerm + '%'
-                    OR l.PathWindows LIKE '%' + @SearchTerm + '%'
-                    OR l.PathLinux LIKE '%' + @SearchTerm + '%'
-                    OR l.PathMac LIKE '%' + @SearchTerm + '%'
-                    OR l.Args LIKE '%' + @SearchTerm + '%';
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Search"" (
+                p_SearchTerm VARCHAR(256),
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}"" 
+                WHERE 
+                    CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR CAST(""GameProfileId"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Name"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""PathWindows"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""PathLinux"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""PathMac"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Args"" ILIKE '%' || p_SearchTerm || '%';
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure SearchPaginated = new()
@@ -174,23 +208,30 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "SearchPaginated",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginated]
-                @SearchTerm NVARCHAR(256),
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                SELECT COUNT(*) OVER() AS TotalCount, l.*
-                FROM dbo.[{Table.TableName}] l
-                WHERE l.Id LIKE '%' + @SearchTerm + '%'
-                    OR l.GameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR l.Name LIKE '%' + @SearchTerm + '%'
-                    OR l.PathWindows LIKE '%' + @SearchTerm + '%'
-                    OR l.PathLinux LIKE '%' + @SearchTerm + '%'
-                    OR l.PathMac LIKE '%' + @SearchTerm + '%'
-                    OR l.Args LIKE '%' + @SearchTerm + '%'
-                ORDER BY l.Name ASC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_SearchPaginated"" (
+                p_SearchTerm VARCHAR(256),
+                p_Offset INT,
+                p_PageSize INT,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                FROM ""{Table.TableName}""
+                WHERE 
+                    CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR CAST(""GameProfileId"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Name"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""PathWindows"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""PathLinux"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""PathMac"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Args"" ILIKE '%' || p_SearchTerm || '%'
+                ORDER BY ""Name"" ASC 
+                OFFSET p_Offset LIMIT p_PageSize;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure Update = new()
@@ -198,30 +239,41 @@ public class LocalResourcesTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Update",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
-                @Id UNIQUEIDENTIFIER,
-                @GameProfileId UNIQUEIDENTIFIER = null,
-                @Name NVARCHAR(128) = null,
-                @PathWindows NVARCHAR(128) = null,
-                @PathLinux NVARCHAR(128) = null,
-                @PathMac NVARCHAR(128) = null,
-                @Startup BIT = null,
-                @StartupPriority INT = null,
-                @Type INT = null,
-                @ContentType INT = null,
-                @Args NVARCHAR(128) = null,
-                @LoadExisting INT = null,
-                @LastModifiedBy UNIQUEIDENTIFIER = null,
-                @LastModifiedOn DATETIME2 = null
-            AS
-            begin
-                UPDATE dbo.[{Table.TableName}]
-                SET GameProfileId = COALESCE(@GameProfileId, GameProfileId), Name = COALESCE(@Name, Name),
-                    PathWindows = COALESCE(@PathWindows, PathWindows), PathLinux = COALESCE(@PathLinux, PathLinux), PathMac = COALESCE(@PathMac, PathMac),
-                    Startup = COALESCE(@Startup, Startup), StartupPriority = COALESCE(@StartupPriority, StartupPriority), Type = COALESCE(@Type, Type),
-                    ContentType = COALESCE(@ContentType, ContentType), Args = COALESCE(@Args, Args), LoadExisting = COALESCE(@LoadExisting, LoadExisting),
-                    LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
-                WHERE Id = @Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Update"" (
+                p_Id UUID,
+                p_GameProfileId UUID DEFAULT NULL,
+                p_Name VARCHAR(128) DEFAULT NULL,
+                p_PathWindows VARCHAR(128) DEFAULT NULL,
+                p_PathLinux VARCHAR(128) DEFAULT NULL,
+                p_PathMac VARCHAR(128) DEFAULT NULL,
+                p_Startup BIT DEFAULT NULL,
+                p_StartupPriority INT DEFAULT NULL,
+                p_Type INT DEFAULT NULL,
+                p_ContentType INT DEFAULT NULL,
+                p_Args VARCHAR(128) DEFAULT NULL,
+                p_LoadExisting INT DEFAULT NULL,
+                p_LastModifiedBy UUID DEFAULT NULL,
+                p_LastModifiedOn TIMESTAMP DEFAULT NULL
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                UPDATE ""{Table.TableName}""
+                SET ""GameProfileId"" = COALESCE(p_GameProfileId, ""GameProfileId""), 
+                    ""Name"" = COALESCE(p_Name, ""Name""),
+                    ""PathWindows"" = COALESCE(p_PathWindows, ""PathWindows""), 
+                    ""PathLinux"" = COALESCE(p_PathLinux, ""PathLinux""), 
+                    ""PathMac"" = COALESCE(p_PathMac, ""PathMac""),
+                    ""Startup"" = COALESCE(p_Startup, ""Startup""), 
+                    ""StartupPriority"" = COALESCE(p_StartupPriority, ""StartupPriority""), 
+                    ""Type"" = COALESCE(p_Type, ""Type""),
+                    ""ContentType"" = COALESCE(p_ContentType, ""ContentType""), 
+                    ""Args"" = COALESCE(p_Args, ""Args""), 
+                    ""LoadExisting"" = COALESCE(p_LoadExisting, ""LoadExisting""),
+                    ""LastModifiedBy"" = COALESCE(p_LastModifiedBy, ""LastModifiedBy""), 
+                    ""LastModifiedOn"" = COALESCE(p_LastModifiedOn, ""LastModifiedOn"")
+                WHERE ""Id"" = p_Id;
+            END;
+            $$;"
     };
 }

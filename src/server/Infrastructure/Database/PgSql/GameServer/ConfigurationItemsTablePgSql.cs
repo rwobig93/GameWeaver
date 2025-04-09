@@ -1,10 +1,11 @@
 using Application.Database;
 using Application.Database.MsSql;
+using Application.Database.PgSql;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.PgSql.GameServer;
 
-public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
+public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
 {
     private const string TableName = "ConfigurationItems";
     public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(ConfigurationItemsTablePgSql).GetDbScriptsFromClass();
@@ -14,20 +15,20 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
-            IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'U' AND OBJECT_ID = OBJECT_ID('[dbo].[{TableName}]'))
-            begin
-                CREATE TABLE [dbo].[{TableName}](
-                    [Id] UNIQUEIDENTIFIER DEFAULT NEWID() PRIMARY KEY,
-                    [LocalResourceId] UNIQUEIDENTIFIER NOT NULL,
-                    [DuplicateKey] BIT NOT NULL,
-                    [Path] NVARCHAR(128) NOT NULL,
-                    [Category] NVARCHAR(128) NOT NULL,
-                    [Key] NVARCHAR(128) NOT NULL,
-                    [Value] NVARCHAR(128) NOT NULL,
-                    [FriendlyName] NVARCHAR(128) NULL,
-                    FOREIGN KEY (LocalResourceId) REFERENCES {LocalResourcesTablePgSql.Table.TableName}(Id) ON DELETE CASCADE
-                )
-            end"
+            CREATE TABLE IF NOT EXISTS ""{TableName}"" (
+                ""Id"" UUID PRIMARY KEY,
+                ""LocalResourceId"" UUID NOT NULL,
+                ""DuplicateKey"" BIT NOT NULL,
+                ""Path"" VARCHAR(128) NOT NULL,
+                ""Category"" VARCHAR(128) NOT NULL,
+                ""Key"" VARCHAR(128) NOT NULL,
+                ""Value"" VARCHAR(128) NOT NULL,
+                ""FriendlyName"" VARCHAR(128) NULL,
+                
+                FOREIGN KEY (""LocalResourceId"") 
+                    REFERENCES ""{LocalResourcesTablePgSql.Table.TableName}""(""Id"") 
+                    ON DELETE CASCADE
+            );"
     };
     
     public static readonly SqlStoredProcedure Delete = new()
@@ -35,13 +36,16 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Delete",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Delete]
-                @Id UNIQUEIDENTIFIER
-            AS
-            begin
-                DELETE FROM dbo.[{Table.TableName}]
-                WHERE Id = @Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Delete"" (
+                p_Id UUID
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                DELETE FROM ""{Table.TableName}""
+                WHERE ""Id"" = p_Id;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure GetAll = new()
@@ -49,12 +53,17 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetAll",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAll]
-            AS
-            begin
-                SELECT c.*
-                FROM dbo.[{Table.TableName}] c;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAll"" (
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}"";
+            END;
+            $$;"
     };
 
     public static readonly SqlStoredProcedure GetAllPaginated = new()
@@ -62,15 +71,21 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetAllPaginated",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetAllPaginated]
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                SELECT COUNT(*) OVER() AS TotalCount, c.*
-                FROM dbo.[{Table.TableName}] c
-                ORDER BY c.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
+                p_Offset INT,
+                p_PageSize INT,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                FROM ""{Table.TableName}""
+                ORDER BY ""Id"" DESC
+                OFFSET p_Offset LIMIT p_PageSize;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure GetById = new()
@@ -78,15 +93,21 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetById",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetById]
-                @Id UNIQUEIDENTIFIER
-            AS
-            begin
-                SELECT TOP 1 c.*
-                FROM dbo.[{Table.TableName}] c
-                WHERE c.Id = @Id
-                ORDER BY c.Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById"" (
+                p_Id UUID,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}""
+                WHERE ""Id"" = p_Id
+                ORDER BY ""Id""
+                LIMIT 1;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure GetByLocalResourceId = new()
@@ -94,15 +115,20 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "GetByLocalResourceId",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByLocalResourceId]
-                @LocalResourceId UNIQUEIDENTIFIER
-            AS
-            begin
-                SELECT c.*
-                FROM dbo.[{Table.TableName}] c
-                WHERE c.LocalResourceId = @LocalResourceId
-                ORDER BY c.Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByLocalResourceId"" (
+                p_LocalResourceId UUID,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}""
+                WHERE ""LocalResourceId"" = p_LocalResourceId
+                ORDER BY ""Id"";
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure Insert = new()
@@ -110,20 +136,28 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Insert",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Insert]
-                @LocalResourceId UNIQUEIDENTIFIER,
-                @DuplicateKey BIT,
-                @Path NVARCHAR(128),
-                @Category NVARCHAR(128),
-                @Key NVARCHAR(128),
-                @Value NVARCHAR(128),
-                @FriendlyName NVARCHAR(128)
-            AS
-            begin
-                INSERT into dbo.[{Table.TableName}] (LocalResourceId, DuplicateKey, Path, Category, [Key], Value, FriendlyName)
-                OUTPUT INSERTED.Id
-                VALUES (@LocalResourceId, @DuplicateKey, @Path, @Category, @Key, @Value, @FriendlyName);
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
+                p_LocalResourceId UUID,
+                p_DuplicateKey BIT,
+                p_Path VARCHAR(128),
+                p_Category VARCHAR(128),
+                p_Key VARCHAR(128),
+                p_Value VARCHAR(128),
+                p_FriendlyName VARCHAR(128),
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                INSERT into ""{Table.TableName}"" (
+                    ""LocalResourceId"", ""DuplicateKey"", ""Path"", ""Category"", ""Key"", ""Value"", ""FriendlyName""
+                )
+                VALUES (
+                    p_LocalResourceId, p_DuplicateKey, p_Path, p_Category, p_Key, p_Value, p_FriendlyName
+                )
+                RETURNING ""Id"";
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure Search = new()
@@ -131,22 +165,25 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Search",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Search]
-                @SearchTerm NVARCHAR(256)
-            AS
-            begin
-                SET nocount on;
-                
-                SELECT c.*
-                FROM dbo.[{Table.TableName}] c
-                WHERE c.Id LIKE '%' + @SearchTerm + '%'
-                    OR c.LocalResourceId LIKE '%' + @SearchTerm + '%'
-                    OR c.Path LIKE '%' + @SearchTerm + '%'
-                    OR c.Category LIKE '%' + @SearchTerm + '%'
-                    OR c.[Key] LIKE '%' + @SearchTerm + '%'
-                    OR c.Value LIKE '%' + @SearchTerm + '%'
-                    OR c.FriendlyName LIKE '%' + @SearchTerm + '%';
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Search"" (
+                p_SearchTerm VARCHAR(256),
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}""
+                WHERE CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR CAST(""LocalResourceId"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Path"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Category"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Key"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Value"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""FriendlyName"" ILIKE '%' || p_SearchTerm || '%';
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure SearchPaginated = new()
@@ -154,23 +191,28 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "SearchPaginated",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_SearchPaginated]
-                @SearchTerm NVARCHAR(256),
-                @Offset INT,
-                @PageSize INT
-            AS
-            begin
-                SELECT COUNT(*) OVER() AS TotalCount, c.*
-                FROM dbo.[{Table.TableName}] c
-                WHERE c.Id LIKE '%' + @SearchTerm + '%'
-                    OR c.LocalResourceId LIKE '%' + @SearchTerm + '%'
-                    OR c.Path LIKE '%' + @SearchTerm + '%'
-                    OR c.Category LIKE '%' + @SearchTerm + '%'
-                    OR c.[Key] LIKE '%' + @SearchTerm + '%'
-                    OR c.Value LIKE '%' + @SearchTerm + '%'
-                    OR c.FriendlyName LIKE '%' + @SearchTerm + '%'
-                ORDER BY c.Id DESC OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_SearchPaginated"" (
+                p_SearchTerm VARCHAR(256),
+                p_Offset INT,
+                p_PageSize INT,
+                INOUT p_ REFCURSOR
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                FROM ""{Table.TableName}""
+                WHERE CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR CAST(""LocalResourceId"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Path"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Category"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Key"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""Value"" ILIKE '%' || p_SearchTerm || '%'
+                    OR ""FriendlyName"" ILIKE '%' || p_SearchTerm || '%'
+                ORDER BY ""Id"" DESC 
+                OFFSET p_Offset LIMIT p_PageSize;
+            END;
+            $$;"
     };
     
     public static readonly SqlStoredProcedure Update = new()
@@ -178,22 +220,32 @@ public class ConfigurationItemsTablePgSql : IMsSqlEnforcedEntity
         Table = Table,
         Action = "Update",
         SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_Update]
-                @Id UNIQUEIDENTIFIER,
-                @LocalResourceId UNIQUEIDENTIFIER = null,
-                @DuplicateKey BIT = null,
-                @Path NVARCHAR(128) = null,
-                @Category NVARCHAR(128) = null,
-                @Key NVARCHAR(128) = null,
-                @Value NVARCHAR(128) = null,
-                @FriendlyName NVARCHAR(128) = null
-            AS
-            begin
-                UPDATE dbo.[{Table.TableName}]
-                SET LocalResourceId = COALESCE(@LocalResourceId, LocalResourceId), DuplicateKey = COALESCE(@DuplicateKey, DuplicateKey), Path = COALESCE(@Path, Path),
-                    Category = COALESCE(@Category, Category), [Key] = COALESCE(@Key, [Key]), Value = COALESCE(@Value, Value), FriendlyName = COALESCE(@FriendlyName, FriendlyName)
-                WHERE Id = @Id;
-            end"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Update"" (
+                p_Id UUID,
+                p_LocalResourceId UUID DEFAULT NULL,
+                p_DuplicateKey BIT DEFAULT NULL,
+                p_Path VARCHAR(128) DEFAULT NULL,
+                p_Category VARCHAR(128) DEFAULT NULL,
+                p_Key VARCHAR(128) DEFAULT NULL,
+                p_Value VARCHAR(128) DEFAULT NULL,
+                p_FriendlyName VARCHAR(128) DEFAULT NULL,
+                INOUT p_ REFCURSOR DEFAULT NULL
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                UPDATE ""{Table.TableName}""
+                SET 
+                    ""LocalResourceId"" = COALESCE(p_LocalResourceId, ""LocalResourceId""), 
+                    ""DuplicateKey"" = COALESCE(p_DuplicateKey, ""DuplicateKey""), 
+                    ""Path"" = COALESCE(p_Path, ""Path""),
+                    ""Category"" = COALESCE(p_Category, ""Category""), 
+                    ""Key"" = COALESCE(p_Key, ""Key""), 
+                    ""Value"" = COALESCE(p_Value, ""Value""), 
+                    ""FriendlyName"" = COALESCE(p_FriendlyName, ""FriendlyName"")
+                WHERE ""Id"" = p_Id;
+            END;
+            $$;"
     };
     
 }
