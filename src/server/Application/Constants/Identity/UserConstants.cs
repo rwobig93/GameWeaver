@@ -22,11 +22,16 @@ public static class UserConstants
         RequireUniqueEmail = true
     };
 
-    public static readonly ClaimsIdentity UnauthenticatedIdentity = new();
+    public static readonly ClaimsIdentity UnauthenticatedIdentity = new([new Claim(ClaimTypes.Name, "UnauthenticatedIdentity")]);
     public static readonly ClaimsIdentity ExpiredIdentity = new([new Claim(ClaimTypes.Name, "ExpiredUserIdentity")]);
+    public static ClaimsIdentity ExpiredIdentityId(Guid userId) => new([
+        new Claim(ClaimTypes.Name, "ExpiredUserIdentity"),
+        new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+    ]);
 
     public static readonly ClaimsPrincipal UnauthenticatedPrincipal = new(UnauthenticatedIdentity);
     public static readonly ClaimsPrincipal ExpiredPrincipal = new(ExpiredIdentity);
+    public static ClaimsPrincipal ExpiredPrincipalId(Guid userID) => new(ExpiredIdentityId(userID));
 
     public static class DefaultUsers
     {

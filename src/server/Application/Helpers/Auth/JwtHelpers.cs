@@ -183,23 +183,29 @@ public static class JwtHelpers
 
     public static ClaimsPrincipal? GetClaimsPrincipalFromToken(string? token, SecurityConfiguration securityConfig, AppConfiguration appConfig)
     {
+        var userId = Guid.Empty;
         try
         {
             var validator = GetJwtValidationParameters(securityConfig, appConfig);
 
             if (string.IsNullOrWhiteSpace(token))
-                return null;
+            {
+                return UserConstants.UnauthenticatedPrincipal;
+            }
+
+            userId = GetJwtUserId(token);
 
             var claimsPrincipal = JwtHandler.ValidateToken(token, validator, out _);
             return claimsPrincipal;
         }
-        catch (SecurityTokenExpiredException)
+        catch (Exception ex)
         {
-            // User principal has expired / token has expired so we'll return an expired principal
-            return UserConstants.ExpiredPrincipal;
-        }
-        catch (Exception)
-        {
+            if (ex is SecurityTokenExpiredException or SecurityTokenInvalidLifetimeException)
+            {
+                // User principal has expired / token has expired so we'll return an expired principal
+                return UserConstants.ExpiredPrincipalId(userId);
+            }
+
             return null;
         }
     }

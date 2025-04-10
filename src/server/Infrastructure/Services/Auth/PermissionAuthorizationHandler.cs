@@ -29,10 +29,16 @@ public class PermissionAuthorizationHandler : AuthorizationHandler<PermissionReq
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PermissionRequirement requirement)
     {
-        if (!context.User.Identity?.IsAuthenticated ?? true)
+        if (context.User.Identity is null || context.User == UserConstants.UnauthenticatedPrincipal)
         {
-            // TODO: User is showing as not authenticated after JWT expiration rather than having the JWT w/ an expired Principal/Identity
             context.Fail();
+            return;
+        }
+
+        if (context.User == UserConstants.ExpiredPrincipal)
+        {
+            context.Fail();
+            await LogoutUserWithRedirect(context, context.User.Claims.GetId());
             return;
         }
 
