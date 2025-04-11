@@ -741,6 +741,7 @@ public partial class GameView : ComponentBase
             configToImport.Add(file);
         }
 
+        // TODO: When hitting confirm and importing multiple files the dialog sticks around w/ no updates, looks like nothing is happening
         var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
                           $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}" +
                           $"{Environment.NewLine}NOTE: Imports won't be complete until you save";
@@ -755,8 +756,17 @@ public partial class GameView : ComponentBase
 
     private async Task ImportConfigFiles(IEnumerable<IBrowserFile> importFiles)
     {
+        // TODO: When saving after deleting a config item we are getting unable to find the configuration item
         var importCount = 0;
 
+        // TODO: Add config item should autofill Friendly name w/ Key value if the field is empty
+
+        // TODO: Duplicate key should be a selectable option when creating a new config item
+
+        // TODO: Getting error when updating existing item to be a duplicate item when it wasn't originally and adding duplicate items:
+        // TODO: The provided config information matches an already existing config, please verify the information provided
+
+        // TODO: When importing an ini w/ duplicate keys only one is being imported
         foreach (var file in importFiles)
         {
             var matchingResource = _localResources.FirstOrDefault(x =>

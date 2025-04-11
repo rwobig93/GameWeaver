@@ -851,7 +851,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        if (_gameServer.ServerState.IsDoingSomething())
+        if (_gameServer.ServerState.IsDoingSomething() && _gameServer.ServerState != ConnectivityState.Discovering)
         {
             Snackbar.Add($"The server is currently {_gameServer.ServerState}", Severity.Error);
             return;
