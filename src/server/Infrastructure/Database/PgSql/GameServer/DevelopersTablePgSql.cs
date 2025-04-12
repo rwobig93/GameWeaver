@@ -15,7 +15,7 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         EnforcementOrder = 10,
         TableName = TableName,
         SqlStatement = $@"
-            CREATE TABLE IF NOT EXISTS ""{TableName}""(
+            CREATE TABLE IF NOT EXISTS ""{TableName}"" (
                 ""Id"" UUID PRIMARY KEY,
                 ""GameId"" UUID NOT NULL,
                 ""Name"" VARCHAR(128) NOT NULL
@@ -96,7 +96,8 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
                 SELECT *
                 FROM ""{Table.TableName}""
                 WHERE ""Id"" = p_Id
-                ORDER BY ""Id"";
+                ORDER BY ""Id""
+                LIMIT 1;
             END;
             $$;"
     };

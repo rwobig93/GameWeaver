@@ -1,5 +1,4 @@
 using Application.Database;
-using Application.Database.MsSql;
 using Application.Database.PgSql;
 using Application.Helpers.Runtime;
 
@@ -110,7 +109,8 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
                 SELECT *
                 FROM ""{Table.TableName}""
                 WHERE ""Id"" = p_Id
-                ORDER BY ""Id"";
+                ORDER BY ""Id""
+                LIMIT 1;
             END;
             $$;"
     };
