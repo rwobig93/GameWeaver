@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Helpers.Auth;
 using Application.Helpers.Runtime;
 using Application.Models.Identity.User;
 using Application.Services.Integrations;

@@ -1,9 +1,9 @@
 using Domain.Enums.Identity;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Application.Auth;
+namespace Application.Auth.Dynamic;
 
-public class DynamicRequirement : IAuthorizationRequirement
+public class DynamicAuthorization : IAuthorizationRequirement
 {
     public Guid EntityId { get; set; }
     public DynamicPermissionGroup Group { get; set; }

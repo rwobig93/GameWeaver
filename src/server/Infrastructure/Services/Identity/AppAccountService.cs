@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Security.Claims;
+using Application.Auth;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Constants.Web;
@@ -30,7 +31,6 @@ using Domain.Enums.Lifecycle;
 using Domain.Models.Database;
 using Domain.Models.Identity;
 using Hangfire;
-using Infrastructure.Services.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;

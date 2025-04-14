@@ -1728,6 +1728,68 @@
             <param name="auditService"></param>
             <returns></returns>
         </member>
+        <member name="M:Application.Helpers.Auth.AuthorizationHelpers.UserHasPermission(Microsoft.AspNetCore.Authorization.IAuthorizationService,System.Security.Claims.ClaimsPrincipal,System.String)">
+            <summary>
+            Check whether a claims principal has a specific permission
+            </summary>
+            <param name="authService"></param>
+            <param name="currentUser"></param>
+            <param name="permission"></param>
+            <returns>Boolean indicating whether the principal has the provided permission</returns>
+        </member>
+        <member name="M:Application.Helpers.Auth.AuthorizationHelpers.UserHasDynamicPermission(Microsoft.AspNetCore.Authorization.IAuthorizationService,System.Security.Claims.ClaimsPrincipal,Domain.Enums.Identity.DynamicPermissionGroup,Domain.Enums.Identity.DynamicPermissionLevel,System.Guid)">
+            <summary>
+            Check whether a claims principal has a specific dynamic permission
+            </summary>
+            <param name="authService"></param>
+            <param name="currentUser"></param>
+            <param name="group"></param>
+            <param name="level"></param>
+            <param name="entityId"></param>
+            <returns>Boolean indicating whether the principal has the provided dynamic permission</returns>
+        </member>
+        <member name="M:Application.Helpers.Auth.AuthorizationHelpers.GetLoginRedirect(Application.Settings.AppSettings.AppConfiguration,Domain.Enums.Identity.LoginRedirectReason)">
+            <summary>
+            Get the login redirect URL for a given redirect reason
+            </summary>
+            <param name="appConfig"></param>
+            <param name="redirectReason"></param>
+            <returns>Full login redirect URL</returns>
+        </member>
+        <member name="M:Application.Helpers.Auth.AuthorizationHelpers.LogoutUserWithRedirect(Application.Services.Identity.IAppAccountService,System.Guid,Microsoft.AspNetCore.Components.NavigationManager)">
+            <summary>
+            Logout a user by ID and redirect with the proper notification reason, will also fail the current context for reliability
+            </summary>
+            <param name="userId"></param>
+            <param name="accountService"></param>
+            <param name="navigationManager"></param>
+        </member>
+        <member name="M:Application.Helpers.Auth.AuthorizationHelpers.ValidateHasPermission(Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext,Application.Auth.Default.PermissionAuthorization)">
+            <summary>
+            Validate the context identity has permission then succeed or fail the context
+            </summary>
+            <param name="context"></param>
+            <param name="authorization"></param>
+            <returns>Boolean indicating whether the identity has permission</returns>
+        </member>
+        <member name="M:Application.Helpers.Auth.AuthorizationHelpers.AttemptReAuthentication(Application.Services.Identity.IAppAccountService,Microsoft.AspNetCore.Components.NavigationManager,System.Nullable{System.Guid})">
+            <summary>
+            Attempt to reauthenticate the context identity using the JWT refresh token or logout the identity if required
+            </summary>
+            <param name="accountService"></param>
+            <param name="navigationManager"></param>
+            <param name="userId"></param>
+            <returns>Boolean indicating whether the re-authentication was successful</returns>
+        </member>
+        <member name="M:Application.Helpers.Auth.AuthorizationHelpers.VerifyAuthenticationIsValid(Microsoft.AspNetCore.Authorization.AuthorizationHandlerContext,Application.Services.Identity.IAppAccountService,Microsoft.AspNetCore.Components.NavigationManager)">
+            <summary>
+            Validate context identity authentication for expiration, API, forced re-authentication or missing permissions, then fail the context and force a logout if not valid
+            </summary>
+            <param name="context"></param>
+            <param name="accountService"></param>
+            <param name="navigationManager"></param>
+            <returns>Boolean indicating whether the context identity is authenticated</returns>
+        </member>
         <member name="M:Application.Helpers.GameServer.GameHelpers.SteamNameSanitizeRegex">
             <remarks>
             Pattern:<br/>

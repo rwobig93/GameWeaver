@@ -1,6 +1,5 @@
 ﻿@using Application.Constants.Communication
 @using Application.Constants.GameServer
-@using Application.Constants.Identity
 @using Application.Helpers.GameServer
 @using Application.Helpers.Runtime
 @using Application.Models.Lifecycle
@@ -8,7 +7,8 @@
 @using GameWeaver.Components.GameServer
 
 @attribute [Route(AppRouteConstants.GameServer.GameServers.View)]
-@attribute [Authorize(PermissionConstants.GameServer.Gameserver.Get)]
+@attribute [Authorize]
+@* TODO: Move to Authorize on dynamic pages and move to new updated UserHasGlobalOrDynamicPermission permission validation, same as the .cs of this page *@
 
 @if (!_validIdProvided)
 {

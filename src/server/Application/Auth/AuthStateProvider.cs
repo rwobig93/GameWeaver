@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Serilog;
 
-namespace Infrastructure.Services.Auth;
+namespace Application.Auth;
 
 public class AuthStateProvider : AuthenticationStateProvider
 {

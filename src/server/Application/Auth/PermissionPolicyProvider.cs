@@ -1,8 +1,9 @@
-﻿using Application.Constants.Identity;
+﻿using Application.Auth.Default;
+using Application.Constants.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 
-namespace Infrastructure.Services.Auth;
+namespace Application.Auth;
 
 public class PermissionPolicyProvider : IAuthorizationPolicyProvider
 {
@@ -24,7 +25,7 @@ public class PermissionPolicyProvider : IAuthorizationPolicyProvider
         }
 
         var policy = new AuthorizationPolicyBuilder();
-        policy.AddRequirements(new PermissionRequirement(policyName));
+        policy.AddRequirements(new PermissionAuthorization(policyName));
         return Task.FromResult(policy.Build())!;
     }
 
