@@ -1,5 +1,6 @@
 @using Application.Constants.GameServer
 @using Domain.Enums.GameServer
+
 <MudDialog Class="rounded-lg">
     <DialogContent>
         <MudStack Row="false" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Stretch">
@@ -27,7 +28,7 @@
             }
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
                 <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
-                    <MudTextField @bind-Value="_newConfigItem.Key" Label="Key" Variant="Variant.Outlined" Disabled="false"/>
+                    <MudTextField T="string" ValueChanged="@(ConfigItemKeyChanged)" Immediate="true" Label="Key" Variant="Variant.Outlined" Disabled="false"/>
                 </MudStack>
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
@@ -48,7 +49,7 @@
             </MudPaper>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3 pb-1">
                 <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
-                    <MudTextField @bind-Value="_newConfigItem.FriendlyName" Label="Friendly Name" Variant="Variant.Outlined" Disabled="false"/>
+                    <MudTextField @bind-Value="_newConfigItem.FriendlyName" Immediate="true" OnKeyDown="FriendlyNameKeyDown" Label="Friendly Name" Variant="Variant.Outlined" Disabled="false"/>
                 </MudStack>
             </MudPaper>
         </MudStack>

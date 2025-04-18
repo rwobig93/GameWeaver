@@ -163,7 +163,6 @@ public class GameServerWorker : BackgroundService
 
         var allGameServers = await _gameServerService.GetAll();
 
-        // TODO: Gameserver is sometimes in a discovery state w/o the processes running, if discovery is occurring and no process is running we are done
         foreach (var gameServer in allGameServers.Data)
         {
             var realtimeState = (await _gameServerService.GetCurrentRealtimeState(gameServer.Id)).Data;

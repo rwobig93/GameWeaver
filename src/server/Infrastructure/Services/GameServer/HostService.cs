@@ -1415,7 +1415,7 @@ public class HostService : IHostService
                 StorageConfigHash = deserializedData.StorageConfigHash
             };
 
-            // If any messages have been provided we will send them as notify messages for informational or error messages
+            // If any messages have been provided, we will send them as notify messages for informational or error messages
             if (deserializedData.Messages is not null)
             {
                 await GameServerNotifyMessage(foundServer.Result.Id, request, foundServer.Result.HostId, deserializedData.Messages);

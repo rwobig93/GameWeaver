@@ -760,10 +760,6 @@ public partial class GameView : ComponentBase
         // TODO: When saving after deleting a config item we are getting unable to find the configuration item
         var importCount = 0;
 
-        // TODO: Add config item should autofill Friendly name w/ Key value if the field is empty
-
-        // TODO: Duplicate key should be a selectable option when creating a new config item
-
         // TODO: Getting error when updating existing item to be a duplicate item when it wasn't originally and adding duplicate items:
         // TODO: The provided config information matches an already existing config, please verify the information provided
 
