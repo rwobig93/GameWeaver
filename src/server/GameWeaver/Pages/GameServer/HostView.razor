@@ -1,10 +1,9 @@
 ﻿@using System.Globalization
 @using Application.Constants.Communication
-@using Application.Constants.Identity
 @using Application.Helpers.Runtime
 
 @attribute [Route(AppRouteConstants.GameServer.Hosts.View)]
-@attribute [Authorize(PermissionConstants.GameServer.Hosts.Get)]
+@attribute [Authorize]
 
 @if (!_validIdProvided)
 {

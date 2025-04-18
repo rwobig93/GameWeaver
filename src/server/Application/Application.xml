@@ -1912,6 +1912,7 @@
             <b>Domain.Contracts.SerializableList&lt;Application.Models.GameServer.LocalResource.LocalResourceSlim&gt;</b> Resources<br/>
             <b>string</b> RunningConfigHash<br/>
             <b>string</b> StorageConfigHash<br/>
+            <b>System.Collections.Generic.List&lt;string&gt;</b> Messages<br/>
             </code>
             </remarks>
         </member>

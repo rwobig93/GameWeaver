@@ -212,7 +212,7 @@ public partial class GameView : ComponentBase
             resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
             resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
             var updateResourceResponse = await GameServerService.UpdateLocalResourceAsync(resource.ToUpdate(), _loggedInUserId);
-            if (!updateResourceResponse.Succeeded) continue;
+            if (updateResourceResponse.Succeeded) continue;
 
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;

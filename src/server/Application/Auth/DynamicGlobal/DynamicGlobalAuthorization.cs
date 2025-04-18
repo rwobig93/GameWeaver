@@ -5,6 +5,14 @@ namespace Application.Auth.DynamicGlobal;
 
 public class DynamicGlobalAuthorization : AuthorizeAttribute, IAuthorizationRequirement, IAuthorizationRequirementData
 {
+    public DynamicGlobalAuthorization(string globalPermission, DynamicPermissionGroup group, DynamicPermissionLevel level)
+    {
+        EntityId = Guid.Empty;
+        Group = group;
+        Level = level;
+        GlobalPermission = globalPermission;
+    }
+
     public DynamicGlobalAuthorization(string globalPermission, Guid entityId, DynamicPermissionGroup group, DynamicPermissionLevel level)
     {
         EntityId = entityId;

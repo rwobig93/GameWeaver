@@ -492,7 +492,6 @@ public class GameServerService : IGameServerService
 
                 if (!File.Exists(fullPath))
                 {
-                    // TODO: Startup failure isn't being reported back to the Gameserver events UI
                     _logger.Error("Startup resource for gameserver doesn't exist: [{GameserverId}]{GameserverName} => {FilePath}",
                         gameServer.Id, gameServer.ServerName, fullPath);
                     failures.Add($"Startup resource for gameserver doesn't exist: [{gameServer.Id}]{gameServer.ServerName} => {fullPath}");

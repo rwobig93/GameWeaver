@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using Application.Auth;
 using Application.Auth.Default;
 using Application.Auth.Dynamic;
+using Application.Auth.DynamicGlobal;
 using Application.Constants.Identity;
 using Application.Constants.Web;
 using Application.Helpers.Identity;
@@ -49,16 +49,9 @@ public static class AuthorizationHelpers
     public static async Task<bool> UserHasGlobalOrDynamicPermission(this IAuthorizationService authService, ClaimsPrincipal? currentUser, string permission,
         DynamicPermissionGroup group, DynamicPermissionLevel level, Guid entityId)
     {
-        // If user has the global permission then we'll return early
-        if ((await authService.AuthorizeAsync(currentUser!, null, permission)).Succeeded)
-        {
-            return true;
-        }
-
-        // User doesn't have the global permission so we'll verify the dynamic permission
         return (await authService.AuthorizeAsync(currentUser!, null, new List<IAuthorizationRequirement>
         {
-            new DynamicAuthorization { EntityId = entityId, Group = group, Level = level }
+            new DynamicGlobalAuthorization(permission, entityId, group, level)
         })).Succeeded;
     }
 

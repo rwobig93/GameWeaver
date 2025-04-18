@@ -8,7 +8,6 @@
 
 @attribute [Route(AppRouteConstants.GameServer.GameServers.View)]
 @attribute [Authorize]
-@* TODO: Move to Authorize on dynamic pages and move to new updated UserHasGlobalOrDynamicPermission permission validation, same as the .cs of this page *@
 
 @if (!_validIdProvided)
 {
@@ -67,6 +66,7 @@
 </MudPaper>
 
 @* Notifications *@
+@* TODO: Mention in documentation that state is based on process running and listening ports listening, will stay spinning up if ports are never listening *@
 @if (_gameServer.IsDeleted)
 {
     <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-2">
