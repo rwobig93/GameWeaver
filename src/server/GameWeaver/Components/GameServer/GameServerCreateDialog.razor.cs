@@ -1,6 +1,7 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
+using Application.Helpers.Web;
 using Application.Mappers.GameServer;
 using Application.Mappers.Identity;
 using Application.Models.GameServer.Game;
@@ -59,12 +60,7 @@ public partial class GameServerCreateDialog : ComponentBase
     {
         if (firstRender)
         {
-            await GetAllUsers();
             await GetCurrentUser();
-            await GetHosts();
-            await GetGames();
-            await GetGameProfiles();
-
             StateHasChanged();
         }
     }
@@ -72,122 +68,140 @@ public partial class GameServerCreateDialog : ComponentBase
     private async Task GetCurrentUser()
     {
         _loggedInUserId = await CurrentUserService.GetCurrentUserId() ?? Guid.Empty;
-        _selectedOwner = _users.FirstOrDefault(x => x.Id == _loggedInUserId) ?? new UserBasicResponse {Username = "Unknown"};
+        var loggedInUser = await CurrentUserService.GetCurrentUserBasic();
+        _selectedOwner = loggedInUser ?? new UserBasicResponse {Username = "Unknown"};
     }
 
-    private async Task GetAllUsers()
+    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
-        var response = await AppUserService.GetAllAsync();
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3)
+        {
+            return _users;
+        }
+
+        var response = await AppUserService.SearchPaginatedAsync(filterText, 1, 100);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
+            return _users;
         }
 
         _users = response.Data.Where(x => x.Id != Guid.Empty && x.Id != ServerState.SystemUserId).ToResponses();
+        return _users;
     }
 
-    private async Task GetHosts()
+    private async Task<IEnumerable<GameSlim>> FilterGames(string filterText, CancellationToken token)
     {
-        var response = await HostService.GetAllAsync();
-        if (!response.Succeeded)
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3)
         {
-            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
+            return _games;
         }
 
-        _hosts = response.Data.ToList();
-    }
-
-    private async Task GetGames()
-    {
-        var response = await GameService.GetAllAsync();
+        var response = await GameService.SearchPaginatedAsync(filterText, 1, 100);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
+            return _games;
         }
 
         _games = response.Data.ToList();
+        return _games;
     }
 
-    private async Task GetGameProfiles()
+    private async Task<IEnumerable<HostSlim>> FilterHosts(string filterText, CancellationToken token)
     {
-        if (_selectedGame.Id == Guid.Empty)
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3)
         {
-            return;
+            return _hosts;
+        }
+
+        var response = await HostService.SearchPaginatedAsync(filterText, 1, 100);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return _hosts;
+        }
+
+        _hosts = response.Data.ToList();
+        return _hosts;
+    }
+
+    private async Task<IEnumerable<GameProfileSlim>> FilterProfiles(string filterText, CancellationToken token)
+    {
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3 || _selectedGame.Id == Guid.Empty)
+        {
+            return _gameProfiles;
         }
 
         var response = await GameServerService.GetGameProfilesByGameIdAsync(_selectedGame.Id);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-
-        _gameProfiles = response.Data.ToList();
-    }
-
-    private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
-    {
-        if (string.IsNullOrWhiteSpace(filterText))
-        {
-            return _users;
-        }
-
-        await Task.CompletedTask;
-
-        return _users.Where(x =>
-            x.Username.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
-    }
-
-    private async Task<IEnumerable<GameSlim>> FilterGames(string filterText, CancellationToken token)
-    {
-        if (string.IsNullOrWhiteSpace(filterText))
-        {
-            return _games;
-        }
-
-        await Task.CompletedTask;
-
-        return _games.Where(x =>
-            x.FriendlyName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.SteamName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.SteamGameId.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.SteamToolId.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
-    }
-
-    private async Task<IEnumerable<HostSlim>> FilterHosts(string filterText, CancellationToken token)
-    {
-        if (string.IsNullOrWhiteSpace(filterText))
-        {
-            return _hosts;
-        }
-
-        await Task.CompletedTask;
-
-        return _hosts.Where(x =>
-            x.FriendlyName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Hostname.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Description.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
-    }
-
-    private async Task<IEnumerable<GameProfileSlim>> FilterProfiles(string filterText, CancellationToken token)
-    {
-        if (string.IsNullOrWhiteSpace(filterText))
-        {
             return _gameProfiles;
         }
 
-        await Task.CompletedTask;
+        // The default game profile for each game is always inherited from, so we won't allow double inheritance
+        _gameProfiles = response.Data.Where(x => x.Id != _selectedGame.DefaultGameProfileId).ToList();
+        return _gameProfiles;
+    }
 
-        return _gameProfiles.Where(x =>
-            x.FriendlyName.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.OwnerId.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
+    private void TogglePasswordVisibility()
+    {
+        if (_passwordInputIcon == Icons.Material.Filled.VisibilityOff)
+        {
+            _passwordInput = InputType.Text;
+            _passwordInputIcon = Icons.Material.Filled.Visibility;
+            return;
+        }
+
+        _passwordInput = InputType.Password;
+        _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    }
+
+    private void ToggleAdminPasswordVisibility()
+    {
+        if (_adminPasswordInputIcon == Icons.Material.Filled.VisibilityOff)
+        {
+            _adminPasswordInput = InputType.Text;
+            _adminPasswordInputIcon = Icons.Material.Filled.Visibility;
+            return;
+        }
+
+        _adminPasswordInput = InputType.Password;
+        _adminPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    }
+
+    private void ToggleRconPasswordVisibility()
+    {
+        if (_rconPasswordInputIcon == Icons.Material.Filled.VisibilityOff)
+        {
+            _rconPasswordInput = InputType.Text;
+            _rconPasswordInputIcon = Icons.Material.Filled.Visibility;
+            return;
+        }
+
+        _rconPasswordInput = InputType.Password;
+        _rconPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    }
+
+    private void GenerateRandomName()
+    {
+        _createRequest.Name = NameHelpers.GenerateHostname();
+    }
+
+    private void GenerateServerPassword()
+    {
+        _createRequest.Password = NameHelpers.GeneratePassphrase();
+    }
+
+    private void GenerateAdminPassword()
+    {
+        _createRequest.PasswordAdmin = UrlHelpers.GenerateToken()[..25];
+    }
+
+    private void GenerateRconPassword()
+    {
+        _createRequest.PasswordRcon = UrlHelpers.GenerateToken()[..25];
     }
 
     private async Task CreateGameServer()
@@ -252,50 +266,6 @@ public partial class GameServerCreateDialog : ComponentBase
         }
 
         MudDialog.Close(DialogResult.Ok(response.Data));
-    }
-
-    private void TogglePasswordVisibility()
-    {
-        if (_passwordInputIcon == Icons.Material.Filled.VisibilityOff)
-        {
-            _adminPasswordInput = InputType.Text;
-            _adminPasswordInputIcon = Icons.Material.Filled.Visibility;
-            return;
-        }
-
-        _passwordInput = InputType.Password;
-        _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    }
-
-    private void ToggleAdminPasswordVisibility()
-    {
-        if (_adminPasswordInputIcon == Icons.Material.Filled.VisibilityOff)
-        {
-            _adminPasswordInput = InputType.Text;
-            _adminPasswordInputIcon = Icons.Material.Filled.Visibility;
-            return;
-        }
-
-        _adminPasswordInput = InputType.Password;
-        _adminPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-    }
-
-    private void ToggleRconPasswordVisibility()
-    {
-        if (_rconPasswordInputIcon == Icons.Material.Filled.VisibilityOff)
-        {
-            _rconPasswordInput = InputType.Text;
-            _rconPasswordInputIcon = Icons.Material.Filled.Visibility;
-            return;
-        }
-
-        _rconPasswordInput = InputType.Password;
-        _rconPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
-    }
-
-    private void GenerateRandomName()
-    {
-        _createRequest.Name = NameHelpers.GenerateHostname();
     }
 
     private void Cancel()
