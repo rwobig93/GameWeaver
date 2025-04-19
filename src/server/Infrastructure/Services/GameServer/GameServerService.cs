@@ -1108,11 +1108,8 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
-        var gameServerHost = new GameServerToHost
-        {
-            Id = foundServer.Result.Id,
-            Resources = new SerializableList<LocalResourceHost>([foundResource.Data.ToHost(foundServer.Result.Id, foundHost.Result.Os)])
-        };
+        var gameServerHost = foundServer.Result.ToHost();
+        gameServerHost.Resources = new SerializableList<LocalResourceHost>([foundResource.Data.ToHost(foundServer.Result.Id, foundHost.Result.Os)]);
 
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdate,
             foundServer.Result.HostId, gameServerHost, requestUserId, _dateTime.NowDatabaseTime);
@@ -1173,11 +1170,8 @@ public class GameServerService : IGameServerService
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
-        var gameServerHost = new GameServerToHost
-        {
-            Id = foundServer.Result.Id,
-            Resources = new SerializableList<LocalResourceHost>(foundResources.Data.ToHosts(foundServer.Result.Id, foundHost.Result.Os))
-        };
+        var gameServerHost = foundServer.Result.ToHost();
+        gameServerHost.Resources = new SerializableList<LocalResourceHost>(foundResources.Data.ToHosts(foundServer.Result.Id, foundHost.Result.Os));
 
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdateFull,
             foundHost.Result.Id, gameServerHost, requestUserId, _dateTime.NowDatabaseTime);

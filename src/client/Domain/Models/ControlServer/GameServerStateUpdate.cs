@@ -14,4 +14,5 @@ public partial class GameServerStateUpdate
     [MemoryPackOrder(3)] public SerializableList<LocalResource>? Resources { get; set; }
     [MemoryPackOrder(4)] public string? RunningConfigHash { get; set; }
     [MemoryPackOrder(5)] public string? StorageConfigHash { get; set; }
+    [MemoryPackOrder(6)] public List<string>? Messages { get; set; }
 }

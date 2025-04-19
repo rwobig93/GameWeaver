@@ -1,11 +1,11 @@
 ﻿using System.Security.Claims;
+using Application.Auth;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Repositories.Identity;
 using Application.Responses.v1.Identity;
 using Application.Services.Identity;
 using Domain.DatabaseEntities.Identity;
-using Infrastructure.Services.Auth;
 
 namespace Infrastructure.Services.Identity;
 

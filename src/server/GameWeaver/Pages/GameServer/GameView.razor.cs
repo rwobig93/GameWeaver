@@ -1,6 +1,7 @@
 ﻿using System.Xml.Linq;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Helpers.Auth;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
@@ -174,6 +175,7 @@ public partial class GameView : ComponentBase
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        _deletedLocalResources.Clear();
 
         foreach (var resource in _createdLocalResources)
         {
@@ -188,6 +190,7 @@ public partial class GameView : ComponentBase
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+        _createdLocalResources.Clear();
 
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
         {
@@ -195,14 +198,17 @@ public partial class GameView : ComponentBase
             {
                 return;
             }
+            _createdConfigItems.Clear();
             if (await SaveUpdatedConfigItems())
             {
                 return;
             }
+            _updatedConfigItems.Clear();
             if (await SaveDeletedConfigItems())
             {
                 return;
             }
+            _deletedConfigItems.Clear();
         }
 
         foreach (var resource in _updatedLocalResources)
@@ -211,18 +217,12 @@ public partial class GameView : ComponentBase
             resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
             resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
             var updateResourceResponse = await GameServerService.UpdateLocalResourceAsync(resource.ToUpdate(), _loggedInUserId);
-            if (!updateResourceResponse.Succeeded) continue;
+            if (updateResourceResponse.Succeeded) continue;
 
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-
-        _createdConfigItems.Clear();
-        _updatedConfigItems.Clear();
-        _deletedConfigItems.Clear();
-        _createdLocalResources.Clear();
         _updatedLocalResources.Clear();
-        _deletedLocalResources.Clear();
 
         ToggleEditMode();
         await GetViewingGame();
@@ -323,12 +323,6 @@ public partial class GameView : ComponentBase
 
     private void ConfigDeleted(ConfigurationItemSlim item)
     {
-        if (_createdConfigItems.Contains(item))
-        {
-            _createdConfigItems.Remove(item);
-            return;
-        }
-
         // Go through each resource config set and remove the targeted config item
         foreach (var resource in _localResources)
         {
@@ -349,6 +343,14 @@ public partial class GameView : ComponentBase
             }
 
             resource.ConfigSets = resourceConfigSets.Where(x => x.Id != item.Id).ToList();
+        }
+
+        // If config was just created, we'll just remove it and move on
+        var matchingCreatedConfig = _createdConfigItems.FirstOrDefault(x => x.Id == item.Id);
+        if (matchingCreatedConfig is not null)
+        {
+            _createdConfigItems.Remove(item);
+            return;
         }
 
         // Remove this config item from updated if it was updated and is now being deleted
@@ -433,10 +435,32 @@ public partial class GameView : ComponentBase
             return;
         }
 
+        // Config items have a foreign key cascade delete, so we will just remove any changes for this resource
+        foreach (var configItem in localResource.ConfigSets)
+        {
+            var matchingNewConfig = _createdConfigItems.FirstOrDefault(x => x.Id == configItem.Id);
+            if (matchingNewConfig is not null)
+            {
+                _createdConfigItems.Remove(matchingNewConfig);
+            }
+            var matchingUpdatedConfig = _createdConfigItems.FirstOrDefault(x => x.Id == configItem.Id);
+            if (matchingUpdatedConfig is not null)
+            {
+                _updatedConfigItems.Remove(matchingUpdatedConfig);
+            }
+            var matchingDeletedConfig = _createdConfigItems.FirstOrDefault(x => x.Id == configItem.Id);
+            if (matchingDeletedConfig is not null)
+            {
+                _deletedConfigItems.Remove(matchingDeletedConfig);
+            }
+        }
+
         var matchingNewResource = _createdLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
         if (matchingNewResource is not null)
         {
             _createdLocalResources.Remove(matchingNewResource);
+            _localResources.Remove(localResource);
+            return;
         }
 
         var matchingUpdatedResource = _updatedLocalResources.FirstOrDefault(x => x.Id == localResource.Id);
@@ -447,10 +471,6 @@ public partial class GameView : ComponentBase
 
         _localResources.Remove(localResource);
         _deletedLocalResources.Add(localResource);
-        foreach (var configItem in localResource.ConfigSets)
-        {
-            _deletedConfigItems.Remove(configItem);
-        }
     }
 
     private async Task<bool> SaveNewConfigItems()
@@ -750,6 +770,7 @@ public partial class GameView : ComponentBase
             return;
         }
 
+        Snackbar.Add("Importing files, this may take a moment or two depending on file count and size...", Severity.Info);
         await ImportConfigFiles(configToImport);
     }
 
@@ -803,7 +824,7 @@ public partial class GameView : ComponentBase
             var configItems = newResource.ContentType switch
             {
                 ContentType.Raw => fileContentLines.ToConfigItems(newResource.Id),
-                ContentType.Ini => new IniData(fileContentLines).ToConfigItems(newResource.Id),
+                ContentType.Ini => new IniData(fileContentLines, true).ToConfigItems(newResource.Id),
                 ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(fileContent.Data).ToConfigItems(newResource.Id),
                 ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(newResource.Id),
                 _ => fileContentLines.ToConfigItems(newResource.Id)

@@ -1415,6 +1415,12 @@ public class HostService : IHostService
                 StorageConfigHash = deserializedData.StorageConfigHash
             };
 
+            // If any messages have been provided, we will send them as notify messages for informational or error messages
+            if (deserializedData.Messages is not null)
+            {
+                await GameServerNotifyMessage(foundServer.Result.Id, request, foundServer.Result.HostId, deserializedData.Messages);
+            }
+
             // Update the game server version to the latest if we just did a server update and it was successful
             if (deserializedData.BuildVersionUpdated)
             {
@@ -1549,6 +1555,38 @@ public class HostService : IHostService
             Message = $"Server State Changed To: {after}",
             Detail = $"Server State Change: {before} => {after}"
         });
+    }
+
+    private async Task GameServerNotifyMessage(Guid serverId, WeaverWorkUpdate workUpdate, Guid hostId, List<string> messages)
+    {
+        var messagePrefix = workUpdate.Status is WeaverWorkState.Failed ? "ERROR:" : "INFO:";
+        foreach (var message in messages)
+        {
+            var stateRecordCreate = await _recordRepository.CreateAsync(new NotifyRecordCreate
+            {
+                EntityId = serverId,
+                Timestamp = _dateTime.NowDatabaseTime,
+                Message = $"{messagePrefix} {message[..40]}...",
+                Detail = $"{messagePrefix} {message}"
+            });
+            if (!stateRecordCreate.Succeeded)
+            {
+                await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.WeaverWork, serverId,
+                    hostId, "Failed to create state message notify record from weaver work for game server", new Dictionary<string, string>
+                    {
+                        {"WorkId", workUpdate.Id.ToString()},
+                        {"Error", stateRecordCreate.ErrorMessage}
+                    });
+            }
+
+            _eventService.TriggerNotify("HostServiceGameServerNotifyMessage", new NotifyTriggeredEvent
+            {
+                EntityId = serverId,
+                Timestamp = _dateTime.NowDatabaseTime,
+                Message = $"{messagePrefix} {message[..40]}...",
+                Detail = $"{messagePrefix} {message}"
+            });
+        }
     }
 
     private async Task GameServerBuildVersionUpdate(WeaverWorkUpdate request, DatabaseActionResult<GameServerDb?> foundServer, GameServerUpdate gameServerUpdate)

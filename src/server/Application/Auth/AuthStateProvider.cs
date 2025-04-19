@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
+using Serilog;
 
-namespace Infrastructure.Services.Auth;
+namespace Application.Auth;
 
 public class AuthStateProvider : AuthenticationStateProvider
 {
@@ -41,14 +42,11 @@ public class AuthStateProvider : AuthenticationStateProvider
             await GetAuthTokenFromSession();
 
             var currentPrincipal = JwtHelpers.GetClaimsPrincipalFromToken(_authToken, _securityConfig, _appConfig);
-            if (currentPrincipal is null || currentPrincipal == UserConstants.UnauthenticatedPrincipal)
+            if (currentPrincipal is null || currentPrincipal == UserConstants.UnauthenticatedPrincipal || string.IsNullOrWhiteSpace(_authToken))
                 return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
 
             if (currentPrincipal == UserConstants.ExpiredPrincipal)
-                return new AuthenticationState(UserConstants.ExpiredPrincipal);
-
-            if (string.IsNullOrWhiteSpace(_authToken))
-                return new AuthenticationState(UserConstants.UnauthenticatedPrincipal);
+                return new AuthenticationState(UserConstants.ExpiredPrincipalId(JwtHelpers.GetJwtUserId(_authToken)));
 
             // User is valid and not token isn't expired
             return GenerateNewAuthenticationState(_authToken);
@@ -69,8 +67,7 @@ public class AuthStateProvider : AuthenticationStateProvider
     {
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", savedToken);
 
-        var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(JwtHelpers.GetJwtDecoded(savedToken).Claims, JwtBearerDefaults
-            .AuthenticationScheme));
+        var authorizedPrincipal = new ClaimsPrincipal(new ClaimsIdentity(JwtHelpers.GetJwtDecoded(savedToken).Claims, JwtBearerDefaults.AuthenticationScheme));
         _contextAccessor.HttpContext!.User = authorizedPrincipal;
 
         var state = new AuthenticationState(authorizedPrincipal);

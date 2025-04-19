@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using System.Security.Principal;
 using Application.Constants.Identity;
-using Application.Helpers.Runtime;
+using Application.Helpers.Auth;
 using Application.Mappers.Identity;
 using Application.Models.Identity.User;
 using Application.Services.Lifecycle;

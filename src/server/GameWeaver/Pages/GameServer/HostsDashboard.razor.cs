@@ -1,4 +1,5 @@
 using Application.Constants.Identity;
+using Application.Helpers.Auth;
 using Application.Helpers.Runtime;
 using Application.Models.GameServer.Host;
 using Application.Services.GameServer;

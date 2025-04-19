@@ -17,11 +17,26 @@ public partial class ConfigAddDialog : ComponentBase
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private readonly ConfigurationItemSlim _newConfigItem = new() { Id = Guid.CreateVersion7() };
+    private bool _friendlyNameEdited;
 
 
     private void InjectDynamicValue(string value)
     {
         _newConfigItem.Value = value;
+    }
+
+    private void ConfigItemKeyChanged(string value)
+    {
+        _newConfigItem.Key = value;
+        if (!_friendlyNameEdited)
+        {
+            _newConfigItem.FriendlyName = value;
+        }
+    }
+
+    private void FriendlyNameKeyDown(KeyboardEventArgs key)
+    {
+        _friendlyNameEdited = true;
     }
 
     private void Submit()

@@ -74,10 +74,6 @@
         </MudItem>
     }
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField @bind-Value="_game.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField @bind-Value="_game.SourceType" Label="Source" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
     </MudItem>
     @if (_canEditGame)
     {
@@ -207,7 +203,7 @@
                     </MudPaper>
                     <MudPaper Elevation="10" Square="false">
                         <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ConfigSelectedForImport(files))"
-                                       Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))">
+                                       Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))" MaximumFileCount="100">
                             <ActivatorContent>
                                 <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
                                     Import Config Files

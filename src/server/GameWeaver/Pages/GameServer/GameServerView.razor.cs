@@ -1,6 +1,7 @@
 ﻿using System.Xml.Linq;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
+using Application.Helpers.Auth;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
@@ -208,13 +209,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
 
-        _canViewGameServer = !_gameServer.Private ||
-                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get) ||
-                             await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.View));
+        _canViewGameServer = !_gameServer.Private || await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get,
+                                 DynamicPermissionGroup.GameServers, DynamicPermissionLevel.View, _gameServer.Id);
 
         var isServerAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
-                            await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Admin));
-
+                            await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, _gameServer.Id);
         // Game server owner and admin gets full permissions
         if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
         {
@@ -229,10 +228,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        // Handle server moderator dynamic permission, global moderators get access via their role
-        var isServerModerator = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id,
-                                DynamicPermissionLevel.Moderator));
-
+        // Moderators get most access except deletion and ownership changing
+        var isServerModerator = (await RoleService.IsUserModeratorAsync(_loggedInUserId)).Data ||
+                                await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Moderator, _gameServer.Id);
         if (isServerModerator)
         {
             _canViewGameServer = true;
@@ -246,16 +244,15 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _canPermissionServer =  await AuthorizationService.UserHasPermission(currentUser,
-                                        PermissionConstants.GameServer.Gameserver.Dynamic(_gameServer.Id, DynamicPermissionLevel.Permission));
-        _canEditServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
-                         await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Edit, _gameServer.Id);
-        _canConfigServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update) ||
-                           await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Configure, _gameServer.Id);
-        _canStartServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StartServer) ||
-                          await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Start, _gameServer.Id);
-        _canStopServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.StopServer) ||
-                         await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Stop, _gameServer.Id);
+        _canPermissionServer =  await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Permission, _gameServer.Id);
+        _canEditServer = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update,
+            DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Edit, _gameServer.Id);
+        _canConfigServer = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update,
+            DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Configure, _gameServer.Id);
+        _canStartServer = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.StartServer,
+            DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Start, _gameServer.Id);
+        _canStopServer = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.StopServer,
+            DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Stop, _gameServer.Id);
         _canDeleteServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
     }
@@ -556,15 +553,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         GoBack();
     }
 
-    private bool ConfigShouldBeShown(ConfigurationItemSlim item)
-    {
-        var shouldBeShown = item.FriendlyName.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Key.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase) ||
-                            item.Value.Contains(_configSearchText, StringComparison.OrdinalIgnoreCase);
-
-        return shouldBeShown;
-    }
-
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
         var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
@@ -851,7 +839,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        if (_gameServer.ServerState.IsDoingSomething())
+        if (_gameServer.ServerState.IsDoingSomething() && _gameServer.ServerState != ConnectivityState.Discovering)
         {
             Snackbar.Add($"The server is currently {_gameServer.ServerState}", Severity.Error);
             return;
@@ -1245,11 +1233,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         };
 
         return new TableData<NotifyRecordSlim> {TotalItems = _totalNotifyRecords, Items = _notifyPagedData};
-    }
-
-    private void InjectDynamicValue(ConfigurationItemSlim item, string value)
-    {
-        item.Value = value;
     }
 
     private void NotifyTriggered(object? sender, NotifyTriggeredEvent e)

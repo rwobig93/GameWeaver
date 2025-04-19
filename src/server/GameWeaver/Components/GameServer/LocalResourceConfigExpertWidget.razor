@@ -2,77 +2,85 @@
 @using Domain.Enums.GameServer
 @attribute [AllowAnonymous]
 
-<MudPaper Elevation="10" Class="ma-4 pa-4 gap-4">
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;">
+<MudPaper Elevation="10" Class="ma-4 pa-1">
+    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="px-2 py-1 my-1">
+        <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;" Class="py-1 my-1">
             @if (!EditMode)
             {
-                <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6">@LocalResource.Name</MudText>
+                <MudSpacer/>
+                <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6" Class="py-1 my-1">@LocalResource.Name</MudText>
+                <MudSpacer/>
                 @if (LocalResource.ContentType is ContentType.Deleted or ContentType.Ignore)
                 {
-                    <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined"
+                    <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined" Class="py-1 my-1"
                              Text="@(LocalResource.ContentType is ContentType.Deleted ? "Enforced Not To Exist" : "Ignored From Inherited Game & Profile")" />
                 }
                 else
                 {
-                    <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.RemoveRedEye"
+                    <MudButton Class="py-1 my-1" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.RemoveRedEye"
                                OnClick="@(() => OpenInEditor(LocalResource))">
                         View Config In Editor
                     </MudButton>
                 }
+                <MudSpacer/>
             }
             else
             {
-                <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Spacing="3" Wrap="Wrap.NoWrap" Style="width: 100%;">
-                    <MudTextField T="string" Label="Friendly Name" @bind-Value="LocalResource.Name" AutoGrow="false" FullWidth="true" Disabled="@(!EditMode)" Class="px-8"
-                                  OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+                <MudStack Row="true" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Spacing="3" Wrap="Wrap.NoWrap" Style="width: 100%;" Class="py-1 my-1">
+                    <MudSpacer/>
+                    <MudTextField T="string" Label="Friendly Name" @bind-Value="LocalResource.Name" AutoGrow="false" FullWidth="true" Disabled="@(!EditMode)"
+                                  Class="px-8 py-1 my-1" OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
                     @if (LocalResource.ContentType is ContentType.Deleted or ContentType.Ignore)
                     {
-                        <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined"
-                                 Text="@(LocalResource.ContentType is ContentType.Deleted ? "Enforced Not To Exist" : "Ignored From Inherited Game & Profile")" />
+                        <MudSpacer/>
+                        <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined" Class="py-1 my-1"
+                                 Text="@(LocalResource.ContentType is ContentType.Deleted ? "Enforced Not To Exist" : "Ignored From Inherited Game & Profile")"/>
                     }
+                    <MudSpacer/>
                 </MudStack>
             }
         </MudStack>
     </MudItem>
-    <MudStack Row="false" Justify="Justify.Center" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Class="px-8" Style="width: 100%;">
-        @if (Game.SupportsWindows)
-        {
-            <MudTextField T="string" Label="Windows Path" @bind-Value="LocalResource.PathWindows" FullWidth="true" Disabled="@(!EditMode)" Class="px-4"
-                          OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
-        }
-        @if (Game.SupportsLinux)
-        {
-            <MudTextField T="string" Label="Linux Path" @bind-Value="LocalResource.PathLinux" FullWidth="true" Disabled="@(!EditMode)" Class="px-4"
-                          OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
-        }
-        @if (Game.SupportsMac)
-        {
-            <MudTextField T="string" Label="Mac Path" @bind-Value="LocalResource.PathMac" FullWidth="true" Disabled="@(!EditMode)" Class="px-4"
-                          OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
-        }
-    </MudStack>
+    <MudContainer Class="d-flex flex-column gap-1 px-8 pb-2" Style="width: 100%;">
+        <MudStack Row="false" Justify="Justify.Center" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Class="pa-0 ma-0">
+            @if (Game.SupportsWindows)
+            {
+                <MudTextField T="string" Label="Windows Path" @bind-Value="LocalResource.PathWindows" FullWidth="true" Disabled="@(!EditMode)" Class=""
+                              OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+            }
+            @if (Game.SupportsLinux)
+            {
+                <MudTextField T="string" Label="Linux Path" @bind-Value="LocalResource.PathLinux" FullWidth="true" Disabled="@(!EditMode)" Class=""
+                              OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+            }
+            @if (Game.SupportsMac)
+            {
+                <MudTextField T="string" Label="Mac Path" @bind-Value="LocalResource.PathMac" FullWidth="true" Disabled="@(!EditMode)" Class=""
+                              OnKeyDown="@(() => UpdateLocalResource(LocalResource))"/>
+            }
+        </MudStack>
+    </MudContainer>
     @if (EditMode)
     {
-        <MudStack Row="true" Justify="Justify.SpaceEvenly" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+        <MudStack Row="true" Justify="Justify.SpaceEvenly" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 100%;" Class="py-1 my-1">
             @if (LocalResource.ContentType != ContentType.Ignore && LocalResource.ContentType != ContentType.Deleted)
             {
-                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" Class="py-1 my-1"
                            OnClick="@(() => AddConfigItem(LocalResource))" Disabled="@(!EditMode)">
                     Add Config
                 </MudButton>
-                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.Edit"
+                <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.Edit" Class="py-1 my-1"
                            OnClick="@(() => OpenInEditor(LocalResource))" Disabled="@(!EditMode)">
                     Edit Config In Editor
                 </MudButton>
             }
-            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete" Class="py-1 my-1"
                        OnClick="@(() => DeleteLocalResource(LocalResource))" Disabled="@(!EditMode)">
                 Delete Resource
             </MudButton>
         </MudStack>
     }
-    <MudContainer Class="d-flex flex-column gap-1">
+    <MudContainer Class="d-flex flex-column gap-1 pt-2" Style="width: 100%;">
         @foreach (var configItem in LocalResource.ConfigSets.OrderBy(x => x.FriendlyName))
         {
             @if (!ConfigShouldBeShown(configItem))
@@ -81,24 +89,24 @@
             }
 
             <div class="border-solid border rounded pa-1 ma-1">
-                <MudStack Row="false" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Class="ma-0 pa-1">
-                    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
+                <MudStack Row="false" Justify="Justify.SpaceBetween" Wrap="Wrap.NoWrap" Class="ma-0 pa-1" Style="width: 100%;">
+                    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 py-0 px-1">
                         <MudTextField T="string" Label="Friendly Name" @bind-Value="configItem.FriendlyName" FullWidth="true" Disabled="@(!EditMode)"
-                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))" Class="ma-0 pa-0"/>
                         <MudTextField T="string" Label="Key" @bind-Value="configItem.Key" FullWidth="true" Disabled="@(!EditMode)"
-                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))" Class="ma-0 pa-0"/>
                     </MudStack>
-                    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 pa-0">
+                    <MudStack Row="true" Justify="Justify.SpaceEvenly" Class="ma-0 py-0 px-1">
                         <MudTextField T="string" Label="Path" @bind-Value="configItem.Path" FullWidth="true" Disabled="@(!EditMode)"
-                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))" Class="ma-0 pa-0"/>
                         <MudTextField T="string" Label="Category" @bind-Value="configItem.Category" FullWidth="true" Disabled="@(!EditMode)"
-                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))" Class="ma-0 pa-0"/>
                         <MudCheckBox @bind-Value="configItem.DuplicateKey" Label="Is Duplicate Key" Dense="true"/>
                     </MudStack>
-                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 pa-0">
+                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="ma-0 py-0 px-1">
                         <MudTextField T="string" Label="Value" @bind-Value="configItem.Value" FullWidth="true" Disabled="@(!EditMode)"
-                                      OnKeyDown="@(() => UpdateConfigItem(configItem))"/>
-                        <MudButtonGroup Variant="Variant.Text">
+                                      OnKeyDown="@(() => UpdateConfigItem(configItem))" Class="ma-0 pa-0"/>
+                        <MudButtonGroup Variant="Variant.Text" Class="ma-0 pa-0">
                             <MudMenu Icon="@Icons.Material.Filled.DriveFileRenameOutline" Disabled="@(!EditMode)" Size="Size.Medium" IconColor="Color.Info">
                                 @foreach (var dynamicVariable in ConfigurationItemConstants.DynamicVariables)
                                 {
@@ -106,7 +114,7 @@
                                 }
                             </MudMenu>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Medium" Color="Color.Error" Disabled="@(!EditMode)"
-                                           OnClick="@(() => DeleteConfigItem(configItem))"/>
+                                           OnClick="@(() => DeleteConfigItem(configItem))" Class="ma-0 pa-0"/>
                         </MudButtonGroup>
                     </MudStack>
                 </MudStack>

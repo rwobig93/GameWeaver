@@ -1,6 +1,9 @@
 ﻿using System.Net;
 using System.Text.Json.Serialization;
 using Application.Auth;
+using Application.Auth.Default;
+using Application.Auth.Dynamic;
+using Application.Auth.DynamicGlobal;
 using Application.Constants.Communication;
 using Application.Constants.Web;
 using Application.Helpers.Auth;
@@ -28,7 +31,6 @@ using Infrastructure.Repositories.MsSql.GameServer;
 using Infrastructure.Repositories.MsSql.Identity;
 using Infrastructure.Repositories.MsSql.Integrations;
 using Infrastructure.Repositories.MsSql.Lifecycle;
-using Infrastructure.Services.Auth;
 using Infrastructure.Services.Database;
 using Infrastructure.Services.External;
 using Infrastructure.Services.GameServer;
@@ -206,6 +208,7 @@ public static class DependencyInjection
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
         services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
         services.AddScoped<IAuthorizationHandler, DynamicAuthorizationHandler>();
+        services.AddScoped<IAuthorizationHandler, DynamicGlobalAuthorizationHandler>();
 
         services.AddSingleton<IExternalAuthProviderService, ExternalAuthProviderService>();
 

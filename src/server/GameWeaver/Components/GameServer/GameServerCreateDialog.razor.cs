@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Communication;
 using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Mappers.Identity;
 using Application.Models.GameServer.Game;
@@ -42,8 +43,9 @@ public partial class GameServerCreateDialog : ComponentBase
     private HostSlim _selectedHost = new() {Id = Guid.Empty, Hostname = "Unknown"};
     private GameSlim _selectedGame = new() {Id = Guid.Empty, FriendlyName = "Unknown"};
     private GameProfileSlim _selectedParentProfile = new() {Id = Guid.Empty, FriendlyName = "None"};
-    private readonly GameServerCreateRequest _createRequest = new();
+    private readonly GameServerCreateRequest _createRequest = new() { Name = NameHelpers.GenerateHostname() };
     private bool _showPortConfig;
+    private const int TooltipDelay = 500;
 
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
@@ -289,6 +291,11 @@ public partial class GameServerCreateDialog : ComponentBase
 
         _rconPasswordInput = InputType.Password;
         _rconPasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    }
+
+    private void GenerateRandomName()
+    {
+        _createRequest.Name = NameHelpers.GenerateHostname();
     }
 
     private void Cancel()
