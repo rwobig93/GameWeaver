@@ -203,7 +203,7 @@
                     </MudPaper>
                     <MudPaper Elevation="10" Square="false">
                         <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ConfigSelectedForImport(files))"
-                                       Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))">
+                                       Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))" MaximumFileCount="100">
                             <ActivatorContent>
                                 <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
                                     Import Config Files

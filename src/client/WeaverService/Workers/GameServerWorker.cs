@@ -724,6 +724,14 @@ public class GameServerWorker : BackgroundService
         var deserializedServer = await ExtractGameServerFromWorkData(work);
         if (deserializedServer is null) return;
 
+        var updateGameServerResponse = await _gameServerService.Update(deserializedServer.ToUpdate());
+        if (!updateGameServerResponse.Succeeded)
+        {
+            _logger.Error("Failed to update gameserver configuration from work [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+            work.SendStatusUpdate(WeaverWorkState.Failed, "Failed to update gameserver configuration");
+            return;
+        }
+
         var foundGameServer = await _gameServerService.GetById(deserializedServer.Id);
         if (!foundGameServer.Succeeded || foundGameServer.Data is null)
         {
@@ -824,6 +832,14 @@ public class GameServerWorker : BackgroundService
     {
         var deserializedServer = await ExtractGameServerFromWorkData(work);
         if (deserializedServer is null) return;
+
+        var updateGameServerResponse = await _gameServerService.Update(deserializedServer.ToUpdate());
+        if (!updateGameServerResponse.Succeeded)
+        {
+            _logger.Error("Failed to update gameserver configuration from work [{WorkId}] of type {WorkType}", work.Id, work.TargetType);
+            work.SendStatusUpdate(WeaverWorkState.Failed, "Failed to update gameserver configuration");
+            return;
+        }
 
         var foundGameServer = await _gameServerService.GetById(deserializedServer.Id);
         if (!foundGameServer.Succeeded || foundGameServer.Data is null)

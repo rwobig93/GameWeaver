@@ -9,7 +9,7 @@ public static class NameHelpers
         Parts = [
             WordBank.Adverbs,
             WordBank.Verbs,
-            WordBank.Adjectives,
+            // WordBank.Adjectives,
             WordBank.Nouns
         ]
     };

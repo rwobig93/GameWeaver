@@ -9,60 +9,46 @@
     <DialogContent>
         <MudStack Row="false" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Stretch">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
-                <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
             </MudItem>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="px-3">
                     <MudTextField @bind-Value="_selectedGame.SteamName" Label="Game" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="GameSlim" Label="Available Games" @bind-Value="_selectedGame" Required="true"
                                      SearchFunc="@FilterGames" ToStringFunc="@(x => $"{x?.SteamName}")"/>
                 </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="px-3">
                     <MudTextField @bind-Value="_selectedOwner.Username" Label="Server Owner" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="UserBasicResponse" Label="Available Owners" @bind-Value="_selectedOwner" Required="true"
                                      SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")"/>
                 </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="px-3">
                     <MudTextField @bind-Value="_selectedHost.FriendlyName" Label="Host" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="HostSlim" Label="Available Hosts" @bind-Value="_selectedHost"
                                      SearchFunc="@FilterHosts" ToStringFunc="@(x => $"{x?.FriendlyName}")"/>
                 </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="pa-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="px-3">
                     <MudTextField @bind-Value="_selectedParentProfile.FriendlyName" Label="Inherit Configuration Profile" Variant="Variant.Outlined" Disabled="true"/>
                     <MudAutocomplete T="GameProfileSlim" Label="Available Configuration" @bind-Value="_selectedParentProfile"
                                      SearchFunc="@FilterProfiles" ToStringFunc="@(x => $"{x?.FriendlyName}")"/>
                 </MudStack>
             </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-1" Style="width: 100%">
+                <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3" Style="width: 100%">
                     <MudTextField @bind-Value="_createRequest.Name" Label="Server Name" Variant="Variant.Outlined" Disabled="false"/>
+                    <MudIconButton Color="Color.Tertiary" Size="Size.Medium" Variant="Variant.Outlined" OnClick="@GenerateRandomName" Icon="@Icons.Material.Filled.Casino" />
                 </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3">
                     <MudTextField @bind-Value="_createRequest.Password" Label="Server Password" Variant="Variant.Outlined" InputType="@_passwordInput"
                                   Adornment="Adornment.End" AdornmentIcon="@_passwordInputIcon" OnAdornmentClick="@TogglePasswordVisibility"
                                   AdornmentAriaLabel="Show Password"/>
                 </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3">
                     <MudTextField @bind-Value="_createRequest.PasswordAdmin" Label="Admin Password" Variant="Variant.Outlined" InputType="@_adminPasswordInput"
                                   Adornment="Adornment.End" AdornmentIcon="@_adminPasswordInputIcon" OnAdornmentClick="@ToggleAdminPasswordVisibility"
                                   AdornmentAriaLabel="Show Password"/>
                 </MudStack>
-            </MudPaper>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-5">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3">
                     <MudTextField @bind-Value="_createRequest.PasswordRcon" Label="RCON Password" Variant="Variant.Outlined" InputType="@_rconPasswordInput"
                                   Adornment="Adornment.End" AdornmentIcon="@_rconPasswordInputIcon" OnAdornmentClick="@ToggleRconPasswordVisibility"
                                   AdornmentAriaLabel="Show Password"/>
