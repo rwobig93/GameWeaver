@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Application.Auth;
 using Application.Auth.Default;
@@ -149,19 +150,27 @@ public static class DependencyInjection
         services.AddHttpClient(ApiConstants.Clients.GameWeaverDefault, options =>
         {
             options.BaseAddress = new Uri(configuration.GetApplicationSettings().BaseUrl);
+            options.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.9));
+            options.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-US", 0.9));
         }).ConfigureCertificateHandling(configuration);
         services.AddHttpClient(ApiConstants.Clients.GeneralWeb).ConfigureCertificateHandling(configuration);
         services.AddHttpClient(ApiConstants.Clients.SteamApiNetUnauthenticated, options =>
         {
             options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlApiNet);
+            options.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.9));
+            options.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-US", 0.9));
         }).ConfigureCertificateHandling(configuration);
         services.AddHttpClient(ApiConstants.Clients.SteamApiPoweredComUnauthenticated, options =>
         {
             options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlApiPoweredCom);
+            options.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.9));
+            options.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-US", 0.9));
         }).ConfigureCertificateHandling(configuration);
         services.AddHttpClient(ApiConstants.Clients.SteamStoreUnauthenticated, options =>
         {
             options.BaseAddress = new Uri(ApiConstants.Steam.BaseUrlStore);
+            options.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*", 0.9));
+            options.DefaultRequestHeaders.AcceptLanguage.Add(new StringWithQualityHeaderValue("en-US", 0.9));
         }).ConfigureCertificateHandling(configuration);
 
         var mailConfig = configuration.GetMailSettings();
