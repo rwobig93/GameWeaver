@@ -21,6 +21,7 @@ using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
+using GameWeaver.Components.Identity;
 using GameWeaver.Helpers;
 using GameWeaverShared.Parsers;
 using Microsoft.AspNetCore.Components.Forms;
@@ -214,7 +215,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         var isServerAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
                             await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, _gameServer.Id);
-        // Game server owner and admin gets full permissions
+        // Game server owner and admin will get full permissions
         if (_gameServer.OwnerId == _loggedInUserId || isServerAdmin)
         {
             _canViewGameServer = true;
@@ -259,11 +260,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task GetGameServerPermissions()
     {
-        var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, _gameServer.Id);
+        var assignedPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, _gameServer.Id);
         _assignedUserPermissions.Clear();
         _assignedRolePermissions.Clear();
 
-        var filteredUserPermissions = assignedServerPermissions.Data.Where(x => x.UserId != Guid.AllBitsSet).ToDisplays();
+        var filteredUserPermissions = assignedPermissions.Data.Where(x => x.UserId != Guid.AllBitsSet).ToDisplays();
         foreach (var permission in filteredUserPermissions.OrderBy(x => x.UserId))
         {
             var matchingUser = await UserService.GetByIdAsync(permission.UserId);
@@ -271,7 +272,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _assignedUserPermissions.Add(permission);
         }
 
-        var filteredRolePermissions = assignedServerPermissions.Data.Where(x => x.RoleId != Guid.AllBitsSet).ToDisplays();
+        var filteredRolePermissions = assignedPermissions.Data.Where(x => x.RoleId != Guid.AllBitsSet).ToDisplays();
         foreach (var permission in filteredRolePermissions.OrderBy(x => x.RoleId))
         {
             var matchingRole = await RoleService.GetByIdAsync(permission.RoleId);
@@ -744,11 +745,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task AddPermissions(bool isForRolesNotUsers)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters {{"GameServerId", _gameServer.Id}, {"IsForRolesNotUsers", isForRolesNotUsers}};
-        var dialog = await DialogService.ShowAsync<GameServerPermissionAddDialog>("Add Gameserver Permissions", dialogParameters, dialogOptions);
-        var dialogResult = await dialog.Result;
-        if (dialogResult is null || dialogResult.Canceled)
+        var dialogResult = await DialogService.DynamicPermissionsAddDialog("Add Gameserver Permissions", _gameServer.Id, DynamicPermissionGroup.GameServers,
+            _canPermissionServer, isForRolesNotUsers);
+        if (dialogResult.Data is null || dialogResult.Canceled)
         {
             return;
         }

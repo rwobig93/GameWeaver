@@ -1,6 +1,7 @@
 ﻿@using System.Globalization
 @using Application.Constants.Communication
 @using Application.Helpers.Runtime
+@using GameWeaver.Components.GameServer
 
 @attribute [Route(AppRouteConstants.GameServer.Hosts.View)]
 @attribute [Authorize]
@@ -11,6 +12,7 @@
     return;
 }
 
+@* General Action Button Bar *@
 <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@GoBack">Go Back
@@ -41,6 +43,7 @@
     }
 </MudPaper>
 
+@* Notifications *@
 @if (_host.IsDeleted)
 {
     <MudPaper Elevation="10" Class="d-flex flex-wrap ma-4 pa-2 gap-5 justify-center align-center mud-text-align-center">
@@ -50,6 +53,7 @@
     </MudPaper>
 }
 
+@* Realtime Host Charts / Information *@
 <MudPaper Elevation="8" Style="position: relative;" Class="ma-4 pa-4 gap-4" MaxWidth="406" MaxHeight="276" >
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
         <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Realtime</MudText>
@@ -104,6 +108,7 @@
     </MudStack>
 </MudPaper>
 
+@* General Host Information *@
 <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
         <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Info</MudText>
@@ -300,41 +305,17 @@
 @if (_canViewGameServers)
 {
     <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Gameservers On This Host</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudTable Items="@_runningGameservers" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
-                <HeaderContent>
-                    <MudTh></MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Game</MudTh>
-                    <MudTh>Modded</MudTh>
-                    <MudTh>State</MudTh>
-                    <MudTh></MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
-                    <MudTd DataLabel="Name">@context.ServerName</MudTd>
-                    <MudTd DataLabel="Game">@(_gameServerGames.FirstOrDefault(x => x.Id == context.GameId)?.FriendlyName ?? "Unknown")</MudTd>
-                    <MudTd DataLabel="Modded">@context.Modded</MudTd>
-                    <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
-                    <MudTd DataLabel="Button">
-                        @if (_viewableGameServers.Contains(context.Id))
-                        {
-                            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@(() => ViewGameServer(context.Id))" Class="rounded-lg">
-                                View
-                            </MudButton>
-                        }
-                        else
-                        {
-                            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" Disabled="true" Class="rounded-lg">
-                                No Access
-                            </MudButton>
-                        }
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudItem>
+        @if (_runningGameservers.Any())
+        {
+            <GameServerListWidget GameServers="@_runningGameservers" ViewableGameServers="@_viewableGameServers" Title="Gameservers On This Host"/>
+        }
+        else
+        {
+            <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Gameservers Are Running This Host</MudText>
+                </MudItem>
+            </MudPaper>
+        }
     </MudPaper>
 }

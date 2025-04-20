@@ -4,7 +4,7 @@
 <MudDialog Class="d-flex flex-column pa-4 justify-center my-4 mud-text-align-center"
            ContentStyle="max-height: 600px; min-width: 250px; overflow-y: scroll">
     <DialogContent>
-        @if (!_canPermissionGameServer)
+        @if (!CanPermissionEntity)
         {
             <IconWithMessageDisplay Icon="@Icons.Material.Filled.PermIdentity" Text="@ErrorMessageConstants.Permissions.NoViewPermission" />
         }

@@ -57,7 +57,7 @@
                         </MudStack>
                         <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
                             <MudTextField T="string" @bind-Value="_totpCode" Placeholder="Code Response" OnKeyDown="@(TotpSubmitCheck)" Adornment="Adornment.Start"
-                                          AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
+                                          AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0" Immediate="true"/>
                             <MudButton Color="Color.Tertiary" OnClick="@(ValidateTotpCode)" Size="Size.Medium" Variant="Variant.Outlined"
                                        StartIcon="@Icons.Material.Filled.Verified">
                                 Verify Code

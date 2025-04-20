@@ -47,6 +47,17 @@ public static class GameProfileMappers
         };
     }
 
+    public static GameProfileUpdateRequest ToUpdate(this GameProfileSlim profile)
+    {
+        return new GameProfileUpdateRequest
+        {
+            Id = profile.Id,
+            Name = profile.FriendlyName,
+            OwnerId = profile.OwnerId,
+            AllowAutoDelete = profile.AllowAutoDelete
+        };
+    }
+
     public static GameProfileCreate ToCreate(this GameProfileCreateRequest request)
     {
         return new GameProfileCreate

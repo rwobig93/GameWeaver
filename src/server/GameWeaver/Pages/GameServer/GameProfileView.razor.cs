@@ -5,10 +5,13 @@ using Application.Helpers.Auth;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Mappers.Identity;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
+using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.LocalResource;
+using Application.Models.Identity.Permission;
 using Application.Models.Integrations;
 using Application.Services.GameServer;
 using Application.Services.Integrations;
@@ -16,29 +19,33 @@ using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
+using GameWeaver.Components.Identity;
 using GameWeaver.Helpers;
 using GameWeaverShared.Parsers;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace GameWeaver.Pages.GameServer;
 
-public partial class GameView : ComponentBase
+public partial class GameProfileView : ComponentBase
 {
-    [Parameter] public Guid GameId { get; set; } = Guid.Empty;
+    [Parameter] public Guid GameProfileId { get; set; } = Guid.Empty;
 
     [Inject] public IGameService GameService { get; init; } = null!;
     [Inject] public IGameServerService GameServerService { get; init; } = null!;
-    [Inject] public IFileStorageRecordService FileStorageService { get; init; } = null!;
     [Inject] public IWebClientService WebClientService { get; init; } = null!;
     [Inject] public ISerializerService SerializerService { get; init; } = null!;
+    [Inject] public IAppUserService UserService { get; init; } = null!;
+    [Inject] public IAppRoleService RoleService { get; init; } = null!;
+    [Inject] public IAppPermissionService PermissionService { get; init; } = null!;
 
     private bool _validIdProvided = true;
     private Guid _loggedInUserId = Guid.Empty;
     private GameSlim _game = new() { Id = Guid.Empty };
+    private GameProfileSlim _gameProfile = new() { Id = Guid.Empty };
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private bool _editMode;
     private string _editButtonText = "Enable Edit Mode";
-    private List<GameServerSlim> _runningGameservers = [];
-    private List<FileStorageRecordSlim> _manualVersionFiles = [];
+    private List<GameServerSlim> _inheritingGameservers = [];
     private List<LocalResourceSlim> _localResources = [];
     private string _configSearchText = string.Empty;
     private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
@@ -48,11 +55,16 @@ public partial class GameView : ComponentBase
     private readonly List<LocalResourceSlim> _updatedLocalResources = [];
     private readonly List<LocalResourceSlim> _deletedLocalResources = [];
     private readonly List<Guid> _viewableGameServers = [];
+    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
+    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
+    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
 
-    private bool _canEditGame;
-    private bool _canConfigureGame;
+    private bool _canEditProfile;
+    private bool _canConfigureProfile;
+    private bool _canPermissionProfile;
+    private bool _canChangeOwnership;
     private bool _canViewGameServers;
-    private bool _canViewGameFiles;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -61,11 +73,13 @@ public partial class GameView : ComponentBase
         {
             if (firstRender)
             {
+                await GetViewingProfile();
                 await GetPermissions();
-                await GetViewingGame();
-                await GetGameVersionFiles();
+                await GetClientTimezone();
+                await GetGame();
                 await GetGameServers();
-                await GetGameProfileResources();
+                await GetProfileResources();
+                await GetGameProfilePermissions();
                 StateHasChanged();
             }
         }
@@ -79,15 +93,70 @@ public partial class GameView : ComponentBase
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
-        _canEditGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Update);
-        _canConfigureGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Configure);
+
+        // TODO: Game profiles will have dynamic permissions same as game servers, update service filtering and add permission components
+        var isProfileAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
+                            await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, _gameProfile.Id);
+        // Profile owner and admin will get full permissions
+        if (_gameProfile.OwnerId == _loggedInUserId || isProfileAdmin)
+        {
+            _canPermissionProfile = true;
+            _canEditProfile = true;
+            _canConfigureProfile = true;
+            _canChangeOwnership = true;
+            return;
+        }
+
+        _canEditProfile = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.GameProfile.Update,
+            DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Edit, _gameProfile.Id);
+        _canConfigureProfile = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.GameProfile.Update,
+            DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Configure, _gameProfile.Id);
+        _canPermissionProfile = await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Permission, _gameProfile.Id);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.SeeUi);
-        _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
+        // TODO: Add ownership change dialog same as a game server has
+        _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.ChangeOwnership);
     }
 
-    private async Task GetViewingGame()
+    private async Task GetClientTimezone()
     {
-        var response = await GameService.GetByIdAsync(GameId);
+        var clientTimezoneRequest = await WebClientService.GetClientTimezone();
+        if (!clientTimezoneRequest.Succeeded)
+        {
+            clientTimezoneRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById(clientTimezoneRequest.Data);
+    }
+
+    private async Task GetViewingProfile()
+    {
+        var response = await GameServerService.GetGameProfileByIdAsync(GameProfileId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        if (response.Data is null)
+        {
+            Snackbar.Add(ErrorMessageConstants.GameProfiles.NotFound);
+            _validIdProvided = false;
+            return;
+        }
+
+        _gameProfile = response.Data;
+
+        if (_gameProfile.Id == Guid.Empty)
+        {
+            _validIdProvided = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetGame()
+    {
+        var response = await GameService.GetByIdAsync(_gameProfile.GameId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -97,17 +166,10 @@ public partial class GameView : ComponentBase
         if (response.Data is null)
         {
             Snackbar.Add(ErrorMessageConstants.Games.NotFound);
-            _validIdProvided = false;
             return;
         }
 
         _game = response.Data;
-
-        if (_game.Id == Guid.Empty)
-        {
-            _validIdProvided = false;
-            StateHasChanged();
-        }
     }
 
     private async Task GetGameServers()
@@ -117,17 +179,17 @@ public partial class GameView : ComponentBase
             return;
         }
 
-        _runningGameservers = [];
-        var response = await GameServerService.GetByGameIdAsync(_game.Id, _loggedInUserId);
+        _inheritingGameservers = [];
+        var response = await GameServerService.GetByParentGameProfileIdAsync(_game.Id, _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
-        _runningGameservers = response.Data.ToList();
+        _inheritingGameservers = response.Data.ToList();
 
-        foreach (var server in _runningGameservers)
+        foreach (var server in _inheritingGameservers)
         {
             if (await CanViewGameServer(server.Id))
             {
@@ -136,7 +198,7 @@ public partial class GameView : ComponentBase
         }
     }
 
-    private async Task GetGameProfileResources()
+    private async Task GetProfileResources()
     {
         if (!_validIdProvided)
         {
@@ -155,12 +217,12 @@ public partial class GameView : ComponentBase
 
     private async Task Save()
     {
-        if (!_canConfigureGame && !_canEditGame)
+        if (!_canEditProfile)
         {
             return;
         }
 
-        var response = await GameService.UpdateAsync(_game.ToUpdate(), _loggedInUserId);
+        var response = await GameServerService.UpdateGameProfileAsync(_gameProfile.ToUpdate(), _loggedInUserId);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -225,8 +287,8 @@ public partial class GameView : ComponentBase
         _updatedLocalResources.Clear();
 
         ToggleEditMode();
-        await GetViewingGame();
-        Snackbar.Add("Game successfully updated!", Severity.Success);
+        await GetViewingProfile();
+        Snackbar.Add("Profile successfully updated!", Severity.Success);
         StateHasChanged();
     }
 
@@ -239,40 +301,7 @@ public partial class GameView : ComponentBase
 
     private void GoBack()
     {
-        NavManager.NavigateTo(AppRouteConstants.GameServer.Games.ViewAll);
-    }
-
-    private async Task ViewGameOnSteam()
-    {
-        var urlOpened = await WebClientService.OpenExternalUrl(_game.UrlSteamStorePage);
-        if (!urlOpened.Succeeded)
-        {
-            urlOpened.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-        }
-    }
-
-    private async Task ViewGameVersionFiles()
-    {
-        Snackbar.Add("This feature is currently not implemented", Severity.Warning);
-        await Task.CompletedTask;
-    }
-
-    private async Task GetGameVersionFiles()
-    {
-        if (!_canViewGameFiles && _game.SourceType == GameSource.Manual)
-        {
-            return;
-        }
-
-        _manualVersionFiles = [];
-        var response = await FileStorageService.GetByLinkedIdAsync(_game.Id);
-        if (!response.Succeeded)
-        {
-            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return;
-        }
-
-        _manualVersionFiles = response.Data.ToList();
+        NavManager.NavigateTo(AppRouteConstants.GameServer.GameProfiles.ViewAll);
     }
 
     private async Task ConfigAdd(LocalResourceSlim localResource)
@@ -843,4 +872,72 @@ public partial class GameView : ComponentBase
         }
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
     }
+
+    private async Task GetGameProfilePermissions()
+    {
+        var assignedPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameProfiles, _gameProfile.Id);
+        _assignedUserPermissions.Clear();
+        _assignedRolePermissions.Clear();
+
+        var filteredUserPermissions = assignedPermissions.Data.Where(x => x.UserId != Guid.AllBitsSet).ToDisplays();
+        foreach (var permission in filteredUserPermissions.OrderBy(x => x.UserId))
+        {
+            var matchingUser = await UserService.GetByIdAsync(permission.UserId);
+            permission.UserName = matchingUser.Data?.Username ?? "Unknown";
+            _assignedUserPermissions.Add(permission);
+        }
+
+        var filteredRolePermissions = assignedPermissions.Data.Where(x => x.RoleId != Guid.AllBitsSet).ToDisplays();
+        foreach (var permission in filteredRolePermissions.OrderBy(x => x.RoleId))
+        {
+            var matchingRole = await RoleService.GetByIdAsync(permission.RoleId);
+            permission.RoleName = matchingRole.Data?.Name ?? "Unknown";
+            _assignedRolePermissions.Add(permission);
+        }
+    }
+
+    private async Task AddPermissions(bool isForRolesNotUsers)
+    {
+        var dialogResult = await DialogService.DynamicPermissionsAddDialog("Add Profile Permissions", _gameProfile.Id, DynamicPermissionGroup.GameProfiles,
+            _canPermissionProfile, isForRolesNotUsers);
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        Snackbar.Add("Successfully updated permissions for this profile!", Severity.Success);
+        await GetGameProfilePermissions();
+    }
+
+    private async Task DeletePermissions()
+    {
+        if (_deleteRolePermissions.Count == 0 && _deleteUserPermissions.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var permission in _deleteRolePermissions)
+        {
+            var deleteRolePermResponse = await PermissionService.DeleteAsync(permission.Id, _loggedInUserId);
+            if (!deleteRolePermResponse.Succeeded)
+            {
+                deleteRolePermResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+        }
+
+        foreach (var permission in _deleteUserPermissions)
+        {
+            var deleteUserPermResponse = await PermissionService.DeleteAsync(permission.Id, _loggedInUserId);
+            if (!deleteUserPermResponse.Succeeded)
+            {
+                deleteUserPermResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+        }
+
+        Snackbar.Add("Successfully deleted permissions for this profile!", Severity.Success);
+        await GetGameProfilePermissions();
+    }
+
 }

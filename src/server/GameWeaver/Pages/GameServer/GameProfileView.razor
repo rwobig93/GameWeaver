@@ -1,10 +1,11 @@
 ﻿@using Application.Constants.GameServer
 @using Application.Constants.Identity
+@using Application.Helpers.Runtime
 @using Domain.Enums.GameServer
 @using GameWeaver.Components.GameServer
 
-@attribute [Route(AppRouteConstants.GameServer.Games.View)]
-@attribute [Authorize(PermissionConstants.GameServer.Game.Get)]
+@attribute [Route(AppRouteConstants.GameServer.GameProfiles.View)]
+@attribute [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
 
 @if (!_validIdProvided)
 {
@@ -17,7 +18,7 @@
     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@GoBack">Go Back
     </MudButton>
-    @if (_canEditGame || _canConfigureGame)
+    @if (_canEditProfile || _canConfigureProfile)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
                    OnClick="@ToggleEditMode">@_editButtonText
@@ -31,116 +32,33 @@
     }
 </MudPaper>
 
-@* Game steam information *@
-@if (_game.SourceType == GameSource.Steam)
-{
-    <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Steam Info</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_game.SteamName" Label="Steam Name" Variant="Variant.Outlined" Disabled="true"/>
-            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.RemoveRedEye" Size="Size.Small"
-                       OnClick="@ViewGameOnSteam">View On Steam
-            </MudButton>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_game.SteamGameId" Label="Steam Game Id" Variant="Variant.Outlined" Disabled="true"/>
-            <MudTextField @bind-Value="_game.SteamToolId" Label="Steam Tool Id" Variant="Variant.Outlined" Disabled="true"/>
-        </MudItem>
-    </MudPaper>
-}
-
-@* Editable Game information *@
+@* Editable Profile information *@
 <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        @if (_canEditGame && _editMode)
+        @if (_canEditProfile && _editMode)
         {
-            <MudTextField @bind-Value="_game.FriendlyName" Label="Friendly Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudTextField @bind-Value="_gameProfile.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
         }
         else
         {
-            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@_game.FriendlyName</MudText>
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@_gameProfile.FriendlyName</MudText>
         }
     </MudItem>
-    @if (!string.IsNullOrWhiteSpace(_game.UrlLogo))
-    {
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-1">
-            <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Style="width: 48%;">
-                <img src="@((MarkupString)_game.UrlLogo)" alt="Game Background Image" width="90%" class="rounded-lg"/>
-            </MudStack>
-            <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Style="width: 48%;">
-                <MudTextField @bind-Value="_game.Id" Label="Id" Variant="Variant.Outlined" Disabled="true" FullWidth="true"/>
-                <MudTextField @bind-Value="_game.SourceType" Label="Source" Variant="Variant.Outlined" Disabled="true" FullWidth="true"/>
-                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap">
-                    <MudCheckBox @bind-Value="_game.SupportsWindows" Label="Windows Support" Disabled="@(!_editMode)"/>
-                    <MudCheckBox @bind-Value="_game.SupportsLinux" Label="Linux Support" Disabled="@(!_editMode)"/>
-                    <MudCheckBox @bind-Value="_game.SupportsMac" Label="Mac Support" Disabled="@(!_editMode)"/>
-                </MudStack>
-            </MudStack>
-        </MudItem>
-    }
-    @if (_canEditGame)
+    @if (_canEditProfile)
     {
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_game.UrlWebsite" Label="Website URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_game.UrlBackground" Label="Background URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_game.UrlLogo" Label="Logo URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_game.UrlLogoSmall" Label="Small Logo URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-        </MudItem>
-    }
-    @if (_canEditGame && _game.SourceType == GameSource.Manual)
-    {
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_game.ManualFileRecordId" Label="Current Game Version Id" Variant="Variant.Outlined" Disabled="true"/>
-            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.FileOpen"
-                       OnClick="@ViewGameVersionFiles">View Game Versions
-            </MudButton>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-            <MudTextField @bind-Value="_game.ManualVersionUrlCheck" Label="Check URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-            <MudTextField @bind-Value="_game.ManualVersionUrlDownload" Label="Download URL" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+            <MudSwitch T="bool" Color="Color.Secondary" @bind-Value="_gameProfile.AllowAutoDelete" Label="Allow Auto Delete If Unused" Disabled="@(!_editMode)" />
         </MudItem>
     }
 </MudPaper>
 
-@* Manual Game File Management *@
-@if (_canViewGameFiles && _game.SourceType == GameSource.Manual)
-{
-    <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Game Versions</MudText>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudTable Items="@_manualVersionFiles" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
-                <HeaderContent>
-                    <MudTh></MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Format</MudTh>
-                    <MudTh>Version</MudTh>
-                    <MudTh>Hash</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.InsertDriveFile"/></MudTd>
-                    <MudTd DataLabel="Name">@context.FriendlyName</MudTd>
-                    <MudTd DataLabel="Format">@(context.Format.ToString())</MudTd>
-                    <MudTd DataLabel="Version">@context.Version</MudTd>
-                    <MudTd DataLabel="Hash">@context.HashSha256</MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudItem>
-    </MudPaper>
-}
-
-@* Configuration, Expert, Startup and Gameserver Tabs *@
-@if (!_canEditGame && !_canConfigureGame && !_canViewGameServers)
+@* Configuration, Expert, Startup, Permissions and Gameserver Tabs *@
+@if (!_canEditProfile && !_canConfigureProfile && !_canViewGameServers && !_canPermissionProfile)
 {
     return;
 }
 <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center">
-    @if (_canEditGame || _canConfigureGame)
+    @if (_canEditProfile || _canConfigureProfile)
     {
         <MudTabPanel Text="Config">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -167,7 +85,7 @@
                     continue;
                 }
 
-                <LocalResourceConfigWidget LocalResource="@localResource" CanEdit="@_canEditGame" EditMode="@_editMode" ConfigFilterText="@_configSearchText" 
+                <LocalResourceConfigWidget LocalResource="@localResource" CanEdit="@_canEditProfile" EditMode="@_editMode" ConfigFilterText="@_configSearchText" 
                                            ConfigUpdate="@ConfigUpdated" ConfigDelete="@ConfigDeleted" />
             }
             @if (_localResources.All(x => x.Type != ResourceType.ConfigFile))
@@ -180,7 +98,7 @@
             }
         </MudTabPanel>
     }
-    @if (_canEditGame)
+    @if (_canEditProfile)
     {
         <MudTabPanel Text="Expert">
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
@@ -267,21 +185,84 @@
             }
         </MudTabPanel>
     }
+    @if (_canPermissionProfile)
+    {
+        <MudTabPanel Text="Permissions">
+            <MudPaper Elevation="10" Class="ma-4 pa-4" Square="false">
+                <MudTable Items="@_assignedRolePermissions" @bind-SelectedItems="_deleteRolePermissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap"
+                          MultiSelection="true">
+                    <ToolBarContent>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                            <MudText>Roles with direct access to this profile</MudText>
+                            <MudSpacer/>
+                            @if (_editMode)
+                            {
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                           OnClick="@(() => AddPermissions(true))">
+                                    Add Access
+                                </MudButton>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                                           OnClick="@DeletePermissions" Disabled="@(_deleteRolePermissions.Count < 1)">
+                                    Remove Access
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Access Level</MudTh>
+                        <MudTh>Added</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
+                        <MudTd DataLabel="Name">@context.RoleName</MudTd>
+                        <MudTd DataLabel="Access Level">@context.Access</MudTd>
+                        <MudTd DataLabel="Added">@(context.CreatedOn.ConvertToLocal(_localTimeZone))</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+
+            <MudPaper Elevation="10" Class="ma-4 pa-4" Square="false">
+                <MudTable Items="@_assignedUserPermissions" @bind-SelectedItems="_deleteUserPermissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap"
+                          MultiSelection="true">
+                    <ToolBarContent>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                            <MudText>Users with direct access to this profile</MudText>
+                            <MudSpacer/>
+                            @if (_editMode)
+                            {
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                           OnClick="@(() => AddPermissions(false))">
+                                    Add Access
+                                </MudButton>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                                           OnClick="@DeletePermissions" Disabled="@(_deleteUserPermissions.Count < 1)">
+                                    Remove Access
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Access Level</MudTh>
+                        <MudTh>Added</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.VerifiedUser"/></MudTd>
+                        <MudTd DataLabel="Name">@context.UserName</MudTd>
+                        <MudTd DataLabel="Access Level">@context.Access</MudTd>
+                        <MudTd DataLabel="Added">@(context.CreatedOn.ConvertToLocal(_localTimeZone))</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
+    }
     @if (_canViewGameServers)
     {
         <MudTabPanel Text="Gameservers">
-            @if (_runningGameservers.Any())
-            {
-                <GameServerListWidget GameServers="@_runningGameservers" ViewableGameServers="@_viewableGameServers" Title="Gameservers Running This Game"/>
-            }
-            else
-            {
-                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
-                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Gameservers Are Running This Game</MudText>
-                    </MudItem>
-                </MudPaper>
-            }
+            <GameServerListWidget GameServers="@_inheritingGameservers" ViewableGameServers="@_viewableGameServers" Title="Gameservers Inheriting This Profile" />
         </MudTabPanel>
     }
 </MudTabs>

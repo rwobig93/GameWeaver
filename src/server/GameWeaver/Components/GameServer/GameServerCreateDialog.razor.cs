@@ -61,6 +61,9 @@ public partial class GameServerCreateDialog : ComponentBase
         if (firstRender)
         {
             await GetCurrentUser();
+            await UpdateUsers();
+            await UpdateGames();
+            await UpdateHosts();
             StateHasChanged();
         }
     }
@@ -72,6 +75,18 @@ public partial class GameServerCreateDialog : ComponentBase
         _selectedOwner = loggedInUser ?? new UserBasicResponse {Username = "Unknown"};
     }
 
+    private async Task UpdateUsers(string searchText = "")
+    {
+        var response = await AppUserService.SearchPaginatedAsync(searchText, 1, 100);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _users = response.Data.Where(x => x.Id != Guid.Empty && x.Id != ServerState.SystemUserId).ToResponses();
+    }
+
     private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
         if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3)
@@ -79,15 +94,20 @@ public partial class GameServerCreateDialog : ComponentBase
             return _users;
         }
 
-        var response = await AppUserService.SearchPaginatedAsync(filterText, 1, 100);
+        await UpdateUsers(filterText);
+        return _users;
+    }
+
+    private async Task UpdateGames(string searchText = "")
+    {
+        var response = await GameService.SearchPaginatedAsync(searchText, 1, 100);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return _users;
+            return;
         }
 
-        _users = response.Data.Where(x => x.Id != Guid.Empty && x.Id != ServerState.SystemUserId).ToResponses();
-        return _users;
+        _games = response.Data.ToList();
     }
 
     private async Task<IEnumerable<GameSlim>> FilterGames(string filterText, CancellationToken token)
@@ -97,15 +117,20 @@ public partial class GameServerCreateDialog : ComponentBase
             return _games;
         }
 
-        var response = await GameService.SearchPaginatedAsync(filterText, 1, 100);
+        await UpdateGames(filterText);
+        return _games;
+    }
+
+    private async Task UpdateHosts(string searchText = "")
+    {
+        var response = await HostService.SearchPaginatedAsync(searchText, 1, 100);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return _games;
+            return;
         }
 
-        _games = response.Data.ToList();
-        return _games;
+        _hosts = response.Data.ToList();
     }
 
     private async Task<IEnumerable<HostSlim>> FilterHosts(string filterText, CancellationToken token)
@@ -115,14 +140,7 @@ public partial class GameServerCreateDialog : ComponentBase
             return _hosts;
         }
 
-        var response = await HostService.SearchPaginatedAsync(filterText, 1, 100);
-        if (!response.Succeeded)
-        {
-            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-            return _hosts;
-        }
-
-        _hosts = response.Data.ToList();
+        await UpdateHosts(filterText);
         return _hosts;
     }
 

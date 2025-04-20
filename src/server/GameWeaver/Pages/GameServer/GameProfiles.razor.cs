@@ -1,20 +1,20 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Auth;
 using Application.Helpers.Runtime;
-using Application.Models.GameServer.GameServer;
+using Application.Models.GameServer.GameProfile;
 using Application.Services.GameServer;
 using Domain.Models.Identity;
 using GameWeaver.Components.GameServer;
 
 namespace GameWeaver.Pages.GameServer;
 
-public partial class GameServers : ComponentBase, IAsyncDisposable
+public partial class GameProfiles : ComponentBase
 {
     [Inject] private IGameServerService GameServerService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
 
-    private IEnumerable<GameServerSlim> _pagedData = [];
+    private IEnumerable<GameProfileSlim> _pagedData = [];
     private AppUserPreferenceFull _userPreferences = new();
     private Guid _loggedInUserId = Guid.Empty;
 
@@ -23,12 +23,8 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
     private int _totalPages = 1;
     private int _pageSize = PaginationHelpers.GetPageSizes(true).First();
     private int _currentPage = 1;
-    // private readonly string[] _orderings = null;
-    // private string _searchString = "";
-    // private List<string> _autocompleteList;
-    private Timer? _timer;
 
-    private bool _canCreateGameServers;
+    private bool _canCreateProfiles;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -37,25 +33,13 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
             await GetPermissions();
             await GetUserPreferences();
             await RefreshData();
-
-            _timer = new Timer(async _ => { await TimerDataUpdate(); }, null, 0, 1000);
         }
-    }
-
-    private async Task TimerDataUpdate()
-    {
-        if (!_pagedData.Any())
-        {
-            return;
-        }
-
-        await InvokeAsync(RefreshData);
     }
 
     private async Task GetPermissions()
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
-        _canCreateGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Create);
+        _canCreateProfiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Create);
     }
 
     private async Task GetUserPreferences()
@@ -74,7 +58,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         _pagedData = [];
         StateHasChanged();
 
-        var response = await GameServerService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize, _loggedInUserId);
+        var response = await GameServerService.SearchGameProfilesPaginatedAsync(_searchText, _currentPage, _pageSize);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -115,24 +99,37 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
         await RefreshData();
     }
 
-    private async Task CreateServer()
+    private async Task CreateProfile()
     {
-        if (!_canCreateGameServers)
+        if (!_canCreateProfiles)
         {
             return;
         }
 
         var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialog = await DialogService.ShowAsync<GameServerCreateDialog>("Create Gameserver", new DialogParameters(), dialogOptions);
+        // TODO: Create new profile dialog
+        var dialog = await DialogService.ShowAsync<GameServerCreateDialog>("Create Configuration Profile", new DialogParameters(), dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
         {
             return;
         }
 
-        var createdGameServerId = (Guid) dialogResult.Data;
-        Snackbar.Add("Successfully created new gameserver!", Severity.Success);
-        NavManager.NavigateTo(AppRouteConstants.GameServer.GameServers.ViewId(createdGameServerId));
+        var createdProfileId = (Guid) dialogResult.Data;
+        Snackbar.Add("Successfully created new configuration profile!", Severity.Success);
+        NavManager.NavigateTo(AppRouteConstants.GameServer.GameProfiles.ViewId(createdProfileId));
+    }
+
+    private async Task ImportProfiles()
+    {
+        if (!_canCreateProfiles)
+        {
+            return;
+        }
+
+        await Task.CompletedTask;
+
+        // TODO: Add import functionality
     }
 
     private async Task SearchKeyDown(KeyboardEventArgs keyArgs)
@@ -147,11 +144,5 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
     {
         await RefreshData();
         await WebClientService.InvokeScrollToTop();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        _timer?.Dispose();
-        await Task.CompletedTask;
     }
 }

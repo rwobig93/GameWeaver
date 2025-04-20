@@ -4,9 +4,6 @@ namespace Application.Constants.Identity;
 
 public static class PermissionConstants
 {
-    // Built-in Permissions are the following format: Permissions.Group.Name.Access => Permissions.Identity.Users.View
-    // Dynamic Permissions are the following format: Dynamic.Group.Id.AccessLevel => Dynamic.ServiceAccounts.<Guid>.Admin
-
     public static class Identity
     {
         public static class Users
@@ -197,11 +194,15 @@ public static class PermissionConstants
         {
             public const string GetAllPaginated = $"{ClaimConstants.Permission}.GameServer.GameProfile.GetAllPaginated";
             public const string GetCount = $"{ClaimConstants.Permission}.GameServer.GameProfile.GetCount";
+            public const string SeeUi = $"{ClaimConstants.Permission}.GameServer.GameProfile.SeeUi";
             public const string Get = $"{ClaimConstants.Permission}.GameServer.GameProfile.Get";
             public const string Create = $"{ClaimConstants.Permission}.GameServer.GameProfile.Create";
             public const string Update = $"{ClaimConstants.Permission}.GameServer.GameProfile.Update";
             public const string Delete = $"{ClaimConstants.Permission}.GameServer.GameProfile.Delete";
             public const string Search = $"{ClaimConstants.Permission}.GameServer.GameProfile.Search";
+            public const string ChangeOwnership = $"{ClaimConstants.Permission}.GameServer.Gameservers.ChangeOwnership";
+
+            public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"{ClaimConstants.DynamicPermission}.{DynamicPermissionGroup.GameProfiles}.{id}.{permission}";
         }
 
         public static class Mod

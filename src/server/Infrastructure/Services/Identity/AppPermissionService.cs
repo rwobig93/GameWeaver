@@ -136,6 +136,23 @@ public class AppPermissionService : IAppPermissionService
         }
     }
 
+    public async Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicGameProfilePermissionsAsync(Guid id)
+    {
+        try
+        {
+            var allPermissions = new List<AppPermissionCreate>();
+
+            var allGameProfilePermissions = PermissionHelpers.GetAllGameProfileDynamicPermissions(id);
+            allPermissions.AddRange(allGameProfilePermissions.ToDynamicPermissionCreates());
+
+            return await Result<IEnumerable<AppPermissionCreate>>.SuccessAsync(allPermissions);
+        }
+        catch (Exception ex)
+        {
+            return await Result<IEnumerable<AppPermissionCreate>>.FailAsync(ex.Message);
+        }
+    }
+
     public async Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedAsync()
     {
         try
@@ -537,12 +554,16 @@ public class AppPermissionService : IAppPermissionService
     {
         try
         {
-            if (createObject.UserId == Guid.Empty && createObject.RoleId == Guid.Empty)
+            if (createObject.UserId == Guid.Empty && createObject.RoleId == Guid.Empty ||
+                createObject.UserId == GuidHelpers.GetMax() && createObject.RoleId == GuidHelpers.GetMax())
+            {
                 return await Result<Guid>.FailAsync("UserId & RoleId cannot be empty, please provide a valid Id");
-            if (createObject.UserId == GuidHelpers.GetMax() && createObject.RoleId == GuidHelpers.GetMax())
-                return await Result<Guid>.FailAsync("UserId & RoleId cannot be empty, please provide a valid Id");
+            }
+
             if (createObject.UserId != GuidHelpers.GetMax() && createObject.RoleId != GuidHelpers.GetMax())
+            {
                 return await Result<Guid>.FailAsync("Each permission assignment request can only be made for a User or Role, not both at the same time");
+            }
 
             if (createObject.UserId != GuidHelpers.GetMax())
             {
@@ -558,19 +579,21 @@ public class AppPermissionService : IAppPermissionService
                     return await Result<Guid>.FailAsync("RoleId provided is invalid");
             }
 
-            if (!await CanUserDoThisAction(modifyingUserId, createObject.ClaimValue))
+            // Dynamic permissions can be granted separately based on entity and ownership permissions, all others must be validated
+            if (createObject.ClaimType != ClaimConstants.DynamicPermission && !await CanUserDoThisAction(modifyingUserId, createObject.ClaimValue))
+            {
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
+            }
 
             createObject.CreatedBy = modifyingUserId;
             createObject.CreatedOn = _dateTime.NowDatabaseTime;
-
             var createRequest = await _permissionRepository.CreateAsync(createObject);
             if (!createRequest.Succeeded)
+            {
                 return await Result<Guid>.FailAsync(createRequest.ErrorMessage);
+            }
 
-
-
-            // Queue background job to update all users w/ permission or role permission to re-auth and have the latest permissions
+            // Queue a background job to update all user sessions w/ permission or role permission to re-auth and have the latest permissions on their JWT
             _logger.Debug("Kicking off job to update {PermissionClaimValue} claim userClientId's with re-auth string to force token refresh for updated permissions",
                 createObject.ClaimValue);
             var response = createObject.UserId == GuidHelpers.GetMax() ?
@@ -605,10 +628,14 @@ public class AppPermissionService : IAppPermissionService
                 return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
             }
 
-            var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
-            if (!userCanDoAction)
+            // Dynamic permissions can be updated separately based on entity and ownership permissions, all others must be validated
+            if (foundPermission.Result.ClaimType != ClaimConstants.DynamicPermission)
             {
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
+                var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
+                if (!userCanDoAction)
+                {
+                    return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
+                }
             }
 
             updateObject.LastModifiedBy = modifyingUserId;
@@ -634,31 +661,42 @@ public class AppPermissionService : IAppPermissionService
         {
             var foundPermission = await _permissionRepository.GetByIdAsync(permissionId);
             if (!foundPermission.Succeeded || foundPermission.Result?.ClaimValue is null)
+            {
                 return await Result.FailAsync(ErrorMessageConstants.Generic.NotFound);
+            }
 
-            var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
-            if (!userCanDoAction)
-                return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
+            // Dynamic permissions can be deleted separately based on entity and ownership permissions, all others must be validated
+            if (foundPermission.Result.ClaimType != ClaimConstants.DynamicPermission)
+            {
+                var userCanDoAction = await CanUserDoThisAction(modifyingUserId, foundPermission.Result.ClaimValue);
+                if (!userCanDoAction)
+                {
+                    return await Result<Guid>.FailAsync(ErrorMessageConstants.Permissions.CannotAdministrateMissingPermission);
+                }
+            }
 
             var deleteRequest = await _permissionRepository.DeleteAsync(foundPermission.Result.Id, modifyingUserId);
             if (!deleteRequest.Succeeded)
+            {
                 return await Result.FailAsync(deleteRequest.ErrorMessage);
+            }
 
-            // Queue background job to update all users w/ permission or role permission to re-auth and have the latest permissions
+            // Dynamic permissions can be granted separately based on entity and ownership permissions, all others must be validated
             _logger.Debug("Kicking off job to update {PermissionClaimValue} claim userClientId's with re-auth string to force token refresh for updated permissions",
                 foundPermission.Result.ClaimValue);
-
             var response = foundPermission.Result.UserId == GuidHelpers.GetMax() ?
                 BackgroundJob.Enqueue(() => UpdateRoleUsersForPermissionChange(foundPermission.Result.RoleId)) :
                 BackgroundJob.Enqueue(() => UpdateUserForPermissionChange(foundPermission.Result.UserId));
 
             if (response is null)
+            {
                 await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.Permissions, permissionId,
                     "Failed to queue permission job to update users w/ new permissions to validate against clientId", new Dictionary<string, string>
                     {
                         {"Action", "Permission Change - Update Users - Delete Permission"},
                         {"PermissionId", permissionId.ToString()}
                     });
+            }
 
             return await Result.SuccessAsync();
         }

@@ -14,7 +14,7 @@
         </MudButton>
         <MudSpacer />
         <MudDivider Vertical="true"/>
-        <MudTextField T="string" @bind-Value="_searchText" Placeholder="Find a game" Adornment="Adornment.Start" Class="py-1" OnKeyDown="@SearchKeyDown"
+        <MudTextField T="string" @bind-Value="_searchText" Placeholder="Find a game" Adornment="Adornment.Start" Class="py-1" OnKeyDown="@SearchKeyDown" Immediate="true"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense"/>
         <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Outlined.Search" OnClick="@RefreshData">
             Search

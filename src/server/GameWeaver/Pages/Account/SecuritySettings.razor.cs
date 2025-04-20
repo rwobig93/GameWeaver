@@ -292,7 +292,9 @@ public partial class SecuritySettings
     private async Task TotpSubmitCheck(KeyboardEventArgs arg)
     {
         if (arg.Key == "Enter")
+        {
             await ValidateTotpCode();
+        }
     }
 
     private async Task GetClientTimezone()

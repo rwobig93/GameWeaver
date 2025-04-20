@@ -1,20 +1,22 @@
-using Application.Constants.Identity;
-using Application.Helpers.Auth;
+using Application.Constants.Communication;
 using Application.Mappers.Identity;
 using Application.Models.Identity.Permission;
 using Application.Responses.v1.Identity;
+using Domain.Contracts;
 using Domain.Enums.Identity;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.Identity;
 
-public partial class GameServerPermissionAddDialog : ComponentBase
+public partial class DynamicPermissionAddDialog : ComponentBase
 {
     [CascadingParameter] private IMudDialogInstance MudDialog { get; init; } = null!;
     [Inject] private IAppPermissionService PermissionService { get; init; } = null!;
     [Inject] private IAppRoleService RoleService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
 
-    [Parameter] public Guid GameServerId { get; set; }
+    [Parameter] public Guid EntityId { get; set; }
+    [Parameter] public DynamicPermissionGroup Group { get; set; }
+    [Parameter] public bool CanPermissionEntity { get; set; }
     [Parameter] public bool IsForRolesNotUsers { get; set; } = true;
 
     private List<RoleResponse> _availableRoles = [];
@@ -26,7 +28,6 @@ public partial class GameServerPermissionAddDialog : ComponentBase
     private List<AppPermissionCreate> _availablePermissions = [];
 
     private Guid _currentUserId;
-    private bool _canPermissionGameServer;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -36,11 +37,11 @@ public partial class GameServerPermissionAddDialog : ComponentBase
 
             if (IsForRolesNotUsers)
             {
-                await GetRoles();
+                await UpdateRoles();
             }
             else
             {
-                await GetUsers();
+                await UpdateUsers();
             }
 
             StateHasChanged();
@@ -51,19 +52,11 @@ public partial class GameServerPermissionAddDialog : ComponentBase
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _currentUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
-
-        var isServerAdmin = (await RoleService.IsUserAdminAsync(_currentUserId)).Data || await AuthorizationService.UserHasPermission(currentUser,
-            PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Admin));
-        var isServerModerator = (await RoleService.IsUserModeratorAsync(_currentUserId)).Data || await AuthorizationService.UserHasPermission(currentUser,
-            PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Moderator));
-
-        _canPermissionGameServer = isServerAdmin || isServerModerator ||
-            await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Dynamic(GameServerId, DynamicPermissionLevel.Permission));
     }
 
-    private async Task GetRoles()
+    private async Task UpdateRoles(string searchText = "")
     {
-        var rolesRequest = await RoleService.GetAllAsync();
+        var rolesRequest = await RoleService.SearchPaginatedAsync(searchText, 1, 100);
         if (!rolesRequest.Succeeded)
         {
             rolesRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -73,9 +66,9 @@ public partial class GameServerPermissionAddDialog : ComponentBase
         _availableRoles = rolesRequest.Data.ToResponses();
     }
 
-    private async Task GetUsers()
+    private async Task UpdateUsers(string searchText = "")
     {
-        var usersRequest = await UserService.GetAllAsync();
+        var usersRequest = await UserService.SearchPaginatedAsync(searchText, 1, 100);
         if (!usersRequest.Succeeded)
         {
             usersRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -93,36 +86,40 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             return;
         }
 
-        var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, GameServerId);
-        if (!assignedServerPermissions.Succeeded)
+        var assignedPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(Group, EntityId);
+        if (!assignedPermissions.Succeeded)
         {
-            assignedServerPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            assignedPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        _assignedPermissions = assignedServerPermissions.Data.Where(x => x.RoleId == _selectedRole.Id).ToList();
+        _assignedPermissions = assignedPermissions.Data.Where(x => x.RoleId == _selectedRole.Id).ToList();
 
-        var availableServerPermissions = await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(GameServerId);
-        if (!availableServerPermissions.Succeeded)
+        var availablePermissions = Group switch
         {
-            availableServerPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            DynamicPermissionGroup.ServiceAccounts => await PermissionService.GetAllAvailableDynamicServiceAccountPermissionsAsync(EntityId),
+            DynamicPermissionGroup.GameServers => await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(EntityId),
+            DynamicPermissionGroup.GameProfiles => await PermissionService.GetAllAvailableDynamicGameProfilePermissionsAsync(EntityId),
+            _ => await Result<IEnumerable<AppPermissionCreate>>.FailAsync(ErrorMessageConstants.Permissions.DynamicPermissionNotSupported)
+        };
+        if (!availablePermissions.Succeeded)
+        {
+            availablePermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        _availablePermissions = availableServerPermissions.Data.Where(x => _assignedPermissions
+
+        _availablePermissions = availablePermissions.Data.Where(x => _assignedPermissions
             .FirstOrDefault(p => p.ClaimValue == x.ClaimValue) is null).ToList();
     }
 
     private async Task<IEnumerable<RoleResponse>> FilterRoles(string filterText, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(filterText))
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3)
         {
             return _availableRoles;
         }
 
-        await Task.CompletedTask;
-
-        return _availableRoles.Where(x =>
-            x.Name.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
+        await UpdateRoles(filterText);
+        return _availableRoles;
     }
 
     private async Task SelectedUserChanged(UserBasicResponse? user)
@@ -133,36 +130,40 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             return;
         }
 
-        var assignedServerPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(DynamicPermissionGroup.GameServers, GameServerId);
-        if (!assignedServerPermissions.Succeeded)
+        var assignedPermissions = await PermissionService.GetDynamicByTypeAndNameAsync(Group, EntityId);
+        if (!assignedPermissions.Succeeded)
         {
-            assignedServerPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            assignedPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        _assignedPermissions = assignedServerPermissions.Data.Where(x => x.UserId == _selectedUser.Id).ToList();
 
-        var availableServerPermissions = await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(GameServerId);
-        if (!availableServerPermissions.Succeeded)
+        _assignedPermissions = assignedPermissions.Data.Where(x => x.UserId == _selectedUser.Id).ToList();
+        var availablePermissions = Group switch
         {
-            availableServerPermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            DynamicPermissionGroup.ServiceAccounts => await PermissionService.GetAllAvailableDynamicServiceAccountPermissionsAsync(EntityId),
+            DynamicPermissionGroup.GameServers => await PermissionService.GetAllAvailableDynamicGameServerPermissionsAsync(EntityId),
+            DynamicPermissionGroup.GameProfiles => await PermissionService.GetAllAvailableDynamicGameProfilePermissionsAsync(EntityId),
+            _ => await Result<IEnumerable<AppPermissionCreate>>.FailAsync(ErrorMessageConstants.Permissions.DynamicPermissionNotSupported)
+        };
+        if (!availablePermissions.Succeeded)
+        {
+            availablePermissions.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
-        _availablePermissions = availableServerPermissions.Data.Where(x => _assignedPermissions
+
+        _availablePermissions = availablePermissions.Data.Where(x => _assignedPermissions
             .FirstOrDefault(p => p.ClaimValue == x.ClaimValue) is null).ToList();
     }
 
     private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(filterText))
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3)
         {
             return _availableUsers;
         }
 
-        await Task.CompletedTask;
-
-        return _availableUsers.Where(x =>
-            x.Username.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
+        await UpdateUsers(filterText);
+        return _availableUsers;
     }
 
     private async Task Save()
@@ -186,11 +187,10 @@ public partial class GameServerPermissionAddDialog : ComponentBase
             }
 
             var permissionResponse = await PermissionService.CreateAsync(permission, _currentUserId);
-            if (!permissionResponse.Succeeded)
-            {
-                permissionResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
-                return;
-            }
+            if (permissionResponse.Succeeded) continue;
+
+            permissionResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
         }
 
         MudDialog.Close(DialogResult.Ok(true));

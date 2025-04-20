@@ -25,6 +25,15 @@
             </MudTooltip>
         }
 
+        @if (_canSeeGameProfilesUi)
+        {
+            <MudTooltip Text="Config Profiles" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">
+                <MudNavLink Href="@AppRouteConstants.GameServer.GameProfiles.ViewAll" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DataObject">
+                    Config Profiles
+                </MudNavLink>
+            </MudTooltip>
+        }
+
         @if (_canSeeGameServersUi)
         {
             <MudTooltip Text="Game Servers" Placement="Placement.Right" Delay="_tooltipDelay" ShowOnHover="@(!ParentLayout._userPreferences.DrawerDefaultOpen)">

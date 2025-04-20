@@ -220,6 +220,19 @@ public class GameServerService : IGameServerService
         return await Result<GameServerSlim?>.SuccessAsync(permissionFilteredGameserver.ToSlim());
     }
 
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByParentGameProfileIdAsync(Guid id, Guid requestUserId)
+    {
+        var response = await _gameServerRepository.GetByParentGameProfileIdAsync(id);
+        if (!response.Succeeded)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+
+        var accessFilteredServers = await FilterNoAccessServers(response.Result ?? [], requestUserId);
+
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
+    }
+
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id, Guid requestUserId)
     {
         var response = await _gameServerRepository.GetByHostIdAsync(id);
@@ -1400,19 +1413,22 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
         }
 
-        if (request.Name is not null)
+        if (string.IsNullOrWhiteSpace(request.Name))
         {
-            if (request.Name.Length == 0)
-            {
-                return await Result.FailAsync(ErrorMessageConstants.GameProfiles.EmptyName);
-            }
+            return await Result.FailAsync(ErrorMessageConstants.GameProfiles.EmptyName);
+        }
 
-            // Game profiles shouldn't have matching friendly names, so we'll enforce that
-            var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(request.Name);
-            if (matchingUsernameRequest.Result is not null)
-            {
-                return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
-            }
+        if (request.Name.StartsWith(GameProfileConstants.ServerProfileNamePrefix, StringComparison.InvariantCultureIgnoreCase) ||
+            request.Name.StartsWith(GameProfileConstants.GameProfileDefaultNamePrefix, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.InvalidNamePrefix);
+        }
+
+        // Game profiles shouldn't have matching friendly names, so we'll enforce that
+        var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(request.Name);
+        if (matchingUsernameRequest.Result is not null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
         }
 
         var convertedRequest = request.ToUpdate();
