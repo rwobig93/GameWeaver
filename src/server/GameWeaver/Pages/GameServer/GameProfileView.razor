@@ -24,6 +24,12 @@
                    OnClick="@ToggleEditMode">@_editButtonText
         </MudButton>
     }
+    @if (_canChangeOwnership)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Person"
+                   OnClick="@ChangeOwnership">Change Ownership
+        </MudButton>
+    }
     @if (_editMode)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 

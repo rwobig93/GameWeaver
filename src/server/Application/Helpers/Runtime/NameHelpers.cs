@@ -46,13 +46,13 @@ public static class NameHelpers
         return $"{GeneratorShort.Generate().Replace(" ", "")}{number}";
     }
 
-    public static string GenerateHostname(bool spaces = false)
+    public static string GenerateName(bool spaces = false)
     {
         var hostname = Generator.Generate();
         return spaces ? hostname : hostname.Replace(" ", "");
     }
 
-    public static string GenerateHostnameLong(bool spaces = false)
+    public static string GenerateNameLong(bool spaces = false)
     {
         var hostname = GeneratorLong.Generate();
         return spaces ? hostname : hostname.Replace(" ", "");

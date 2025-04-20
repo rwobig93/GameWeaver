@@ -18,9 +18,6 @@ namespace GameWeaver.Components.GameServer;
 public partial class GameServerCreateDialog : ComponentBase
 {
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
-    [Parameter] public string Icon { get; set; } = Icons.Material.Filled.AddToQueue;
-    [Parameter] public Color IconColor { get; set; } = Color.Success;
-    [Parameter] public Color TextColor { get; set; } = Color.Default;
     [Parameter] public string Title { get; set; } = "New Gameserver";
     [Parameter] public string ConfirmButtonText { get; set; } = "Create";
     [Parameter] public int IconWidthPixels { get; set; } = 75;
@@ -34,7 +31,6 @@ public partial class GameServerCreateDialog : ComponentBase
     [Inject] public IRunningServerState ServerState { get; init; } = null!;
 
 
-    private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
     private Guid _loggedInUserId = Guid.Empty;
     private List<UserBasicResponse> _users = [];
     private List<HostSlim> _hosts = [];
@@ -44,9 +40,8 @@ public partial class GameServerCreateDialog : ComponentBase
     private HostSlim _selectedHost = new() {Id = Guid.Empty, Hostname = "Unknown"};
     private GameSlim _selectedGame = new() {Id = Guid.Empty, FriendlyName = "Unknown"};
     private GameProfileSlim _selectedParentProfile = new() {Id = Guid.Empty, FriendlyName = "None"};
-    private readonly GameServerCreateRequest _createRequest = new() { Name = NameHelpers.GenerateHostname() };
+    private readonly GameServerCreateRequest _createRequest = new() { Name = NameHelpers.GenerateName() };
     private bool _showPortConfig;
-    private const int TooltipDelay = 500;
 
     private InputType _passwordInput = InputType.Password;
     private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
@@ -204,7 +199,7 @@ public partial class GameServerCreateDialog : ComponentBase
 
     private void GenerateRandomName()
     {
-        _createRequest.Name = NameHelpers.GenerateHostname();
+        _createRequest.Name = NameHelpers.GenerateName();
     }
 
     private void GenerateServerPassword()

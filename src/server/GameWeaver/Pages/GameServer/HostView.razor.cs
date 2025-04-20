@@ -14,6 +14,7 @@ using Application.Services.GameServer;
 using Domain.Contracts;
 using Domain.Enums.Identity;
 using GameWeaver.Components.GameServer;
+using GameWeaver.Helpers;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
@@ -309,17 +310,8 @@ public partial class HostView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogParameters = new DialogParameters
-        {
-            {"ConfirmButtonText", "Change Host Owner"},
-            {"Title", "Transfer Host Ownership"},
-            {"OwnerId", _host.OwnerId}
-        };
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-
-        var dialog = await DialogService.ShowAsync<ChangeOwnershipDialog>("Transfer Host Ownership", dialogParameters, dialogOptions);
-        var dialogResult = await dialog.Result;
-        if (dialogResult?.Data is null || dialogResult.Canceled)
+        var dialogResult = await DialogService.ChangeOwnershipDialog("Transfer Host Ownership", _host.OwnerId, "Change Host Owner");
+        if (dialogResult.Data is null || dialogResult.Canceled)
         {
             return;
         }

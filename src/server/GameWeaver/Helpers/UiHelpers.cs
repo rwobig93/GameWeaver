@@ -1,15 +1,20 @@
 ﻿using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
+using GameWeaver.Components.GameServer;
 using GameWeaver.Components.Identity;
 
 namespace GameWeaver.Helpers;
 
 public static class UiHelpers
 {
-    public static async Task<DialogResult> ConfirmDialog(this IDialogService dialogService, string title, string content)
+    public static async Task<DialogResult> ConfirmDialog(this IDialogService dialogService, string title, string content, string confirmButtonText = "Confirm",
+        string cancelButtonText = "Cancel")
     {
         var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters { {"Title", title}, {"Content", content} };
+        var dialogParameters = new DialogParameters
+        {
+            {"Title", title}, {"Content", content}, {"ConfirmText", confirmButtonText}, {"CancelText", cancelButtonText}
+        };
 
         var dialog = await dialogService.ShowAsync<ConfirmationDialog>(title, dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -40,6 +45,33 @@ public static class UiHelpers
         };
 
         var dialog = await dialogService.ShowAsync<DynamicPermissionAddDialog>(title, dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        return dialogResult ?? DialogResult.Cancel();
+    }
+
+    public static async Task<DialogResult> ChangeOwnershipDialog(this IDialogService dialogService, string title, Guid currentOwnerId, string confirmButtonText)
+    {
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters
+        {
+            {"Title", title}, {"OwnerId", currentOwnerId}, {"ConfirmButtonText", confirmButtonText}
+        };
+
+        var dialog = await dialogService.ShowAsync<ChangeOwnershipDialog>(title, dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        return dialogResult ?? DialogResult.Cancel();
+    }
+
+    public static async Task<DialogResult> CreateGameProfileDialog(this IDialogService dialogService, string confirmButtonText = "Create Profile",
+        string title = "New Configuration Profile")
+    {
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters
+        {
+            {"Title", title}, {"ConfirmButtonText", confirmButtonText}
+        };
+
+        var dialog = await dialogService.ShowAsync<GameProfileCreateDialog>(title, dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
         return dialogResult ?? DialogResult.Cancel();
     }

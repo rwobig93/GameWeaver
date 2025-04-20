@@ -1,0 +1,32 @@
+﻿@using Application.Constants.Identity
+@using Application.Models.GameServer.Game
+@using Application.Models.GameServer.GameProfile
+@using Application.Models.GameServer.Host
+@using Application.Responses.v1.Identity
+@attribute [Authorize(PermissionConstants.GameServer.Gameserver.Create)]
+
+<MudDialog Class="rounded-lg">
+    <DialogContent>
+        <MudStack Row="false" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Stretch">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+            </MudItem>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3">
+                <MudStack Justify="Justify.SpaceAround" AlignItems="AlignItems.Stretch" Row="true" Spacing="3" Class="px-3 py-0">
+                    <MudAutocomplete T="GameSlim" Label="Game" @bind-Value="_selectedGame" Required="true" Variant="Variant.Outlined" MaxItems="100" Dense="true"
+                                     SearchFunc="@FilterGames" ToStringFunc="@(x => $"{x?.FriendlyName}")"/>
+                </MudStack>
+                <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3" Style="width: 100%">
+                    <MudTextField @bind-Value="_createRequest.Name" Label="Server Name" Variant="Variant.Outlined" Disabled="false"/>
+                    <MudIconButton Color="Color.Tertiary" Size="Size.Medium" Variant="Variant.Outlined" OnClick="@GenerateRandomName" Icon="@Icons.Material.Filled.Casino" />
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex gap-4 justify-center pb-3">
+            <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@CreateGameProfile">@ConfirmButtonText</MudButton>
+            <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

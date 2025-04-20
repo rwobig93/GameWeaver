@@ -922,17 +922,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogParameters = new DialogParameters
-        {
-            {"ConfirmButtonText", "Change Gameserver Owner"},
-            {"Title", "Transfer Gameserver Ownership"},
-            {"OwnerId", _gameServer.OwnerId}
-        };
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-
-        var dialog = await DialogService.ShowAsync<ChangeOwnershipDialog>("Transfer Gameserver Ownership", dialogParameters, dialogOptions);
-        var dialogResult = await dialog.Result;
-        if (dialogResult?.Data is null || dialogResult.Canceled)
+        var dialogResult = await DialogService.ChangeOwnershipDialog("Transfer Gameserver Ownership", _gameServer.OwnerId, "Change Gameserver Owner");
+        if (dialogResult.Data is null || dialogResult.Canceled)
         {
             return;
         }

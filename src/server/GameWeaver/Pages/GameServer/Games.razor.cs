@@ -32,7 +32,6 @@ public partial class Games : ComponentBase
     {
         if (firstRender)
         {
-            // TODO: Add game import & export option which includes the profile, resources and config items
             await GetUserPreferences();
             await RefreshData();
         }

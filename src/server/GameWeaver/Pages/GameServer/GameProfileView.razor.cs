@@ -93,8 +93,8 @@ public partial class GameProfileView : ComponentBase
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
+        _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.SeeUi);
 
-        // TODO: Game profiles will have dynamic permissions same as game servers, update service filtering and add permission components
         var isProfileAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
                             await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, _gameProfile.Id);
         // Profile owner and admin will get full permissions
@@ -112,8 +112,6 @@ public partial class GameProfileView : ComponentBase
         _canConfigureProfile = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.GameProfile.Update,
             DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Configure, _gameProfile.Id);
         _canPermissionProfile = await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Permission, _gameProfile.Id);
-        _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.SeeUi);
-        // TODO: Add ownership change dialog same as a game server has
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.ChangeOwnership);
     }
 
@@ -940,4 +938,37 @@ public partial class GameProfileView : ComponentBase
         await GetGameProfilePermissions();
     }
 
+    private async Task ChangeOwnership()
+    {
+        if (!_canChangeOwnership)
+        {
+            return;
+        }
+
+        var dialogResult = await DialogService.ChangeOwnershipDialog("Transfer Profile Ownership", _gameProfile.OwnerId, "Change Profile Owner");
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var responseOwnerId = (Guid) dialogResult.Data;
+        if (_gameProfile.OwnerId == responseOwnerId)
+        {
+            Snackbar.Add("Selected owner is already the owner, everything is as it was", Severity.Info);
+            return;
+        }
+
+        var updateRequest = _gameProfile.ToUpdate();
+        updateRequest.OwnerId = responseOwnerId;
+
+        var response = await GameServerService.UpdateGameProfileAsync(updateRequest, _loggedInUserId);
+        if (!response.Succeeded)
+        {
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Successfully transferred ownership!", Severity.Success);
+        GoBack();
+    }
 }

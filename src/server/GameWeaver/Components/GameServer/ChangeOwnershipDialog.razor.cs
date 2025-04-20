@@ -28,16 +28,16 @@ public partial class ChangeOwnershipDialog : ComponentBase
     {
         if (firstRender)
         {
-            await GetAllUsers();
-            GetCurrentOwner();
+            await UpdateUsers();
+            await UpdateCurrentOwner();
 
             StateHasChanged();
         }
     }
 
-    private async Task GetAllUsers()
+    private async Task UpdateUsers(string searchText = "")
     {
-        var response = await AppUserService.GetAllAsync();
+        var response = await AppUserService.SearchPaginatedAsync(searchText, 1, 100);
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -47,35 +47,33 @@ public partial class ChangeOwnershipDialog : ComponentBase
         _users = response.Data.ToResponses();
     }
 
-    private void GetCurrentOwner()
+    private async Task UpdateCurrentOwner()
     {
-        if (_users.Count == 0)
+        var response = await AppUserService.GetByIdAsync(OwnerId);
+        if (!response.Succeeded)
         {
-            return;
+            response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
         }
 
-        _currentOwner = _users.FirstOrDefault(x => x.Id == OwnerId) ?? new UserBasicResponse { Username = "Unknown" };
+        _currentOwner = response.Data?.ToResponse() ?? new UserBasicResponse { Username = "Unknown" };
     }
 
     private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)
     {
-        if (string.IsNullOrWhiteSpace(filterText))
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3)
         {
             return _users;
         }
 
-        await Task.CompletedTask;
-
-        return _users.Where(x =>
-            x.Username.Contains(filterText, StringComparison.InvariantCultureIgnoreCase) ||
-            x.Id.ToString().Contains(filterText, StringComparison.InvariantCultureIgnoreCase));
+        await UpdateUsers(filterText);
+        return _users;
     }
 
     private void Confirm()
     {
         if (_selectedUser is null)
         {
-            Snackbar.Add("Host must have an assigned owner", Severity.Error);
+            Snackbar.Add("An owner hasn't been selected but one is required", Severity.Error);
             return;
         }
 
