@@ -1,4 +1,6 @@
-﻿namespace Application.Constants.Communication;
+﻿using Application.Constants.GameServer;
+
+namespace Application.Constants.Communication;
 
 public static class ErrorMessageConstants
 {
@@ -80,6 +82,8 @@ public static class ErrorMessageConstants
         public const string AssignedGameServers = "Game profile is assigned to game servers, unable to delete the profile without removing the assignments";
         public const string NoStartupResources =
             "Game profile currently doesn't have any startup local resources, at least one startup resource must be available to start a game server";
+        public const string InvalidNamePrefix = $"Game profiles cannot be created using one of the reserved name prefixes: '{GameProfileConstants.ServerProfileNamePrefix}' or" +
+                                          $" '{GameProfileConstants.GameProfileDefaultNamePrefix}'";
     }
 
     public static class Games

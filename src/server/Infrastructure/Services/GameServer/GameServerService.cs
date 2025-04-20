@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.GameServer;
 using Application.Constants.Lifecycle;
 using Application.Helpers.GameServer;
 using Application.Helpers.Lifecycle;
@@ -343,7 +344,7 @@ public class GameServerService : IGameServerService
 
         var createdGameProfile = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
-            FriendlyName = $"Server Profile - {request.ServerName}",
+            FriendlyName = $"{GameProfileConstants.ServerProfileNamePrefix} {request.ServerName}",
             OwnerId = request.OwnerId,
             GameId = foundGame.Result.Id,
             CreatedBy = requestUserId,
@@ -1350,9 +1351,19 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreateRequest request, Guid requestUserId)
     {
+        var convertedRequest = request.ToCreate();
+        convertedRequest.CreatedBy = requestUserId;
+        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+
         if (string.IsNullOrWhiteSpace(request.Name))
         {
-            request.Name = $"Profile - {Guid.NewGuid()}";
+            convertedRequest.FriendlyName = $"{GameProfileConstants.EmptyProfileNamePrefix} {convertedRequest.Id}";
+        }
+
+        if (convertedRequest.FriendlyName.StartsWith(GameProfileConstants.ServerProfileNamePrefix, StringComparison.InvariantCultureIgnoreCase) ||
+            convertedRequest.FriendlyName.StartsWith(GameProfileConstants.GameProfileDefaultNamePrefix, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.InvalidNamePrefix);
         }
 
         // Game profiles shouldn't have matching friendly names, so we'll enforce that
@@ -1361,10 +1372,6 @@ public class GameServerService : IGameServerService
         {
             request.Name = $"{request.Name} - {Guid.NewGuid()}";
         }
-
-        var convertedRequest = request.ToCreate();
-        convertedRequest.CreatedBy = requestUserId;
-        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
 
         var profileCreate = await _gameServerRepository.CreateGameProfileAsync(convertedRequest);
         if (!profileCreate.Succeeded)

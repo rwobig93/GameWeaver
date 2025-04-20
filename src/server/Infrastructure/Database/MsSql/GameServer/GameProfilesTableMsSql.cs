@@ -22,6 +22,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                     [FriendlyName] NVARCHAR(128) NOT NULL,
                     [OwnerId] UNIQUEIDENTIFIER NOT NULL,
                     [GameId] UNIQUEIDENTIFIER NOT NULL,
+                    [AllowAutoDelete] BIT NOT NULL,
                     [CreatedBy] UNIQUEIDENTIFIER NOT NULL,
                     [CreatedOn] datetime2 NOT NULL,
                     [LastModifiedBy] UNIQUEIDENTIFIER NULL,
@@ -155,6 +156,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @FriendlyName NVARCHAR(128),
                 @OwnerId UNIQUEIDENTIFIER,
                 @GameId UNIQUEIDENTIFIER,
+                @AllowAutoDelete BIT,
                 @CreatedBy UNIQUEIDENTIFIER,
                 @CreatedOn datetime2,
                 @LastModifiedBy UNIQUEIDENTIFIER,
@@ -163,9 +165,9 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @DeletedOn datetime2
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Id, FriendlyName, OwnerId, GameId, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
+                INSERT into dbo.[{Table.TableName}] (Id, FriendlyName, OwnerId, GameId, AllowAutoDelete, CreatedBy, CreatedOn, LastModifiedBy, LastModifiedOn, IsDeleted, DeletedOn)
                 OUTPUT INSERTED.Id
-                VALUES (@Id, @FriendlyName, @OwnerId, @GameId, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
+                VALUES (@Id, @FriendlyName, @OwnerId, @GameId, @AllowAutoDelete, @CreatedBy, @CreatedOn, @LastModifiedBy, @LastModifiedOn, @IsDeleted, @DeletedOn);
             end"
     };
 
@@ -223,6 +225,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
                 @FriendlyName NVARCHAR(128) = null,
                 @OwnerId UNIQUEIDENTIFIER = null,
                 @GameId UNIQUEIDENTIFIER = null,
+                @AllowAutoDelete BIT = null,
                 @CreatedBy UNIQUEIDENTIFIER = null,
                 @CreatedOn datetime2 = null,
                 @LastModifiedBy UNIQUEIDENTIFIER = null,
@@ -233,7 +236,7 @@ public class GameProfilesTableMsSql : IMsSqlEnforcedEntity
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET FriendlyName = COALESCE(@FriendlyName, FriendlyName), OwnerId = COALESCE(@OwnerId, OwnerId), GameId = COALESCE(@GameId, GameId),
-                    CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
+                    AllowAutoDelete = COALESCE(@AllowAutoDelete, AllowAutoDelete),CreatedBy = COALESCE(@CreatedBy, CreatedBy), CreatedOn = COALESCE(@CreatedOn, CreatedOn),
                     LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy), LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn),
                     IsDeleted = COALESCE(@IsDeleted, IsDeleted), DeletedOn = COALESCE(@DeletedOn, DeletedOn)
                 WHERE Id = @Id;

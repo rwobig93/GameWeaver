@@ -5,4 +5,5 @@ public class GameProfileUpdateRequest
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public Guid? OwnerId { get; set; }
+    public bool? AllowAutoDelete { get; set; }
 }

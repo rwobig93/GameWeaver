@@ -14,6 +14,7 @@ public static class GameProfileMappers
             FriendlyName = gameProfileDb.FriendlyName,
             OwnerId = gameProfileDb.OwnerId,
             GameId = gameProfileDb.GameId,
+            AllowAutoDelete = gameProfileDb.AllowAutoDelete,
             CreatedBy = gameProfileDb.CreatedBy,
             CreatedOn = gameProfileDb.CreatedOn,
             LastModifiedBy = gameProfileDb.LastModifiedBy,
@@ -36,6 +37,7 @@ public static class GameProfileMappers
             FriendlyName = gameProfileDb.FriendlyName,
             OwnerId = gameProfileDb.OwnerId,
             GameId = gameProfileDb.GameId,
+            AllowAutoDelete = gameProfileDb.AllowAutoDelete,
             CreatedBy = gameProfileDb.CreatedBy,
             CreatedOn = gameProfileDb.CreatedOn,
             LastModifiedBy = gameProfileDb.LastModifiedBy,
@@ -61,7 +63,8 @@ public static class GameProfileMappers
         {
             Id = request.Id,
             FriendlyName = request.Name,
-            OwnerId = request.OwnerId
+            OwnerId = request.OwnerId,
+            AllowAutoDelete = request.AllowAutoDelete
         };
     }
 }

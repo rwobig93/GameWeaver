@@ -153,6 +153,13 @@ public class JobManager : IJobManager
         var allGames = await _gameRepository.GetAllAsync();
         foreach (var gameProfile in allGameProfiles.Result?.ToList() ?? [])
         {
+            if (!gameProfile.AllowAutoDelete)
+            {
+                _logger.Debug("{LogPrefix} Game profile doesn't allow auto delete, skipping: [{GameProfileId}]{GameProfileName}",
+                    DataConstants.Logging.JobDailyCleanup, gameProfile.Id, gameProfile.FriendlyName);
+                continue;
+            }
+
             var assignedServer = allGameServers.Result?.FirstOrDefault(x => x.GameProfileId == gameProfile.Id || x.ParentGameProfileId == gameProfile.Id);
             var assignedGame = allGames.Result?.FirstOrDefault(x => x.DefaultGameProfileId == gameProfile.Id);
             if (assignedServer is not null || assignedGame is not null)
