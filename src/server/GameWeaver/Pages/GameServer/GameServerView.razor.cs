@@ -985,6 +985,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         Snackbar.Add("Launched steam connect to server command successfully! Have fun!", Severity.Success);
     }
+
     private void ViewParentProfile()
     {
         if (_parentProfile is null || _parentProfile.Id == Guid.Empty)
@@ -1241,6 +1242,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 _availableParentProfiles = [];
                 return [];
             }
+
+            _availableParentProfiles = response.Data.ToList();
         }
 
         if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3 || _game.Id == Guid.Empty)
