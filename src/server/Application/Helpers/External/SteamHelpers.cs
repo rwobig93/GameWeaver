@@ -32,4 +32,10 @@ public static class SteamHelpers
 
         return $"steam://connect/{serverIp}:{serverPort}";
     }
+
+    public static string InstallGameUri(int gameId)
+    {
+        // SEE: https://developer.valvesoftware.com/wiki/Steam_browser_protocol
+        return $"steam://install/{gameId}";
+    }
 }

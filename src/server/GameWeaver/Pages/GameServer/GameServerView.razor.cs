@@ -983,7 +983,19 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        Snackbar.Add("Launched steam connect to server command successfully! Have fun!", Severity.Success);
+        Snackbar.Add("Ran steam connect to server command successfully! Have fun!", Severity.Success);
+    }
+
+    private async Task InstallGameFromSteam()
+    {
+        var urlOpened = await WebClientService.OpenExternalUrl(SteamHelpers.InstallGameUri(_game.SteamGameId));
+        if (!urlOpened.Succeeded)
+        {
+            urlOpened.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Ran steam install command successfully!", Severity.Success);
     }
 
     private void ViewParentProfile()
