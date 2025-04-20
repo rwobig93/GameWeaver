@@ -1,0 +1,28 @@
+﻿
+@attribute [AllowAnonymous]
+
+<MudDialog Class="pa-4 justify-center my-4 mud-text-align-center">
+    <DialogContent>
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudGrid Class="d-flex flex-column ma-4">
+                @if (!string.IsNullOrWhiteSpace(Icon))
+                {
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
+                        <MudIcon Icon="@Icon" Color="Color.Primary" Size="Size.Large" Style="@StyleString"/>
+                    </MudItem>
+                }
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center pa-4">
+                    <MudText Style="white-space: pre-wrap;" Align="Align.Center">@Content</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex gap-4 justify-center pb-3">
+            <MudButton Color="Color.Success" OnClick="@Confirm">@ButtonText</MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

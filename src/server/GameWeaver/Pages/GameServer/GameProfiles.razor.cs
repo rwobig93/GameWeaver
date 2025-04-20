@@ -1,17 +1,13 @@
-﻿using System.Xml.Linq;
-using Application.Constants.Communication;
-using Application.Constants.GameServer;
-using Application.Constants.Identity;
+﻿using Application.Constants.Identity;
 using Application.Helpers.Auth;
-using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
+using Application.Mappers.GameServer;
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
-using Application.Models.GameServer.LocalResource;
+using Application.Requests.GameServer.GameProfile;
 using Application.Services.GameServer;
 using Domain.Models.Identity;
 using GameWeaver.Helpers;
-using GameWeaverShared.Parsers;
-using Infrastructure.Services.System;
 using Microsoft.AspNetCore.Components.Forms;
 
 namespace GameWeaver.Pages.GameServer;
@@ -19,6 +15,7 @@ namespace GameWeaver.Pages.GameServer;
 public partial class GameProfiles : ComponentBase
 {
     [Inject] private IGameServerService GameServerService { get; init; } = null!;
+    [Inject] private IGameService GameService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private ISerializerService SerializerService { get; init; } = null!;
@@ -229,29 +226,98 @@ public partial class GameProfiles : ComponentBase
                 if (deleteResponse.Succeeded) continue;
 
                 errors.AddRange(deleteResponse.Messages);
-                continue;
             }
         }
 
-        // foreach (var profile in profilesToCreate)
-        // {
-        //     // TODO: Create profile, add to errors if failed, add to createdProfiles if successful, add mapper for export to create request
-        //     var createResponse = await GameServerService.CreateGameProfileAsync(profile, _loggedInUserId);
-        //     if (createResponse.Succeeded)
-        //     {
-        //         createdProfiles.Add(createResponse.Data);
-        //         continue;
-        //     }
-        //
-        //     errors.AddRange(createResponse.Messages);
-        //     continue;
-        // }
+        foreach (var profile in profilesToCreate)
+        {
+            await CreateGameProfileResourcesAndConfig(profile, errors, createdProfiles);
+        }
+
+        if (errors.Count > 0)
+        {
+            var errorContent = $"The following errors occurred while importing profiles:{Environment.NewLine}{Environment.NewLine}" +
+                               $"{string.Join(Environment.NewLine, errors)}{Environment.NewLine}";
+            await DialogService.MessageDialog("Profile Import Errors", errorContent);
+        }
 
         if (createdProfiles.Count == 0)
         {
+            Snackbar.Add($"No profiles were imported", Severity.Info);
             return;
         }
+
         Snackbar.Add($"Successfully imported {createdProfiles.Count} profile(s)", Severity.Success);
+    }
+
+    private async Task CreateGameProfileResourcesAndConfig(GameProfileExport profile, List<string> errors, List<Guid> createdProfiles)
+    {
+        var profileCreateRequest = profile.ToCreateRequest();
+        GameSlim matchingGame;
+
+        var gameIdIsSteam = int.TryParse(profile.GameId, out var steamId);
+        if (gameIdIsSteam)
+        {
+            var steamGameResponse = await GameService.GetBySteamToolIdAsync(steamId);
+            if (!steamGameResponse.Succeeded || steamGameResponse.Data is null)
+            {
+                errors.AddRange(steamGameResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                return;
+            }
+            matchingGame = steamGameResponse.Data;
+        }
+        else
+        {
+            var manualGameResponse = await GameService.GetByFriendlyNameAsync(profile.GameId);
+            if (!manualGameResponse.Succeeded || manualGameResponse.Data is null)
+            {
+                errors.AddRange(manualGameResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                return;
+            }
+            matchingGame = manualGameResponse.Data;
+        }
+
+        profileCreateRequest.GameId = matchingGame.Id;
+        profileCreateRequest.OwnerId = _loggedInUserId;
+        var createProfileResponse = await GameServerService.CreateGameProfileAsync(profileCreateRequest, _loggedInUserId);
+        if (!createProfileResponse.Succeeded)
+        {
+            errors.AddRange(createProfileResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+            return;
+        }
+
+        if (!profile.AllowAutoDelete)
+        {
+            var updateAutoDeleteResponse = await GameServerService.UpdateGameProfileAsync(new GameProfileUpdateRequest
+            { Id = createProfileResponse.Data, AllowAutoDelete = profile.AllowAutoDelete }, _loggedInUserId);
+            if (!updateAutoDeleteResponse.Succeeded)
+            {
+                errors.AddRange(updateAutoDeleteResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+            }
+        }
+
+        createdProfiles.Add(createProfileResponse.Data);
+        foreach (var resource in profile.Resources)
+        {
+            var resourceCreateRequest = resource.ToCreate();
+            resourceCreateRequest.GameProfileId = createProfileResponse.Data;
+            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
+            if (!createResourceResponse.Succeeded)
+            {
+                errors.AddRange(createResourceResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                continue;
+            }
+
+            foreach (var configCreateRequest in resource.Configuration.Select(configItem => configItem.ToCreate()))
+            {
+                configCreateRequest.LocalResourceId = createResourceResponse.Data;
+                var createConfigResponse = await GameServerService.CreateConfigurationItemAsync(configCreateRequest, _loggedInUserId);
+                if (!createConfigResponse.Succeeded)
+                {
+                    errors.AddRange(createConfigResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                }
+            }
+        }
     }
 
     private async Task SearchKeyDown(KeyboardEventArgs keyArgs)

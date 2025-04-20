@@ -1,5 +1,4 @@
 using Application.Models.GameServer.LocalResource;
-using Domain.Enums.GameServer;
 
 namespace Application.Models.GameServer.GameProfile;
 

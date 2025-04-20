@@ -13,7 +13,6 @@ using Application.Responses.v1.Identity;
 using Application.Services.GameServer;
 using Domain.Contracts;
 using Domain.Enums.Identity;
-using GameWeaver.Components.GameServer;
 using GameWeaver.Helpers;
 
 #pragma warning disable CS0618 // Type or member is obsolete

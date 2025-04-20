@@ -223,4 +223,21 @@ public static class LocalResourceMappers
             Name = resource.Name
         };
     }
+
+    public static LocalResourceCreate ToCreate(this LocalResourceExport resource)
+    {
+        return new LocalResourceCreate
+        {
+            Name = resource.Name,
+            PathWindows = resource.PathWindows,
+            PathLinux = resource.PathLinux,
+            PathMac = resource.PathMac,
+            Startup = resource.Startup,
+            StartupPriority = resource.StartupPriority,
+            Type = resource.Type,
+            ContentType = resource.ContentType,
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting
+        };
+    }
 }

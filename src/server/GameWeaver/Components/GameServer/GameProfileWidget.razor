@@ -1,5 +1,4 @@
-﻿@using Application.Helpers.GameServer
-<MudPaper Class="@($"{_cssBorderBase}{_cssBorderStatus}")" Width="@Width" Height="@Height" Elevation="8"
+﻿<MudPaper Class="@($"{_cssBorderBase}{_cssBorderStatus}")" Width="@Width" Height="@Height" Elevation="8"
           Style="background-color: var(--mud-palette-surface); cursor: pointer; position: relative;" @onclick="ViewProfile">
     <div style="position: absolute; width: 100%; height: 100%;" class="z-0 rounded-lg darken-content">
         <img src="@(_game.UrlLogo)" width="100%" height="100%" alt="Game Cover" class="z-0 rounded-lg"

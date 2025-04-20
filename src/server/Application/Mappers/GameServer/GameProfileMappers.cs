@@ -78,4 +78,12 @@ public static class GameProfileMappers
             AllowAutoDelete = request.AllowAutoDelete
         };
     }
+
+    public static GameProfileCreateRequest ToCreateRequest(this GameProfileExport profile)
+    {
+        return new GameProfileCreateRequest
+        {
+            Name = profile.Name
+        };
+    }
 }

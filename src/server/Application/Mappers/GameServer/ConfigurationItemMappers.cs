@@ -150,4 +150,17 @@ public static class ConfigurationItemMappers
             FriendlyName = configItem.FriendlyName
         };
     }
+
+    public static ConfigurationItemCreate ToCreate(this ConfigurationItemExport configItem)
+    {
+        return new ConfigurationItemCreate
+        {
+            DuplicateKey = configItem.DuplicateKey,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
+        };
+    }
 }

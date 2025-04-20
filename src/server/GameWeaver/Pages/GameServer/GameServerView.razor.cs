@@ -2,6 +2,7 @@
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Auth;
+using Application.Helpers.External;
 using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
@@ -21,7 +22,6 @@ using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
 using GameWeaver.Components.GameServer;
-using GameWeaver.Components.Identity;
 using GameWeaver.Helpers;
 using GameWeaverShared.Parsers;
 using Microsoft.AspNetCore.Components.Forms;
@@ -70,6 +70,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
     private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
     private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
+    private List<GameProfileSlim>? _availableParentProfiles;
 
     private bool _canViewGameServer;
     private bool _canPermissionServer;
@@ -150,6 +151,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         if (_gameServer.ParentGameProfileId is null)
         {
+            _parentProfile = new GameProfileSlim { Id = Guid.Empty, FriendlyName = "None" };
             return;
         }
 
@@ -293,6 +295,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         {
             Snackbar.Add("The host for this gameserver is currently offline, changes will occur once the host is online again", Severity.Error);
             StateHasChanged();
+        }
+
+        if (_parentProfile is null || _parentProfile?.Id == Guid.Empty)
+        {
+            _gameServer.ParentGameProfileId = null;
         }
 
         var response = await GameServerService.UpdateAsync(_gameServer.ToUpdate(), _loggedInUserId);
@@ -967,6 +974,27 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         NavManager.NavigateTo(AppRouteConstants.GameServer.Hosts.ViewId(_host.Id));
     }
 
+    private async Task ConnectToServer()
+    {
+        var urlOpened = await WebClientService.OpenExternalUrl(SteamHelpers.ConnectToServerUri(_gameServer.PublicIp, _gameServer.PortGame, _gameServer.Password));
+        if (!urlOpened.Succeeded)
+        {
+            urlOpened.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add("Launched steam connect to server command successfully! Have fun!", Severity.Success);
+    }
+    private void ViewParentProfile()
+    {
+        if (_parentProfile is null || _parentProfile.Id == Guid.Empty)
+        {
+            return;
+        }
+
+        NavManager.NavigateTo(AppRouteConstants.GameServer.GameProfiles.ViewId(_parentProfile.Id));
+    }
+
     private async Task OpenScriptInEditor(LocalResourceSlim resource)
     {
         if (resource.Type != ResourceType.ScriptFile)
@@ -1200,6 +1228,28 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
+    }
+
+    private async Task<IEnumerable<GameProfileSlim>> FilterProfiles(string filterText, CancellationToken token)
+    {
+        if (_availableParentProfiles is null)
+        {
+            var response = await GameServerService.GetGameProfilesByGameIdAsync(_game.Id);
+            if (!response.Succeeded)
+            {
+                response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                _availableParentProfiles = [];
+                return [];
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(filterText) || filterText.Length < 3 || _game.Id == Guid.Empty)
+        {
+            return _availableParentProfiles?.Take(100) ?? [];
+        }
+
+        // The default game profile for each game is always inherited from, and we shouldn't be able to assign to the server profile, so we won't allow double inheritance
+        return _availableParentProfiles?.Where(x => x.Id != _game.DefaultGameProfileId && x.Id != _gameServer.GameProfileId).ToList() ?? [];
     }
 
     private async Task<TableData<NotifyRecordSlim>> ServerEventsReload(TableState state, CancellationToken token)

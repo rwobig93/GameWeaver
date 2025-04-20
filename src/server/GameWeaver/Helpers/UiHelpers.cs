@@ -75,4 +75,19 @@ public static class UiHelpers
         var dialogResult = await dialog.Result;
         return dialogResult ?? DialogResult.Cancel();
     }
+
+    public static async Task<DialogResult> MessageDialog(this IDialogService dialogService, string title, string content, string buttonText = "Got it", string? icon = null,
+        Color iconColor = Color.Info, Color textColor = Color.Default, int iconWidthPx = 75, int iconHeightPx = 75)
+    {
+        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogParameters = new DialogParameters
+        {
+            {"Title", title}, {"Content", content}, {"ButtonText", buttonText}, {"Icon", icon}, {"IconColor", iconColor}, {"TextColor", textColor},
+            {"IconWidthPixels", iconWidthPx}, {"IconHeightPixels", iconHeightPx}
+        };
+
+        var dialog = await dialogService.ShowAsync<ConfirmationDialog>(title, dialogParameters, dialogOptions);
+        var dialogResult = await dialog.Result;
+        return dialogResult ?? DialogResult.Cancel();
+    }
 }
