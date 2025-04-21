@@ -1,4 +1,5 @@
-﻿using System.Xml.Linq;
+﻿using System.Text;
+using System.Xml.Linq;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Auth;
@@ -1241,6 +1242,31 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
+    }
+
+    private async Task ExportServerConfig()
+    {
+
+        var profileExport = new GameProfileExport
+        {
+            Name = $"{_gameServer.ServerName} Profile",
+            GameId = _game.SourceType is GameSource.Steam ? _game.SteamToolId.ToString() : _game.FriendlyName,
+            AllowAutoDelete = true,
+            Resources = []
+        };
+        foreach (var resource in _localResources)
+        {
+            var resourceExport = resource.ToExport();
+            resourceExport.Configuration = resource.ConfigSets.Select(x => x.ToExport()).ToList();
+            profileExport.Resources.Add(resourceExport);
+        }
+
+        var serializedProfile = SerializerService.SerializeJson(profileExport);
+        var convertedSerializedProfile = Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedProfile));
+        var profileExportName = $"{FileHelpers.SanitizeSecureFilename(profileExport.Name)}.json";
+        await WebClientService.InvokeFileDownload(convertedSerializedProfile, profileExportName, DataConstants.MimeTypes.Json);
+
+        Snackbar.Add($"Successfully Exported Configuration: {profileExportName}");
     }
 
     private async Task<IEnumerable<GameProfileSlim>> FilterProfiles(string filterText, CancellationToken token)

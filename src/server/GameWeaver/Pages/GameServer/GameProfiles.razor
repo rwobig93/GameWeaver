@@ -8,17 +8,19 @@
     <MudContainer Class="d-flex flex-row gap-3">
         @if (_canCreateProfiles)
         {
-            <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@CreateProfile">
-                Create
-            </MudButton>
-            <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ProfilesSelectedForImport(files))"
-                           Accept=".json" MaximumFileCount="100">
-                <ActivatorContent>
-                    <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.UploadFile">
-                        Import
-                    </MudButton>
-                </ActivatorContent>
-            </MudFileUpload>
+            <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.Center" Spacing="2" Wrap="Wrap.NoWrap">
+                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@CreateProfile">
+                    Create
+                </MudButton>
+                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ProfilesSelectedForImport(files))"
+                               Accept=".json" MaximumFileCount="100">
+                    <ActivatorContent>
+                        <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.UploadFile">
+                            Import
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+            </MudStack>
             <MudSpacer/>
             <MudDivider Vertical="true"/>
         }

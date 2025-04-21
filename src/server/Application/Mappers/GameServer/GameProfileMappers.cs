@@ -86,4 +86,15 @@ public static class GameProfileMappers
             Name = profile.Name
         };
     }
+
+    public static GameProfileExport ToExport(this GameProfileSlim profile, string gameId)
+    {
+        return new GameProfileExport
+        {
+            Name = profile.FriendlyName,
+            GameId = gameId,
+            AllowAutoDelete = profile.AllowAutoDelete,
+            Resources = []
+        };
+    }
 }

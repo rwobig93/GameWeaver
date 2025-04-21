@@ -163,4 +163,18 @@ public static class ConfigurationItemMappers
             FriendlyName = configItem.FriendlyName
         };
     }
+
+    public static ConfigurationItemExport ToExport(this ConfigurationItemSlim configItem)
+    {
+        return new ConfigurationItemExport
+        {
+            DuplicateKey = configItem.DuplicateKey,
+            Ignore = configItem.Ignore,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
+        };
+    }
 }

@@ -240,4 +240,22 @@ public static class LocalResourceMappers
             LoadExisting = resource.LoadExisting
         };
     }
+
+    public static LocalResourceExport ToExport(this LocalResourceSlim resource)
+    {
+        return new LocalResourceExport
+        {
+            Name = resource.Name,
+            PathWindows = resource.PathWindows,
+            PathLinux = resource.PathLinux,
+            PathMac = resource.PathMac,
+            Startup = resource.Startup,
+            StartupPriority = resource.StartupPriority,
+            Type = resource.Type,
+            ContentType = resource.ContentType,
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting,
+            Configuration = []
+        };
+    }
 }

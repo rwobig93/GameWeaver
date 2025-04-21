@@ -763,6 +763,8 @@ public partial class GameProfileView : ComponentBase
 
     private async Task ConfigSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
     {
+        // TODO: Export looks good, import isn't pulling in any data but is being created
+        // TODO: Add delete button and permission check on game profile view page
         if (importFiles is null || !importFiles.Any())
         {
             return;
@@ -866,6 +868,23 @@ public partial class GameProfileView : ComponentBase
             return;
         }
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
+    }
+
+    private async Task ExportProfile()
+    {
+        var profileExport = _gameProfile.ToExport(_game.SourceType is GameSource.Steam ? _game.SteamToolId.ToString() : _game.FriendlyName);
+        foreach (var resource in _localResources)
+        {
+            var resourceExport = resource.ToExport();
+            resourceExport.Configuration = resource.ConfigSets.Select(x => x.ToExport()).ToList();
+            profileExport.Resources.Add(resourceExport);
+        }
+
+        var serializedProfile = SerializerService.SerializeJson(profileExport);
+        var profileExportName = $"{FileHelpers.SanitizeSecureFilename(_gameProfile.FriendlyName)}.json";
+        await WebClientService.InvokeFileDownload(serializedProfile, profileExportName, DataConstants.MimeTypes.Json);
+
+        Snackbar.Add($"Successfully Exported Profile: {profileExportName}");
     }
 
     private async Task GetGameProfilePermissions()
