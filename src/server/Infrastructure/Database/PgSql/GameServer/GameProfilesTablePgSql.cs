@@ -35,9 +35,9 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Delete"" (
-                p_Id UUID,
-                p_DeletedBy UUID,
-                p_DeletedOn TIMESTAMP
+                IN p_Id UUID,
+                IN p_DeletedBy UUID,
+                IN p_DeletedOn TIMESTAMP
             )
             LANGUAGE plpgsql
             AS $$
@@ -63,7 +63,7 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""IsDeleted"" = FALSE
                 ORDER BY ""FriendlyName"" ASC;
@@ -77,15 +77,15 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                SELECT COUNT(*) OVER() AS ""TotalCount"", h.*
                 FROM ""{Table.TableName}""
                 WHERE ""IsDeleted"" = FALSE
                 ORDER BY ""FriendlyName"" ASC 
@@ -100,14 +100,14 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetById",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById"" (
-                p_Id UUID,
+                IN p_Id UUID,
                 INOUT p_ REFCURSOR,     
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""Id"" = p_Id
                 ORDER BY ""Id""
@@ -122,13 +122,13 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByOwnerId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByOwnerId"" (
-                p_OwnerId UUID,
+                IN p_OwnerId UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
-                SELECT g.*
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""OwnerId"" = p_OwnerId AND ""IsDeleted"" = FALSE
                 ORDER BY g.Id;
@@ -142,14 +142,14 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByGameId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByGameId"" (
-                p_GameId UUID,
+                IN p_GameId UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""GameId"" = p_GameId AND ""IsDeleted"" = FALSE
                 ORDER BY ""Id"";
@@ -163,14 +163,14 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByFriendlyName",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByFriendlyName"" (
-                p_FriendlyName VARCHAR(128),
+                IN p_FriendlyName VARCHAR(128),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""FriendlyName"" = p_FriendlyName AND ""IsDeleted"" = FALSE
                 ORDER BY ""Id"";
@@ -184,15 +184,15 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
-                p_FriendlyName VARCHAR(128),
-                p_OwnerId UUID,
-                p_GameId UUID,
-                p_CreatedBy UUID,
-                p_CreatedOn TIMESTAMP,
-                p_LastModifiedBy UUID,
-                p_LastModifiedOn TIMESTAMP,
-                p_IsDeleted BOOLEAN,
-                p_DeletedOn TIMESTAMP,
+                IN p_FriendlyName VARCHAR(128),
+                IN p_OwnerId UUID,
+                IN p_GameId UUID,
+                IN p_CreatedBy UUID,
+                IN p_CreatedOn TIMESTAMP,
+                IN p_LastModifiedBy UUID,
+                IN p_LastModifiedOn TIMESTAMP,
+                IN p_IsDeleted BOOLEAN,
+                IN p_DeletedOn TIMESTAMP,
                 OUT p_Id UUID
             )
             LANGAUGE plpgsql
@@ -204,9 +204,8 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
                 VALUES (
                     p_FriendlyName, p_OwnerId, p_GameId, p_CreatedBy, p_CreatedOn, 
                     p_LastModifiedBy, p_LastModifiedOn, p_IsDeleted, p_DeletedOn
-                );
-                OUTPUT INSERTED.Id
-                RETURNING ""Id"" INTO p_Id;
+                )
+                RETURNING ""Id"";
             END;
             $$;"
     };
@@ -217,14 +216,14 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "Search",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Search"" (
-                p_SearchTerm VARCHAR(256),
+                IN p_SearchTerm VARCHAR(256),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""IsDeleted"" = FALSE
                     AND (
@@ -243,16 +242,16 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "SearchPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_SearchPaginated"" (
-                p_SearchTerm VARCHAR(256),
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_SearchTerm VARCHAR(256),
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                SELECT COUNT(*) OVER() AS ""TotalCount"", h.*
                 FROM ""{Table.TableName}""
                 WHERE ""IsDeleted"" = FALSE
                     AND (
@@ -273,16 +272,16 @@ public class GameProfilesTablePgSql : IPgSqlEnforcedEntity
         Action = "Update",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Update"" (
-                p_Id UUID,
-                p_FriendlyName VARCHAR(128) = null,
-                p_OwnerId UUID = null,
-                p_GameId UUID = null,
-                p_CreatedBy UUID = null,
-                p_CreatedOn TIMESTAMP = null,
-                p_LastModifiedBy UUID = null,
-                p_LastModifiedOn TIMESTAMP = null,
-                p_IsDeleted BOOLEAN = null,
-                p_DeletedOn TIMESTAMP = null
+                IN p_Id UUID,
+                IN p_FriendlyName VARCHAR(128) = null,
+                IN p_OwnerId UUID = null,
+                IN p_GameId UUID = null,
+                IN p_CreatedBy UUID = null,
+                IN p_CreatedOn TIMESTAMP = null,
+                IN p_LastModifiedBy UUID = null,
+                IN p_LastModifiedOn TIMESTAMP = null,
+                IN p_IsDeleted BOOLEAN = null,
+                IN p_DeletedOn TIMESTAMP = null
             AS $$
             BEGIN
                 UPDATE ""{Table.TableName}""

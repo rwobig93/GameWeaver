@@ -1,14 +1,14 @@
-using Application.Database;
+﻿using Application.Database;
 using Application.Database.PgSql;
 using Application.Helpers.Runtime;
 
 namespace Infrastructure.Database.PgSql.GameServer;
 
-public class GameGenreTablePgSql : IPgSqlEnforcedEntity
+public class GameUpdatesTablePgSql : IPgSqlEnforcedEntity
 {
-    private const string TableName = "GameGenres";
+    private const string TableName = "GameUpdates";
 
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GameGenreTablePgSql).GetDbScriptsFromClass();
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GameUpdatesTablePgSql).GetDbScriptsFromClass();
     
     public static readonly SqlTable Table = new()
     {
@@ -18,8 +18,11 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
             CREATE TABLE IF NOT EXISTS ""{TableName}"" (
                 ""Id"" UUID PRIMARY KEY,
                 ""GameId"" UUID NOT NULL,
-                ""Name"" VARCHAR(128) NOT NULL,
-                ""Description"" VARCHAR(128) NOT NULL
+                ""SupportsWindows"" BOOLEAN NOT NULL,
+                ""SupportsLinux"" BOOLEAN NOT NULL,
+                ""SupportsMac"" BOOLEAN NOT NULL,
+                ""BuildVersion"" VARCHAR(128) NOT NULL,
+                ""BuildVersionReleased"" TIMESTAMP NOT NULL
             );"
     };
     
@@ -40,6 +43,23 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
             $$;"
     };
     
+    public static readonly SqlStoredProcedure DeleteForGameId = new()
+    {
+        Table = Table,
+        Action = "DeleteForGameId",
+        SqlStatement = @$"
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_DeleteForGameId"" (
+                IN p_Id UUID
+            )
+            LANGUAGE plpgsql
+            AS $$
+            BEGIN
+                DELETE FROM ""{Table.TableName}""
+                WHERE ""GameId"" = p_Id;
+            END;
+            $$;"
+    };
+    
     public static readonly SqlStoredProcedure GetAll = new()
     {
         Table = Table,
@@ -54,9 +74,9 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
                 OPEN p_ FOR
                 SELECT *
                 FROM ""{Table.TableName}""
-                ORDER BY ""Name"" ASC;
+                ORDER BY ""BuildVersionReleased"" DESC;
             END;
-            $$"
+            $$;"
     };
 
     public static readonly SqlStoredProcedure GetAllPaginated = new()
@@ -64,7 +84,7 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
         Table = Table,
         Action = "GetAllPaginated",
         SqlStatement = @$"
-            CREATE OR ALTER REPLACE ""sp{Table.TableName}_GetAllPaginated"" (
+            CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
                 IN p_Offset INT,
                 IN p_PageSize INT,
                 INOUT p_ REFCURSOR
@@ -72,9 +92,10 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
             LANGUAGE plpgsql
             AS $$
             BEGIN
+                OPEN p_ FOR
                 SELECT COUNT(*) OVER() AS ""TotalCount"", *
                 FROM ""{Table.TableName}""
-                ORDER BY ""Name"" ASC 
+                ORDER BY ""BuildVersionReleased"" DESC
                 OFFSET p_Offset LIMIT p_PageSize;
             END;
             $$;"
@@ -100,7 +121,7 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
                 LIMIT 1;
             END;
             $$;"
-    };
+        };
     
     public static readonly SqlStoredProcedure GetByGameId = new()
     {
@@ -108,8 +129,8 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByGameId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByGameId"" (
-                IN p_GameId UUID,
-                INOUT p_ REFCURSOR  
+                IN p_Id UUID,
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
@@ -117,27 +138,8 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
                 OPEN p_ FOR
                 SELECT *
                 FROM ""{Table.TableName}""
-                WHERE ""GameId"" = p_GameId
-                ORDER BY ""Id"";
-            END;
-            $$;"
-    };
-    
-    public static readonly SqlStoredProcedure GetByName = new()
-    {
-        Table = Table,
-        Action = "GetByName",
-        SqlStatement = @$"
-            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByName]
-                IN p_Name VARCHAR(128)
-                INOUT p_ REFCURSOR;
-            AS
-            begin
-                OPEN p_ FOR
-                SELECT *
-                FROM ""{Table.TableName}""
-                WHERE ""Name"" = p_Name
-                ORDER BY ""Id""
+                WHERE ""GameId"" = p_Id
+                ORDER BY ""BuildVersionReleased"" DESC
                 LIMIT 1;
             END;
             $$;"
@@ -150,20 +152,27 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
                 IN p_GameId UUID,
-                IN p_Name VARCHAR(128),
-                IN p_Description VARCHAR(128),
-                INOUT p_ID UUID
+                IN p_SupportsWindows BOOLEAN,
+                IN p_SupportsLinux BOOLEAN,
+                IN p_SupportsMac BOOLEAN,
+                IN p_BuildVersion VARCHAR(128),
+                IN p_BuildVersionReleased TIMESTAMP,
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
-                INSERT into ""{Table.TableName}""  (
-                    ""GameId"", ""Name"", ""Description""
+                OPEN p_ FOR
+                WITH inserted AS (
+                    INSERT INTO ""{{Table.TableName}}"" (
+                        ""GameId"", ""SupportsWindows"", ""SupportsLinux"", ""SupportsMac"", ""BuildVersion"", ""BuildVersionReleased""
+                    )
+                    VALUES (
+                        p_GameId, p_SupportsWindows, p_SupportsLinux, p_SupportsMac, p_BuildVersion, p_BuildVersionReleased
+                    )
+                    RETURNING ""Id""
                 )
-                VALUES (
-                    p_GameId, p_Name, p_Description
-                )
-                RETURNING ""Id"" INTO p_Id;
+                SELECT * FROM inserted;
             END;
             $$;"
     };
@@ -180,12 +189,13 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
             LANGUAGE plpgsql
             AS $$
             BEGIN
-                OPEN p_ FOR
+                OPEN p_ FOR 
                 SELECT *
                 FROM ""{Table.TableName}""
-                WHERE CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
-                    OR ""Name"" ILIKE '%' || p_SearchTerm || '%'
-                    OR ""Description"" ILIKE '%' || p_SearchTerm || '%';
+                WHERE ""Id""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                    OR ""GameId""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                    OR ""BuildVersion"" ILIKE '%' || p_SearchTerm || '%'
+            ORDER BY ""BuildVersionReleased"" DESC;
             END;
             $$;"
     };
@@ -207,10 +217,10 @@ public class GameGenreTablePgSql : IPgSqlEnforcedEntity
                 OPEN p_ FOR
                 SELECT COUNT(*) OVER() AS ""TotalCount"", *
                 FROM ""{Table.TableName}""
-                WHERE CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
-                    OR ""Name"" ILIKE '%' || p_SearchTerm || '%'
-                    OR ""Description"" ILIKE '%' || p_SearchTerm || '%'
-                ORDER BY ""Name"" ASC
+                WHERE ""Id""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                    OR ""GameId""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                    OR ""BuildVersion"" ILIKE '%' || p_SearchTerm || '%'
+                ORDER BY ""BuildVersionReleased"" DESC 
                 OFFSET p_Offset LIMIT p_PageSize;
             END;
             $$;"

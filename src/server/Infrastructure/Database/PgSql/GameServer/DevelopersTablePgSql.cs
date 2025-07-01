@@ -28,7 +28,7 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Delete"" (
-                p_Id UUID
+                IN p_Id UUID
             )
             LANGUAGE plpgsql
             AS $$
@@ -45,13 +45,13 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetAll",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAll"" (
-            INOUT p_ REFCURSOR DEFAULT NULL
+                INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 ORDER BY ""Name"" ASC;
             END;
@@ -64,15 +64,15 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                SELECT COUNT(*) OVER() AS ""TotalCount"", h.*
                 FROM ""{Table.TableName}""
                 ORDER BY ""Name"" ASC 
                 OFFSET p_Offset LIMIT p_PageSize;
@@ -86,14 +86,14 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetById",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById"" (
-                p_Id UUID,
+                IN p_Id UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""Id"" = p_Id
                 ORDER BY ""Id""
@@ -108,14 +108,14 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByGameId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByGameId"" (
-                p_GameId UUID,
+                IN p_GameId UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""GameId"" = p_GameId
                 ORDER BY ""Id"";
@@ -129,14 +129,14 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByName",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByName"" (
-                p_Name VARCHAR(128),
+                IN p_Name VARCHAR(128),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""Name"" = p_Name
                 ORDER BY ""Id"";
@@ -150,8 +150,8 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
-                p_GameId UUID,
-                p_Name VARCHAR(128),
+                IN p_GameId UUID,
+                IN p_Name VARCHAR(128),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -170,14 +170,14 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "Search",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Search"" (
-                p_SearchTerm VARCHAR(256),
+                IN p_SearchTerm VARCHAR(256),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR 
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE 
                     CAST(""Id"" AS TEST) ILIKE '%' || p_SearchTerm || '%'
@@ -192,16 +192,16 @@ public class DevelopersTablePgSql : IPgSqlEnforcedEntity
         Action = "SearchPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_SearchPaginated"" (
-                p_SearchTerm VARCHAR(256),
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_SearchTerm VARCHAR(256),
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                SELECT COUNT(*) OVER() AS ""TotalCount"", h.*
                 FROM ""{Table.TableName}""
                 WHERE 
                     CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'

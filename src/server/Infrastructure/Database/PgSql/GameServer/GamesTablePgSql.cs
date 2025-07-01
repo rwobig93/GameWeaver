@@ -105,8 +105,8 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -127,7 +127,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "GetById",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById"" (
-                p_Id UUID,
+                IN p_Id UUID,
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -149,7 +149,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "GetBySteamName",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetBySteamName"" (
-                p_SteamName VARCHAR(128),
+                IN p_SteamName VARCHAR(128),
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -170,7 +170,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "GetByFriendlyName",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByFriendlyName"" (
-                p_FriendlyName VARCHAR(128),
+                IN p_FriendlyName VARCHAR(128),
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -191,7 +191,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "GetBySteamGameId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetBySteamGameId"" (
-                p_SteamGameId INT,
+                IN p_SteamGameId INT,
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -212,7 +212,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "GetBySteamToolId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetBySteamToolId"" (
-                p_SteamToolId INT,
+                IN p_SteamToolId INT,
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -233,7 +233,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "GetBySourceType",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetBySourceType"" (
-                p_SourceType INT,
+                IN p_SourceType INT,
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -254,44 +254,44 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
-                p_Id UUID,
-                p_FriendlyName VARCHAR(128),
-                p_SteamName VARCHAR(128),
-                p_SteamGameId INT,
-                p_SteamToolId INT,
-                p_DefaultGameProfileId UUID,
-                p_LatestBuildVersion VARCHAR(128),
-                p_UrlBackground VARCHAR(258),
-                p_UrlLogo VARCHAR(256),
-                p_UrlLogoSmall VARCHAR(256),
-                p_UrlWebsite VARCHAR(256),
-                p_ControllerSupport VARCHAR(128),
-                p_DescriptionShort VARCHAR(256),
-                p_DescriptionLong VARCHAR(4000),
-                p_DescriptionAbout VARCHAR(2048),
-                p_PriceInitial VARCHAR(128),
-                p_PriceCurrent VARCHAR(128),
-                p_PriceDiscount INT,
-                p_MetaCriticScore INT,
-                p_UrlMetaCriticPage VARCHAR(128),
-                p_RequirementsPcMinimum VARCHAR(128),
-                p_RequirementsPcRecommended VARCHAR(128),
-                p_RequirementsMacMinimum VARCHAR(128),
-                p_RequirementsMacRecommended VARCHAR(128),
-                p_RequirementsLinuxMinimum VARCHAR(128),
-                p_RequirementsLinuxRecommended VARCHAR(128),
-                p_CreatedBy UUID,
-                p_CreatedOn TIMESTAMP,
-                p_LastModifiedBy UUID,
-                p_LastModifiedOn TIMESTAMP,
-                p_IsDeleted BOOLEAN,
-                p_SupportsWindows BOOLEAN,
-                p_SupportsLinux BOOLEAN,
-                p_SupportsMac BOOLEAN,
-                p_SourceType INT,
-                p_ManualFileRecordId UUID,
-                p_ManualVersionUrlCheck VARCHAR(1024),
-                p_ManualVersionUrlDownload VARCHAR(1024),
+                IN p_Id UUID,
+                IN p_FriendlyName VARCHAR(128),
+                IN p_SteamName VARCHAR(128),
+                IN p_SteamGameId INT,
+                IN p_SteamToolId INT,
+                IN p_DefaultGameProfileId UUID,
+                IN p_LatestBuildVersion VARCHAR(128),
+                IN p_UrlBackground VARCHAR(258),
+                IN p_UrlLogo VARCHAR(256),
+                IN p_UrlLogoSmall VARCHAR(256),
+                IN p_UrlWebsite VARCHAR(256),
+                IN p_ControllerSupport VARCHAR(128),
+                IN p_DescriptionShort VARCHAR(256),
+                IN p_DescriptionLong VARCHAR(4000),
+                IN p_DescriptionAbout VARCHAR(2048),
+                IN p_PriceInitial VARCHAR(128),
+                IN p_PriceCurrent VARCHAR(128),
+                IN p_PriceDiscount INT,
+                IN p_MetaCriticScore INT,
+                IN p_UrlMetaCriticPage VARCHAR(128),
+                IN p_RequirementsPcMinimum VARCHAR(128),
+                IN p_RequirementsPcRecommended VARCHAR(128),
+                IN p_RequirementsMacMinimum VARCHAR(128),
+                IN p_RequirementsMacRecommended VARCHAR(128),
+                IN p_RequirementsLinuxMinimum VARCHAR(128),
+                IN p_RequirementsLinuxRecommended VARCHAR(128),
+                IN p_CreatedBy UUID,
+                IN p_CreatedOn TIMESTAMP,
+                IN p_LastModifiedBy UUID,
+                IN p_LastModifiedOn TIMESTAMP,
+                IN p_IsDeleted BOOLEAN,
+                IN p_SupportsWindows BOOLEAN,
+                IN p_SupportsLinux BOOLEAN,
+                IN p_SupportsMac BOOLEAN,
+                IN p_SourceType INT,
+                IN p_ManualFileRecordId UUID,
+                IN p_ManualVersionUrlCheck VARCHAR(1024),
+                IN p_ManualVersionUrlDownload VARCHAR(1024),
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -324,7 +324,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "Search",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Search"" (
-                p_SearchTerm VARCHAR(256),
+                IN p_SearchTerm VARCHAR(256),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -355,9 +355,9 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "SearchPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_SearchPaginated"" (
-                p_SearchTerm VARCHAR(256),
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_SearchTerm VARCHAR(256),
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
@@ -388,45 +388,45 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
         Action = "Update",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Update"" (
-                p_Id UUID,
-                p_FriendlyName VARCHAR(128) DEFAULT NULL,
-                p_SteamName VARCHAR(128) DEFAULT NULL,
-                p_SteamGameId INT DEFAULT NULL,
-                p_SteamToolId INT DEFAULT NULL,
-                p_DefaultGameProfileId UUID DEFAULT NULL,
-                p_LatestBuildVersion VARCHAR(128) DEFAULT NULL,
-                p_UrlBackground VARCHAR(258) DEFAULT NULL,
-                p_UrlLogo VARCHAR(256) DEFAULT NULL,
-                p_UrlLogoSmall VARCHAR(256) DEFAULT NULL,
-                p_UrlWebsite VARCHAR(256) DEFAULT NULL,
-                p_ControllerSupport VARCHAR(128) DEFAULT NULL,
-                p_DescriptionShort VARCHAR(256) DEFAULT NULL,
-                p_DescriptionLong VARCHAR(4000) DEFAULT NULL,
-                p_DescriptionAbout VARCHAR(2048) DEFAULT NULL,
-                p_PriceInitial VARCHAR(128) DEFAULT NULL,
-                p_PriceCurrent VARCHAR(128) DEFAULT NULL,
-                p_PriceDiscount INT DEFAULT NULL,
-                p_MetaCriticScore INT DEFAULT NULL,
-                p_UrlMetaCriticPage VARCHAR(128) DEFAULT NULL,
-                p_RequirementsPcMinimum VARCHAR(128) DEFAULT NULL,
-                p_RequirementsPcRecommended VARCHAR(128) DEFAULT NULL,
-                p_RequirementsMacMinimum VARCHAR(128) DEFAULT NULL,
-                p_RequirementsMacRecommended VARCHAR(128) DEFAULT NULL,
-                p_RequirementsLinuxMinimum VARCHAR(128) DEFAULT NULL,
-                p_RequirementsLinuxRecommended VARCHAR(128) DEFAULT NULL,
-                p_CreatedBy UUID DEFAULT NULL,
-                p_CreatedOn TIMESTAMP DEFAULT NULL,
-                p_LastModifiedBy UUID DEFAULT NULL,
-                p_LastModifiedOn TIMESTAMP DEFAULT NULL,
-                p_IsDeleted BOOLEAN DEFAULT NULL,
-                p_DeletedOn TIMESTAMP DEFAULT NULL,
-                p_SupportsWindows BOOLEAN DEFAULT NULL,
-                p_SupportsLinux BOOLEAN DEFAULT NULL,
-                p_SupportsMac BOOLEAN DEFAULT NULL,
-                p_SourceType INT DEFAULT NULL,
-                p_ManualFileRecordId UUID DEFAULT NULL,
-                p_ManualVersionUrlCheck VARCHAR(1024) DEFAULT NULL,
-                p_ManualVersionUrlDownload VARCHAR(1024) DEFAULT NULL            
+                IN p_Id UUID,
+                IN p_FriendlyName VARCHAR(128) DEFAULT NULL,
+                IN p_SteamName VARCHAR(128) DEFAULT NULL,
+                IN p_SteamGameId INT DEFAULT NULL,
+                IN p_SteamToolId INT DEFAULT NULL,
+                IN p_DefaultGameProfileId UUID DEFAULT NULL,
+                IN p_LatestBuildVersion VARCHAR(128) DEFAULT NULL,
+                IN p_UrlBackground VARCHAR(258) DEFAULT NULL,
+                IN p_UrlLogo VARCHAR(256) DEFAULT NULL,
+                IN p_UrlLogoSmall VARCHAR(256) DEFAULT NULL,
+                IN p_UrlWebsite VARCHAR(256) DEFAULT NULL,
+                IN p_ControllerSupport VARCHAR(128) DEFAULT NULL,
+                IN p_DescriptionShort VARCHAR(256) DEFAULT NULL,
+                IN p_DescriptionLong VARCHAR(4000) DEFAULT NULL,
+                IN p_DescriptionAbout VARCHAR(2048) DEFAULT NULL,
+                IN p_PriceInitial VARCHAR(128) DEFAULT NULL,
+                IN p_PriceCurrent VARCHAR(128) DEFAULT NULL,
+                IN p_PriceDiscount INT DEFAULT NULL,
+                IN p_MetaCriticScore INT DEFAULT NULL,
+                IN p_UrlMetaCriticPage VARCHAR(128) DEFAULT NULL,
+                IN p_RequirementsPcMinimum VARCHAR(128) DEFAULT NULL,
+                IN p_RequirementsPcRecommended VARCHAR(128) DEFAULT NULL,
+                IN p_RequirementsMacMinimum VARCHAR(128) DEFAULT NULL,
+                IN p_RequirementsMacRecommended VARCHAR(128) DEFAULT NULL,
+                IN p_RequirementsLinuxMinimum VARCHAR(128) DEFAULT NULL,
+                IN p_RequirementsLinuxRecommended VARCHAR(128) DEFAULT NULL,
+                IN p_CreatedBy UUID DEFAULT NULL,
+                IN p_CreatedOn TIMESTAMP DEFAULT NULL,
+                IN p_LastModifiedBy UUID DEFAULT NULL,
+                IN p_LastModifiedOn TIMESTAMP DEFAULT NULL,
+                IN p_IsDeleted BOOLEAN DEFAULT NULL,
+                IN p_DeletedOn TIMESTAMP DEFAULT NULL,
+                IN p_SupportsWindows BOOLEAN DEFAULT NULL,
+                IN p_SupportsLinux BOOLEAN DEFAULT NULL,
+                IN p_SupportsMac BOOLEAN DEFAULT NULL,
+                IN p_SourceType INT DEFAULT NULL,
+                IN p_ManualFileRecordId UUID DEFAULT NULL,
+                IN p_ManualVersionUrlCheck VARCHAR(1024) DEFAULT NULL,
+                IN p_ManualVersionUrlDownload VARCHAR(1024) DEFAULT NULL            
             )
             LANGUAGE plpgsql
             AS $$
@@ -470,8 +470,7 @@ public class GamesTablePgSql: IPgSqlEnforcedEntity
                     ""ManualFileRecordId"" = COALESCE(p_ManualFileRecordId, ""ManualFileRecordId""), 
                     ""ManualVersionUrlCheck"" = COALESCE(p_ManualVersionUrlCheck, ""ManualVersionUrlCheck""),
                     ""ManualVersionUrlDownload"" = COALESCE(p_ManualVersionUrlDownload, ""ManualVersionUrlDownload"")
-                WHERE ""Id"" = p_Id;
-                
+                WHERE ""Id"" = p_Id;         
             END;
             $$;"
     };

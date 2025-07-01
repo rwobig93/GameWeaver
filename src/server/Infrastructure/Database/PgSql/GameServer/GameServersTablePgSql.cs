@@ -52,9 +52,9 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Delete""(
-                p_Id UUID,
-                p_DeletedBy UUID,
-                p_DeletedOn TIMESTAMP
+                IN p_Id UUID,
+                IN p_DeletedBy UUID,
+                IN p_DeletedOn TIMESTAMP
             )
             LANGUAGE plpgsql
             AS $$
@@ -72,13 +72,13 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetAll",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAll"" (
-                INOUT p_ REFCURSOR DEFAULT NULL
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT g
+                SELECT *
                 FROM ""{Table.TableName}""
                 WHERE ""IsDeleted"" = False
                 ORDER BY ""ServerName"" ASC;
@@ -92,9 +92,9 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated""(
-                p_Offset INT,
-                p_PageSize INT
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_Offset INT,
+                IN p_PageSize INT
+                INOUT p_ REFCURSOR
                 )
             LANGUAGE plpgsql
             AS $$
@@ -115,8 +115,8 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetById",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById""(
-                p_Id UUID,
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_Id UUID,
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
@@ -137,8 +137,8 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByOwnerId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByOwnerId""(
-                p_OwnerId UUID,
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_OwnerId UUID,
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
@@ -158,8 +158,8 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByHostId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByHostId""(
-                p_HostId UUID,
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_HostId UUID,
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
@@ -179,8 +179,9 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByGameId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByGameId""(
-                p_GameId UUID,
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_GameId UUID,
+                INOUT p_ REFCURSOR
+            )
             LANGUAGE plpgsql
             AS $$
             BEGIN
@@ -199,7 +200,9 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByGameProfileId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByGameProfileId""(
-                p_GameProfileId UUID
+                IN p_GameProfileId UUID,
+                INOPUT p_ REFCURSOR
+            )
             LANGUAGE plpgsql
             AS $$
             BEGIN
@@ -219,8 +222,8 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByParentGameProfileId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByParentGameProfileId"" (
-                p_ParentGameProfileId UUID,
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_ParentGameProfileId UUID,
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
@@ -241,8 +244,8 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByServerBuildVersion",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByServerBuildVersion""(
-                p_ServerBuildVersion VARCHAR(128),
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_ServerBuildVersion VARCHAR(128),
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
@@ -263,8 +266,8 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByServerName",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByServerName""(
-                @ServerName VARCHAR(128),
-                INOUT p_ REFCURSOR DEFAULT NULL
+                IN p_ServerName VARCHAR(128),
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
@@ -313,7 +316,7 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
             AS $$
             BEGIN
                 OPEN p_ FOR
-                WITH inserted AS (
+                WITH INSERTED AS (
                     INSERT INTO ""{Table.TableName}"" (
                         ""OwnerId"", ""HostId"", ""GameId"", ""GameProfileId"", ""ParentGameProfileId"", ""ServerBuildVersion"", ""ServerName"", ""Password"", ""PasswordRcon"",
                         ""PasswordAdmin"", ""PublicIp"", ""PrivateIp"", ""ExternalHostname"", ""PortGame"", ""PortPeer"", ""PortQuery"", ""PortRcon"", ""Modded"", ""Private"", ""ServerState"",
@@ -325,8 +328,8 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
                         p_CreatedBy, p_CreatedOn, p_IsDeleted
                     )
                     RETURNING ""Id""
-                )
-                SELECT * FROM inserted;
+                    )
+                    SELECT ""ID"" FROM INSERTED;
             END;
             $$;"
     };
@@ -344,22 +347,23 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
             LANGUAGE plpgsql
             AS $$
             BEGIN
-                SET nocount on;
-                
-                SELECT g.*
-                FROM dbo.[{Table.TableName}] g
-                WHERE g.IsDeleted = 0
-                    AND (g.Id LIKE '%' + @SearchTerm + '%'
-                    OR g.OwnerId LIKE '%' + @SearchTerm + '%'
-                    OR g.HostId LIKE '%' + @SearchTerm + '%'
-                    OR g.GameId LIKE '%' + @SearchTerm + '%'
-                    OR g.GameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR g.ParentGameProfileId LIKE '%' + @SearchTerm + '%'
-                    OR g.ServerBuildVersion LIKE '%' + @SearchTerm + '%'
-                    OR g.PublicIp LIKE '%' + @SearchTerm + '%'
-                    OR g.PrivateIp LIKE '%' + @SearchTerm + '%'
-                    OR g.ExternalHostname LIKE '%' + @SearchTerm + '%'
-                    OR g.ServerName LIKE '%' + @SearchTerm + '%');
+                OPEN p_ FOR
+                SELECT *
+                FROM ""{Table.TableName}""
+                WHERE ""IsDeleted"" = FALSE
+                    AND (
+                        ""Id""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                        OR ""OwnerId""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                        OR ""HostId""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                        OR ""GameId""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                        OR ""GameProfileId""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                        OR ""ParentGameProfileId""::TEXT ILIKE '%' || p_SearchTerm || '%'
+                        OR ""ServerBuildVersion"" ILIKE '%' || p_SearchTerm || '%'
+                        OR ""PublicIp"" ILIKE '%' || p_SearchTerm || '%'
+                        OR ""PrivateIp"" ILIKE '%' || p_SearchTerm || '%'
+                        OR ""ExternalHostname"" ILIKE '%' || p_SearchTerm || '%'
+                        OR ""ServerName"" ILIKE '%' || p_SearchTerm || '%'
+                    );
             END;
             $$;"
     };
@@ -379,7 +383,7 @@ public class GameServersTablePgSql : IPgSqlEnforcedEntity
         AS $$
         BEGIN
             OPEN p_ FOR
-            SELECT COUNT(*) OVER() AS ""TotalCount"", *
+            SELECT COUNT(*) OVER() AS ""TotalCount"", h.*
             FROM ""{Table.TableName}""
             WHERE ""IsDeleted"" = FALSE
                 AND (

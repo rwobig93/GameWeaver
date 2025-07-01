@@ -41,7 +41,7 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Delete"" (
-                p_Id UUID,
+                IN p_Id UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -78,8 +78,8 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -100,7 +100,7 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetById",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById"" (
-                p_Id UUID,
+                IN p_Id UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -121,7 +121,7 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByGameProfileId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByGameProfileId"" (
-                p_GameProfileId UUID,
+                IN p_GameProfileId UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -142,22 +142,22 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
-                p_Id UUID,
-                p_GameProfileId UUID,
-                p_Name VARCHAR(128),
-                p_PathWindows VARCHAR(128),
-                p_PathLinux VARCHAR(128),
-                p_PathMac VARCHAR(128),
-                p_Startup BIT,
-                p_StartupPriority INT,
-                p_Type INT,
-                p_ContentType INT,
-                p_Args VARCHAR(128),
-                p_LoadExisting INT,
-                p_CreatedBy UUID,
-                p_CreatedOn TIMESTAMP,
-                p_LastModifiedBy UUID,
-                p_LastModifiedOn TIMESTAMP,
+                IN p_Id UUID,
+                IN p_GameProfileId UUID,
+                IN p_Name VARCHAR(128),
+                IN p_PathWindows VARCHAR(128),
+                IN p_PathLinux VARCHAR(128),
+                IN p_PathMac VARCHAR(128),
+                IN p_Startup BIT,
+                IN p_StartupPriority INT,
+                IN p_Type INT,
+                IN p_ContentType INT,
+                IN p_Args VARCHAR(128),
+                IN p_LoadExisting INT,
+                IN p_CreatedBy UUID,
+                IN p_CreatedOn TIMESTAMP,
+                IN p_LastModifiedBy UUID,
+                IN p_LastModifiedOn TIMESTAMP,
                 OUT p_ UUID
             )
             LANGUAGE plpgsql
@@ -182,7 +182,7 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "Search",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Search"" (
-                p_SearchTerm VARCHAR(256),
+                IN p_SearchTerm VARCHAR(256),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -209,9 +209,9 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "SearchPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_SearchPaginated"" (
-                p_SearchTerm VARCHAR(256),
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_SearchTerm VARCHAR(256),
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -240,20 +240,20 @@ public class LocalResourcesTablePgSql : IPgSqlEnforcedEntity
         Action = "Update",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Update"" (
-                p_Id UUID,
-                p_GameProfileId UUID DEFAULT NULL,
-                p_Name VARCHAR(128) DEFAULT NULL,
-                p_PathWindows VARCHAR(128) DEFAULT NULL,
-                p_PathLinux VARCHAR(128) DEFAULT NULL,
-                p_PathMac VARCHAR(128) DEFAULT NULL,
-                p_Startup BIT DEFAULT NULL,
-                p_StartupPriority INT DEFAULT NULL,
-                p_Type INT DEFAULT NULL,
-                p_ContentType INT DEFAULT NULL,
-                p_Args VARCHAR(128) DEFAULT NULL,
-                p_LoadExisting INT DEFAULT NULL,
-                p_LastModifiedBy UUID DEFAULT NULL,
-                p_LastModifiedOn TIMESTAMP DEFAULT NULL
+                IN p_Id UUID,
+                IN p_GameProfileId UUID DEFAULT NULL,
+                IN p_Name VARCHAR(128) DEFAULT NULL,
+                IN p_PathWindows VARCHAR(128) DEFAULT NULL,
+                IN p_PathLinux VARCHAR(128) DEFAULT NULL,
+                IN p_PathMac VARCHAR(128) DEFAULT NULL,
+                IN p_Startup BIT DEFAULT NULL,
+                IN p_StartupPriority INT DEFAULT NULL,
+                IN p_Type INT DEFAULT NULL,
+                IN p_ContentType INT DEFAULT NULL,
+                IN p_Args VARCHAR(128) DEFAULT NULL,
+                IN p_LoadExisting INT DEFAULT NULL,
+                IN p_LastModifiedBy UUID DEFAULT NULL,
+                IN p_LastModifiedOn TIMESTAMP DEFAULT NULL
             )
             LANGUAGE plpgsql
             AS $$

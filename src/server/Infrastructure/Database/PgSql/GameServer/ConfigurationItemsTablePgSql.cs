@@ -36,7 +36,7 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "Delete",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Delete"" (
-                p_Id UUID
+                IN p_Id UUID
             )
             LANGUAGE plpgsql
             AS $$
@@ -59,7 +59,7 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}"";
             END;
             $$;"
@@ -71,15 +71,15 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "GetAllPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetAllPaginated"" (
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                SELECT COUNT(*) OVER() AS ""TotalCount"", h.*
                 FROM ""{Table.TableName}""
                 ORDER BY ""Id"" DESC
                 OFFSET p_Offset LIMIT p_PageSize;
@@ -93,14 +93,14 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "GetById",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetById"" (
-                p_Id UUID,
+                IN p_Id UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""Id"" = p_Id
                 ORDER BY ""Id""
@@ -115,14 +115,14 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "GetByLocalResourceId",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_GetByLocalResourceId"" (
-                p_LocalResourceId UUID,
+                IN p_LocalResourceId UUID,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE ""LocalResourceId"" = p_LocalResourceId
                 ORDER BY ""Id"";
@@ -136,13 +136,13 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "Insert",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Insert"" (
-                p_LocalResourceId UUID,
-                p_DuplicateKey BIT,
-                p_Path VARCHAR(128),
-                p_Category VARCHAR(128),
-                p_Key VARCHAR(128),
-                p_Value VARCHAR(128),
-                p_FriendlyName VARCHAR(128),
+                IN p_LocalResourceId UUID,
+                IN p_DuplicateKey BIT,
+                IN p_Path VARCHAR(128),
+                IN p_Category VARCHAR(128),
+                IN p_Key VARCHAR(128),
+                IN p_Value VARCHAR(128),
+                IN p_FriendlyName VARCHAR(128),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
@@ -165,14 +165,14 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "Search",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Search"" (
-                p_SearchTerm VARCHAR(256),
+                IN p_SearchTerm VARCHAR(256),
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
                 OPEN p_ FOR
-                SELECT *
+                SELECT h.*
                 FROM ""{Table.TableName}""
                 WHERE CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
                     OR CAST(""LocalResourceId"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
@@ -191,15 +191,15 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "SearchPaginated",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_SearchPaginated"" (
-                p_SearchTerm VARCHAR(256),
-                p_Offset INT,
-                p_PageSize INT,
+                IN p_SearchTerm VARCHAR(256),
+                IN p_Offset INT,
+                IN p_PageSize INT,
                 INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
             BEGIN
-                SELECT COUNT(*) OVER() AS ""TotalCount"", *
+                SELECT COUNT(*) OVER() AS ""TotalCount"", h.*
                 FROM ""{Table.TableName}""
                 WHERE CAST(""Id"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
                     OR CAST(""LocalResourceId"" AS TEXT) ILIKE '%' || p_SearchTerm || '%'
@@ -220,14 +220,14 @@ public class ConfigurationItemsTablePgSql : IPgSqlEnforcedEntity
         Action = "Update",
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Update"" (
-                p_Id UUID,
-                p_LocalResourceId UUID DEFAULT NULL,
-                p_DuplicateKey BIT DEFAULT NULL,
-                p_Path VARCHAR(128) DEFAULT NULL,
-                p_Category VARCHAR(128) DEFAULT NULL,
-                p_Key VARCHAR(128) DEFAULT NULL,
-                p_Value VARCHAR(128) DEFAULT NULL,
-                p_FriendlyName VARCHAR(128) DEFAULT NULL,
+                IN p_Id UUID,
+                IN p_LocalResourceId UUID DEFAULT NULL,
+                IN p_DuplicateKey BIT DEFAULT NULL,
+                IN p_Path VARCHAR(128) DEFAULT NULL,
+                IN p_Category VARCHAR(128) DEFAULT NULL,
+                IN p_Key VARCHAR(128) DEFAULT NULL,
+                IN p_Value VARCHAR(128) DEFAULT NULL,
+                IN p_FriendlyName VARCHAR(128) DEFAULT NULL,
                 INOUT p_ REFCURSOR DEFAULT NULL
             )
             LANGUAGE plpgsql
