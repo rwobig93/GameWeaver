@@ -360,14 +360,15 @@ public class WeaverWorksTablePgSql : IPgSqlEnforcedEntity
         SqlStatement = @$"
             CREATE OR REPLACE PROCEDURE ""sp{Table.TableName}_Update"" (
                 IN p_Id INT,
-                IN p_HostId UUID = null,
-                IN p_TargetType INT = null,
-                IN p_Status BOOLEAN = null,
-                IN p_WorkData BYTEA = null,
-                IN p_CreatedBy UUID = null,
-                IN p_CreatedOn TIMESTAMP = null,
-                IN p_LastModifiedBy UUID = null,
-                IN p_LastModifiedOn TIMESTAMP = null
+                IN p_HostId UUID DEFAULT NULL,
+                IN p_TargetType INT DEFAULT NULL,
+                IN p_Status BOOLEAN DEFAULT NULL,
+                IN p_WorkData BYTEA DEFAULT NULL,
+                IN p_CreatedBy UUID DEFAULT NULL,
+                IN p_CreatedOn TIMESTAMP DEFAULT NULL,
+                IN p_LastModifiedBy UUID DEFAULT NULL,
+                IN p_LastModifiedOn TIMESTAMP DEFAULT NULL,
+                INOUT p_ REFCURSOR
             )
             LANGUAGE plpgsql
             AS $$
