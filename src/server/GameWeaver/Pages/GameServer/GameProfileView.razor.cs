@@ -882,7 +882,12 @@ public partial class GameProfileView : ComponentBase
 
         var serializedProfile = SerializerService.SerializeJson(profileExport);
         var profileExportName = $"{FileHelpers.SanitizeSecureFilename(_gameProfile.FriendlyName)}.json";
-        await WebClientService.InvokeFileDownload(serializedProfile, profileExportName, DataConstants.MimeTypes.Json);
+        var downloadResult = await WebClientService.InvokeFileDownload(serializedProfile, profileExportName, DataConstants.MimeTypes.Json);
+        if (!downloadResult.Succeeded)
+        {
+            downloadResult.Messages.ForEach(x => Snackbar.Add(x));
+            return;
+        }
 
         Snackbar.Add($"Successfully Exported Profile: {profileExportName}");
     }

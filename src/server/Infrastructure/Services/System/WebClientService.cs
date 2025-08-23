@@ -41,7 +41,8 @@ public class WebClientService : IWebClientService
             {
                 ByteArray = content,
                 FileName = fileName,
-                MimeType = mimeType
+                MimeType = mimeType,
+                IsBase64 = false
             });
 
             return await Result.SuccessAsync();
