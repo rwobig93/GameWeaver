@@ -15,9 +15,9 @@
 
 
     <ItemGroup>
-      <PackageReference Include="Hardware.Info" Version="101.0.1" />
+      <PackageReference Include="Hardware.Info" Version="101.0.1.1" />
       <PackageReference Include="MemoryPack" Version="1.21.4" />
-      <PackageReference Include="Serilog" Version="4.2.0" />
+      <PackageReference Include="Serilog" Version="4.3.0" />
     </ItemGroup>
 
 

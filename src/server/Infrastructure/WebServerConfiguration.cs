@@ -143,10 +143,8 @@ public static class WebServerConfiguration
             options.Title = $"{serverState.ApplicationName} API";
             options.Layout = ScalarLayout.Modern;
             options.DarkMode = true;
-            options.WithHttpBearerAuthentication(bearer => bearer.Token = "your-bearer-token");
+            options.AddHttpAuthentication("Bearer", scheme => scheme.Token = "your-bearer-token");
             options.WithOpenApiRoutePattern("/api/{documentName}.json");
-            options.WithPreferredScheme("Bearer");
-            options.WithHttpBearerAuthentication(bearer => bearer.Token = "your-bearer-token");
             options.HideClientButton = true;
         });
     }
