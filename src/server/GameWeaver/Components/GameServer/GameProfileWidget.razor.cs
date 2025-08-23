@@ -147,6 +147,6 @@ public partial class GameProfileWidget : ComponentBase
             return;
         }
 
-        NavManager.NavigateTo(AppRouteConstants.GameServer.GameProfiles.ViewId(GameProfile.GameId));
+        NavManager.NavigateTo(AppRouteConstants.GameServer.GameProfiles.ViewId(GameProfile.Id));
     }
 }

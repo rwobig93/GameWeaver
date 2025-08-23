@@ -16,16 +16,13 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
 
     private IEnumerable<GameServerSlim> _pagedData = [];
     private AppUserPreferenceFull _userPreferences = new();
-    private Guid _loggedInUserId = Guid.Empty;
+    private readonly Guid _loggedInUserId = Guid.Empty;
 
     private string _searchText = "";
     private int _totalItems = 10;
     private int _totalPages = 1;
     private int _pageSize = PaginationHelpers.GetPageSizes(true).First();
     private int _currentPage = 1;
-    // private readonly string[] _orderings = null;
-    // private string _searchString = "";
-    // private List<string> _autocompleteList;
     private Timer? _timer;
 
     private bool _canCreateGameServers;
@@ -71,7 +68,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
 
     private async Task RefreshData()
     {
-        _pagedData = [];
+        // _pagedData = [];
         StateHasChanged();
 
         var response = await GameServerService.SearchPaginatedAsync(_searchText, _currentPage, _pageSize, _loggedInUserId);
@@ -139,6 +136,7 @@ public partial class GameServers : ComponentBase, IAsyncDisposable
     {
         if (keyArgs.Code is "Enter" or "NumpadEnter")
         {
+            _pagedData = [];
             await RefreshData();
         }
     }

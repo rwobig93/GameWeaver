@@ -52,7 +52,7 @@
     </MudItem>
     @if (_canEditProfile)
     {
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
             <MudSwitch T="bool" Color="Color.Secondary" @bind-Value="_gameProfile.AllowAutoDelete" Label="Allow Auto Delete If Unused" Disabled="@(!_editMode)" />
         </MudItem>
     }
