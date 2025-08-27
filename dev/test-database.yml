@@ -1,0 +1,16 @@
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    user: '0:0'
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=testDatabase123!Secure^Really
+    ports:
+      - '1433:1433'
+    volumes:
+      - "mssql_test:/var/opt/mssql"
+    restart: "always"
+
+
+volumes:
+  mssql_test:
