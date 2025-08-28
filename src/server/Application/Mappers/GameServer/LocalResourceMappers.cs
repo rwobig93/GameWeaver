@@ -143,6 +143,7 @@ public static class LocalResourceMappers
     {
         return new LocalResourceCreate
         {
+            Id = Guid.CreateVersion7(),
             GameProfileId = request.GameProfileId,
             Name = request.Name,
             PathWindows = request.PathWindows,
@@ -183,6 +184,7 @@ public static class LocalResourceMappers
     {
         return new LocalResourceCreate
         {
+            Id = resource.Id,
             GameProfileId = resource.GameProfileId,
             Name = resource.Name ?? string.Empty,
             PathWindows = resource.PathWindows ?? string.Empty,
@@ -201,6 +203,7 @@ public static class LocalResourceMappers
     {
         return new LocalResourceCreate
         {
+            Id = resource.Id,
             GameProfileId = resource.GameProfileId,
             Name = resource.Name,
             PathWindows = resource.PathWindows,

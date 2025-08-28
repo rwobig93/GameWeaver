@@ -336,6 +336,7 @@
 </MudTable>
 
 @* Configuration, Expert, Startup & Permissions Tabs *@
+@* TODO: Allow collapsable config sections, set to default collapsed for expert config files for manageability *@
 <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center">
     @if (_canEditServer || _canConfigServer)
     {
@@ -427,7 +428,7 @@
                     <MudPaper Elevation="10" Square="false">
                         <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
                                    OnClick="@ExportServerConfig">
-                            Export Configuration
+                            Export All Configuration
                         </MudButton>
                     </MudPaper>
                 </MudStack>

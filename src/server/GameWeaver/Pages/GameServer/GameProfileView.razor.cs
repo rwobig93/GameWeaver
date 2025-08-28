@@ -763,7 +763,6 @@ public partial class GameProfileView : ComponentBase
 
     private async Task ConfigSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
     {
-        // TODO: Export looks good, import isn't pulling in any data but is being created
         // TODO: Add delete button and permission check on game profile view page
         if (importFiles is null || !importFiles.Any())
         {
@@ -872,6 +871,7 @@ public partial class GameProfileView : ComponentBase
 
     private async Task ExportProfile()
     {
+        // TODO: Export in chrome works, export in brave doesn't, it saves w/o dialog and the content is only the base64 encoded content
         var profileExport = _gameProfile.ToExport(_game.SourceType is GameSource.Steam ? _game.SteamToolId.ToString() : _game.FriendlyName);
         foreach (var resource in _localResources)
         {

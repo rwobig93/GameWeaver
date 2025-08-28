@@ -12,8 +12,7 @@
                 <MudSpacer/>
                 @if (LocalResource.ContentType is ContentType.Deleted or ContentType.Ignore)
                 {
-                    <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined" Class="py-1 my-1"
-                             Text="@(LocalResource.ContentType is ContentType.Deleted ? "Enforced Not To Exist" : "Ignored From Inherited Game & Profile")" />
+                    <MudChip T="string" Color="Color.Error" Variant="Variant.Outlined" Class="py-1 my-1" Text="Enforced Not To Exist" />
                 }
                 else
                 {
@@ -33,8 +32,7 @@
                     @if (LocalResource.ContentType is ContentType.Deleted or ContentType.Ignore)
                     {
                         <MudSpacer/>
-                        <MudChip T="string" Color="@(LocalResource.ContentType is ContentType.Deleted ? Color.Error : Color.Warning)" Variant="Variant.Outlined" Class="py-1 my-1"
-                                 Text="@(LocalResource.ContentType is ContentType.Deleted ? "Enforced Not To Exist" : "Ignored From Inherited Game & Profile")"/>
+                        <MudChip T="string" Color="Color.Error" Variant="Variant.Outlined" Class="py-1 my-1" Text="Enforced Not To Exist" />
                     }
                     <MudSpacer/>
                 </MudStack>
@@ -69,6 +67,7 @@
                            OnClick="@(() => AddConfigItem(LocalResource))" Disabled="@(!EditMode)">
                     Add Config
                 </MudButton>
+                // TODO: Add export config for this file button
                 <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.Edit" Class="py-1 my-1"
                            OnClick="@(() => OpenInEditor(LocalResource))" Disabled="@(!EditMode)">
                     Edit Config In Editor

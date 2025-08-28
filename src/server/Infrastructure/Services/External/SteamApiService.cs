@@ -119,7 +119,7 @@ public class SteamApiService : ISteamApiService
             var httpClient = _httpClientFactory.CreateClient(ApiConstants.Clients.SteamStoreUnauthenticated);
             while (true)
             {
-                if (backOffTimer >= 20000)
+                if (backOffTimer >= 300000)
                 {
                     return await Result<SteamAppDetailResponseJson?>.FailAsync($"Maximum retry backoff timer hit, unable to get response");
                 }
@@ -127,7 +127,7 @@ public class SteamApiService : ISteamApiService
                 var response = await httpClient.GetAsync(ApiConstants.Steam.StoreAppDetails(appId));
                 if (response.StatusCode == HttpStatusCode.TooManyRequests)
                 {
-                    backOffTimer += 2000;
+                    backOffTimer += 60000;
                     _logger.Debug("Got too many requests response from steam, waiting {Delay}ms", backOffTimer);
                     await Task.Delay(backOffTimer);
                     continue;

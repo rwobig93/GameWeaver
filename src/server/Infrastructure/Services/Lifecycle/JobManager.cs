@@ -591,7 +591,7 @@ public class JobManager : IJobManager
                 gameserver.ServerState != ConnectivityState.Unreachable &&
                 gameserver.ServerState != ConnectivityState.InternallyConnectable)
             {
-                _logger.Debug("Gameserver isn't a valid state for checking connectable state, skipping: [{GameserverId}]{GameserverState}", gameserver.Id, gameserver.ServerState);
+                _logger.Debug("Gameserver isn't in a valid state for checking connectable state, skipping: [{GameserverId}]{GameserverState}", gameserver.Id, gameserver.ServerState);
                 continue;
             }
 
