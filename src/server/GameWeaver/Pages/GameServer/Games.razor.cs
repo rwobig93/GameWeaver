@@ -25,9 +25,6 @@ public partial class Games : ComponentBase
     private int _totalPages = 1;
     private int _pageSize = PaginationHelpers.GetPageSizes(true).First();
     private int _currentPage = 1;
-    // private readonly string[] _orderings = null;
-    // private string _searchString = "";
-    // private List<string> _autocompleteList;
     private bool _showNames;
     private string _cssDisplay = "game-card-lift";
 

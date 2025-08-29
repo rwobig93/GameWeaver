@@ -91,7 +91,7 @@
                 <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-3 pb-1">
                     <MudStack Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="2" Class="px-5">
                         <MudTooltip Placement="Placement.Top" Delay="TooltipDelay" ShowOnHover="true" Text="Whether to merge existing local config or replace it">
-                            <MudCheckBox @bind-Value="_newLocalResource.LoadExisting" Label="Load Existing Config"/>
+                            <MudCheckBox @bind-Value="_newLocalResource.LoadExisting" Label="Load Existing Local Config"/>
                         </MudTooltip>
                     </MudStack>
                 </MudPaper>
@@ -99,9 +99,9 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Wrap="Wrap.Wrap" Class="px-4">
+        <MudItem xs="12" sm="12" md="12" Class="d-flex gap-4 justify-center pb-3">
             <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@Submit">@ConfirmButtonText</MudButton>
             <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
-        </MudStack>
+        </MudItem>
     </DialogActions>
 </MudDialog>

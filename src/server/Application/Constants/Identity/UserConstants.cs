@@ -31,7 +31,7 @@ public static class UserConstants
 
     public static readonly ClaimsPrincipal UnauthenticatedPrincipal = new(UnauthenticatedIdentity);
     public static readonly ClaimsPrincipal ExpiredPrincipal = new(ExpiredIdentity);
-    public static ClaimsPrincipal ExpiredPrincipalId(Guid userID) => new(ExpiredIdentityId(userID));
+    public static ClaimsPrincipal ExpiredPrincipalId(Guid userId) => new(ExpiredIdentityId(userId));
 
     public static class DefaultUsers
     {

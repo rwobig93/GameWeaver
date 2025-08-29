@@ -30,6 +30,7 @@ public partial class Login
     [Inject] private IExternalAuthProviderService ExternalAuth { get; init; } = null!;
     [Inject] private ILocalStorageService LocalStorage { get; init; } = null!;
     [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
+    [Inject] private IOptions<LifecycleConfiguration> LifecycleSettings { get; init; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";

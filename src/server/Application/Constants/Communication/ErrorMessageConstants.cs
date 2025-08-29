@@ -1,4 +1,6 @@
-﻿namespace Application.Constants.Communication;
+﻿using Application.Constants.GameServer;
+
+namespace Application.Constants.Communication;
 
 public static class ErrorMessageConstants
 {
@@ -48,6 +50,7 @@ public static class ErrorMessageConstants
             "You don't have the permission you are attempting to add/remove so you also can't administrate this permission";
         public const string Forbidden = "You hath been forbidden, do thy bidding my masta, it's a disasta, skywalka we're afta!";
         public const string NoViewPermission = "You don't have permission to view this resource";
+        public const string DynamicPermissionNotSupported = "Permissions aren't supported for this entity type, please let an admin know";
     }
 
     public static class Roles
@@ -80,6 +83,8 @@ public static class ErrorMessageConstants
         public const string AssignedGameServers = "Game profile is assigned to game servers, unable to delete the profile without removing the assignments";
         public const string NoStartupResources =
             "Game profile currently doesn't have any startup local resources, at least one startup resource must be available to start a game server";
+        public const string InvalidNamePrefix = $"Profile names cannot start with one of the reserved prefixes: '{GameProfileConstants.ServerProfileNamePrefix}' or" +
+                                          $" '{GameProfileConstants.GameProfileDefaultNamePrefix}'";
     }
 
     public static class Games

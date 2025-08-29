@@ -1,0 +1,33 @@
+﻿<MudPaper Class="@($"{_cssBorderBase}{_cssBorderStatus}")" Width="@Width" Height="@Height" Elevation="8"
+          Style="background-color: var(--mud-palette-surface); cursor: pointer; position: relative;" @onclick="ViewProfile">
+    <div style="position: absolute; width: 100%; height: 100%;" class="z-0 rounded-lg darken-content">
+        <img src="@(_game.UrlLogo)" width="100%" height="100%" alt="Game Cover" class="z-0 rounded-lg"
+             style="position: absolute; top: 0; bottom: 0; clip: rect(0, @Width, @Height, 0);"/>
+    </div>
+    <MudStack Class="pa-4 z-2 rounded-lg" Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Style="position: absolute; width: 100%;">
+        <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Style="width: 20%;" Class="pb-1">
+            <MudAvatar Color="@(GetAssignmentColor())" Variant="Variant.Outlined" Elevation="8" Style="width: 55px; height: 55px" Size="Size.Large">
+                @_serverUsages
+            </MudAvatar>
+            <MudText Align="Align.Center" Typo="Typo.body2" Color="@(GetAssignmentColor())">
+                Assignments
+            </MudText>
+            <MudSpacer/>
+        </MudStack>
+        <MudStack Row="false" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Style="width: 80%;">
+            <MudPaper Outlined="false" Elevation="6" Square="false" Class="rounded-lg px-1">
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body1" Style="position: relative;" Class="@(_cssTextStatus)">
+                    @(GameProfile.FriendlyName.Length > 30 ? GameProfile.FriendlyName[..30] : GameProfile.FriendlyName)
+                </MudText>
+            </MudPaper>
+            <MudSpacer />
+            <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
+            <MudSpacer />
+            <MudPaper Outlined="false" Elevation="6" Square="false" Class="rounded-lg px-1">
+                <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">
+                    Game: @(_game.FriendlyName.Length > 35 ? _game.FriendlyName[..35] : _game.FriendlyName)
+                </MudText>
+            </MudPaper>
+        </MudStack>
+    </MudStack>
+</MudPaper>

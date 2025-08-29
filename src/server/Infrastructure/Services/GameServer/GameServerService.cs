@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.GameServer;
 using Application.Constants.Lifecycle;
 using Application.Helpers.GameServer;
 using Application.Helpers.Lifecycle;
@@ -31,18 +32,18 @@ namespace Infrastructure.Services.GameServer;
 
 public class GameServerService : IGameServerService
 {
-    private readonly IGameServerRepository _gameServerRepository;
-    private readonly IDateTimeService _dateTime;
-    private readonly IHostRepository _hostRepository;
-    private readonly IGameRepository _gameRepository;
     private readonly IAuditTrailsRepository _auditRepository;
-    private readonly IRunningServerState _serverState;
-    private readonly ITroubleshootingRecordsRepository _tshootRepository;
-    private readonly IOptions<AppConfiguration> _generalConfig;
-    private readonly IAppUserRepository _userRepository;
+    private readonly IDateTimeService _dateTime;
     private readonly IEventService _eventService;
+    private readonly IGameRepository _gameRepository;
+    private readonly IGameServerRepository _gameServerRepository;
+    private readonly IOptions<AppConfiguration> _generalConfig;
+    private readonly IHostRepository _hostRepository;
     private readonly INotifyRecordRepository _notifyRecordRepository;
     private readonly IAppPermissionRepository _permissionRepository;
+    private readonly IRunningServerState _serverState;
+    private readonly ITroubleshootingRecordsRepository _tshootRepository;
+    private readonly IAppUserRepository _userRepository;
 
     public GameServerService(IGameServerRepository gameServerRepository, IDateTimeService dateTime, IHostRepository hostRepository, IGameRepository gameRepository,
         IAuditTrailsRepository auditRepository, IRunningServerState serverState, ITroubleshootingRecordsRepository tshootRepository, IOptions<AppConfiguration> generalConfig,
@@ -60,48 +61,6 @@ public class GameServerService : IGameServerService
         _eventService = eventService;
         _notifyRecordRepository = notifyRecordRepository;
         _permissionRepository = permissionRepository;
-    }
-
-    private async Task<GameServerDb> FilterNoAccessServer(GameServerDb gameServer, Guid requestUserId)
-    {
-        if (requestUserId == _serverState.SystemUserId)
-        {
-            return gameServer;
-        }
-
-        var userPermissions = (await _permissionRepository.GetAllIncludingRolesForUserAsync(requestUserId)).Result?.ToArray() ?? [];
-
-        if (gameServer.OwnerId == requestUserId || !gameServer.Private || gameServer.PermissionsHaveAccess(userPermissions))
-        {
-            return gameServer;
-        }
-
-        return gameServer.ToNoAccess();
-    }
-
-    private async Task<IEnumerable<GameServerDb>> FilterNoAccessServers(IEnumerable<GameServerDb> gameServers, Guid requestUserId)
-    {
-        if (requestUserId == _serverState.SystemUserId)
-        {
-            return gameServers;
-        }
-
-        List<GameServerDb> filteredServers = [];
-
-        var userPermissions = (await _permissionRepository.GetAllIncludingRolesForUserAsync(requestUserId)).Result?.ToArray() ?? [];
-
-        foreach (var gameServer in gameServers)
-        {
-            if (gameServer.OwnerId == requestUserId || !gameServer.Private || gameServer.PermissionsHaveAccess(userPermissions))
-            {
-                filteredServers.Add(gameServer);
-                continue;
-            }
-
-            filteredServers.Add(gameServer.ToNoAccess());
-        }
-
-        return filteredServers;
     }
 
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetAllAsync(Guid requestUserId)
@@ -219,6 +178,19 @@ public class GameServerService : IGameServerService
         return await Result<GameServerSlim?>.SuccessAsync(permissionFilteredGameserver.ToSlim());
     }
 
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByParentGameProfileIdAsync(Guid id, Guid requestUserId)
+    {
+        var response = await _gameServerRepository.GetByParentGameProfileIdAsync(id);
+        if (!response.Succeeded)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+
+        var accessFilteredServers = await FilterNoAccessServers(response.Result ?? [], requestUserId);
+
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
+    }
+
     public async Task<IResult<IEnumerable<GameServerSlim>>> GetByHostIdAsync(Guid id, Guid requestUserId)
     {
         var response = await _gameServerRepository.GetByHostIdAsync(id);
@@ -332,9 +304,10 @@ public class GameServerService : IGameServerService
         {
             request.ParentGameProfileId = null;
         }
+
         if (request.ParentGameProfileId is not null)
         {
-            var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync((Guid)request.ParentGameProfileId);
+            var parentGameProfileRequest = await _gameServerRepository.GetGameProfileByIdAsync((Guid) request.ParentGameProfileId);
             if (parentGameProfileRequest.Result is null)
             {
                 return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.ParentProfileNotFound);
@@ -343,7 +316,7 @@ public class GameServerService : IGameServerService
 
         var createdGameProfile = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
-            FriendlyName = $"Server Profile - {request.ServerName}",
+            FriendlyName = $"{GameProfileConstants.ServerProfileNamePrefix} {request.ServerName}",
             OwnerId = request.OwnerId,
             GameId = foundGame.Result.Id,
             CreatedBy = requestUserId,
@@ -365,10 +338,10 @@ public class GameServerService : IGameServerService
         if (!gameServerCreate.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, Guid.Empty, requestUserId,
-            "Created server profile but failed to create game server", new Dictionary<string, string>
-            {
-                {"Error", gameServerCreate.ErrorMessage}
-            });
+                "Created server profile but failed to create game server", new Dictionary<string, string>
+                {
+                    {"Error", gameServerCreate.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -387,7 +360,7 @@ public class GameServerService : IGameServerService
             if (!userUpdate.Succeeded)
             {
                 var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, gameServerCreate.Result,
-                    requestUserId, "Created game server and profile but failed to update user currency",new Dictionary<string, string>
+                    requestUserId, "Created game server and profile but failed to update user currency", new Dictionary<string, string>
                     {
                         {"UserId", requestingUser.Result.Id.ToString()},
                         {"Username", requestingUser.Result.Username},
@@ -413,10 +386,10 @@ public class GameServerService : IGameServerService
         if (!hostInstallRequest.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, gameServerCreate.Result,
-                requestUserId, "Created game server and profile but failed to send install request to the host",new Dictionary<string, string>
-            {
-                {"Error", hostInstallRequest.ErrorMessage}
-            });
+                requestUserId, "Created game server and profile but failed to send install request to the host", new Dictionary<string, string>
+                {
+                    {"Error", hostInstallRequest.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -470,6 +443,37 @@ public class GameServerService : IGameServerService
         return await Result.SuccessAsync();
     }
 
+    public async Task<IResult> UpdateParentProfileAsync(GameServerParentUpdate request, Guid requestUserId)
+    {
+        var foundGameServer = await _gameServerRepository.GetByIdAsync(request.Id);
+        if (foundGameServer.Result is null) return await Result.FailAsync(ErrorMessageConstants.GameServers.NotFound);
+
+        if (request.ParentGameProfileId is not null)
+        {
+            var foundGame = await _gameRepository.GetByIdAsync(foundGameServer.Result.GameId);
+            if (!foundGame.Succeeded) return await Result.FailAsync(foundGame.ErrorMessage);
+
+            if (foundGame.Result?.DefaultGameProfileId == request.ParentGameProfileId) return await Result.FailAsync(ErrorMessageConstants.GameServers.DefaultProfileAssignment);
+        }
+
+        request.LastModifiedOn = _dateTime.NowDatabaseTime;
+        request.LastModifiedBy = requestUserId;
+
+        var gameServerUpdate = await _gameServerRepository.SetParentGameProfileIdAsync(request);
+        if (!gameServerUpdate.Succeeded)
+        {
+            var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundGameServer.Result.Id,
+                requestUserId, "Failed to update game server", new Dictionary<string, string> {{"Error", gameServerUpdate.ErrorMessage}});
+            return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
+        }
+
+        var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundGameServer.Result.Id);
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundGameServer.Result.Id, requestUserId, AuditAction.Update,
+            foundGameServer.Result, updatedGameServer.Result);
+
+        return await Result.SuccessAsync();
+    }
+
     /// <summary>
     /// Delete a game server
     /// </summary>
@@ -490,9 +494,9 @@ public class GameServerService : IGameServerService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
                 requestUserId, "Failed to get game server profile servers before deletion", new Dictionary<string, string>
-            {
-                {"Error", profileServers.ErrorMessage}
-            });
+                {
+                    {"Error", profileServers.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -545,7 +549,7 @@ public class GameServerService : IGameServerService
                     if (userUpdate.Succeeded) return await Result.SuccessAsync();
 
                     var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
-                        requestUserId, "Deleted game server and profile but failed to update user currency",new Dictionary<string, string>
+                        requestUserId, "Deleted game server and profile but failed to update user currency", new Dictionary<string, string>
                         {
                             {"UserId", serverOwner.Result.Id.ToString()},
                             {"Username", serverOwner.Result.Username},
@@ -701,10 +705,10 @@ public class GameServerService : IGameServerService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.ConfigItems, Guid.Empty, requestUserId,
                 "Failed to create a configuration item", new Dictionary<string, string>
-            {
-                {"LocalResourceId", foundResource.Result.Id.ToString()},
-                {"Error", configItemCreate.ErrorMessage}
-            });
+                {
+                    {"LocalResourceId", foundResource.Result.Id.ToString()},
+                    {"Error", configItemCreate.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -728,10 +732,10 @@ public class GameServerService : IGameServerService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.ConfigItems, foundConfig.Result.Id, requestUserId,
                 "Failed to update a configuration item", new Dictionary<string, string>
-            {
-                {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
-                {"Error", configUpdate.ErrorMessage}
-            });
+                {
+                    {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
+                    {"Error", configUpdate.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -755,10 +759,10 @@ public class GameServerService : IGameServerService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.ConfigItems, foundConfig.Result.Id, requestUserId,
                 "Failed to delete a configuration item", new Dictionary<string, string>
-            {
-                {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
-                {"Error", configDelete.ErrorMessage}
-            });
+                {
+                    {"LocalResourceId", foundConfig.Result.LocalResourceId.ToString()},
+                    {"Error", configDelete.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -843,12 +847,6 @@ public class GameServerService : IGameServerService
         return await Result<int>.SuccessAsync(request.Result);
     }
 
-    private async Task<IEnumerable<ConfigurationItemSlim>> GetLocalResourceConfigurationItems(LocalResourceSlim resource)
-    {
-        var configItemsRequest = await _gameServerRepository.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
-        return configItemsRequest.Result is null ? [] : configItemsRequest.Result.ToSlims();
-    }
-
     public async Task<IResult<LocalResourceSlim>> GetLocalResourceByIdAsync(Guid id)
     {
         var localResourceRequest = await _gameServerRepository.GetLocalResourceByIdAsync(id);
@@ -917,7 +915,7 @@ public class GameServerService : IGameServerService
 
         if (gameServerRequest.Result.ParentGameProfileId is not null)
         {
-            var parentProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync((Guid)gameServerRequest.Result.ParentGameProfileId);
+            var parentProfileResourcesRequest = await _gameServerRepository.GetLocalResourcesByGameProfileIdAsync((Guid) gameServerRequest.Result.ParentGameProfileId);
             if (parentProfileResourcesRequest.Result is not null)
             {
                 var convertedResources = parentProfileResourcesRequest.Result.ToSlims().ToList();
@@ -989,10 +987,10 @@ public class GameServerService : IGameServerService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.LocalResources, Guid.Empty, requestUserId,
                 "Failed to create a local resource", new Dictionary<string, string>
-            {
-                {"GameProfileId", foundProfile.Result.Id.ToString()},
-                {"Error", resourceCreate.ErrorMessage}
-            });
+                {
+                    {"GameProfileId", foundProfile.Result.Id.ToString()},
+                    {"Error", resourceCreate.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -1047,10 +1045,10 @@ public class GameServerService : IGameServerService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.LocalResources, foundResource.Result.Id, requestUserId,
                 "Failed to update a local resource", new Dictionary<string, string>
-            {
-                {"GameProfileId", foundProfile.Result.Id.ToString()},
-                {"Error", resourceUpdate.ErrorMessage}
-            });
+                {
+                    {"GameProfileId", foundProfile.Result.Id.ToString()},
+                    {"Error", resourceUpdate.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -1303,6 +1301,7 @@ public class GameServerService : IGameServerService
         {
             return await Result<GameProfileSlim>.FailAsync(request.ErrorMessage);
         }
+
         if (request.Result is null)
         {
             return await Result<GameProfileSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
@@ -1318,6 +1317,7 @@ public class GameServerService : IGameServerService
         {
             return await Result<GameProfileSlim>.FailAsync(request.ErrorMessage);
         }
+
         if (request.Result is null)
         {
             return await Result<GameProfileSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
@@ -1350,9 +1350,19 @@ public class GameServerService : IGameServerService
 
     public async Task<IResult<Guid>> CreateGameProfileAsync(GameProfileCreateRequest request, Guid requestUserId)
     {
+        var convertedRequest = request.ToCreate();
+        convertedRequest.CreatedBy = requestUserId;
+        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
+
         if (string.IsNullOrWhiteSpace(request.Name))
         {
-            request.Name = $"Profile - {Guid.NewGuid()}";
+            convertedRequest.FriendlyName = $"{GameProfileConstants.EmptyProfileNamePrefix} {convertedRequest.Id}";
+        }
+
+        if (convertedRequest.FriendlyName.StartsWith(GameProfileConstants.ServerProfileNamePrefix, StringComparison.InvariantCultureIgnoreCase) ||
+            convertedRequest.FriendlyName.StartsWith(GameProfileConstants.GameProfileDefaultNamePrefix, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.InvalidNamePrefix);
         }
 
         // Game profiles shouldn't have matching friendly names, so we'll enforce that
@@ -1362,19 +1372,15 @@ public class GameServerService : IGameServerService
             request.Name = $"{request.Name} - {Guid.NewGuid()}";
         }
 
-        var convertedRequest = request.ToCreate();
-        convertedRequest.CreatedBy = requestUserId;
-        convertedRequest.CreatedOn = _dateTime.NowDatabaseTime;
-
         var profileCreate = await _gameServerRepository.CreateGameProfileAsync(convertedRequest);
         if (!profileCreate.Succeeded)
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.GameProfiles, Guid.Empty, requestUserId,
                 "Failed to create a game profile", new Dictionary<string, string>
-            {
-                {"ProfileName", convertedRequest.FriendlyName},
-                {"Error", profileCreate.ErrorMessage}
-            });
+                {
+                    {"ProfileName", convertedRequest.FriendlyName},
+                    {"Error", profileCreate.ErrorMessage}
+                });
             return await Result<Guid>.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -1393,19 +1399,22 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(ErrorMessageConstants.GameProfiles.NotFound);
         }
 
-        if (request.Name is not null)
+        if (string.IsNullOrWhiteSpace(request.Name))
         {
-            if (request.Name.Length == 0)
-            {
-                return await Result.FailAsync(ErrorMessageConstants.GameProfiles.EmptyName);
-            }
+            return await Result.FailAsync(ErrorMessageConstants.GameProfiles.EmptyName);
+        }
 
-            // Game profiles shouldn't have matching friendly names, so we'll enforce that
-            var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(request.Name);
-            if (matchingUsernameRequest.Result is not null)
-            {
-                return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
-            }
+        if (request.Name.StartsWith(GameProfileConstants.ServerProfileNamePrefix, StringComparison.InvariantCultureIgnoreCase) ||
+            request.Name.StartsWith(GameProfileConstants.GameProfileDefaultNamePrefix, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.InvalidNamePrefix);
+        }
+
+        // Game profiles shouldn't have matching friendly names, so we'll enforce that
+        var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(request.Name);
+        if (matchingUsernameRequest.Result is not null)
+        {
+            return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
         }
 
         var convertedRequest = request.ToUpdate();
@@ -1895,5 +1904,44 @@ public class GameServerService : IGameServerService
             });
 
         return await Result<Guid>.SuccessAsync();
+    }
+
+    private async Task<GameServerDb> FilterNoAccessServer(GameServerDb gameServer, Guid requestUserId)
+    {
+        if (requestUserId == _serverState.SystemUserId) return gameServer;
+
+        var userPermissions = (await _permissionRepository.GetAllIncludingRolesForUserAsync(requestUserId)).Result?.ToArray() ?? [];
+
+        if (gameServer.OwnerId == requestUserId || !gameServer.Private || gameServer.PermissionsHaveAccess(userPermissions)) return gameServer;
+
+        return gameServer.ToNoAccess();
+    }
+
+    private async Task<IEnumerable<GameServerDb>> FilterNoAccessServers(IEnumerable<GameServerDb> gameServers, Guid requestUserId)
+    {
+        if (requestUserId == _serverState.SystemUserId) return gameServers;
+
+        List<GameServerDb> filteredServers = [];
+
+        var userPermissions = (await _permissionRepository.GetAllIncludingRolesForUserAsync(requestUserId)).Result?.ToArray() ?? [];
+
+        foreach (var gameServer in gameServers)
+        {
+            if (gameServer.OwnerId == requestUserId || !gameServer.Private || gameServer.PermissionsHaveAccess(userPermissions))
+            {
+                filteredServers.Add(gameServer);
+                continue;
+            }
+
+            filteredServers.Add(gameServer.ToNoAccess());
+        }
+
+        return filteredServers;
+    }
+
+    private async Task<IEnumerable<ConfigurationItemSlim>> GetLocalResourceConfigurationItems(LocalResourceSlim resource)
+    {
+        var configItemsRequest = await _gameServerRepository.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
+        return configItemsRequest.Result is null ? [] : configItemsRequest.Result.ToSlims();
     }
 }

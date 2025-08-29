@@ -2,7 +2,6 @@
 @using Application.Constants.Identity
 @using Domain.Enums.GameServer
 @using GameWeaver.Components.GameServer
-
 @attribute [Route(AppRouteConstants.GameServer.Games.View)]
 @attribute [Authorize(PermissionConstants.GameServer.Game.Get)]
 
@@ -54,7 +53,14 @@
 @* Editable Game information *@
 <MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@_game.FriendlyName</MudText>
+        @if (_canEditGame && _editMode)
+        {
+            <MudTextField @bind-Value="_game.FriendlyName" Label="Friendly Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+        }
+        else
+        {
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@_game.FriendlyName</MudText>
+        }
     </MudItem>
     @if (!string.IsNullOrWhiteSpace(_game.UrlLogo))
     {
@@ -73,8 +79,6 @@
             </MudStack>
         </MudItem>
     }
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-    </MudItem>
     @if (_canEditGame)
     {
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
@@ -211,6 +215,12 @@
                             </ActivatorContent>
                         </MudFileUpload>
                     </MudPaper>
+                    <MudPaper Elevation="10" Square="false">
+                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
+                                   OnClick="@ExportProfile" Disabled="@(!_editMode)">
+                            Export Configuration
+                        </MudButton>
+                    </MudPaper>
                 </MudStack>
             }
             @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
@@ -265,7 +275,18 @@
     @if (_canViewGameServers)
     {
         <MudTabPanel Text="Gameservers">
-            <GameServerListWidget GameServers="@_runningGameservers" ViewableGameServers="@_viewableGameServers" Title="Gameservers Running This Game" />
+            @if (_runningGameservers.Any())
+            {
+                <GameServerListWidget GameServers="@_runningGameservers" ViewableGameServers="@_viewableGameServers" Title="Gameservers Running This Game"/>
+            }
+            else
+            {
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Gameservers Are Running This Game</MudText>
+                    </MudItem>
+                </MudPaper>
+            }
         </MudTabPanel>
     }
 </MudTabs>

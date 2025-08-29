@@ -10,6 +10,8 @@ public partial class ConfirmationDialog
     [Parameter] public string Content { get; set; } = "Stuff and things";
     [Parameter] public int IconWidthPixels { get; set; } = 75;
     [Parameter] public int IconHeightPixels { get; set; } = 75;
+    [Parameter] public string ConfirmText { get; set; } = "Confirm";
+    [Parameter] public string CancelText { get; set; } = "Cancel";
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
 

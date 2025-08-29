@@ -1,4 +1,5 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.GameServer;
 using Application.Helpers.Lifecycle;
 using Application.Mappers.GameServer;
 using Application.Models.Events;
@@ -163,7 +164,7 @@ public class GameService : IGameService
 
         var defaultProfileCreate = await _gameServerRepository.CreateGameProfileAsync(new GameProfileCreate
         {
-            FriendlyName = $"{request.FriendlyName} - Default",
+            FriendlyName = $"{GameProfileConstants.GameProfileDefaultNamePrefix} {request.FriendlyName}",
             OwnerId = requestUserId,
             GameId = createRequest.Result,
             CreatedBy = requestUserId,

@@ -57,7 +57,7 @@
                         </MudStack>
                         <MudStack Row="false" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Spacing="4" Wrap="Wrap.NoWrap">
                             <MudTextField T="string" @bind-Value="_totpCode" Placeholder="Code Response" OnKeyDown="@(TotpSubmitCheck)" Adornment="Adornment.Start"
-                                          AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0"/>
+                                          AdornmentIcon="@Icons.Material.Filled.Token" IconSize="Size.Medium" Class="mt-0" Immediate="true"/>
                             <MudButton Color="Color.Tertiary" OnClick="@(ValidateTotpCode)" Size="Size.Medium" Variant="Variant.Outlined"
                                        StartIcon="@Icons.Material.Filled.Verified">
                                 Verify Code
@@ -189,12 +189,12 @@
                         <MudContainer Class="d-flex flex-wrap gap-4">
                             <MudMenu Label="Actions" Variant="Variant.Outlined" EndIcon="@Icons.Material.Filled.KeyboardArrowDown"
                                      IconColor="Color.Secondary" Color="Color.Secondary" AnchorOrigin="Origin.BottomLeft">
-                                <MudMenuItem IconColor="Color.Secondary" Disabled="@(_selectedApiTokens.Count != 1)" OnClick="UpdateApiToken"
+                                <MudMenuItem IconColor="Color.Secondary" Disabled="@(_selectedApiTokens.Count != 1)" OnClick="@UpdateApiToken"
                                              Icon="@Icons.Material.Filled.Update">Update</MudMenuItem>
-                                <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedApiTokens.Count < 1)" OnClick="DeleteApiTokens"
+                                <MudMenuItem IconColor="Color.Warning" Disabled="@(_selectedApiTokens.Count < 1)" OnClick="@DeleteApiTokens"
                                              Icon="@Icons.Material.Filled.Delete">Delete</MudMenuItem>
                             </MudMenu>
-                            <MudButton Color="Color.Success" Size="Size.Small" OnClick="@(GenerateUserApiToken)" Variant="Variant.Outlined"
+                            <MudButton Color="Color.Success" Size="Size.Small" OnClick="@GenerateUserApiToken" Variant="Variant.Outlined"
                                        EndIcon="@Icons.Material.Filled.Add">Create</MudButton>
                         </MudContainer>
                     </ToolBarContent>

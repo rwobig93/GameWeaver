@@ -1,6 +1,7 @@
 ﻿@using System.Globalization
 @using Application.Constants.Communication
 @using Application.Helpers.Runtime
+@using GameWeaver.Components.GameServer
 
 @attribute [Route(AppRouteConstants.GameServer.Hosts.View)]
 @attribute [Authorize]
@@ -11,6 +12,7 @@
     return;
 }
 
+@* General Action Button Bar *@
 <MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@GoBack">Go Back
@@ -41,6 +43,7 @@
     }
 </MudPaper>
 
+@* Notifications *@
 @if (_host.IsDeleted)
 {
     <MudPaper Elevation="10" Class="d-flex flex-wrap ma-4 pa-2 gap-5 justify-center align-center mud-text-align-center">
@@ -50,7 +53,8 @@
     </MudPaper>
 }
 
-<MudPaper Elevation="8" Style="position: relative;" Class="ma-4 pa-4 gap-4" MaxWidth="406" MaxHeight="276" >
+@* Realtime Host Charts / Information *@
+<MudPaper Elevation="8" Style="position: relative;" Class="rounded-lg ma-4 pa-4" MaxWidth="406" MaxHeight="276" >
     <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
         <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Realtime</MudText>
     </MudItem>
@@ -104,237 +108,227 @@
     </MudStack>
 </MudPaper>
 
-<MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Info</MudText>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField @bind-Value="_host.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
-        <MudTextField @bind-Value="_host.Description" Label="Description" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="@(!_editMode)"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField @bind-Value="_host.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField @bind-Value="_host.Hostname" Label="Hostname" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField @bind-Value="_hostOwner.Username" Label="Owner" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField @bind-Value="_host.CurrentState" Label="Status" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Operating System</MudText>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField @bind-Value="_host.OsName" Label="OS Name" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField @bind-Value="_host.OsVersion" Label="OS Version" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Network</MudText>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField Value="@(string.Join(",", _host.AllowedPorts ?? []))" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
-        @if (_editMode)
-        {
-            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
-                       OnClick="@ChangeAllowedPorts">Change Allowed Ports
-            </MudButton>
-        }
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField T="int" @bind-Value="_hostPortStats.TotalPorts" Label="Total Ports" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField T="int" @bind-Value="_hostPortStats.AvailablePorts" Label="Available Ports" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField T="int" @bind-Value="_hostPortStats.UsedPorts" Label="Used Ports" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField T="int" @bind-Value="_hostPortStats.UsedGameserversWorth" Label="Used Gameservers Worth" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField T="int" @bind-Value="_hostPortStats.AvailableGameserversWorth" Label="Available Gameservers Worth" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h6">Hardware</MudText>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField T="string" Value="@CpuDisplay()" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField T="string" Value="@GpuDisplay()" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField T="string" Value="@MotherboardDisplay()" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField T="string" Value="@RamDisplay()" Label="RAM" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
-        <MudTextField T="string" Value="@NetInterfaceDisplay()" Label="Interfaces" Variant="Variant.Outlined" Disabled="true"/>
-        <MudTextField T="string" Value="@StorageDisplay()" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
-    </MudItem>
-</MudPaper>
+@* General Information, OS, Network and Hardware Tabs *@
+<MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center" Class="py-4">
+    <MudTabPanel Text="General">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-4">
+            <MudPaper Width="100%" Elevation="12" Square="false" Class="d-flex flex-wrap rounded-lg gap-2 pa-2">
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField @bind-Value="_host.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+                    <MudTextField @bind-Value="_host.Description" Label="Description" Variant="Variant.Outlined" MaxLines="2" AutoGrow="true" Disabled="@(!_editMode)"/>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField @bind-Value="_host.Id" Label="Id" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField @bind-Value="_host.Hostname" Label="Hostname" Variant="Variant.Outlined" Disabled="true"/>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField @bind-Value="_hostOwner.Username" Label="Owner" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField @bind-Value="_host.CurrentState" Label="Status" Variant="Variant.Outlined" Disabled="true"/>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudTabPanel>
+    <MudTabPanel Text="OS">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-4">
+            <MudPaper Width="100%" Elevation="12" Square="false" Class="d-flex flex-wrap rounded-lg gap-2 pa-2">
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField @bind-Value="_host.OsName" Label="OS Name" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField @bind-Value="_host.OsVersion" Label="OS Version" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField @bind-Value="_host.Os" Label="OS Type" Variant="Variant.Outlined" Disabled="true"/>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudTabPanel>
+    <MudTabPanel Text="Network">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-4">
+            <MudPaper Width="100%" Elevation="12" Square="false" Class="d-flex flex-wrap rounded-lg gap-2 pa-2">
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField @bind-Value="_host.PrivateIp" Label="Private IP Address" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField @bind-Value="_host.PublicIp" Label="Public IP Address" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField Value="@(string.Join(",", _host.AllowedPorts ?? []))" Label="Allowed Ports" Variant="Variant.Outlined" Disabled="true"/>
+                    @if (_editMode)
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.SettingsEthernet"
+                                   OnClick="@ChangeAllowedPorts">Change Allowed Ports
+                        </MudButton>
+                    }
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField T="int" @bind-Value="_hostPortStats.TotalPorts" Label="Total Ports" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField T="int" @bind-Value="_hostPortStats.AvailablePorts" Label="Available Ports" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField T="int" @bind-Value="_hostPortStats.UsedPorts" Label="Used Ports" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField T="int" @bind-Value="_hostPortStats.UsedGameserversWorth" Label="Used Gameservers Worth" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField T="int" @bind-Value="_hostPortStats.AvailableGameserversWorth" Label="Available Gameservers Worth" Variant="Variant.Outlined" Disabled="true"/>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudTabPanel>
+    <MudTabPanel Text="Hardware">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4 pa-4">
+            <MudPaper Width="100%" Elevation="12" Square="false" Class="d-flex flex-wrap rounded-lg gap-2 pa-2">
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField T="string" Value="@CpuDisplay()" Label="Compute" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField T="string" Value="@GpuDisplay()" Label="Graphics" Variant="Variant.Outlined" Disabled="true"/>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField T="string" Value="@MotherboardDisplay()" Label="Motherboards" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField T="string" Value="@RamDisplay()" Label="RAM" Variant="Variant.Outlined" Disabled="true"/>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-2" Style="width: 100%;">
+                    <MudTextField T="string" Value="@NetInterfaceDisplay()" Label="Interfaces" Variant="Variant.Outlined" Disabled="true"/>
+                    <MudTextField T="string" Value="@StorageDisplay()" Label="Storage" Variant="Variant.Outlined" Disabled="true"/>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudTabPanel>
+</MudTabs>
 
-<MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center" Style="position: relative;">
-    <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
-        <MudPaper Outlined="true">
-            <MudStack Row="false" Spacing="2" Class="justify-center pa-2">
-                <MudText Typo="Typo.body2" Align="Align.Center">
-                    Went Offline @@ @(WentOffline.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.UserFriendlyFormat))
-                </MudText>
-                <MudText Typo="Typo.body2" Align="Align.Center">Downtime: @DowntimeDisplay()</MudText>
-            </MudStack>
-        </MudPaper>
-    </MudOverlay>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Resource Usage History</MudText>
-    </MudItem>
-    <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="py-3">
-        <MudItem Class="justify-center align-center">
-            <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string"
-                       @bind-Value="_checkinsDateSelection" SelectedValuesChanged="@TimeframeChanged" Style="max-width: 300px;">
-                @foreach (var choice in _resourceHistoryChoices)
-                {
-                    <MudSelectItem Value="@(choice)"/>
-                }
-            </MudSelect>
+@* Resource Usage, Host Detail and Gameservers Tabs *@
+<MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center" Class="">
+    <MudTabPanel Text="Resource History">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-4">
+            <MudPaper Width="100%" Elevation="8" Class="d-flex flex-column rounded-lg justify-center align-center mud-text-align-center" Style="position: relative;">
+                <MudOverlay Visible="@(IsOffline)" DarkBackground="true" Absolute="true">
+                    <MudPaper Outlined="true">
+                        <MudStack Row="false" Spacing="2" Class="justify-center pa-2">
+                            <MudText Typo="Typo.body2" Align="Align.Center">
+                                Went Offline @@ @(WentOffline.ConvertToLocal(_localTimeZone).ToString(DataConstants.DateTime.UserFriendlyFormat))
+                            </MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Center">Downtime: @DowntimeDisplay()</MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudOverlay>
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="py-3">
+                    <MudItem Class="justify-center align-center">
+                        <MudSelect Margin="Margin.Dense" Dense="true" Label="Timeframe" Variant="Variant.Outlined" T="string"
+                                   @bind-Value="_checkinsDateSelection" SelectedValuesChanged="@TimeframeChanged" Style="max-width: 300px;">
+                            @foreach (var choice in _resourceHistoryChoices)
+                            {
+                                <MudSelectItem Value="@(choice)"/>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                </MudStack>
+                <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center">
+                    <MudItem Class="justify-center py-2">
+                        <MudChart ChartType="ChartType.Line" ChartSeries="@_cpu" ChartOptions="@_chartOptionsCpuLong" Width="98%" Style="min-width: 370px;"/>
+                        <MudText Typo="Typo.body2" Align="Align.Center">(CPU) Central Processing Unit</MudText>
+                    </MudItem>
+                    <MudItem Class="justify-center py-2">
+                        <MudChart ChartType="ChartType.Line" ChartSeries="@_ram" ChartOptions="@_chartOptionsRamLong" Width="98%" Style="min-width: 370px;"/>
+                        <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText>
+                    </MudItem>
+                    <MudItem Class="justify-center py-2">
+                        <MudTimeSeriesChart ChartSeries="@_netInLong" Width="98%" Style="min-width: 370px;" ChartOptions="@_chartOptionsNetworkLong"/>
+                        <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText>
+                    </MudItem>
+                    <MudItem Class="justify-center py-2">
+                        <MudTimeSeriesChart ChartSeries="@_netOutLong" Width="98%" Style="min-width: 370px;" ChartOptions="@_chartOptionsNetworkLong"/>
+                        <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText>
+                    </MudItem>
+                </MudStack>
+            </MudPaper>
         </MudItem>
-    </MudStack>
-    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="2" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center">
-        <MudItem Class="justify-center py-2">
-            <MudChart ChartType="ChartType.Line" ChartSeries="@_cpu" ChartOptions="@_chartOptionsCpuLong" Width="98%" Style="min-width: 370px;" />
-            <MudText Typo="Typo.body2" Align="Align.Center">(CPU) Central Processing Unit</MudText>
-        </MudItem>
-        <MudItem Class="justify-center py-2">
-            <MudChart ChartType="ChartType.Line" ChartSeries="@_ram" ChartOptions="@_chartOptionsRamLong" Width="98%" Style="min-width: 370px;" />
-            <MudText Typo="Typo.body2" Align="Align.Center">(RAM) Random Access Memory</MudText>
-        </MudItem>
-        <MudItem Class="justify-center py-2">
-            <MudTimeSeriesChart ChartSeries="@_netInLong" Width="98%" Style="min-width: 370px;" ChartOptions="@_chartOptionsNetworkLong"/>
-            <MudText Typo="Typo.body2" Align="Align.Center">Network In</MudText>
-        </MudItem>
-        <MudItem Class="justify-center py-2">
-            <MudTimeSeriesChart ChartSeries="@_netOutLong" Width="98%" Style="min-width: 370px;" ChartOptions="@_chartOptionsNetworkLong"/>
-            <MudText Typo="Typo.body2" Align="Align.Center">Network Out</MudText>
-        </MudItem>
-    </MudStack>
-</MudPaper>
-
-<MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Host Detail</MudText>
-    </MudItem>
-    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
-        <MudPaper Elevation="5" Outlined="true" Class="pa-1 justify-center">
-            <MudTreeView T="string" Hover="true" ExpandOnClick="true" Class="justify-center">
-                <MudTreeViewItem Value="@("Operating System")">
-                    <MudTreeViewItem Value="@($"OS: {_host.Os}")"/>
-                    <MudTreeViewItem Value="@($"OsName: {_host.OsName}")"/>
-                    <MudTreeViewItem Value="@($"OsVersion: {_host.OsVersion}")"/>
-                </MudTreeViewItem>
-                <MudTreeViewItem Value="@("Compute")">
-                    @if (_host.Motherboards != null)
-                    {
-                        foreach (var motherboard in _host.Motherboards)
-                        {
-                            <MudTreeViewItem Value="@($"Motherboard: {motherboard.Manufacturer} | {motherboard.Product}")"/>
-                        }
-                    }
-                    @if (_host.Cpus != null)
-                    {
-                        foreach (var cpu in _host.Cpus)
-                        {
-                            <MudTreeViewItem Value="@($"CPU: {cpu.Name} {cpu.CoreCount}/{cpu.LogicalProcessorCount} using {cpu.SocketDesignation}")"/>
-                        }
-                    }
-                </MudTreeViewItem>
-                <MudTreeViewItem Value="@("RAM")">
-                    @if (_host.RamModules != null)
-                    {
-                        foreach (var ram in _host.RamModules)
-                        {
-                            <MudTreeViewItem Value="@($"{ram.Manufacturer} {MathHelpers.ConvertToGigabytes(ram.Capacity)}GB @ {ram.Speed}")"/>
-                        }
-                    }
-                </MudTreeViewItem>
-                <MudTreeViewItem Value="@("Storage")">
-                    @if (_host.Storage != null)
-                    {
-                        foreach (var device in _host.Storage.OrderBy(x => x.Index))
-                        {
-                            <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model}" +
-                                                      $" | {device.MountPoint} {MathHelpers.ConvertToGigabytes(device.FreeSpace)} / {MathHelpers.ConvertToGigabytes(device.TotalSpace)}GB")"/>
-                        }
-                    }
-                </MudTreeViewItem>
-                <MudTreeViewItem Value="@("Graphics")">
-                    @if (_host.Gpus != null)
-                    {
-                        foreach (var gpu in _host.Gpus)
-                        {
-                            <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | VRAM: {MathHelpers.ConvertToGigabytes(gpu.AdapterRam)}GB | MODE: {gpu.VideoMode}")"/>
-                        }
-                    }
-                </MudTreeViewItem>
-                <MudTreeViewItem Value="@("Network")">
-                    @if (_host.NetworkInterfaces != null)
-                    {
-                        foreach (var netIf in _host.NetworkInterfaces)
-                        {
-                            <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {MathHelpers.ConvertToMbps(netIf.Speed)}Mbps | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
-                                <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")"/>
-                                @foreach (var address in netIf.DefaultGateways)
+    </MudTabPanel>
+    <MudTabPanel Text="Host Detail">
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-4">
+            <MudPaper Width="100%" Elevation="8" Class="d-flex flex-column rounded-lg justify-center align-center mud-text-align-center">
+                <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="py-2">
+                    <MudPaper Elevation="5" Outlined="true" Class="pa-1 justify-center">
+                        <MudTreeView T="string" Hover="true" ExpandOnClick="true" Class="justify-center">
+                            <MudTreeViewItem Value="@("Operating System")">
+                                <MudTreeViewItem Value="@($"OS: {_host.Os}")"/>
+                                <MudTreeViewItem Value="@($"OsName: {_host.OsName}")"/>
+                                <MudTreeViewItem Value="@($"OsVersion: {_host.OsVersion}")"/>
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Compute")">
+                                @if (_host.Motherboards != null)
                                 {
-                                    <MudTreeViewItem Value="@($"GATEWAY: {address}")"/>
+                                    foreach (var motherboard in _host.Motherboards)
+                                    {
+                                        <MudTreeViewItem Value="@($"Motherboard: {motherboard.Manufacturer} | {motherboard.Product}")"/>
+                                    }
                                 }
-                                @foreach (var address in netIf.IpAddresses)
+                                @if (_host.Cpus != null)
                                 {
-                                    <MudTreeViewItem Value="@($"ADDRESS: {address}")"/>
-                                }
-                                @foreach (var server in netIf.DnsServers)
-                                {
-                                    <MudTreeViewItem Value="@($"DNS: {server}")"/>
+                                    foreach (var cpu in _host.Cpus)
+                                    {
+                                        <MudTreeViewItem Value="@($"CPU: {cpu.Name} {cpu.CoreCount}/{cpu.LogicalProcessorCount} using {cpu.SocketDesignation}")"/>
+                                    }
                                 }
                             </MudTreeViewItem>
-                        }
-                    }
-                </MudTreeViewItem>
-            </MudTreeView>
-        </MudPaper>
-    </MudItem>
-</MudPaper>
-
-@if (_canViewGameServers)
-{
-    <MudPaper Elevation="8" Class="d-flex ma-4 pa-4 flex-column justify-center align-center mud-text-align-center">
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Gameservers On This Host</MudText>
+                            <MudTreeViewItem Value="@("RAM")">
+                                @if (_host.RamModules != null)
+                                {
+                                    foreach (var ram in _host.RamModules)
+                                    {
+                                        <MudTreeViewItem Value="@($"{ram.Manufacturer} {MathHelpers.ConvertToGigabytes(ram.Capacity)}GB @ {ram.Speed}")"/>
+                                    }
+                                }
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Storage")">
+                                @if (_host.Storage != null)
+                                {
+                                    foreach (var device in _host.Storage.OrderBy(x => x.Index))
+                                    {
+                                        <MudTreeViewItem Value="@($"[{device.Index}]{device.Name} {device.Model}" +
+                                                                $" | {device.MountPoint} {MathHelpers.ConvertToGigabytes(device.FreeSpace)} / {MathHelpers.ConvertToGigabytes(device.TotalSpace)}GB")"/>
+                                    }
+                                }
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Graphics")">
+                                @if (_host.Gpus != null)
+                                {
+                                    foreach (var gpu in _host.Gpus)
+                                    {
+                                        <MudTreeViewItem Value="@($"{gpu.Name} v{gpu.DriverVersion} | VRAM: {MathHelpers.ConvertToGigabytes(gpu.AdapterRam)}GB | MODE: {gpu.VideoMode}")"/>
+                                    }
+                                }
+                            </MudTreeViewItem>
+                            <MudTreeViewItem Value="@("Network")">
+                                @if (_host.NetworkInterfaces != null)
+                                {
+                                    foreach (var netIf in _host.NetworkInterfaces)
+                                    {
+                                        <MudTreeViewItem Value="@($"{netIf.Name} {netIf.Type} | Speed: {MathHelpers.ConvertToMbps(netIf.Speed)}Mbps | MAC: {netIf.MacAddress} | Detail: {netIf.TypeDetail}")">
+                                            <MudTreeViewItem Value="@($"DHCP: {netIf.DhcpServer}")"/>
+                                            @foreach (var address in netIf.DefaultGateways)
+                                            {
+                                                <MudTreeViewItem Value="@($"GATEWAY: {address}")"/>
+                                            }
+                                            @foreach (var address in netIf.IpAddresses)
+                                            {
+                                                <MudTreeViewItem Value="@($"ADDRESS: {address}")"/>
+                                            }
+                                            @foreach (var server in netIf.DnsServers)
+                                            {
+                                                <MudTreeViewItem Value="@($"DNS: {server}")"/>
+                                            }
+                                        </MudTreeViewItem>
+                                    }
+                                }
+                            </MudTreeViewItem>
+                        </MudTreeView>
+                    </MudPaper>
+                </MudItem>
+            </MudPaper>
         </MudItem>
-        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
-            <MudTable Items="@_runningGameservers" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap">
-                <HeaderContent>
-                    <MudTh></MudTh>
-                    <MudTh>Name</MudTh>
-                    <MudTh>Game</MudTh>
-                    <MudTh>Modded</MudTh>
-                    <MudTh>State</MudTh>
-                    <MudTh></MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.SportsEsports"/></MudTd>
-                    <MudTd DataLabel="Name">@context.ServerName</MudTd>
-                    <MudTd DataLabel="Game">@(_gameServerGames.FirstOrDefault(x => x.Id == context.GameId)?.FriendlyName ?? "Unknown")</MudTd>
-                    <MudTd DataLabel="Modded">@context.Modded</MudTd>
-                    <MudTd DataLabel="ServerState">@(context.ServerState.ToString())</MudTd>
-                    <MudTd DataLabel="Button">
-                        @if (_viewableGameServers.Contains(context.Id))
-                        {
-                            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@(() => ViewGameServer(context.Id))" Class="rounded-lg">
-                                View
-                            </MudButton>
-                        }
-                        else
-                        {
-                            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" Disabled="true" Class="rounded-lg">
-                                No Access
-                            </MudButton>
-                        }
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudItem>
-    </MudPaper>
-}
+    </MudTabPanel>
+    @if (_canViewGameServers)
+    {
+        <MudTabPanel Text="GameServers">
+            @if (_runningGameservers.Any())
+            {
+                <GameServerListWidget GameServers="@_runningGameservers" ViewableGameServers="@_viewableGameServers" Title="Gameservers On This Host"/>
+            }
+            else
+            {
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Gameservers Are Running This Host</MudText>
+                    </MudItem>
+                </MudPaper>
+            }
+        </MudTabPanel>
+    }
+</MudTabs>

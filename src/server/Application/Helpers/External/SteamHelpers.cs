@@ -21,4 +21,21 @@ public static class SteamHelpers
             return parsedResponse;
         }
     }
+
+    public static string ConnectToServerUri(string serverIp, int serverPort, string serverPassword = "")
+    {
+        // SEE: https://developer.valvesoftware.com/wiki/Steam_browser_protocol
+        if (!string.IsNullOrWhiteSpace(serverPassword))
+        {
+            return $"steam://connect/{serverIp}:{serverPort}/{serverPassword}";
+        }
+
+        return $"steam://connect/{serverIp}:{serverPort}";
+    }
+
+    public static string InstallGameUri(int gameId)
+    {
+        // SEE: https://developer.valvesoftware.com/wiki/Steam_browser_protocol
+        return $"steam://install/{gameId}";
+    }
 }

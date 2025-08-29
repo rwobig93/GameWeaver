@@ -14,6 +14,7 @@ public static class GameProfileMappers
             FriendlyName = gameProfileDb.FriendlyName,
             OwnerId = gameProfileDb.OwnerId,
             GameId = gameProfileDb.GameId,
+            AllowAutoDelete = gameProfileDb.AllowAutoDelete,
             CreatedBy = gameProfileDb.CreatedBy,
             CreatedOn = gameProfileDb.CreatedOn,
             LastModifiedBy = gameProfileDb.LastModifiedBy,
@@ -36,12 +37,24 @@ public static class GameProfileMappers
             FriendlyName = gameProfileDb.FriendlyName,
             OwnerId = gameProfileDb.OwnerId,
             GameId = gameProfileDb.GameId,
+            AllowAutoDelete = gameProfileDb.AllowAutoDelete,
             CreatedBy = gameProfileDb.CreatedBy,
             CreatedOn = gameProfileDb.CreatedOn,
             LastModifiedBy = gameProfileDb.LastModifiedBy,
             LastModifiedOn = gameProfileDb.LastModifiedOn,
             IsDeleted = gameProfileDb.IsDeleted,
             DeletedOn = gameProfileDb.DeletedOn
+        };
+    }
+
+    public static GameProfileUpdateRequest ToUpdate(this GameProfileSlim profile)
+    {
+        return new GameProfileUpdateRequest
+        {
+            Id = profile.Id,
+            Name = profile.FriendlyName,
+            OwnerId = profile.OwnerId,
+            AllowAutoDelete = profile.AllowAutoDelete
         };
     }
 
@@ -61,7 +74,27 @@ public static class GameProfileMappers
         {
             Id = request.Id,
             FriendlyName = request.Name,
-            OwnerId = request.OwnerId
+            OwnerId = request.OwnerId,
+            AllowAutoDelete = request.AllowAutoDelete
+        };
+    }
+
+    public static GameProfileCreateRequest ToCreateRequest(this GameProfileExport profile)
+    {
+        return new GameProfileCreateRequest
+        {
+            Name = profile.Name
+        };
+    }
+
+    public static GameProfileExport ToExport(this GameProfileSlim profile, string gameId)
+    {
+        return new GameProfileExport
+        {
+            Name = profile.FriendlyName,
+            GameId = gameId,
+            AllowAutoDelete = profile.AllowAutoDelete,
+            Resources = []
         };
     }
 }

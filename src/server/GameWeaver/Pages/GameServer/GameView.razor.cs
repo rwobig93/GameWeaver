@@ -24,6 +24,28 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameView : ComponentBase
 {
+    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
+    private readonly List<LocalResourceSlim> _createdLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
+    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
+    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
+    private readonly List<Guid> _viewableGameServers = [];
+    private bool _canConfigureGame;
+
+    private bool _canEditGame;
+    private bool _canViewGameFiles;
+    private bool _canViewGameServers;
+    private string _configSearchText = string.Empty;
+    private string _editButtonText = "Enable Edit Mode";
+    private bool _editMode;
+    private GameSlim _game = new() {Id = Guid.Empty};
+    private List<LocalResourceSlim> _localResources = [];
+    private Guid _loggedInUserId = Guid.Empty;
+    private List<FileStorageRecordSlim> _manualVersionFiles = [];
+    private List<GameServerSlim> _runningGameservers = [];
+
+    private bool _validIdProvided = true;
     [Parameter] public Guid GameId { get; set; } = Guid.Empty;
 
     [Inject] public IGameService GameService { get; init; } = null!;
@@ -31,28 +53,6 @@ public partial class GameView : ComponentBase
     [Inject] public IFileStorageRecordService FileStorageService { get; init; } = null!;
     [Inject] public IWebClientService WebClientService { get; init; } = null!;
     [Inject] public ISerializerService SerializerService { get; init; } = null!;
-
-    private bool _validIdProvided = true;
-    private Guid _loggedInUserId = Guid.Empty;
-    private GameSlim _game = new() { Id = Guid.Empty };
-    private bool _editMode;
-    private string _editButtonText = "Enable Edit Mode";
-    private List<GameServerSlim> _runningGameservers = [];
-    private List<FileStorageRecordSlim> _manualVersionFiles = [];
-    private List<LocalResourceSlim> _localResources = [];
-    private string _configSearchText = string.Empty;
-    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
-    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
-    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
-    private readonly List<LocalResourceSlim> _createdLocalResources = [];
-    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
-    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
-    private readonly List<Guid> _viewableGameServers = [];
-
-    private bool _canEditGame;
-    private bool _canConfigureGame;
-    private bool _canViewGameServers;
-    private bool _canViewGameFiles;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -81,7 +81,7 @@ public partial class GameView : ComponentBase
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canEditGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Update);
         _canConfigureGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Configure);
-        _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get);
+        _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.SeeUi);
         _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
     }
 
@@ -155,7 +155,7 @@ public partial class GameView : ComponentBase
 
     private async Task Save()
     {
-        if (!_canEditGame)
+        if (!_canConfigureGame && !_canEditGame)
         {
             return;
         }
@@ -175,6 +175,7 @@ public partial class GameView : ComponentBase
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _deletedLocalResources.Clear();
 
         foreach (var resource in _createdLocalResources)
@@ -190,6 +191,7 @@ public partial class GameView : ComponentBase
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _createdLocalResources.Clear();
 
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
@@ -198,16 +200,19 @@ public partial class GameView : ComponentBase
             {
                 return;
             }
+
             _createdConfigItems.Clear();
             if (await SaveUpdatedConfigItems())
             {
                 return;
             }
+
             _updatedConfigItems.Clear();
             if (await SaveDeletedConfigItems())
             {
                 return;
             }
+
             _deletedConfigItems.Clear();
         }
 
@@ -222,6 +227,7 @@ public partial class GameView : ComponentBase
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _updatedLocalResources.Clear();
 
         ToggleEditMode();
@@ -277,7 +283,7 @@ public partial class GameView : ComponentBase
 
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
         var dialogParameters = new DialogParameters {{"ReferenceResource", localResource}};
         var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -370,7 +376,7 @@ public partial class GameView : ComponentBase
 
     private async Task LocalResourceAdd(ResourceType resourceType)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true, FullWidth = true};
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true, FullWidth = true};
         var dialogParameters = new DialogParameters {{"GameProfileId", _game.DefaultGameProfileId}, {"ResourceType", resourceType}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -381,8 +387,8 @@ public partial class GameView : ComponentBase
 
         var newResource = (LocalResourceSlim) dialogResult.Data;
         var startupResourceCount = _localResources.Count(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile);
-        newResource.StartupPriority = startupResourceCount; // We start from 0 for priority so count is correct
-        newResource.Startup = true; // We'll assume since we just created it we would want this resource enabled
+        newResource.StartupPriority = startupResourceCount; // We start from 0 for priority so the count is correct
+        newResource.Startup = true; // We'll assume since we just created it, we would want this resource enabled
 
         _localResources.Add(newResource);
         _createdLocalResources.Add(newResource);
@@ -417,8 +423,9 @@ public partial class GameView : ComponentBase
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters {
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
+        var dialogParameters = new DialogParameters
+        {
             {"Title", "Are you sure you want to delete this local resource?"},
             {"Content", $"You want to delete the resource '{localResource.Name}'?"}
         };
@@ -443,11 +450,13 @@ public partial class GameView : ComponentBase
             {
                 _createdConfigItems.Remove(matchingNewConfig);
             }
+
             var matchingUpdatedConfig = _createdConfigItems.FirstOrDefault(x => x.Id == configItem.Id);
             if (matchingUpdatedConfig is not null)
             {
                 _updatedConfigItems.Remove(matchingUpdatedConfig);
             }
+
             var matchingDeletedConfig = _createdConfigItems.FirstOrDefault(x => x.Id == configItem.Id);
             if (matchingDeletedConfig is not null)
             {
@@ -762,8 +771,7 @@ public partial class GameView : ComponentBase
         }
 
         var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
-                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}" +
-                          $"{Environment.NewLine}NOTE: Imports won't be complete until you save";
+                          $"File paths can't be assumed so each will need to be updated manually before you save";
         var importConfirmation = await DialogService.ConfirmDialog($"Import {configToImport.Count} config files", confirmText);
         if (importConfirmation.Canceled)
         {
@@ -780,6 +788,7 @@ public partial class GameView : ComponentBase
 
         foreach (var file in importFiles)
         {
+            var isNewConfigFile = true;
             var matchingResource = _localResources.FirstOrDefault(x =>
                 !string.IsNullOrWhiteSpace(x.PathWindows) && x.PathWindows.ToLower().EndsWith(file.Name.ToLower()) ||
                 !string.IsNullOrWhiteSpace(x.PathLinux) && x.PathLinux.ToLower().EndsWith(file.Name.ToLower()) ||
@@ -794,26 +803,27 @@ public partial class GameView : ComponentBase
                     continue;
                 }
 
-                await LocalResourceDelete(matchingResource);
+                isNewConfigFile = false;
             }
 
-            var newResource = new LocalResourceSlim
-            {
-                Id = Guid.CreateVersion7(),
-                GameProfileId = _game.DefaultGameProfileId,
-                Name = file.Name.Split('.').First(),
-                PathWindows = _game.SupportsWindows ? file.Name : string.Empty,
-                PathLinux = _game.SupportsLinux ? file.Name : string.Empty,
-                PathMac = _game.SupportsMac ? file.Name : string.Empty,
-                Startup = false,
-                StartupPriority = 0,
-                Type = ResourceType.ConfigFile,
-                ContentType = FileHelpers.GetContentTypeFromName(file.Name),
-                Args = string.Empty,
-                LoadExisting = false
-            };
+            if (isNewConfigFile)
+                matchingResource = new LocalResourceSlim
+                {
+                    Id = Guid.CreateVersion7(),
+                    GameProfileId = _game.DefaultGameProfileId,
+                    Name = file.Name.Split('.').First(),
+                    PathWindows = _game.SupportsWindows ? file.Name : string.Empty,
+                    PathLinux = _game.SupportsLinux ? file.Name : string.Empty,
+                    PathMac = _game.SupportsMac ? file.Name : string.Empty,
+                    Startup = false,
+                    StartupPriority = 0,
+                    Type = ResourceType.ConfigFile,
+                    ContentType = FileHelpers.GetContentTypeFromName(file.Name),
+                    Args = string.Empty,
+                    LoadExisting = false
+                };
 
-            var fileContent = await file.GetContent();  // Max import size per file is 10MB by default
+            var fileContent = await file.GetContent(); // The max import size per file is 10MB by default
             if (!fileContent.Succeeded || fileContent.Data is null)
             {
                 fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -821,26 +831,90 @@ public partial class GameView : ComponentBase
             }
 
             var fileContentLines = fileContent.Data.Split(Environment.NewLine);
-            var configItems = newResource.ContentType switch
+            List<ConfigurationItemSlim> configItems;
+            try
             {
-                ContentType.Raw => fileContentLines.ToConfigItems(newResource.Id),
-                ContentType.Ini => new IniData(fileContentLines, true).ToConfigItems(newResource.Id),
-                ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(fileContent.Data).ToConfigItems(newResource.Id),
-                ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(newResource.Id),
-                _ => fileContentLines.ToConfigItems(newResource.Id)
-            };
+                configItems = matchingResource!.ContentType switch
+                {
+                    ContentType.Raw => fileContentLines.ToConfigItems(matchingResource.Id),
+                    ContentType.Ini => new IniData(fileContentLines).ToConfigItems(matchingResource.Id),
+                    ContentType.Json => SerializerService.DeserializeJson<List<ConfigurationItemExport>>(fileContent.Data).ToConfigItems(matchingResource.Id),
+                    ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(matchingResource.Id),
+                    _ => fileContentLines.ToConfigItems(matchingResource.Id)
+                };
+            }
+            catch (Exception)
+            {
+                Snackbar.Add($"File {file.Name} import failed due to being in an unsupported or corrupt format", Severity.Error);
+                continue;
+            }
 
-            newResource.ConfigSets = configItems;
-            _createdLocalResources.Add(newResource);
-            _localResources.Add(newResource);
-            _createdConfigItems.AddRange(configItems);
+            matchingResource.ConfigSets = matchingResource.ConfigSets.MergeConfiguration(configItems, true);
+            foreach (var configItem in configItems)
+            {
+                // Set any config items not merged into existing items to be created
+                if (matchingResource.ConfigSets.FirstOrDefault(x => x.Id == configItem.Id) is not null)
+                {
+                    _createdConfigItems.Add(configItem);
+                    continue;
+                }
+
+                // Any config items where the id doesn't exist are updated
+                var updatedConfigItem = matchingResource.ConfigSets.FirstOrDefault(x =>
+                    (x.DuplicateKey && x.Category == configItem.Category && x.Key == configItem.Key && x.Path == configItem.Path && x.Value == configItem.Value) ||
+                    (x.Category == configItem.Category && x.Key == configItem.Key && x.Path == configItem.Path));
+                if (updatedConfigItem is null) continue;
+
+                _updatedConfigItems.Add(updatedConfigItem);
+            }
+
             importCount++;
+
+            if (isNewConfigFile)
+            {
+                _createdLocalResources.Add(matchingResource);
+                _localResources.Add(matchingResource);
+                continue;
+            }
+
+            _updatedLocalResources.Add(matchingResource);
         }
 
         if (importCount <= 0)
         {
+            Snackbar.Add("No files were imported", Severity.Info);
             return;
         }
+
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
+    }
+
+    private async Task ExportProfile()
+    {
+        var gameProfileResponse = await GameServerService.GetGameProfileByIdAsync(_game.DefaultGameProfileId);
+        if (!gameProfileResponse.Succeeded || gameProfileResponse.Data is null)
+        {
+            gameProfileResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        var profileExport = gameProfileResponse.Data.ToExport(_game.SourceType is GameSource.Steam ? _game.SteamToolId.ToString() : _game.FriendlyName);
+        foreach (var resource in _localResources)
+        {
+            var resourceExport = resource.ToExport();
+            resourceExport.Configuration = resource.ConfigSets.Select(x => x.ToExport()).ToList();
+            profileExport.Resources.Add(resourceExport);
+        }
+
+        var serializedProfile = SerializerService.SerializeJson(profileExport);
+        var profileExportName = $"{FileHelpers.SanitizeSecureFilename(profileExport.Name)}.json";
+        var downloadResult = await WebClientService.InvokeFileDownload(serializedProfile, profileExportName, DataConstants.MimeTypes.Json);
+        if (!downloadResult.Succeeded)
+        {
+            downloadResult.Messages.ForEach(x => Snackbar.Add(x));
+            return;
+        }
+
+        Snackbar.Add($"Successfully Exported Game Profile: {profileExportName}");
     }
 }

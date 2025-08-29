@@ -16,15 +16,15 @@
                 </MudItem>
                 <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
                     <MudAutocomplete T="UserBasicResponse" Label="Available Users" @bind-Value="_selectedUser" CoerceText="true" Required="true"
-                                     SearchFunc="@FilterUsers" ToStringFunc="@(x => $"{x?.Username}")"/>
+                                     SearchFunc="@FilterUsers" Immediate="true" ToStringFunc="@(x => $"{x?.Username}")"/>
                 </MudItem>
             </MudStack>
         </MudContainer>
     </DialogContent>
     <DialogActions>
-        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Stretch" Spacing="3">
+        <MudItem  xs="12" sm="12" md="12" Class="d-flex gap-4 justify-center pb-3">
             <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@Confirm">@ConfirmButtonText</MudButton>
             <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
-        </MudStack>
+        </MudItem>
     </DialogActions>
 </MudDialog>

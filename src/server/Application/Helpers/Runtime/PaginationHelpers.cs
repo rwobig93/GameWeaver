@@ -33,7 +33,7 @@ public static class PaginationHelpers
         {
             return
             [
-                25,
+                20,
                 50,
                 100,
                 200,

@@ -87,6 +87,10 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
 
     private async Task RefreshData()
     {
+        _hostWidgets.Clear();
+        _pagedData = [];
+        StateHasChanged();
+
         var response = await HostService.SearchPaginatedAsync(_searchText, _pageNumber, _pageSize);
         if (!response.Succeeded)
         {
@@ -94,7 +98,6 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _hostWidgets.Clear();
         _pagedData = response.Data;
         _totalItems = response.TotalCount;
         _totalPages = response.EndPage;

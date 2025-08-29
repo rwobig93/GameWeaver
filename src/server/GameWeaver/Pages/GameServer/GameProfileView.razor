@@ -1,0 +1,286 @@
+﻿@using Application.Constants.GameServer
+@using Application.Constants.Identity
+@using Application.Helpers.Runtime
+@using Domain.Enums.GameServer
+@using GameWeaver.Components.GameServer
+
+@attribute [Route(AppRouteConstants.GameServer.GameProfiles.View)]
+@attribute [Authorize(PermissionConstants.GameServer.GameProfile.Get)]
+
+@if (!_validIdProvided)
+{
+    <IconWithMessageDisplay Icon="@Icons.Material.Filled.ErrorOutline" Text="Invalid Game Id provided"/>
+    return;
+}
+
+@* General Action Button Bar *@
+<MudPaper Elevation="12" Class="d-flex flex-wrap gap-4 mb-2 pa-4 justify-center align-center mud-text-align-center">
+    <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
+               OnClick="@GoBack">Go Back
+    </MudButton>
+    @if (_canEditProfile || _canConfigureProfile)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
+                   OnClick="@ToggleEditMode">@_editButtonText
+        </MudButton>
+    }
+    @if (_canChangeOwnership)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.Person"
+                   OnClick="@ChangeOwnership">Change Ownership
+        </MudButton>
+    }
+    @if (_editMode)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 
+                   OnClick="@Save">Save Changes
+        </MudButton>
+    }
+    @if (_canDeleteProfile)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                   OnClick="@Delete">Delete Profile
+        </MudButton>
+    }
+</MudPaper>
+
+@* Editable Profile information *@
+<MudPaper Elevation="8" Class="d-flex flex-wrap ma-4 pa-4 gap-4">
+    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+        @if (_canEditProfile && _editMode)
+        {
+            <MudTextField @bind-Value="_gameProfile.FriendlyName" Label="Name" Variant="Variant.Outlined" Disabled="@(!_editMode)"/>
+        }
+        else
+        {
+            <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@_gameProfile.FriendlyName</MudText>
+        }
+    </MudItem>
+    @if (_canEditProfile)
+    {
+        <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center">
+            <MudSwitch T="bool" Color="Color.Secondary" @bind-Value="_gameProfile.AllowAutoDelete" Label="Allow Auto Delete If Unused" Disabled="@(!_editMode)" />
+        </MudItem>
+    }
+</MudPaper>
+
+@* Configuration, Expert, Startup, Permissions and Gameserver Tabs *@
+@if (!_canEditProfile && !_canConfigureProfile && !_canViewGameServers && !_canPermissionProfile)
+{
+    return;
+}
+<MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center">
+    @if (_canEditProfile || _canConfigureProfile)
+    {
+        <MudTabPanel Text="Config">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudPaper Width="100%" Elevation="12" Square="false">
+                    <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="" Immediate="true" @bind-Text="_configSearchText"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
+                </MudPaper>
+            </MudItem>
+            @if (_editMode)
+            {
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-2">
+                    <MudPaper Elevation="10" Square="false">
+                        <MudAlert Dense="true" Square="false" Severity="Severity.Info" Class="border-pulse-info">
+                            Configuration starting and ending with '%%%' uses that server setting, use these settings with the
+                            <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline"/> button
+                        </MudAlert>
+                    </MudPaper>
+                </MudStack>
+            }
+            @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
+            {
+                @if (localResource.ContentType is ContentType.Ignore or ContentType.Deleted)
+                {
+                    continue;
+                }
+
+                <LocalResourceConfigWidget LocalResource="@localResource" CanEdit="@_canEditProfile" EditMode="@_editMode" ConfigFilterText="@_configSearchText" 
+                                           ConfigUpdate="@ConfigUpdated" ConfigDelete="@ConfigDeleted" />
+            }
+            @if (_localResources.All(x => x.Type != ResourceType.ConfigFile))
+            {
+                <MudPaper Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Configuration Files Found</MudText>
+                    </MudItem>
+                </MudPaper>
+            }
+        </MudTabPanel>
+    }
+    @if (_canEditProfile)
+    {
+        <MudTabPanel Text="Expert">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                <MudPaper Width="100%" Elevation="12">
+                    <MudTextField T="string" Placeholder="Find Configuration" Adornment="Adornment.Start" Class="" Immediate="true" @bind-Text="_configSearchText"
+                                  AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true"/>
+                </MudPaper>
+            </MudItem>
+            @if (_editMode)
+            {
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="pt-2">
+                    <MudPaper Elevation="10" Square="false">
+                        <MudAlert Dense="true" Square="false" Severity="Severity.Info" Class="border-pulse-info">
+                            Configuration starting and ending with '%%%' uses that server setting, use these settings with the
+                            <MudIcon Icon="@Icons.Material.Filled.DriveFileRenameOutline"/> button
+                        </MudAlert>
+                    </MudPaper>
+                </MudStack>
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-4 pt-3">
+                    <MudPaper Elevation="10" Square="false">
+                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                   OnClick="@(() => LocalResourceAdd(ResourceType.ConfigFile))" FullWidth="true" Disabled="@(!_editMode)">
+                            Add Config File
+                        </MudButton>
+                    </MudPaper>
+                    <MudPaper Elevation="10" Square="false">
+                        <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ConfigSelectedForImport(files))"
+                                       Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))" MaximumFileCount="100">
+                            <ActivatorContent>
+                                <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                    Import Config Files
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudPaper>
+                    <MudPaper Elevation="10" Square="false">
+                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
+                                   OnClick="@ExportProfile" Disabled="@(!_editMode)">
+                            Export Configuration
+                        </MudButton>
+                    </MudPaper>
+                </MudStack>
+            }
+            @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
+            {
+                <LocalResourceConfigExpertWidget LocalResource="@localResource" Game="@_game" ConfigFilterText="@_configSearchText" EditMode="@_editMode"
+                                                 ResourceUpdate="@LocalResourceUpdate" ResourceDelete="@LocalResourceDelete" ConfigAdd="ConfigAdd" ConfigUpdate="ConfigUpdated"
+                                                 ConfigDelete="@ConfigDeleted" OpenConfigEditor="@OpenConfigInEditor"/>
+            }
+            @if (_localResources.All(x => x.Type != ResourceType.ConfigFile))
+            {
+                <MudPaper Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Configuration Files Found</MudText>
+                    </MudItem>
+                </MudPaper>
+            }
+        </MudTabPanel>
+        <MudTabPanel Text="Startup">
+            @if (_editMode)
+            {
+                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-4 pt-3">
+                    <MudPaper Elevation="10" Square="false">
+                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                   OnClick="@(() => LocalResourceAdd(ResourceType.Executable))" FullWidth="true" Disabled="@(!_editMode)">
+                            Add Startup Executable
+                        </MudButton>
+                    </MudPaper>
+                    <MudPaper Elevation="10" Square="false">
+                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                   OnClick="@(() => LocalResourceAdd(ResourceType.ScriptFile))" FullWidth="true" Disabled="@(!_editMode)">
+                            Add Startup Script
+                        </MudButton>
+                    </MudPaper>
+                </MudStack>
+            }
+            @foreach (var localResource in _localResources.Where(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile)
+                          .OrderBy(x => x.StartupPriority))
+            {
+                <LocalResourceStartupWidget LocalResource="@localResource" Game="@_game" EditMode="@_editMode" ResourceUpdate="@LocalResourceUpdate"
+                                            OpenScriptEditor="@OpenScriptInEditor" ResourceDelete="@LocalResourceDelete" />
+            }
+            @if (_localResources.Count(x => x.Type is ResourceType.Executable or ResourceType.ScriptFile) <= 0)
+            {
+                <MudPaper Width="95%" Elevation="10" Class="ma-4 pa-4">
+                    <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="pa-2">
+                        <MudText Color="Color.Warning" Align="Align.Center" Typo="Typo.h6">No Startup Executables Or Scripts Found</MudText>
+                    </MudItem>
+                </MudPaper>
+            }
+        </MudTabPanel>
+    }
+    @if (_canPermissionProfile)
+    {
+        <MudTabPanel Text="Permissions">
+            <MudPaper Elevation="10" Class="ma-4 pa-4" Square="false">
+                <MudTable Items="@_assignedRolePermissions" @bind-SelectedItems="_deleteRolePermissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap"
+                          MultiSelection="true">
+                    <ToolBarContent>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                            <MudText>Roles with direct access to this profile</MudText>
+                            <MudSpacer/>
+                            @if (_editMode)
+                            {
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                           OnClick="@(() => AddPermissions(true))">
+                                    Add Access
+                                </MudButton>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                                           OnClick="@DeletePermissions" Disabled="@(_deleteRolePermissions.Count < 1)">
+                                    Remove Access
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Access Level</MudTh>
+                        <MudTh>Added</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.PermContactCalendar"/></MudTd>
+                        <MudTd DataLabel="Name">@context.RoleName</MudTd>
+                        <MudTd DataLabel="Access Level">@context.Access</MudTd>
+                        <MudTd DataLabel="Added">@(context.CreatedOn.ConvertToLocal(_localTimeZone))</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+
+            <MudPaper Elevation="10" Class="ma-4 pa-4" Square="false">
+                <MudTable Items="@_assignedUserPermissions" @bind-SelectedItems="_deleteUserPermissions" Hover="true" Dense="true" Striped="true" Class="d-flex flex-wrap"
+                          MultiSelection="true">
+                    <ToolBarContent>
+                        <MudStack Row="true" Justify="Justify.SpaceBetween" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center">
+                            <MudText>Users with direct access to this profile</MudText>
+                            <MudSpacer/>
+                            @if (_editMode)
+                            {
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add"
+                                           OnClick="@(() => AddPermissions(false))">
+                                    Add Access
+                                </MudButton>
+                                <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete"
+                                           OnClick="@DeletePermissions" Disabled="@(_deleteUserPermissions.Count < 1)">
+                                    Remove Access
+                                </MudButton>
+                            }
+                        </MudStack>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh></MudTh>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Access Level</MudTh>
+                        <MudTh>Added</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Icon"><MudIcon Color="Color.Secondary" Icon="@Icons.Material.Filled.VerifiedUser"/></MudTd>
+                        <MudTd DataLabel="Name">@context.UserName</MudTd>
+                        <MudTd DataLabel="Access Level">@context.Access</MudTd>
+                        <MudTd DataLabel="Added">@(context.CreatedOn.ConvertToLocal(_localTimeZone))</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudTabPanel>
+    }
+    @if (_canViewGameServers)
+    {
+        <MudTabPanel Text="Gameservers">
+            <GameServerListWidget GameServers="@_inheritingGameservers" ViewableGameServers="@_viewableGameServers" Title="Gameservers Inheriting This Profile" />
+        </MudTabPanel>
+    }
+</MudTabs>

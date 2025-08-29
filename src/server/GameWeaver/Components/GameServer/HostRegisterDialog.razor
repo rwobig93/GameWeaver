@@ -49,7 +49,9 @@
         </MudStack>
     </DialogContent>
     <DialogActions>
-        <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@GenerateRegistration">@ConfirmButtonText</MudButton>
-        <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex gap-4 justify-center pb-3">
+            <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@GenerateRegistration">@ConfirmButtonText</MudButton>
+            <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+        </MudItem>
     </DialogActions>
 </MudDialog>

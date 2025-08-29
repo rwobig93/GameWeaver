@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigurationItem;
 using GameWeaverShared.Parsers;
 
@@ -67,6 +68,12 @@ public static class ConfigurationItemHelpers
         }));
 
         return configItems;
+    }
+
+    public static List<ConfigurationItemSlim> ToConfigItems(this IEnumerable<ConfigurationItemExport> jsonConfigItems, Guid resourceId)
+    {
+        var convertedConfigItems = jsonConfigItems.Select(jsonConfigItem => jsonConfigItem.ToSlim(resourceId)).ToList();
+        return convertedConfigItems;
     }
 
     public static List<ConfigurationItemSlim> ToConfigItems(this IEnumerable<string> rawData, Guid resourceId)

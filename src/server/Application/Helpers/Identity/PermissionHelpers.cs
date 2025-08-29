@@ -67,6 +67,16 @@ public static class PermissionHelpers
         ];
     }
 
+    public static List<string> GetAllGameProfileDynamicPermissions(Guid id)
+    {
+        return [
+            PermissionConstants.GameServer.GameProfile.Dynamic(id, DynamicPermissionLevel.Admin),
+            PermissionConstants.GameServer.GameProfile.Dynamic(id, DynamicPermissionLevel.Edit),
+            PermissionConstants.GameServer.GameProfile.Dynamic(id, DynamicPermissionLevel.Permission),
+            PermissionConstants.GameServer.GameProfile.Dynamic(id, DynamicPermissionLevel.Configure)
+        ];
+    }
+
     public static List<string> GetModeratorRolePermissions()
     {
         return
@@ -112,6 +122,7 @@ public static class PermissionHelpers
             PermissionConstants.GameServer.Game.Search,
             PermissionConstants.GameServer.Game.GetAllPaginated,
             PermissionConstants.GameServer.Game.Delete,
+            PermissionConstants.GameServer.GameProfile.SeeUi,
             PermissionConstants.GameServer.GameProfile.Get,
             PermissionConstants.GameServer.GameProfile.GetCount,
             PermissionConstants.GameServer.GameProfile.Create,
@@ -159,6 +170,7 @@ public static class PermissionHelpers
             PermissionConstants.Identity.Users.ChangeEmail,
             PermissionConstants.GameServer.Game.Get,
             PermissionConstants.GameServer.Gameserver.SeeUi,
+            PermissionConstants.GameServer.GameProfile.SeeUi,
             PermissionConstants.GameServer.Hosts.SeeUi
         ];
     }

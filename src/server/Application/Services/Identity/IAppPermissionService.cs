@@ -11,6 +11,7 @@ public interface IAppPermissionService
     Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailablePermissionsAsync();
     Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicServiceAccountPermissionsAsync(Guid id);
     Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicGameServerPermissionsAsync(Guid id);
+    Task<IResult<IEnumerable<AppPermissionCreate>>> GetAllAvailableDynamicGameProfilePermissionsAsync(Guid id);
     Task<IResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedAsync();
     Task<PaginatedResult<IEnumerable<AppPermissionSlim>>> GetAllAssignedPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<IEnumerable<AppPermissionSlim>>> SearchAsync(string searchTerm);

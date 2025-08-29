@@ -8,8 +8,6 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
 {
     private const string TableName = "GameServers";
 
-    public IEnumerable<ISqlDatabaseScript> GetDbScripts() => typeof(GameServersTableMsSql).GetDbScriptsFromClass();
-
     public static readonly SqlTable Table = new()
     {
         EnforcementOrder = 7,
@@ -384,4 +382,28 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
                 WHERE Id = @Id;
             end"
     };
+
+    public static readonly SqlStoredProcedure UpdateParentGameProfileId = new()
+    {
+        Table = Table,
+        Action = "UpdateParentGameProfileId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_UpdateParentGameProfileId]
+                @Id UNIQUEIDENTIFIER,
+                @ParentGameProfileId UNIQUEIDENTIFIER = null,
+                @LastModifiedBy UNIQUEIDENTIFIER = null,
+                @LastModifiedOn DATETIME2 = null
+            AS
+            begin
+                UPDATE dbo.[{Table.TableName}]
+                SET ParentGameProfileId = @ParentGameProfileId, LastModifiedBy = COALESCE(@LastModifiedBy, LastModifiedBy),
+                    LastModifiedOn = COALESCE(@LastModifiedOn, LastModifiedOn)
+                WHERE Id = @Id;
+            end"
+    };
+
+    public IEnumerable<ISqlDatabaseScript> GetDbScripts()
+    {
+        return typeof(GameServersTableMsSql).GetDbScriptsFromClass();
+    }
 }

@@ -150,4 +150,47 @@ public static class ConfigurationItemMappers
             FriendlyName = configItem.FriendlyName
         };
     }
+
+    public static ConfigurationItemCreate ToCreate(this ConfigurationItemExport configItem)
+    {
+        return new ConfigurationItemCreate
+        {
+            DuplicateKey = configItem.DuplicateKey,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
+        };
+    }
+
+    public static ConfigurationItemExport ToExport(this ConfigurationItemSlim configItem)
+    {
+        return new ConfigurationItemExport
+        {
+            DuplicateKey = configItem.DuplicateKey,
+            Ignore = configItem.Ignore,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
+        };
+    }
+
+    public static ConfigurationItemSlim ToSlim(this ConfigurationItemExport configItem, Guid? resourceId = null)
+    {
+        return new ConfigurationItemSlim
+        {
+            Id = Guid.CreateVersion7(),
+            LocalResourceId = resourceId ?? Guid.Empty,
+            DuplicateKey = configItem.DuplicateKey,
+            Ignore = configItem.Ignore,
+            Path = configItem.Path,
+            Category = configItem.Category,
+            Key = configItem.Key,
+            Value = configItem.Value,
+            FriendlyName = configItem.FriendlyName
+        };
+    }
 }

@@ -15,13 +15,17 @@
         </MudStack>
         <MudStack Row="false" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Style="width: 80%;">
             <MudPaper Outlined="false" Elevation="6" Square="false" Class="rounded-lg px-1">
-                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body1" Style="position: relative;" Class="@(_cssTextStatus)">@(GameServer.ServerName)</MudText>
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body1" Style="position: relative;" Class="@(_cssTextStatus)">
+                    @(GameServer.ServerName.Length > 30 ? GameServer.ServerName[..30] : GameServer.ServerName)
+                </MudText>
             </MudPaper>
             <MudSpacer />
             <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
             <MudSpacer />
             <MudPaper Outlined="false" Elevation="6" Square="false" Class="rounded-lg px-1">
-                <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">Game: @(_game.FriendlyName)</MudText>
+                <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">
+                    Game: @(_game.FriendlyName.Length > 35 ? _game.FriendlyName[..35] : _game.FriendlyName)
+                </MudText>
             </MudPaper>
         </MudStack>
     </MudStack>

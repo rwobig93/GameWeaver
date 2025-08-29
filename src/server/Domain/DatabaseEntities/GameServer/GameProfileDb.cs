@@ -8,7 +8,7 @@ public class GameProfileDb : IAuditableEntity<Guid>
     public string FriendlyName { get; set; } = "";
     public Guid OwnerId { get; set; }
     public Guid GameId { get; set; }
-    public string ServerProcessName { get; set; } = "";
+    public bool AllowAutoDelete { get; set; } = true;
     public Guid CreatedBy { get; set; }
     public DateTime CreatedOn { get; set; }
     public Guid? LastModifiedBy { get; set; }

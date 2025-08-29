@@ -143,6 +143,7 @@ public static class LocalResourceMappers
     {
         return new LocalResourceCreate
         {
+            Id = Guid.CreateVersion7(),
             GameProfileId = request.GameProfileId,
             Name = request.Name,
             PathWindows = request.PathWindows,
@@ -183,6 +184,7 @@ public static class LocalResourceMappers
     {
         return new LocalResourceCreate
         {
+            Id = resource.Id,
             GameProfileId = resource.GameProfileId,
             Name = resource.Name ?? string.Empty,
             PathWindows = resource.PathWindows ?? string.Empty,
@@ -201,6 +203,7 @@ public static class LocalResourceMappers
     {
         return new LocalResourceCreate
         {
+            Id = resource.Id,
             GameProfileId = resource.GameProfileId,
             Name = resource.Name,
             PathWindows = resource.PathWindows,
@@ -221,6 +224,41 @@ public static class LocalResourceMappers
         {
             Id = resource.Id,
             Name = resource.Name
+        };
+    }
+
+    public static LocalResourceCreate ToCreate(this LocalResourceExport resource)
+    {
+        return new LocalResourceCreate
+        {
+            Name = resource.Name,
+            PathWindows = resource.PathWindows,
+            PathLinux = resource.PathLinux,
+            PathMac = resource.PathMac,
+            Startup = resource.Startup,
+            StartupPriority = resource.StartupPriority,
+            Type = resource.Type,
+            ContentType = resource.ContentType,
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting
+        };
+    }
+
+    public static LocalResourceExport ToExport(this LocalResourceSlim resource)
+    {
+        return new LocalResourceExport
+        {
+            Name = resource.Name,
+            PathWindows = resource.PathWindows,
+            PathLinux = resource.PathLinux,
+            PathMac = resource.PathMac,
+            Startup = resource.Startup,
+            StartupPriority = resource.StartupPriority,
+            Type = resource.Type,
+            ContentType = resource.ContentType,
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting,
+            Configuration = []
         };
     }
 }

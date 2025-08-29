@@ -846,6 +846,13 @@ public class GameServerService : IGameServerService
 
             switch (configFile)
             {
+                case {ContentType: ContentType.Ignore or ContentType.Deleted}:
+                {
+                    _logger.Debug("Attempting to delete ignore/delete file: {FilePath}", configFile.GetFullPath());
+                    File.Delete(configFile.GetFullPath());
+                    _logger.Information("Ignore/delete file deleted: {FilePath}", configFile.GetFullPath());
+                    continue;
+                }
                 case {ContentType: ContentType.Json}:
                 {
                     var jsonUpdateRequest = await UpdateJsonFile(configFile, configFile.LoadExisting);

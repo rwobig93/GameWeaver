@@ -21,7 +21,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_solution_items", "_solutio
 		LICENSE = LICENSE
 		.github\CODEOWNERS = .github\CODEOWNERS
 		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
-		src\server\GameWeaver\Dockerfile = src\server\GameWeaver\Dockerfile
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeaverService", "src\client\WeaverService\WeaverService.csproj", "{C79794FE-4CE7-4CAD-88C9-55FE7BDC1070}"
@@ -36,7 +35,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libraries", "libraries", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameServerQuery", "src\libraries\GameServerQuery\GameServerQuery.csproj", "{8E26E9BC-96AC-4941-AD66-C820B2865704}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameWeaverShared", "GameWeaverShared\GameWeaverShared.csproj", "{E33D79AD-D494-42E7-88A3-71038983909B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameWeaverShared", "src\libraries\GameWeaverShared\GameWeaverShared.csproj", "{E33D79AD-D494-42E7-88A3-71038983909B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,4 +1,5 @@
-﻿using Application.Services.System;
+﻿using System.Text;
+using Application.Services.System;
 using Domain.Contracts;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -39,7 +40,7 @@ public class WebClientService : IWebClientService
         {
             await _jsRuntime.InvokeVoidAsync("Download", new
             {
-                ByteArray = content,
+                ByteArray = Convert.ToBase64String(Encoding.UTF8.GetBytes(content)),
                 FileName = fileName,
                 MimeType = mimeType
             });

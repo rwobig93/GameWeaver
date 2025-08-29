@@ -15,7 +15,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\GameWeaverShared\GameWeaverShared.csproj" />
+      <ProjectReference Include="..\..\..\src\libraries\GameWeaverShared\GameWeaverShared.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
     </ItemGroup>
 
@@ -23,23 +23,23 @@
       <PackageReference Include="Asp.Versioning.Http" Version="8.1.0" />
       <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
       <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-      <PackageReference Include="CodenameGenerator" Version="1.2.47" />
       <PackageReference Include="FluentEmail.Core" Version="3.0.2" />
-      <PackageReference Include="Hangfire" Version="1.8.18" />
-      <PackageReference Include="Hangfire.Core" Version="1.8.18" />
+      <PackageReference Include="Hangfire" Version="1.8.21" />
+      <PackageReference Include="Hangfire.Core" Version="1.8.21" />
       <PackageReference Include="MemoryPack" Version="1.21.4" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.3" />
-      <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.7.0" />
-      <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.7.0" />
-      <PackageReference Include="MudBlazor" Version="8.5.1" />
+      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
+      <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.14.0" />
+      <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.14.0" />
+      <PackageReference Include="MudBlazor" Version="8.11.0" />
       <PackageReference Include="OAuth2" Version="0.10.3" />
+      <PackageReference Include="RandomFriendlyNameGenerator" Version="1.0.9" />
       <PackageReference Include="RestSharp.Authenticators" Version="1.1.1" />
       <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
       <PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
       <PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
       <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
       <PackageReference Include="Serilog.Sinks.Seq" Version="9.0.0" />
-      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.7.0" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
     </ItemGroup>
 
 </Project>

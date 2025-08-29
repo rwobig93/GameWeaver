@@ -8,22 +8,21 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\GameWeaverShared\GameWeaverShared.csproj" />
+      <ProjectReference Include="..\..\..\src\libraries\GameWeaverShared\GameWeaverShared.csproj" />
       <ProjectReference Include="..\Domain\Domain.csproj" />
     </ItemGroup>
 
 
 
     <ItemGroup>
-      <PackageReference Include="Hardware.Info" Version="101.0.1" />
+      <PackageReference Include="Hardware.Info" Version="101.0.1.1" />
       <PackageReference Include="MemoryPack" Version="1.21.4" />
-      <PackageReference Include="Serilog" Version="4.2.0" />
+      <PackageReference Include="Serilog" Version="4.3.0" />
     </ItemGroup>
 
 
 
     <ItemGroup>
-      <Folder Include="Handlers\" />
       <Folder Include="Models\Handlers\" />
     </ItemGroup>
 

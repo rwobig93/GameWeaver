@@ -292,7 +292,9 @@ public partial class SecuritySettings
     private async Task TotpSubmitCheck(KeyboardEventArgs arg)
     {
         if (arg.Key == "Enter")
+        {
             await ValidateTotpCode();
+        }
     }
 
     private async Task GetClientTimezone()
@@ -362,7 +364,12 @@ public partial class SecuritySettings
 
         var dialogParameters = new DialogParameters {{"ApiTokenId", Guid.Empty}};
         var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        await DialogService.ShowAsync<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions);
+        var dialogResult = await DialogService.ShowAsync<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions);
+        var answer = await dialogResult.Result;
+        if (answer?.Data is null || answer.Canceled)
+        {
+            return;
+        }
 
         await GetUserApiTokens();
         StateHasChanged();
