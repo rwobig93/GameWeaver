@@ -6,7 +6,6 @@
 @using Application.Models.Lifecycle
 @using Domain.Enums.GameServer
 @using GameWeaver.Components.GameServer
-
 @attribute [Route(AppRouteConstants.GameServer.GameServers.View)]
 @attribute [Authorize]
 
@@ -336,7 +335,6 @@
 </MudTable>
 
 @* Configuration, Expert, Startup & Permissions Tabs *@
-@* TODO: Allow collapsable config sections, set to default collapsed for expert config files for manageability *@
 <MudTabs ApplyEffectsToContainer="true" Centered="true" Rounded="true" ActiveTabClass="mud-border-primary" Position="Position.Center">
     @if (_canEditServer || _canConfigServer)
     {

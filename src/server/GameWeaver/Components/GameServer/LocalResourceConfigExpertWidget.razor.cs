@@ -14,6 +14,7 @@ public partial class LocalResourceConfigExpertWidget : ComponentBase
     [Inject] public IWebClientService WebClientService { get; init; } = null!;
     [Parameter] public LocalResourceSlim LocalResource { get; set; } = null!;
     [Parameter] public bool EditMode { get; set; }
+    [Parameter] public bool ConfigExpanded { get; set; }
     [Parameter] public string ConfigFilterText { get; set; } = string.Empty;
     [Parameter] public GameSlim Game { get; set; } = null!;
     [Parameter] public EventCallback<LocalResourceSlim> ResourceUpdate { get; set; }

@@ -25,6 +25,35 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameProfileView : ComponentBase
 {
+    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
+    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
+    private readonly List<LocalResourceSlim> _createdLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
+    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
+    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
+    private readonly List<Guid> _viewableGameServers = [];
+    private bool _canChangeOwnership;
+    private bool _canConfigureProfile;
+    private bool _canDeleteProfile;
+
+    private bool _canEditProfile;
+    private bool _canPermissionProfile;
+    private bool _canViewGameServers;
+    private string _configSearchText = string.Empty;
+    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
+    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
+    private string _editButtonText = "Enable Edit Mode";
+    private bool _editMode;
+    private GameSlim _game = new() {Id = Guid.Empty};
+    private GameProfileSlim _gameProfile = new() {Id = Guid.Empty};
+    private List<GameServerSlim> _inheritingGameservers = [];
+    private List<LocalResourceSlim> _localResources = [];
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    private Guid _loggedInUserId = Guid.Empty;
+
+    private bool _validIdProvided = true;
     [Parameter] public Guid GameProfileId { get; set; } = Guid.Empty;
 
     [Inject] public IGameService GameService { get; init; } = null!;
@@ -34,35 +63,6 @@ public partial class GameProfileView : ComponentBase
     [Inject] public IAppUserService UserService { get; init; } = null!;
     [Inject] public IAppRoleService RoleService { get; init; } = null!;
     [Inject] public IAppPermissionService PermissionService { get; init; } = null!;
-
-    private bool _validIdProvided = true;
-    private Guid _loggedInUserId = Guid.Empty;
-    private GameSlim _game = new() { Id = Guid.Empty };
-    private GameProfileSlim _gameProfile = new() { Id = Guid.Empty };
-    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private bool _editMode;
-    private string _editButtonText = "Enable Edit Mode";
-    private List<GameServerSlim> _inheritingGameservers = [];
-    private List<LocalResourceSlim> _localResources = [];
-    private string _configSearchText = string.Empty;
-    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
-    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
-    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
-    private readonly List<LocalResourceSlim> _createdLocalResources = [];
-    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
-    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
-    private readonly List<Guid> _viewableGameServers = [];
-    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
-    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
-    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
-    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
-
-    private bool _canEditProfile;
-    private bool _canConfigureProfile;
-    private bool _canPermissionProfile;
-    private bool _canChangeOwnership;
-    private bool _canViewGameServers;
-    private bool _canDeleteProfile;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -94,7 +94,7 @@ public partial class GameProfileView : ComponentBase
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.SeeUi);
 
         var isProfileAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
-                            await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, _gameProfile.Id);
+                             await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, _gameProfile.Id);
         // Profile owner and admin will get full permissions
         if (_gameProfile.OwnerId == _loggedInUserId || isProfileAdmin)
         {
@@ -111,7 +111,8 @@ public partial class GameProfileView : ComponentBase
         _canConfigureProfile = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.GameProfile.Update,
             DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Configure, _gameProfile.Id);
         _canDeleteProfile = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Delete);
-        _canPermissionProfile = await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Permission, _gameProfile.Id);
+        _canPermissionProfile =
+            await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Permission, _gameProfile.Id);
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.ChangeOwnership);
     }
 
@@ -235,6 +236,7 @@ public partial class GameProfileView : ComponentBase
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _deletedLocalResources.Clear();
 
         foreach (var resource in _createdLocalResources)
@@ -248,6 +250,7 @@ public partial class GameProfileView : ComponentBase
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _createdLocalResources.Clear();
 
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
@@ -256,18 +259,21 @@ public partial class GameProfileView : ComponentBase
             {
                 return;
             }
+
             _deletedConfigItems.Clear();
 
             if (await SaveNewConfigItems())
             {
                 return;
             }
+
             _createdConfigItems.Clear();
 
             if (await SaveUpdatedConfigItems())
             {
                 return;
             }
+
             _updatedConfigItems.Clear();
         }
 
@@ -282,6 +288,7 @@ public partial class GameProfileView : ComponentBase
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _updatedLocalResources.Clear();
 
         ToggleEditMode();
@@ -348,7 +355,7 @@ public partial class GameProfileView : ComponentBase
 
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
         var dialogParameters = new DialogParameters {{"ReferenceResource", localResource}};
         var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -441,7 +448,7 @@ public partial class GameProfileView : ComponentBase
 
     private async Task LocalResourceAdd(ResourceType resourceType)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true, FullWidth = true};
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true, FullWidth = true};
         var dialogParameters = new DialogParameters {{"GameProfileId", _game.DefaultGameProfileId}, {"ResourceType", resourceType}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -488,8 +495,9 @@ public partial class GameProfileView : ComponentBase
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters {
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
+        var dialogParameters = new DialogParameters
+        {
             {"Title", "Are you sure you want to delete this local resource?"},
             {"Content", $"You want to delete the resource '{localResource.Name}'?"}
         };
@@ -514,11 +522,13 @@ public partial class GameProfileView : ComponentBase
             {
                 _createdConfigItems.Remove(matchingNewConfig);
             }
+
             var matchingUpdatedConfig = _createdConfigItems.FirstOrDefault(x => x.Id == configItem.Id);
             if (matchingUpdatedConfig is not null)
             {
                 _updatedConfigItems.Remove(matchingUpdatedConfig);
             }
+
             var matchingDeletedConfig = _createdConfigItems.FirstOrDefault(x => x.Id == configItem.Id);
             if (matchingDeletedConfig is not null)
             {
@@ -833,7 +843,7 @@ public partial class GameProfileView : ComponentBase
         }
 
         var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
-                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}";
+                          $"File paths can't be assumed so each will need to be updated manually before you save";
         var importConfirmation = await DialogService.ConfirmDialog($"Import {configToImport.Count} config files", confirmText);
         if (importConfirmation.Canceled)
         {
@@ -864,6 +874,7 @@ public partial class GameProfileView : ComponentBase
                     Snackbar.Add($"File {file.Name} import was cancelled", Severity.Warning);
                     continue;
                 }
+
                 isNewConfigFile = false;
             }
 
@@ -886,7 +897,7 @@ public partial class GameProfileView : ComponentBase
                 };
             }
 
-            var fileContent = await file.GetContent();  // The max import size per file is 10MB by default
+            var fileContent = await file.GetContent(); // The max import size per file is 10MB by default
             if (!fileContent.Succeeded || fileContent.Data is null)
             {
                 fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -930,6 +941,7 @@ public partial class GameProfileView : ComponentBase
                 {
                     continue;
                 }
+
                 _updatedConfigItems.Add(updatedConfigItem);
             }
 
@@ -950,6 +962,7 @@ public partial class GameProfileView : ComponentBase
             Snackbar.Add("No files were imported", Severity.Info);
             return;
         }
+
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
     }
 

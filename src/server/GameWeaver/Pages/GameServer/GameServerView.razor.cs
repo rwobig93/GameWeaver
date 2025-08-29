@@ -1,5 +1,4 @@
-﻿using System.Text;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Auth;
@@ -31,6 +30,44 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameServerView : ComponentBase, IAsyncDisposable
 {
+    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
+    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
+    private readonly List<LocalResourceSlim> _createdLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
+    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
+    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
+    private List<GameProfileSlim>? _availableParentProfiles;
+    private bool _canChangeOwnership;
+    private bool _canConfigServer;
+    private bool _canDeleteServer;
+    private bool _canEditServer;
+    private bool _canPermissionServer;
+    private bool _canStartServer;
+    private bool _canStopServer;
+
+    private bool _canViewGameServer;
+    private string _configSearchText = string.Empty;
+    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
+    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
+    private string _editButtonText = "Enable Edit Mode";
+    private bool _editMode;
+    private GameSlim _game = new() {Id = Guid.Empty};
+    private GameServerSlim _gameServer = new() {Id = Guid.Empty};
+    private HostSlim _host = new() {Id = Guid.Empty};
+    private List<LocalResourceSlim> _localResources = [];
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    private Guid _loggedInUserId = Guid.Empty;
+    private IEnumerable<NotifyRecordSlim> _notifyPagedData = new List<NotifyRecordSlim>();
+    private string _notifySearchText = string.Empty;
+    private MudTable<NotifyRecordSlim> _notifyTable = new();
+    private GameProfileSlim? _parentProfile;
+    private int _selectedNotifyViewDetail;
+    private int _totalNotifyRecords;
+    private bool _updateIsAvailable;
+
+    private bool _validIdProvided = true;
     [Parameter] public Guid GameServerId { get; init; } = Guid.Empty;
 
     [Inject] public IAppRoleService RoleService { get; init; } = null!;
@@ -44,43 +81,14 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     [Inject] public IAppUserService UserService { get; init; } = null!;
     [Inject] public ISerializerService SerializerService { get; init; } = null!;
 
-    private bool _validIdProvided = true;
-    private Guid _loggedInUserId = Guid.Empty;
-    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private GameServerSlim _gameServer = new() { Id = Guid.Empty };
-    private HostSlim _host = new() { Id = Guid.Empty };
-    private GameProfileSlim? _parentProfile;
-    private GameSlim _game = new() { Id = Guid.Empty };
-    private List<LocalResourceSlim> _localResources = [];
-    private bool _editMode;
-    private string _editButtonText = "Enable Edit Mode";
-    private string _configSearchText = string.Empty;
-    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
-    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
-    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
-    private readonly List<LocalResourceSlim> _createdLocalResources = [];
-    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
-    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
-    private bool _updateIsAvailable;
-    private MudTable<NotifyRecordSlim> _notifyTable = new();
-    private IEnumerable<NotifyRecordSlim> _notifyPagedData = new List<NotifyRecordSlim>();
-    private string _notifySearchText = string.Empty;
-    private int _totalNotifyRecords;
-    private int _selectedNotifyViewDetail;
-    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
-    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
-    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
-    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
-    private List<GameProfileSlim>? _availableParentProfiles;
+    public async ValueTask DisposeAsync()
+    {
+        EventService.GameVersionUpdated -= GameVersionUpdated;
+        EventService.GameServerStatusChanged -= GameServerStatusChanged;
+        EventService.NotifyTriggered -= NotifyTriggered;
 
-    private bool _canViewGameServer;
-    private bool _canPermissionServer;
-    private bool _canEditServer;
-    private bool _canConfigServer;
-    private bool _canStartServer;
-    private bool _canStopServer;
-    private bool _canDeleteServer;
-    private bool _canChangeOwnership;
+        await Task.CompletedTask;
+    }
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -152,7 +160,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         if (_gameServer.ParentGameProfileId is null)
         {
-            _parentProfile = new GameProfileSlim { Id = Guid.Empty, FriendlyName = "None" };
+            _parentProfile = new GameProfileSlim {Id = Guid.Empty, FriendlyName = "None"};
             return;
         }
 
@@ -214,7 +222,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
 
         _canViewGameServer = !_gameServer.Private || await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.Get,
-                                 DynamicPermissionGroup.GameServers, DynamicPermissionLevel.View, _gameServer.Id);
+            DynamicPermissionGroup.GameServers, DynamicPermissionLevel.View, _gameServer.Id);
 
         var isServerAdmin = (await RoleService.IsUserAdminAsync(_loggedInUserId)).Data ||
                             await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Admin, _gameServer.Id);
@@ -234,7 +242,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         // Moderators get most access except deletion and ownership changing
         var isServerModerator = (await RoleService.IsUserModeratorAsync(_loggedInUserId)).Data ||
-                                await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Moderator, _gameServer.Id);
+                                await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Moderator,
+                                    _gameServer.Id);
         if (isServerModerator)
         {
             _canViewGameServer = true;
@@ -248,7 +257,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        _canPermissionServer =  await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Permission, _gameServer.Id);
+        _canPermissionServer =
+            await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Permission, _gameServer.Id);
         _canEditServer = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update,
             DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Edit, _gameServer.Id);
         _canConfigServer = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.Gameserver.Update,
@@ -338,6 +348,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             deleteResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _deletedLocalResources.Clear();
 
         foreach (var resource in _createdLocalResources)
@@ -351,6 +362,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _createdLocalResources.Clear();
 
         foreach (var resource in _updatedLocalResources)
@@ -364,6 +376,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             updateResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         _updatedLocalResources.Clear();
 
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
@@ -372,10 +385,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 return;
             }
+
             if (await SaveUpdatedConfigItems())
             {
                 return;
             }
+
             if (await SaveDeletedConfigItems())
             {
                 return;
@@ -563,7 +578,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {"Title", "Are you sure you want to delete this gameserver?"},
             {"Content", $"Server Name: {_gameServer.ServerName}"}
         };
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
 
         var dialog = await DialogService.ShowAsync<ConfirmationDialog>("Delete Gameserver", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -585,7 +600,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task ConfigAdd(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
         var dialogParameters = new DialogParameters {{"ReferenceResource", localResource}};
         var dialog = await DialogService.ShowAsync<ConfigAddDialog>("Add Config Item", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -647,9 +662,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             // ReSharper disable once PossibleMultipleEnumeration
             var resourceConfigSets = resource.ConfigSets.ToList();
             // If we have an item ID we will use that, otherwise we find the item by all other properties that combine to be a 'unique' config item
-            var matchingActiveConfig = item.Id != Guid.Empty ?
-                resourceConfigSets.FirstOrDefault(x => x.Id == item.Id) :
-                resourceConfigSets.FirstOrDefault(x =>
+            var matchingActiveConfig = item.Id != Guid.Empty
+                ? resourceConfigSets.FirstOrDefault(x => x.Id == item.Id)
+                : resourceConfigSets.FirstOrDefault(x =>
                     x.Key == item.Key &&
                     x.Path == item.Path &&
                     x.DuplicateKey == item.DuplicateKey &&
@@ -688,7 +703,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task LocalResourceAdd(ResourceType resourceType)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
         var dialogParameters = new DialogParameters {{"GameProfileId", _gameServer.GameProfileId}, {"ResourceType", resourceType}};
         var dialog = await DialogService.ShowAsync<LocalResourceAddDialog>("New Local Resource", dialogParameters, dialogOptions);
         var dialogResult = await dialog.Result;
@@ -709,10 +724,11 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (localResource.Id == Guid.Empty)
         {
             localResource.Id = Guid.CreateVersion7();
-            foreach (var configItem in localResource.ConfigSets)  // Update the config items to point to our new resource ID
+            foreach (var configItem in localResource.ConfigSets) // Update the config items to point to our new resource ID
             {
                 configItem.LocalResourceId = localResource.Id;
             }
+
             _createdLocalResources.Add(localResource);
             return;
         }
@@ -744,8 +760,9 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
     private async Task LocalResourceDelete(LocalResourceSlim localResource)
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
-        var dialogParameters = new DialogParameters {
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
+        var dialogParameters = new DialogParameters
+        {
             {"Title", "Are you sure you want to delete this local resource?"},
             {"Content", $"You want to delete the resource '{localResource.Name}'?"}
         };
@@ -847,6 +864,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -882,6 +900,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -911,6 +930,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -940,6 +960,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -1186,7 +1207,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
-                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}";
+                          $"File paths can't be assumed so each will need to be updated manually before you save";
         var importConfirmation = await DialogService.ConfirmDialog($"Import {configToImport.Count} config files", confirmText);
         if (importConfirmation.Canceled)
         {
@@ -1216,6 +1237,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                     Snackbar.Add($"File {file.Name} import was cancelled", Severity.Warning);
                     continue;
                 }
+
                 isNewConfigFile = false;
             }
 
@@ -1238,7 +1260,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 };
             }
 
-            var fileContent = await file.GetContent();  // The max import size per file is 10MB by default
+            var fileContent = await file.GetContent(); // The max import size per file is 10MB by default
             if (!fileContent.Succeeded || fileContent.Data is null)
             {
                 fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -1282,6 +1304,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 {
                     continue;
                 }
+
                 _updatedConfigItems.Add(updatedConfigItem);
             }
 
@@ -1302,12 +1325,12 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             Snackbar.Add("No files were imported", Severity.Info);
             return;
         }
+
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
     }
 
     private async Task ExportServerConfig()
     {
-
         var profileExport = new GameProfileExport
         {
             Name = $"{_gameServer.ServerName} Profile",
@@ -1323,9 +1346,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         }
 
         var serializedProfile = SerializerService.SerializeJson(profileExport);
-        var convertedSerializedProfile = Convert.ToBase64String(Encoding.UTF8.GetBytes(serializedProfile));
         var profileExportName = $"{FileHelpers.SanitizeSecureFilename(profileExport.Name)}.json";
-        await WebClientService.InvokeFileDownload(convertedSerializedProfile, profileExportName, DataConstants.MimeTypes.Json);
+        await WebClientService.InvokeFileDownload(serializedProfile, profileExportName, DataConstants.MimeTypes.Json);
 
         Snackbar.Add($"Successfully Exported Configuration: {profileExportName}");
     }
@@ -1437,13 +1459,4 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     {
         _notifyTable.ReloadServerData();
     }
-
-    public async ValueTask DisposeAsync()
-    {
-        EventService.GameVersionUpdated -= GameVersionUpdated;
-        EventService.GameServerStatusChanged -= GameServerStatusChanged;
-        EventService.NotifyTriggered -= NotifyTriggered;
-
-        await Task.CompletedTask;
-    }
-}   
+}

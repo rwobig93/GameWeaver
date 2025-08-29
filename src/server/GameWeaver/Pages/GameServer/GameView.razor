@@ -2,7 +2,6 @@
 @using Application.Constants.Identity
 @using Domain.Enums.GameServer
 @using GameWeaver.Components.GameServer
-
 @attribute [Route(AppRouteConstants.GameServer.Games.View)]
 @attribute [Authorize(PermissionConstants.GameServer.Game.Get)]
 
@@ -215,6 +214,12 @@
                                 </MudButton>
                             </ActivatorContent>
                         </MudFileUpload>
+                    </MudPaper>
+                    <MudPaper Elevation="10" Square="false">
+                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
+                                   OnClick="@ExportProfile" Disabled="@(!_editMode)">
+                            Export Configuration
+                        </MudButton>
                     </MudPaper>
                 </MudStack>
             }

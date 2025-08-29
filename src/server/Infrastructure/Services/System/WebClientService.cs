@@ -40,7 +40,7 @@ public class WebClientService : IWebClientService
         {
             await _jsRuntime.InvokeVoidAsync("Download", new
             {
-                ByteArray = mimeType.EndsWith("json") ? content : Convert.ToBase64String(Encoding.UTF8.GetBytes(content)),
+                ByteArray = Convert.ToBase64String(Encoding.UTF8.GetBytes(content)),
                 FileName = fileName,
                 MimeType = mimeType
             });
