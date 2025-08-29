@@ -60,7 +60,7 @@ public partial class GameProfileCreateDialog : ComponentBase
 
     private void GenerateRandomName()
     {
-        _createRequest.Name = NameHelpers.GenerateNameLong(true);
+        _createRequest.Name = NameHelpers.GenerateName(true);
     }
 
     private async Task CreateGameProfile()

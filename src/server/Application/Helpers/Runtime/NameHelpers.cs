@@ -1,60 +1,22 @@
-using CodenameGenerator;
+
+
+using RandomFriendlyNameGenerator;
 
 namespace Application.Helpers.Runtime;
 
 public static class NameHelpers
 {
-    private static readonly Generator GeneratorShort = new(casing: Casing.PascalCase)
+    public static string GeneratePassphrase()
     {
-        Parts = [
-            WordBank.Verbs,
-            WordBank.Nouns
-        ]
-    };
-
-    private static readonly Generator Generator = new(casing: Casing.PascalCase)
-    {
-        Parts = [
-            WordBank.Adverbs,
-            WordBank.Verbs,
-            WordBank.Nouns
-        ]
-    };
-
-    private static readonly Generator GeneratorLong = new(casing: Casing.PascalCase)
-    {
-        Parts = [
-            WordBank.Adverbs,
-            WordBank.Verbs,
-            WordBank.Adjectives,
-            WordBank.Nouns
-        ]
-    };
-
-    public static string GeneratePassphrase(int numbers = 3)
-    {
-        var max = numbers switch
-        {
-            1 => 9,
-            2 => 99,
-            3 => 999,
-            4 => 9999,
-            5 => 99999,
-            _ => 999999
-        };
-        var number = Random.Shared.Next(0, max);
-        return $"{GeneratorShort.Generate().Replace(" ", "")}{number}";
+        var basePassphraseOptions = NameGenerator.Identifiers.Get(15,
+            IdentifierComponents.FirstName | IdentifierComponents.Adjective | IdentifierComponents.Animal, NameOrderingStyle.BobTheBuilderStyle,
+            separator: "").ToList();
+        var chosenOption = basePassphraseOptions.ElementAt(Random.Shared.Next(basePassphraseOptions.Count));
+        return chosenOption;
     }
 
     public static string GenerateName(bool spaces = false)
     {
-        var hostname = Generator.Generate();
-        return spaces ? hostname : hostname.Replace(" ", "");
-    }
-
-    public static string GenerateNameLong(bool spaces = false)
-    {
-        var hostname = GeneratorLong.Generate();
-        return spaces ? hostname : hostname.Replace(" ", "");
+        return NameGenerator.Identifiers.Get(1, IdentifierTemplate.AnyThreeComponents, separator: spaces ? " " : "").First();
     }
 }
