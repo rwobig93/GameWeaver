@@ -242,9 +242,7 @@ public partial class GameProfileView : ComponentBase
             resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
             resource.PathLinux = FileHelpers.SanitizeSecureFilename(resource.PathLinux);
             resource.PathMac = FileHelpers.SanitizeSecureFilename(resource.PathMac);
-            var createResourceRequest = resource.ToCreate();
-            createResourceRequest.Id = resource.Id;
-            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(createResourceRequest, _loggedInUserId);
+            var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
             if (createResourceResponse.Succeeded) continue;
 
             createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -254,21 +252,23 @@ public partial class GameProfileView : ComponentBase
 
         if (_createdConfigItems.Count != 0 || _updatedConfigItems.Count != 0 || _deletedConfigItems.Count != 0)
         {
-            if (await SaveNewConfigItems())
-            {
-                return;
-            }
-            _createdConfigItems.Clear();
-            if (await SaveUpdatedConfigItems())
-            {
-                return;
-            }
-            _updatedConfigItems.Clear();
             if (await SaveDeletedConfigItems())
             {
                 return;
             }
             _deletedConfigItems.Clear();
+
+            if (await SaveNewConfigItems())
+            {
+                return;
+            }
+            _createdConfigItems.Clear();
+
+            if (await SaveUpdatedConfigItems())
+            {
+                return;
+            }
+            _updatedConfigItems.Clear();
         }
 
         foreach (var resource in _updatedLocalResources)
@@ -833,8 +833,7 @@ public partial class GameProfileView : ComponentBase
         }
 
         var confirmText = $"Are you sure you want to import these {configToImport.Count} files?{Environment.NewLine}" +
-                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}" +
-                          $"{Environment.NewLine}NOTE: Imports won't be complete until you save";
+                          $"File paths can't be assumed so each will need to be updated manually before you save{Environment.NewLine}";
         var importConfirmation = await DialogService.ConfirmDialog($"Import {configToImport.Count} config files", confirmText);
         if (importConfirmation.Canceled)
         {
@@ -851,6 +850,7 @@ public partial class GameProfileView : ComponentBase
 
         foreach (var file in importFiles)
         {
+            var isNewConfigFile = true;
             var matchingResource = _localResources.FirstOrDefault(x =>
                 !string.IsNullOrWhiteSpace(x.PathWindows) && x.PathWindows.ToLower().EndsWith(file.Name.ToLower()) ||
                 !string.IsNullOrWhiteSpace(x.PathLinux) && x.PathLinux.ToLower().EndsWith(file.Name.ToLower()) ||
@@ -864,27 +864,29 @@ public partial class GameProfileView : ComponentBase
                     Snackbar.Add($"File {file.Name} import was cancelled", Severity.Warning);
                     continue;
                 }
-
-                await LocalResourceDelete(matchingResource);
+                isNewConfigFile = false;
             }
 
-            var newResource = new LocalResourceSlim
+            if (isNewConfigFile)
             {
-                Id = Guid.CreateVersion7(),
-                GameProfileId = _game.DefaultGameProfileId,
-                Name = file.Name.Split('.').First(),
-                PathWindows = _game.SupportsWindows ? file.Name : string.Empty,
-                PathLinux = _game.SupportsLinux ? file.Name : string.Empty,
-                PathMac = _game.SupportsMac ? file.Name : string.Empty,
-                Startup = false,
-                StartupPriority = 0,
-                Type = ResourceType.ConfigFile,
-                ContentType = FileHelpers.GetContentTypeFromName(file.Name),
-                Args = string.Empty,
-                LoadExisting = false
-            };
+                matchingResource = new LocalResourceSlim
+                {
+                    Id = Guid.CreateVersion7(),
+                    GameProfileId = _gameProfile.Id,
+                    Name = file.Name.Split('.').First(),
+                    PathWindows = _game.SupportsWindows ? file.Name : string.Empty,
+                    PathLinux = _game.SupportsLinux ? file.Name : string.Empty,
+                    PathMac = _game.SupportsMac ? file.Name : string.Empty,
+                    Startup = false,
+                    StartupPriority = 0,
+                    Type = ResourceType.ConfigFile,
+                    ContentType = FileHelpers.GetContentTypeFromName(file.Name),
+                    Args = string.Empty,
+                    LoadExisting = false
+                };
+            }
 
-            var fileContent = await file.GetContent();  // Max import size per file is 10MB by default
+            var fileContent = await file.GetContent();  // The max import size per file is 10MB by default
             if (!fileContent.Succeeded || fileContent.Data is null)
             {
                 fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
@@ -892,24 +894,60 @@ public partial class GameProfileView : ComponentBase
             }
 
             var fileContentLines = fileContent.Data.Split(Environment.NewLine);
-            var configItems = newResource.ContentType switch
+            List<ConfigurationItemSlim> configItems;
+            try
             {
-                ContentType.Raw => fileContentLines.ToConfigItems(newResource.Id),
-                ContentType.Ini => new IniData(fileContentLines, true).ToConfigItems(newResource.Id),
-                ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(fileContent.Data).ToConfigItems(newResource.Id),
-                ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(newResource.Id),
-                _ => fileContentLines.ToConfigItems(newResource.Id)
-            };
+                configItems = matchingResource!.ContentType switch
+                {
+                    ContentType.Raw => fileContentLines.ToConfigItems(matchingResource.Id),
+                    ContentType.Ini => new IniData(fileContentLines).ToConfigItems(matchingResource.Id),
+                    ContentType.Json => SerializerService.DeserializeJson<List<ConfigurationItemExport>>(fileContent.Data).ToConfigItems(matchingResource.Id),
+                    ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(matchingResource.Id),
+                    _ => fileContentLines.ToConfigItems(matchingResource.Id)
+                };
+            }
+            catch (Exception)
+            {
+                Snackbar.Add($"File {file.Name} import failed due to being in an unsupported or corrupt format", Severity.Error);
+                continue;
+            }
 
-            newResource.ConfigSets = configItems;
-            _createdLocalResources.Add(newResource);
-            _localResources.Add(newResource);
-            _createdConfigItems.AddRange(configItems);
+            matchingResource.ConfigSets = matchingResource.ConfigSets.MergeConfiguration(configItems, true);
+            foreach (var configItem in configItems)
+            {
+                // Set any config items not merged into existing items to be created
+                if (matchingResource.ConfigSets.FirstOrDefault(x => x.Id == configItem.Id) is not null)
+                {
+                    _createdConfigItems.Add(configItem);
+                    continue;
+                }
+
+                // Any config items where the id doesn't exist are updated
+                var updatedConfigItem = matchingResource.ConfigSets.FirstOrDefault(x =>
+                    (x.DuplicateKey && x.Category == configItem.Category && x.Key == configItem.Key && x.Path == configItem.Path && x.Value == configItem.Value) ||
+                    (x.Category == configItem.Category && x.Key == configItem.Key && x.Path == configItem.Path));
+                if (updatedConfigItem is null)
+                {
+                    continue;
+                }
+                _updatedConfigItems.Add(updatedConfigItem);
+            }
+
             importCount++;
+
+            if (isNewConfigFile)
+            {
+                _createdLocalResources.Add(matchingResource);
+                _localResources.Add(matchingResource);
+                continue;
+            }
+
+            _updatedLocalResources.Add(matchingResource);
         }
 
         if (importCount <= 0)
         {
+            Snackbar.Add("No files were imported", Severity.Info);
             return;
         }
         Snackbar.Add($"Successfully imported {importCount} configuration file(s), changes won't be made until you save", Severity.Success);
@@ -917,7 +955,6 @@ public partial class GameProfileView : ComponentBase
 
     private async Task ExportProfile()
     {
-        // TODO: Export in chrome works, export in brave doesn't, it saves w/o dialog and the content is only the base64 encoded content
         var profileExport = _gameProfile.ToExport(_game.SourceType is GameSource.Steam ? _game.SteamToolId.ToString() : _game.FriendlyName);
         foreach (var resource in _localResources)
         {

@@ -310,7 +310,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             return;
         }
 
-        // TODO: Replicate changes to the GameProfileView page code-behind
         foreach (var resource in _deletedLocalResources)
         {
             resource.PathWindows = FileHelpers.SanitizeSecureFilename(resource.PathWindows);
@@ -1254,7 +1253,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
                 {
                     ContentType.Raw => fileContentLines.ToConfigItems(matchingResource.Id),
                     ContentType.Ini => new IniData(fileContentLines).ToConfigItems(matchingResource.Id),
-                    ContentType.Json => SerializerService.DeserializeJson<Dictionary<string, string>>(fileContent.Data).ToConfigItems(matchingResource.Id),
+                    ContentType.Json => SerializerService.DeserializeJson<List<ConfigurationItemExport>>(fileContent.Data).ToConfigItems(matchingResource.Id),
                     ContentType.Xml => XDocument.Parse(fileContent.Data).ToConfigItems(matchingResource.Id),
                     _ => fileContentLines.ToConfigItems(matchingResource.Id)
                 };
