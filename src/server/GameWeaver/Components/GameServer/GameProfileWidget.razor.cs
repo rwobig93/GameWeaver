@@ -19,7 +19,7 @@ public partial class GameProfileWidget : ComponentBase
 
     private GameSlim _game = new() { Id = Guid.Empty, FriendlyName = "Unknown" };
     private GameServerSlim _directGameServer = new() {Id = Guid.Empty, ServerName = "None"};
-    private string _cssBorderBase = "rounded-lg justify-center align-center mud-text-align-center";
+    public readonly string _cssBorderBase = "rounded-lg justify-center align-center mud-text-align-center";
     private string _cssBorderStatus = " border-status-default";
     private string _cssTextStatus = "";
     private int _serverUsages;

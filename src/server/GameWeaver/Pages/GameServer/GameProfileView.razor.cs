@@ -62,6 +62,7 @@ public partial class GameProfileView : ComponentBase
     private bool _canPermissionProfile;
     private bool _canChangeOwnership;
     private bool _canViewGameServers;
+    private bool _canDeleteProfile;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -101,6 +102,7 @@ public partial class GameProfileView : ComponentBase
             _canEditProfile = true;
             _canConfigureProfile = true;
             _canChangeOwnership = true;
+            _canDeleteProfile = true;
             return;
         }
 
@@ -108,6 +110,7 @@ public partial class GameProfileView : ComponentBase
             DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Edit, _gameProfile.Id);
         _canConfigureProfile = await AuthorizationService.UserHasGlobalOrDynamicPermission(currentUser, PermissionConstants.GameServer.GameProfile.Update,
             DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Configure, _gameProfile.Id);
+        _canDeleteProfile = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Delete);
         _canPermissionProfile = await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Permission, _gameProfile.Id);
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.ChangeOwnership);
     }
@@ -285,6 +288,50 @@ public partial class GameProfileView : ComponentBase
         await GetViewingProfile();
         Snackbar.Add("Profile successfully updated!", Severity.Success);
         StateHasChanged();
+    }
+
+    private async Task Delete()
+    {
+        if (!_canDeleteProfile)
+        {
+            return;
+        }
+
+        if (_gameProfile.Id == _game.DefaultGameProfileId)
+        {
+            Snackbar.Add($"This profile is the default profile for the game '{_game.FriendlyName}'. You cannot delete this profile.", Severity.Error);
+            return;
+        }
+
+        if (_inheritingGameservers.Count != 0)
+        {
+            Snackbar.Add("This profile is currently being used by one or more game servers. You cannot delete this profile.", Severity.Error);
+            return;
+        }
+
+        var directGameServer = await GameServerService.GetByGameProfileIdAsync(_gameProfile.Id, _loggedInUserId);
+        if (directGameServer.Data is not null)
+        {
+            Snackbar.Add($"This profile is the direct profile for the game server'{directGameServer.Data.ServerName}'. You cannot delete this profile.", Severity.Error);
+            return;
+        }
+
+        var confirmText = $"Are you sure you want to delete this profile?{Environment.NewLine}Profile: {_gameProfile.FriendlyName}";
+        var deleteConfirmation = await DialogService.ConfirmDialog("Delete Profile", confirmText);
+        if (deleteConfirmation.Canceled)
+        {
+            return;
+        }
+
+        var deleteResponse = await GameServerService.DeleteGameProfileAsync(_gameProfile.Id, _loggedInUserId);
+        if (!deleteResponse.Succeeded)
+        {
+            deleteResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        Snackbar.Add($"Successfully deleted profile '{_gameProfile.FriendlyName}'", Severity.Success);
+        GoBack();
     }
 
     private void ToggleEditMode()
@@ -763,7 +810,6 @@ public partial class GameProfileView : ComponentBase
 
     private async Task ConfigSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
     {
-        // TODO: Add delete button and permission check on game profile view page
         if (importFiles is null || !importFiles.Any())
         {
             return;

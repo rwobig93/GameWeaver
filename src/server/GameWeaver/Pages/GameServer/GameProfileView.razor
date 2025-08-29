@@ -36,6 +36,12 @@
                    OnClick="@Save">Save Changes
         </MudButton>
     }
+    @if (_canDeleteProfile)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
+                   OnClick="@Delete">Delete Profile
+        </MudButton>
+    }
 </MudPaper>
 
 @* Editable Profile information *@
