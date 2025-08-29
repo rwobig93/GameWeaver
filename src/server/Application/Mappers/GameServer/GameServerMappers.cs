@@ -245,6 +245,17 @@ public static class GameServerMappers
         };
     }
 
+    public static GameServerParentUpdate ToParentUpdate(this GameServerSlim gameServer)
+    {
+        return new GameServerParentUpdate
+        {
+            Id = gameServer.Id,
+            ParentGameProfileId = gameServer.ParentGameProfileId,
+            LastModifiedBy = null,
+            LastModifiedOn = null
+        };
+    }
+
     public static GameServerDb ToNoAccess(this GameServerDb gameServer)
     {
         return new GameServerDb

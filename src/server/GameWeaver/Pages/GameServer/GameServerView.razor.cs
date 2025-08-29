@@ -308,9 +308,15 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             StateHasChanged();
         }
 
-        if (_parentProfile is null || _parentProfile?.Id == Guid.Empty)
+        _gameServer.ParentGameProfileId = _parentProfile?.Id == Guid.Empty || _parentProfile?.Id == null ? null : _parentProfile?.Id;
+        if (_gameServer.ParentGameProfileId is null)
         {
-            _gameServer.ParentGameProfileId = null;
+            var parentUpdateResponse = await GameServerService.UpdateParentProfileAsync(_gameServer.ToParentUpdate(), _loggedInUserId);
+            if (!parentUpdateResponse.Succeeded)
+            {
+                parentUpdateResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
         }
 
         var response = await GameServerService.UpdateAsync(_gameServer.ToUpdate(), _loggedInUserId);

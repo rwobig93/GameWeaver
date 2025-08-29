@@ -23,6 +23,7 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<Guid>> CreateAsync(GameServerCreate createObject);
     Task<DatabaseActionResult> UpdateAsync(GameServerUpdate updateObject);
+    Task<DatabaseActionResult> SetParentGameProfileIdAsync(GameServerParentUpdate updateObject);
     Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> SearchAsync(string searchText);
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameServerDb>>>> SearchPaginatedAsync(string searchText, int pageNumber, int pageSize);

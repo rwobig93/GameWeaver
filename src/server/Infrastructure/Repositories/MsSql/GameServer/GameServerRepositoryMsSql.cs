@@ -18,10 +18,10 @@ namespace Infrastructure.Repositories.MsSql.GameServer;
 
 public class GameServerRepositoryMsSql : IGameServerRepository
 {
-    private readonly ISqlDataService _database;
-    private readonly ILogger _logger;
-    private readonly IDateTimeService _dateTime;
     private readonly IAuditTrailsRepository _auditRepository;
+    private readonly ISqlDataService _database;
+    private readonly IDateTimeService _dateTime;
+    private readonly ILogger _logger;
 
     public GameServerRepositoryMsSql(ISqlDataService database, ILogger logger, IDateTimeService dateTime, IAuditTrailsRepository auditRepository)
     {
@@ -56,7 +56,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<GameServerDb, dynamic>(
-                GameServersTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                GameServersTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -248,13 +248,30 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult> SetParentGameProfileIdAsync(GameServerParentUpdate updateObject)
+    {
+        DatabaseActionResult actionReturn = new();
+
+        try
+        {
+            await _database.SaveData(GameServersTableMsSql.UpdateParentGameProfileId, updateObject);
+            actionReturn.Succeed();
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameServersTableMsSql.UpdateParentGameProfileId.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult> DeleteAsync(Guid id, Guid requestUserId)
     {
         DatabaseActionResult actionReturn = new();
 
         try
         {
-            await _database.SaveData(GameServersTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(GameServersTableMsSql.Delete, new {Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -272,7 +289,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var searchResults = await _database.LoadData<GameServerDb, dynamic>(
-                GameServersTableMsSql.Search, new { SearchTerm = searchText });
+                GameServersTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -292,7 +309,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<GameServerDb, dynamic>(
-                GameServersTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                GameServersTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -331,7 +348,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<ConfigurationItemDb, dynamic>(
-                ConfigurationItemsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                ConfigurationItemsTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -439,7 +456,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            await _database.SaveData(ConfigurationItemsTableMsSql.Delete, new { Id = id });
+            await _database.SaveData(ConfigurationItemsTableMsSql.Delete, new {Id = id});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -457,7 +474,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var searchResults = await _database.LoadData<ConfigurationItemDb, dynamic>(
-                ConfigurationItemsTableMsSql.Search, new { SearchTerm = searchText });
+                ConfigurationItemsTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -469,7 +486,8 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
-    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<ConfigurationItemDb>>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber, int pageSize)
+    public async Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<ConfigurationItemDb>>>> SearchConfigurationItemsPaginatedAsync(string searchText, int pageNumber,
+        int pageSize)
     {
         DatabaseActionResult<PaginatedDbEntity<IEnumerable<ConfigurationItemDb>>> actionReturn = new();
 
@@ -477,7 +495,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<ConfigurationItemDb, dynamic>(
-                ConfigurationItemsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                ConfigurationItemsTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -516,7 +534,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<LocalResourceDb, dynamic>(
-                LocalResourcesTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                LocalResourcesTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -625,7 +643,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            await _database.SaveData(LocalResourcesTableMsSql.Delete, new { Id = id });
+            await _database.SaveData(LocalResourcesTableMsSql.Delete, new {Id = id});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -643,7 +661,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var searchResults = await _database.LoadData<LocalResourceDb, dynamic>(
-                LocalResourcesTableMsSql.Search, new { SearchTerm = searchText });
+                LocalResourcesTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -663,7 +681,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<LocalResourceDb, dynamic>(
-                LocalResourcesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                LocalResourcesTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -702,7 +720,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<GameProfileDb, dynamic>(
-                GameProfilesTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                GameProfilesTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -846,7 +864,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            await _database.SaveData(GameProfilesTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(GameProfilesTableMsSql.Delete, new {Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -864,7 +882,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var searchResults = await _database.LoadData<GameProfileDb, dynamic>(
-                GameProfilesTableMsSql.Search, new { SearchTerm = searchText });
+                GameProfilesTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -884,7 +902,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<GameProfileDb, dynamic>(
-                GameProfilesTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                GameProfilesTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -923,7 +941,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<ModDb, dynamic>(
-                ModsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                ModsTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -1121,7 +1139,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
 
         try
         {
-            await _database.SaveData(ModsTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(ModsTableMsSql.Delete, new {Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -1139,7 +1157,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         try
         {
             var searchResults = await _database.LoadData<ModDb, dynamic>(
-                ModsTableMsSql.Search, new { SearchTerm = searchText });
+                ModsTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -1159,7 +1177,7 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<ModDb, dynamic>(
-                ModsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                ModsTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
