@@ -1127,7 +1127,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _ => fileContentLines.ToConfigItems(resource.Id)
         };
 
-        // Updated raw file has desired state, we'll use existing ID's for existing items then add/delete based on provided state
+        // Updated raw file has the desired state, we'll use existing ID's for existing items then add/delete based on provided state
         configItems.UpdateEditorConfigFromExisting(resource.ConfigSets);
         var newConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is null).ToList();
         var updateConfigItems = configItems.Where(x => resource.ConfigSets.FirstOrDefault(c => c.Id == x.Id) is not null).ToList();

@@ -67,10 +67,13 @@
                            OnClick="@(() => AddConfigItem(LocalResource))" Disabled="@(!EditMode)">
                     Add Config
                 </MudButton>
-                // TODO: Add export config for this file button
                 <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Outlined.Edit" Class="py-1 my-1"
                            OnClick="@(() => OpenInEditor(LocalResource))" Disabled="@(!EditMode)">
                     Edit Config In Editor
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" Class="py-1 my-1"
+                           OnClick="@(() => ExportConfig(LocalResource))" Disabled="@(!EditMode)">
+                    Export Config
                 </MudButton>
             }
             <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Outlined.Delete" Class="py-1 my-1"

@@ -40,7 +40,7 @@ public partial class GameServerCreateDialog : ComponentBase
     private HostSlim _selectedHost = new() {Id = Guid.Empty, Hostname = "Unknown"};
     private GameSlim _selectedGame = new() {Id = Guid.Empty, FriendlyName = "Unknown"};
     private GameProfileSlim _selectedParentProfile = new() {Id = Guid.Empty, FriendlyName = "None"};
-    private readonly GameServerCreateRequest _createRequest = new() { Name = NameHelpers.GenerateName() };
+    private readonly GameServerCreateRequest _createRequest = new() { Name = NameHelpers.GenerateName(true) };
     private bool _showPortConfig;
 
     private InputType _passwordInput = InputType.Password;
@@ -199,7 +199,7 @@ public partial class GameServerCreateDialog : ComponentBase
 
     private void GenerateRandomName()
     {
-        _createRequest.Name = NameHelpers.GenerateName();
+        _createRequest.Name = NameHelpers.GenerateName(true);
     }
 
     private void GenerateServerPassword()

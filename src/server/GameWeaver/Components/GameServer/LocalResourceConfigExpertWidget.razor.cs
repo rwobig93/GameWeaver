@@ -1,11 +1,17 @@
+using Application.Constants.Communication;
+using Application.Helpers.Runtime;
+using Application.Mappers.GameServer;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.LocalResource;
+using Domain.Enums.GameServer;
 
 namespace GameWeaver.Components.GameServer;
 
 public partial class LocalResourceConfigExpertWidget : ComponentBase
 {
+    [Inject] public ISerializerService SerializerService { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
     [Parameter] public LocalResourceSlim LocalResource { get; set; } = null!;
     [Parameter] public bool EditMode { get; set; }
     [Parameter] public string ConfigFilterText { get; set; } = string.Empty;
@@ -31,6 +37,33 @@ public partial class LocalResourceConfigExpertWidget : ComponentBase
     private async Task OpenInEditor(LocalResourceSlim localResource)
     {
         await OpenConfigEditor.InvokeAsync(localResource);
+    }
+
+    private async Task ExportConfig(LocalResourceSlim localResource)
+    {
+        var configExport = localResource.ContentType switch
+        {
+            ContentType.Json => SerializerService.SerializeJson(localResource.ConfigSets.Select(x => x.ToExport()).ToList()),
+            ContentType.Ini => localResource.ConfigSets.ToIni().ToString(),
+            ContentType.Xml => localResource.ConfigSets.ToXml()?.ToString() ?? string.Empty,
+            _ => string.Join(Environment.NewLine, localResource.ConfigSets.ToRaw())
+        };
+
+        var exportName = $"{FileHelpers.SanitizeSecureFilename(localResource.Name)}.{localResource.ContentType.GetFileExtension()}";
+        var mimeType = localResource.ContentType switch
+        {
+            ContentType.Json => DataConstants.MimeTypes.Json,
+            ContentType.Xml => DataConstants.MimeTypes.OpenXml,
+            _ => DataConstants.MimeTypes.Binary
+        };
+        var downloadResult = await WebClientService.InvokeFileDownload(configExport, exportName, mimeType);
+        if (!downloadResult.Succeeded)
+        {
+            downloadResult.Messages.ForEach(x => Snackbar.Add(x));
+            return;
+        }
+
+        Snackbar.Add($"Successfully Exported Config File: {exportName}");
     }
 
     private bool ConfigShouldBeShown(ConfigurationItemSlim item)
