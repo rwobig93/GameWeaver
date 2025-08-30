@@ -6,16 +6,17 @@ using Application.Requests.Identity.User;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
-using Blazored.LocalStorage;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
-using Microsoft.Extensions.Options;
 using GameWeaver.Components.Identity;
+using Microsoft.Extensions.Options;
 
 namespace GameWeaver.Pages.Identity;
 
 public partial class Login
 {
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
 
     [Parameter] public string RedirectReason { get; set; } = "";
@@ -26,21 +27,12 @@ public partial class Login
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppSettings { get; init; } = null!;
-    [Inject] private IOptions<OauthConfiguration> OauthSettings { get; init; } = null!;
     [Inject] private IExternalAuthProviderService ExternalAuth { get; init; } = null!;
-    [Inject] private ILocalStorageService LocalStorage { get; init; } = null!;
-    [Inject] private IOptions<SecurityConfiguration> SecuritySettings { get; init; } = null!;
     [Inject] private IOptions<LifecycleConfiguration> LifecycleSettings { get; init; } = null!;
+    [Inject] private IOptions<OauthConfiguration> OauthSettings { get; init; } = null!;
 
     private string Username { get; set; } = "";
     private string Password { get; set; } = "";
-    private string Token { get; set; } = "";
-    private string RefreshToken { get; set; } = "";
-    private DateTime Expiration { get; set; }
-    private bool ShowAuth { get; set; } = false;
-    private List<string> AuthResults { get; set; } = [];
-    private InputType _passwordInput = InputType.Password;
-    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -60,13 +52,19 @@ public partial class Login
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
         if (queryParameters.TryGetValue(LoginRedirectConstants.RedirectParameter, out var redirectReason))
+        {
             RedirectReason = redirectReason!;
+        }
 
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthCode, out var oauthCode))
+        {
             OauthCode = oauthCode!;
+        }
 
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthState, out var oauthState))
+        {
             OauthState = oauthState!;
+        }
     }
 
     private void HandleRedirectReasons()
@@ -141,7 +139,7 @@ public partial class Login
 
     private async Task ForgotPassword()
     {
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
 
         await DialogService.ShowAsync<ForgotPasswordDialog>("Forgot Password", dialogOptions);
     }
@@ -150,11 +148,16 @@ public partial class Login
     {
         var informationValid = true;
 
-        if (string.IsNullOrWhiteSpace(Username)) {
-            Snackbar.Add("Username field is empty", Severity.Error); informationValid = false;
+        if (string.IsNullOrWhiteSpace(Username))
+        {
+            Snackbar.Add("Username field is empty", Severity.Error);
+            informationValid = false;
         }
-        if (string.IsNullOrWhiteSpace(Password)) {
-            Snackbar.Add("Password field is empty", Severity.Error); informationValid = false;
+
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            Snackbar.Add("Password field is empty", Severity.Error);
+            informationValid = false;
         }
 
         return informationValid;
@@ -183,11 +186,6 @@ public partial class Login
         {
             Snackbar.Add($"Failure Occurred: {ex.Message}", Severity.Error);
         }
-    }
-
-    private void ToggleAuth()
-    {
-        ShowAuth = !ShowAuth;
     }
 
     private void DebugFillAdminCredentials()
@@ -219,7 +217,7 @@ public partial class Login
 
         if (!foundUser.Data.TwoFactorEnabled) return true;
 
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true};
         var dialogParameters = new DialogParameters
         {
             {"VerifyCodeMessage", "Please enter your MFA code to login"},
@@ -271,11 +269,12 @@ public partial class Login
 
             if (redirectState.redirect == ExternalAuthRedirect.Security)
             {
+                var securityUriCode =
+                    QueryHelpers.AddQueryString(AppRouteConstants.Account.Security, LoginRedirectConstants.OauthCode, OauthCode);
                 var securityUriState =
-                    QueryHelpers.AddQueryString(AppRouteConstants.Account.Security, LoginRedirectConstants.OauthCode,
-                        redirectState.provider.ToString());
+                    QueryHelpers.AddQueryString(securityUriCode, LoginRedirectConstants.OauthState, OauthState);
                 var securityUriFull =
-                    QueryHelpers.AddQueryString(securityUriState, LoginRedirectConstants.OauthState, externalProfileRequest.Data.Id);
+                    QueryHelpers.AddQueryString(securityUriState, LoginRedirectConstants.OauthExternalId, externalProfileRequest.Data.Id);
 
                 NavManager.NavigateTo(securityUriFull);
                 return;
@@ -304,7 +303,9 @@ public partial class Login
             Username = userSecurityRequest.Data.Username;
             var mfaIsHandled = await IsMfaHandled();
             if (!mfaIsHandled)
+            {
                 return;
+            }
 
             Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);
             NavManager.NavigateTo(AppSettings.Value.BaseUrl, true);

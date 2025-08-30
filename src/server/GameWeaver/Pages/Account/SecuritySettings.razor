@@ -1,7 +1,6 @@
-﻿@using GameWeaver.Components.Account
-@using Application.Helpers.Runtime
+﻿@using Application.Helpers.Runtime
 @using Domain.Enums.Integrations
-
+@using GameWeaver.Components.Account
 @attribute [Route(AppRouteConstants.Account.Security)]
 @attribute [Authorize]
 
@@ -144,7 +143,7 @@
                 <MudPaper Elevation="8" Square="false" Class="" Height="100%">
                     @if (ExternalAuthService.ProviderEnabledDiscord)
                     {
-                        <MudItem xs="12" sm="12" md="12" Class="justify-center">
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center py-2 px-3">
                             <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
                                        Color="@(_linkedAuthDiscord ? Color.Success : Color.Surface)"
                                        StartIcon="@Icons.Custom.Brands.Discord"
@@ -155,7 +154,7 @@
                     }
                     @if (ExternalAuthService.ProviderEnabledGoogle)
                     {
-                        <MudItem xs="12" sm="12" md="12" Class="justify-center">
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center py-2 px-3">
                             <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
                                        Color="@(_linkedAuthGoogle ? Color.Success : Color.Surface)"
                                        StartIcon="@Icons.Custom.Brands.Google"
@@ -166,12 +165,66 @@
                     }
                     @if (ExternalAuthService.ProviderEnabledSpotify)
                     {
-                        <MudItem xs="12" sm="12" md="12" Class="justify-center">
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center py-2 px-3">
                             <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
                                        Color="@(_linkedAuthSpotify ? Color.Success : Color.Surface)"
                                        StartIcon="@Icons.Material.Filled.LibraryMusic"
                                        OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.Spotify, _linkedAuthSpotify))">
                                 @if (_linkedAuthSpotify) { @("Unlink Spotify Account") } else { @("Link Spotify Account") }
+                            </MudButton>
+                        </MudItem>
+                    }
+                    @if (ExternalAuthService.ProviderEnabledCustomOne)
+                    {
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center py-2 px-3">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                       Color="@(_linkedAuthCustomOne ? Color.Success : Color.Surface)"
+                                       StartIcon="@Icons.Material.Filled.Login"
+                                       OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.CustomOne, _linkedAuthCustomOne))">
+                                @if (_linkedAuthCustomOne)
+                                {
+                                    @($"Unlink {OauthConfig.Value.CustomOneProviderName} Account")
+                                }
+                                else
+                                {
+                                    @($"Link {OauthConfig.Value.CustomOneProviderName} Account")
+                                }
+                            </MudButton>
+                        </MudItem>
+                    }
+                    @if (ExternalAuthService.ProviderEnabledCustomTwo)
+                    {
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center py-2 px-3">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                       Color="@(_linkedAuthCustomTwo ? Color.Success : Color.Surface)"
+                                       StartIcon="@Icons.Material.Filled.Login"
+                                       OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.CustomTwo, _linkedAuthCustomTwo))">
+                                @if (_linkedAuthCustomTwo)
+                                {
+                                    @($"Unlink {OauthConfig.Value.CustomTwoProviderName} Account")
+                                }
+                                else
+                                {
+                                    @($"Link {OauthConfig.Value.CustomTwoProviderName} Account")
+                                }
+                            </MudButton>
+                        </MudItem>
+                    }
+                    @if (ExternalAuthService.ProviderEnabledCustomThree)
+                    {
+                        <MudItem xs="12" sm="12" md="12" Class="justify-center py-2 px-3">
+                            <MudButton Variant="Variant.Outlined" Size="Size.Medium" FullWidth="true"
+                                       Color="@(_linkedAuthCustomThree ? Color.Success : Color.Surface)"
+                                       StartIcon="@Icons.Material.Filled.Login"
+                                       OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.CustomThree, _linkedAuthCustomThree))">
+                                @if (_linkedAuthCustomThree)
+                                {
+                                    @($"Unlink {OauthConfig.Value.CustomThreeProviderName} Account")
+                                }
+                                else
+                                {
+                                    @($"Link {OauthConfig.Value.CustomThreeProviderName} Account")
+                                }
                             </MudButton>
                         </MudItem>
                     }

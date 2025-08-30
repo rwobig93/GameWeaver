@@ -1,5 +1,5 @@
-﻿@attribute [Route(AppRouteConstants.Identity.Login)]
-@using Domain.Enums.Integrations
+﻿@using Domain.Enums.Integrations
+@attribute [Route(AppRouteConstants.Identity.Login)]
 
 @attribute [AllowAnonymous]
 
@@ -39,6 +39,14 @@
         @if (ExternalAuth.AnyProvidersEnabled)
         {
             <MudGrid Class="justify-center my-4 mud-text-align-center">
+                @if (ExternalAuth.ProviderEnabledDiscord)
+                {
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Custom.Brands.Discord"
+                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Discord))">Login with Discord
+                        </MudButton>
+                    </MudItem>
+                }
                 @if (ExternalAuth.ProviderEnabledGoogle)
                 {
                     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
@@ -52,6 +60,30 @@
                     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                         <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.LibraryMusic"
                                    OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.Spotify))">Login with Spotify
+                        </MudButton>
+                    </MudItem>
+                }
+                @if (ExternalAuth.ProviderEnabledCustomOne)
+                {
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
+                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomOne))">Login with @(OauthSettings.Value.CustomOneProviderName)
+                        </MudButton>
+                    </MudItem>
+                }
+                @if (ExternalAuth.ProviderEnabledCustomTwo)
+                {
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
+                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomTwo))">Login with @(OauthSettings.Value.CustomTwoProviderName)
+                        </MudButton>
+                    </MudItem>
+                }
+                @if (ExternalAuth.ProviderEnabledCustomThree)
+                {
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
+                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomThree))">Login with @(OauthSettings.Value.CustomThreeProviderName)
                         </MudButton>
                     </MudItem>
                 }
