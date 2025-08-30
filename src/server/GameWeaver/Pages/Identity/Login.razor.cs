@@ -2,6 +2,7 @@ using Application.Constants.Communication;
 using Application.Constants.Identity;
 using Application.Helpers.Auth;
 using Application.Helpers.Integrations;
+using Application.Models.Identity.User;
 using Application.Requests.Identity.User;
 using Application.Services.Integrations;
 using Application.Services.Lifecycle;
@@ -305,6 +306,18 @@ public partial class Login
             if (!mfaIsHandled)
             {
                 return;
+            }
+
+            // If we don't have a profile avatar yet, we can check if the Oauth provider has one and use theirs instead
+            var authenticatedUser = await UserService.GetByIdAsync(authenticatedUserId);
+            if (string.IsNullOrWhiteSpace(authenticatedUser.Data?.ProfilePictureDataUrl) && !string.IsNullOrWhiteSpace(externalProfileRequest.Data.AvatarUri))
+            {
+                var updateAvatarResponse =
+                    await UserService.UpdateAsync(new AppUserUpdate {Id = authenticatedUserId, ProfilePictureDataUrl = externalProfileRequest.Data.AvatarUri}, authenticatedUserId);
+                if (!updateAvatarResponse.Succeeded)
+                {
+                    updateAvatarResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                }
             }
 
             Snackbar.Add("You're logged in, welcome to the party!", Severity.Success);

@@ -18,7 +18,6 @@ namespace GameWeaver.Pages.Account;
 public partial class SecuritySettings
 {
     private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
-
     private bool _canGenerateApiTokens;
     private MudTabPanel _externalAuthPanel = null!;
     private bool _linkedAuthCustomOne;
