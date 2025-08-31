@@ -1,0 +1,16 @@
+<div class="number-display-lift @CssDisplay" @onclick="GoToUrl">
+    <MudPaper Style="position: relative;">
+        <img src="@ImageUrl" width="@CardWidth" height="@CardHeight" alt="Number"/>
+        <div class="overlay-stack">
+            <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.h4">
+                @(Number)
+            </MudText>
+            @if (!string.IsNullOrWhiteSpace(Title))
+            {
+                <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2">
+                    @(Title)
+                </MudText>
+            }
+        </div>
+    </MudPaper>
+</div>

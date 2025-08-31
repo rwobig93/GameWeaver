@@ -1,0 +1,50 @@
+@using Application.Constants.Identity
+@attribute [Route(AppRouteConstants.Admin.Panel)]
+@attribute [Authorize(PermissionConstants.System.Admin.ViewPanel)]
+
+<MudPaper Elevation="8" Square="false" Class="py-4 mb-8" Width="100%">
+    <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Admin Panel</MudText>
+</MudPaper>
+
+<MudGrid Class="d-flex flex-row gap-3 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
+    @if (_canGetUserCount)
+    {
+        <NumberDisplay Number="_userCount" Title="Users" ClickUrl="@AppRouteConstants.Admin.Users" GamerMode="_userPreferences.GamerMode"/>
+    }
+    @if (_canGetGameCount)
+    {
+        <NumberDisplay Number="_gameCount" Title="Games" ClickUrl="@AppRouteConstants.GameServer.Games.ViewAll" GamerMode="_userPreferences.GamerMode"/>
+    }
+    @if (_canGetGameProfileCount)
+    {
+        <NumberDisplay Number="_gameProfileCount" Title="Game Profiles" ClickUrl="@AppRouteConstants.GameServer.GameProfiles.ViewAll" GamerMode="_userPreferences.GamerMode"/>
+    }
+    @if (_canGetHostCount)
+    {
+        <NumberDisplay Number="_hostCount" Title="Hosts" ClickUrl="@AppRouteConstants.GameServer.Hosts.HostsDashboard" GamerMode="_userPreferences.GamerMode"/>
+    }
+    @if (_canGetGameServerCount)
+    {
+        <NumberDisplay Number="_gameServerCount" Title="Game Servers" ClickUrl="@AppRouteConstants.GameServer.GameServers.ViewAll" GamerMode="_userPreferences.GamerMode"/>
+    }
+</MudGrid>
+
+<MudContainer Class="pt-4">
+    <MudGrid Class="pa-4 justify-center mud-text-align-center">
+        <MudPaper Width="98%" Class="pa-4 mb-3">
+            <MudItem xs="12" sm="12" md="12" Class="px-4">
+                <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
+                    Configuration settings changes here will be available later and is coming soon™
+                </MudAlert>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
+                <MudTextField Variant="Variant.Outlined" T="string" Label="Example Setting One"/>
+                <MudTextField Variant="Variant.Outlined" T="string" Label="Example Setting Two"/>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
+                <MudTextField Variant="Variant.Outlined" T="string" ReadOnly="true" Label="Example Setting Three"/>
+                <MudTextField Variant="Variant.Outlined" T="string" ReadOnly="true" Label="Example Setting Four"/>
+            </MudItem>
+        </MudPaper>
+    </MudGrid>
+</MudContainer>

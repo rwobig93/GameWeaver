@@ -27,7 +27,8 @@ public static class PermissionConstants
             public const string View = $"{ClaimConstants.Permission}.Identity.ServiceAccounts.View";
             public const string Admin = $"{ClaimConstants.Permission}.Identity.ServiceAccounts.Admin";
 
-            public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"{ClaimConstants.DynamicPermission}.{DynamicPermissionGroup.ServiceAccounts}.{id}.{permission}";
+            public static string Dynamic(Guid id, DynamicPermissionLevel permission) =>
+                $"{ClaimConstants.DynamicPermission}.{DynamicPermissionGroup.ServiceAccounts}.{id}.{permission}";
         }
 
         public static class Roles
@@ -59,7 +60,6 @@ public static class PermissionConstants
         public static class Jobs
         {
             public const string View = $"{ClaimConstants.Permission}.System.Jobs.View";
-            public const string Status = $"{ClaimConstants.Permission}.System.Jobs.Status";
         }
 
         public static class Api
@@ -89,6 +89,11 @@ public static class PermissionConstants
             public const string Dev = $"{ClaimConstants.Permission}.System.Developer.Dev";
             public const string Contributor = $"{ClaimConstants.Permission}.System.Developer.Contributor";
             public const string Tester = $"{ClaimConstants.Permission}.System.Developer.Tester";
+        }
+
+        public static class Admin
+        {
+            public const string ViewPanel = $"{ClaimConstants.Permission}.System.Admin.ViewPanel";
         }
     }
 
@@ -164,7 +169,8 @@ public static class PermissionConstants
             public const string UpdateLocalResource = $"{ClaimConstants.Permission}.GameServer.Gameservers.UpdateLocalResource";
             public const string UpdateAllLocalResources = $"{ClaimConstants.Permission}.GameServer.Gameservers.UpdateAllLocalResources";
 
-            public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"{ClaimConstants.DynamicPermission}.{DynamicPermissionGroup.GameServers}.{id}.{permission}";
+            public static string Dynamic(Guid id, DynamicPermissionLevel permission) =>
+                $"{ClaimConstants.DynamicPermission}.{DynamicPermissionGroup.GameServers}.{id}.{permission}";
         }
 
         public static class ConfigItem
@@ -202,7 +208,8 @@ public static class PermissionConstants
             public const string Search = $"{ClaimConstants.Permission}.GameServer.GameProfile.Search";
             public const string ChangeOwnership = $"{ClaimConstants.Permission}.GameServer.Gameservers.ChangeOwnership";
 
-            public static string Dynamic(Guid id, DynamicPermissionLevel permission) => $"{ClaimConstants.DynamicPermission}.{DynamicPermissionGroup.GameProfiles}.{id}.{permission}";
+            public static string Dynamic(Guid id, DynamicPermissionLevel permission) =>
+                $"{ClaimConstants.DynamicPermission}.{DynamicPermissionGroup.GameProfiles}.{id}.{permission}";
         }
 
         public static class Mod

@@ -1,5 +1,4 @@
 ﻿@using GameWeaver.Components.Account
-
 <MudNavMenu Margin="Margin.Dense" Color="Color.Primary" Bordered="false" Rounded="true" Class="px-2">
     <MudPaper Elevation="5" Class="d-flex flex-column my-4 justify-center align-center mud-text-align-center">
         <MudItem xs="12" sm="12" md="12" Class="d-flex ma-4 align-center">
@@ -13,6 +12,15 @@
             Account Settings
         </MudNavLink>
     </MudPaper>
+    @if (_canViewAdminPanel)
+    {
+        <MudPaper Elevation="5" Class="d-flex mb-4 justify-center align-center mud-text-align-center">
+            <MudNavLink Href="@AppRouteConstants.Admin.Panel" Match="NavLinkMatch.Prefix"
+                        Icon="@Icons.Material.Filled.AdminPanelSettings">
+                Admin Panel
+            </MudNavLink>
+        </MudPaper>
+    }
     @if (_canEditTheme)
     {
         <MudPaper Elevation="5" Class="d-flex mb-4">

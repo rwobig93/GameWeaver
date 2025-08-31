@@ -7,17 +7,17 @@ namespace GameWeaver.Components.GameServer;
 
 public partial class GameServerWidget : ComponentBase
 {
-    [Parameter] public GameServerSlim GameServer { get; set; } = new();
-    [Parameter] public int WidthPx { get; set; } = 400;
-    [Parameter] public int HeightPx { get; set; } = 100;
-    [Parameter] public bool GamerMode { get; set; } = false;
-
-    [Inject] public IGameService GameService { get; init; } = null!;
-
-    private GameSlim _game = new() { Id = Guid.Empty, FriendlyName = "Unknown" };
     private string _cssBorderBase = "rounded-lg justify-center align-center mud-text-align-center";
     private string _cssBorderStatus = " border-status-default";
     private string _cssTextStatus = "";
+
+    private GameSlim _game = new() {Id = Guid.Empty, FriendlyName = "Unknown"};
+    [Parameter] public GameServerSlim GameServer { get; set; } = new();
+    [Parameter] public int WidthPx { get; set; } = 400;
+    [Parameter] public int HeightPx { get; set; } = 100;
+    [Parameter] public bool GamerMode { get; set; }
+
+    [Inject] public IGameService GameService { get; init; } = null!;
 
 
     private string Width => $"{WidthPx}px";
