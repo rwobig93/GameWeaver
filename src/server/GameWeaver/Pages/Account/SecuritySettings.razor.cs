@@ -485,7 +485,15 @@ public partial class SecuritySettings
                 return;
             }
 
-            Snackbar.Add($"Successfully unlinked your {provider} account", Severity.Success);
+            var providerName = provider switch
+            {
+                ExternalAuthProvider.CustomOne => OauthConfig.Value.CustomProviderOne.ProviderName,
+                ExternalAuthProvider.CustomTwo => OauthConfig.Value.CustomProviderTwo.ProviderName,
+                ExternalAuthProvider.CustomThree => OauthConfig.Value.CustomProviderThree.ProviderName,
+                _ => provider.ToString()
+            };
+
+            Snackbar.Add($"Successfully unlinked your {providerName} account", Severity.Success);
             await GetUserExternalAuthLinks();
             StateHasChanged();
             return;
@@ -523,7 +531,15 @@ public partial class SecuritySettings
                 return;
             }
 
-            Snackbar.Add($"Your {AppConfig.Value.ApplicationName} account has been linked to your {provider} account!", Severity.Success);
+            var providerName = provider switch
+            {
+                ExternalAuthProvider.CustomOne => OauthConfig.Value.CustomProviderOne.ProviderName,
+                ExternalAuthProvider.CustomTwo => OauthConfig.Value.CustomProviderTwo.ProviderName,
+                ExternalAuthProvider.CustomThree => OauthConfig.Value.CustomProviderThree.ProviderName,
+                _ => provider.ToString()
+            };
+
+            Snackbar.Add($"Your {AppConfig.Value.ApplicationName} account has been linked to your {providerName} account!", Severity.Success);
             await GetUserExternalAuthLinks();
             _securityTabs.ActivatePanel(_externalAuthPanel);
             StateHasChanged();

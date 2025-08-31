@@ -183,11 +183,11 @@
                                        OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.CustomOne, _linkedAuthCustomOne))">
                                 @if (_linkedAuthCustomOne)
                                 {
-                                    @($"Unlink {OauthConfig.Value.CustomOneProviderName} Account")
+                                    @($"Unlink {OauthConfig.Value.CustomProviderOne.ProviderName} Account")
                                 }
                                 else
                                 {
-                                    @($"Link {OauthConfig.Value.CustomOneProviderName} Account")
+                                    @($"Link {OauthConfig.Value.CustomProviderOne.ProviderName} Account")
                                 }
                             </MudButton>
                         </MudItem>
@@ -201,11 +201,11 @@
                                        OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.CustomTwo, _linkedAuthCustomTwo))">
                                 @if (_linkedAuthCustomTwo)
                                 {
-                                    @($"Unlink {OauthConfig.Value.CustomTwoProviderName} Account")
+                                    @($"Unlink {OauthConfig.Value.CustomProviderTwo.ProviderName} Account")
                                 }
                                 else
                                 {
-                                    @($"Link {OauthConfig.Value.CustomTwoProviderName} Account")
+                                    @($"Link {OauthConfig.Value.CustomProviderTwo.ProviderName} Account")
                                 }
                             </MudButton>
                         </MudItem>
@@ -219,11 +219,11 @@
                                        OnClick="@(async () => await HandleExternalAuthLinking(ExternalAuthProvider.CustomThree, _linkedAuthCustomThree))">
                                 @if (_linkedAuthCustomThree)
                                 {
-                                    @($"Unlink {OauthConfig.Value.CustomThreeProviderName} Account")
+                                    @($"Unlink {OauthConfig.Value.CustomProviderThree.ProviderName} Account")
                                 }
                                 else
                                 {
-                                    @($"Link {OauthConfig.Value.CustomThreeProviderName} Account")
+                                    @($"Link {OauthConfig.Value.CustomProviderThree.ProviderName} Account")
                                 }
                             </MudButton>
                         </MudItem>

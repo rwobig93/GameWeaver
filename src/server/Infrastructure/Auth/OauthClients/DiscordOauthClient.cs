@@ -5,7 +5,7 @@ using OAuth2.Infrastructure;
 using OAuth2.Models;
 using RestSharp.Authenticators;
 
-namespace Application.Auth.OauthClients;
+namespace Infrastructure.Auth.OauthClients;
 
 public class DiscordOauthClient : OAuth2Client
 {

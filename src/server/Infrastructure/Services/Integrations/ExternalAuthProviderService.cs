@@ -1,5 +1,4 @@
 ﻿using System.Collections.Specialized;
-using Application.Auth.OauthClients;
 using Application.Constants.Web;
 using Application.Helpers.Integrations;
 using Application.Mappers.Integrations;
@@ -8,6 +7,7 @@ using Application.Services.Integrations;
 using Application.Settings.AppSettings;
 using Domain.Contracts;
 using Domain.Enums.Integrations;
+using Infrastructure.Auth.OauthClients;
 using Microsoft.Extensions.Options;
 using OAuth2.Client.Impl;
 using OAuth2.Configuration;
@@ -90,7 +90,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
             case ExternalAuthProvider.CustomOne:
                 if (!ProviderEnabledCustomOne)
                 {
-                    return await Result<string>.FailAsync($"{_oauthConfig.CustomOneProviderName} currently isn't enabled");
+                    return await Result<string>.FailAsync($"{_oauthConfig.CustomProviderOne.ProviderName} currently isn't enabled");
                 }
 
                 loginUri = await _customOneClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
@@ -98,7 +98,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
             case ExternalAuthProvider.CustomTwo:
                 if (!ProviderEnabledCustomTwo)
                 {
-                    return await Result<string>.FailAsync($"{_oauthConfig.CustomTwoProviderName} currently isn't enabled");
+                    return await Result<string>.FailAsync($"{_oauthConfig.CustomProviderTwo.ProviderName} currently isn't enabled");
                 }
 
                 loginUri = await _customTwoClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
@@ -106,7 +106,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
             case ExternalAuthProvider.CustomThree:
                 if (!ProviderEnabledCustomThree)
                 {
-                    return await Result<string>.FailAsync($"{_oauthConfig.CustomThreeProviderName} currently isn't enabled");
+                    return await Result<string>.FailAsync($"{_oauthConfig.CustomProviderThree.ProviderName} currently isn't enabled");
                 }
 
                 loginUri = await _customThreeClient!.GetLoginLinkUriAsync(ExternalAuthHelpers.GetAuthRedirectState(provider, redirect));
@@ -162,7 +162,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                 case ExternalAuthProvider.CustomOne:
                     if (!ProviderEnabledCustomOne)
                     {
-                        return await Result<ExternalUserProfile>.FailAsync($"{_oauthConfig.CustomOneProviderName} currently isn't enabled");
+                        return await Result<ExternalUserProfile>.FailAsync($"{_oauthConfig.CustomProviderOne.ProviderName} currently isn't enabled");
                     }
 
                     externalProfile =
@@ -171,7 +171,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                 case ExternalAuthProvider.CustomTwo:
                     if (!ProviderEnabledCustomTwo)
                     {
-                        return await Result<ExternalUserProfile>.FailAsync($"{_oauthConfig.CustomTwoProviderName} currently isn't enabled");
+                        return await Result<ExternalUserProfile>.FailAsync($"{_oauthConfig.CustomProviderTwo.ProviderName} currently isn't enabled");
                     }
 
                     externalProfile =
@@ -180,7 +180,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
                 case ExternalAuthProvider.CustomThree:
                     if (!ProviderEnabledCustomThree)
                     {
-                        return await Result<ExternalUserProfile>.FailAsync($"{_oauthConfig.CustomThreeProviderName} currently isn't enabled");
+                        return await Result<ExternalUserProfile>.FailAsync($"{_oauthConfig.CustomProviderThree.ProviderName} currently isn't enabled");
                     }
 
                     externalProfile =
@@ -193,7 +193,9 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         }
         catch (Exception ex)
         {
-            return await Result<ExternalUserProfile>.FailAsync(ex.Message);
+            _logger.Error(ex, "Failed to get user profile from external Oauth");
+            return await Result<ExternalUserProfile>.FailAsync(
+                $"Failed authentication, could be due to not being registered or a misconfigured provider scope for provider: {provider.ToString()}");
         }
 
         return await Result<ExternalUserProfile>.SuccessAsync(externalProfile);
@@ -297,7 +299,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
 
     private void ConfigureCustomOauthOneClient()
     {
-        if (string.IsNullOrWhiteSpace(_oauthConfig.CustomOneClientId) || string.IsNullOrWhiteSpace(_oauthConfig.CustomOneClientSecret))
+        if (string.IsNullOrWhiteSpace(_oauthConfig.CustomProviderOne.ClientId) || string.IsNullOrWhiteSpace(_oauthConfig.CustomProviderOne.ClientSecret))
         {
             _enabledCustomOne = false;
             return;
@@ -306,15 +308,14 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         try
         {
             _customOneClient = new GenericOauthClient(new RequestFactory(), new ClientConfiguration
-                {
-                    ClientId = _oauthConfig.CustomOneClientId.Trim(),
-                    ClientSecret = _oauthConfig.CustomOneClientSecret.Trim(),
-                    RedirectUri = _redirectUri,
-                    Scope = _oauthConfig.CustomOneScope,
-                    IsEnabled = true,
-                    ClientTypeName = "WebClient"
-                }, _oauthConfig.CustomOneBaseUri, _oauthConfig.CustomOneUserInfoEndpoint, _oauthConfig.CustomOneAccessTokenEndpoint,
-                _oauthConfig.CustomOneAccessCodeEndpoint, _oauthConfig.CustomOneProviderName);
+            {
+                ClientId = _oauthConfig.CustomProviderOne.ClientId.Trim(),
+                ClientSecret = _oauthConfig.CustomProviderOne.ClientSecret.Trim(),
+                RedirectUri = _redirectUri,
+                Scope = _oauthConfig.CustomProviderOne.Scope,
+                IsEnabled = true,
+                ClientTypeName = "WebClient"
+            }, _oauthConfig.CustomProviderOne);
             _enabledCustomOne = true;
         }
         catch (Exception ex)
@@ -326,7 +327,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
 
     private void ConfigureCustomOauthTwoClient()
     {
-        if (string.IsNullOrWhiteSpace(_oauthConfig.CustomTwoClientId) || string.IsNullOrWhiteSpace(_oauthConfig.CustomTwoClientSecret))
+        if (string.IsNullOrWhiteSpace(_oauthConfig.CustomProviderTwo.ClientId) || string.IsNullOrWhiteSpace(_oauthConfig.CustomProviderTwo.ClientSecret))
         {
             _enabledCustomTwo = false;
             return;
@@ -335,15 +336,14 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         try
         {
             _customTwoClient = new GenericOauthClient(new RequestFactory(), new ClientConfiguration
-                {
-                    ClientId = _oauthConfig.CustomTwoClientId.Trim(),
-                    ClientSecret = _oauthConfig.CustomTwoClientSecret.Trim(),
-                    RedirectUri = _redirectUri,
-                    Scope = _oauthConfig.CustomTwoScope,
-                    IsEnabled = true,
-                    ClientTypeName = "WebClient"
-                }, _oauthConfig.CustomTwoBaseUri, _oauthConfig.CustomTwoUserInfoEndpoint, _oauthConfig.CustomTwoAccessTokenEndpoint,
-                _oauthConfig.CustomTwoAccessCodeEndpoint, _oauthConfig.CustomTwoProviderName);
+            {
+                ClientId = _oauthConfig.CustomProviderTwo.ClientId.Trim(),
+                ClientSecret = _oauthConfig.CustomProviderTwo.ClientSecret.Trim(),
+                RedirectUri = _redirectUri,
+                Scope = _oauthConfig.CustomProviderTwo.Scope,
+                IsEnabled = true,
+                ClientTypeName = "WebClient"
+            }, _oauthConfig.CustomProviderTwo);
             _enabledCustomTwo = true;
         }
         catch (Exception ex)
@@ -355,7 +355,7 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
 
     private void ConfigureCustomOauthThreeClient()
     {
-        if (string.IsNullOrWhiteSpace(_oauthConfig.CustomThreeClientId) || string.IsNullOrWhiteSpace(_oauthConfig.CustomThreeClientSecret))
+        if (string.IsNullOrWhiteSpace(_oauthConfig.CustomProviderThree.ClientId) || string.IsNullOrWhiteSpace(_oauthConfig.CustomProviderThree.ClientSecret))
         {
             _enabledCustomThree = false;
             return;
@@ -364,15 +364,14 @@ public class ExternalAuthProviderService : IExternalAuthProviderService
         try
         {
             _customThreeClient = new GenericOauthClient(new RequestFactory(), new ClientConfiguration
-                {
-                    ClientId = _oauthConfig.CustomThreeClientId.Trim(),
-                    ClientSecret = _oauthConfig.CustomThreeClientSecret.Trim(),
-                    RedirectUri = _redirectUri,
-                    Scope = _oauthConfig.CustomThreeScope,
-                    IsEnabled = true,
-                    ClientTypeName = "WebClient"
-                }, _oauthConfig.CustomThreeBaseUri, _oauthConfig.CustomThreeUserInfoEndpoint, _oauthConfig.CustomThreeAccessTokenEndpoint,
-                _oauthConfig.CustomThreeAccessCodeEndpoint, _oauthConfig.CustomThreeProviderName);
+            {
+                ClientId = _oauthConfig.CustomProviderThree.ClientId.Trim(),
+                ClientSecret = _oauthConfig.CustomProviderThree.ClientSecret.Trim(),
+                RedirectUri = _redirectUri,
+                Scope = _oauthConfig.CustomProviderThree.Scope,
+                IsEnabled = true,
+                ClientTypeName = "WebClient"
+            }, _oauthConfig.CustomProviderThree);
             _enabledCustomThree = true;
         }
         catch (Exception ex)

@@ -67,7 +67,8 @@
                 {
                     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                         <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
-                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomOne))">Login with @(OauthSettings.Value.CustomOneProviderName)
+                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomOne))">
+                            Login with @(OauthSettings.Value.CustomProviderOne.ProviderName)
                         </MudButton>
                     </MudItem>
                 }
@@ -75,7 +76,8 @@
                 {
                     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                         <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
-                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomTwo))">Login with @(OauthSettings.Value.CustomTwoProviderName)
+                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomTwo))">
+                            Login with @(OauthSettings.Value.CustomProviderTwo.ProviderName)
                         </MudButton>
                     </MudItem>
                 }
@@ -83,7 +85,8 @@
                 {
                     <MudItem xs="12" sm="12" md="12" Class="d-flex justify-center">
                         <MudButton Variant="Variant.Outlined" Color="Color.Surface" FullWidth="true" StartIcon="@Icons.Material.Filled.Login"
-                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomThree))">Login with @(OauthSettings.Value.CustomThreeProviderName)
+                                   OnClick="@(async () => await InitiateExternalLogin(ExternalAuthProvider.CustomThree))">
+                            Login with @(OauthSettings.Value.CustomProviderThree.ProviderName)
                         </MudButton>
                     </MudItem>
                 }
