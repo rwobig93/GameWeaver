@@ -1,4 +1,5 @@
 ﻿using Domain.Enums.Integrations;
+using Newtonsoft.Json.Linq;
 
 namespace Application.Helpers.Integrations;
 
@@ -50,5 +51,18 @@ public static class ExternalAuthHelpers
         {
             return new ValueTuple<ExternalAuthProvider, ExternalAuthRedirect>(ExternalAuthProvider.Google, ExternalAuthRedirect.Login);
         }
+    }
+
+    public static string? GetFirstMatchingToken(this JToken token, string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            if (token.SelectToken(key) is not null)
+            {
+                return token.SelectToken(key)?.ToString();
+            }
+        }
+
+        return null;
     }
 }

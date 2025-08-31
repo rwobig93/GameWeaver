@@ -8,7 +8,9 @@ public static class ExternalAuthMappers
     public static ExternalUserProfile ToExternalProfile(this UserInfo? userProfile)
     {
         if (userProfile is null)
+        {
             return new ExternalUserProfile();
+        }
 
         return new ExternalUserProfile
         {

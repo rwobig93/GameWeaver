@@ -1,4 +1,6 @@
-﻿namespace Application.Settings.AppSettings;
+﻿using Application.Settings.Models;
+
+namespace Application.Settings.AppSettings;
 
 public class OauthConfiguration : IAppSettingsSection
 {
@@ -12,4 +14,8 @@ public class OauthConfiguration : IAppSettingsSection
 
     public string SpotifyClientId { get; set; } = "";
     public string SpotifyClientSecret { get; set; } = "";
+
+    public CustomOauthProviderSettings CustomProviderOne { get; set; } = new() {ProviderName = "Custom SSO Primary"};
+    public CustomOauthProviderSettings CustomProviderTwo { get; set; } = new() {ProviderName = "Custom SSO Secondary"};
+    public CustomOauthProviderSettings CustomProviderThree { get; set; } = new() {ProviderName = "Custom SSO Tertiary"};
 }

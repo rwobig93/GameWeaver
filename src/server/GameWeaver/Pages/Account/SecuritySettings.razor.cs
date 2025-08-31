@@ -10,16 +10,47 @@ using Application.Services.Lifecycle;
 using Application.Settings.AppSettings;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
-using Microsoft.Extensions.Options;
 using GameWeaver.Components.Account;
+using Microsoft.Extensions.Options;
 
 namespace GameWeaver.Pages.Account;
 
 public partial class SecuritySettings
 {
+    private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
+    private bool _canGenerateApiTokens;
+    private MudTabPanel _externalAuthPanel = null!;
+    private bool _linkedAuthCustomOne;
+    private bool _linkedAuthCustomThree;
+    private bool _linkedAuthCustomTwo;
+    private bool _linkedAuthDiscord;
+
+    // External Auth
+    private bool _linkedAuthGoogle;
+    private bool _linkedAuthSpotify;
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+
+    // MFA
+    private string _mfaButtonText = "";
+    private string _mfaRegisterCode = "";
+    private InputType _passwordConfirmInput = InputType.Password;
+    private string _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
+    private InputType _passwordCurrentInput = InputType.Password;
+    private string _passwordCurrentInputIcon = Icons.Material.Filled.VisibilityOff;
+    private InputType _passwordInput = InputType.Password;
+    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private string _qrCodeImageSource = "";
+    private MudTabs _securityTabs = null!;
+    private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = [];
+    private string _totpCode = "";
+
+    // User API Tokens
+    private List<AppUserExtendedAttributeSlim> _userApiTokens = [];
+    private List<AppUserExtendedAttributeSlim> _userClientSessions = [];
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
     [Parameter] public string OauthCode { get; set; } = "";
     [Parameter] public string OauthState { get; set; } = "";
+    [Parameter] public string OauthExternalId { get; set; } = "";
 
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
@@ -29,42 +60,15 @@ public partial class SecuritySettings
     [Inject] private IAppUserService UserService { get; init; } = null!;
     [Inject] private IExternalAuthProviderService ExternalAuthService { get; init; } = null!;
     [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
+    [Inject] private IOptions<OauthConfiguration> OauthConfig { get; init; } = null!;
 
     private AppUserSecurityFull CurrentUser { get; set; } = new();
-
-    private bool _canGenerateApiTokens;
-    private MudTabs _securityTabs = null!;
-    private MudTabPanel _externalAuthPanel = null!;
 
     // User Password Change
     private string CurrentPassword { get; set; } = "";
     private string DesiredPassword { get; set; } = "";
     private string ConfirmPassword { get; set; } = "";
-    private readonly PasswordRequirementsResponse _passwordRequirements = AccountHelpers.GetPasswordRequirements();
-    private InputType _passwordCurrentInput = InputType.Password;
-    private string _passwordCurrentInputIcon = Icons.Material.Filled.VisibilityOff;
-    private InputType _passwordInput = InputType.Password;
-    private string _passwordInputIcon = Icons.Material.Filled.VisibilityOff;
-    private InputType _passwordConfirmInput = InputType.Password;
-    private string _passwordConfirmInputIcon = Icons.Material.Filled.VisibilityOff;
-
-    // MFA
-    private string _mfaButtonText = "";
-    private string _mfaRegisterCode = "";
-    private string _qrCodeImageSource = "";
-    private string _totpCode = "";
     private bool QrCodeGenerating { get; set; }
-
-    // User API Tokens
-    private List<AppUserExtendedAttributeSlim> _userApiTokens = [];
-    private List<AppUserExtendedAttributeSlim> _userClientSessions = [];
-    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private HashSet<AppUserExtendedAttributeSlim> _selectedApiTokens = [];
-
-    // External Auth
-    private bool _linkedAuthGoogle;
-    private bool _linkedAuthDiscord;
-    private bool _linkedAuthSpotify;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -99,10 +103,19 @@ public partial class SecuritySettings
         var queryParameters = QueryHelpers.ParseQuery(uri.Query);
 
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthCode, out var oauthCode))
+        {
             OauthCode = oauthCode!;
+        }
 
         if (queryParameters.TryGetValue(LoginRedirectConstants.OauthState, out var oauthState))
+        {
             OauthState = oauthState!;
+        }
+
+        if (queryParameters.TryGetValue(LoginRedirectConstants.OauthExternalId, out var oauthExternalId))
+        {
+            OauthExternalId = oauthExternalId!;
+        }
     }
 
     private async Task GetPermissions()
@@ -350,12 +363,18 @@ public partial class SecuritySettings
             _linkedAuthDiscord = false;
             _linkedAuthGoogle = false;
             _linkedAuthSpotify = false;
+            _linkedAuthCustomOne = false;
+            _linkedAuthCustomTwo = false;
+            _linkedAuthCustomThree = false;
             return;
         }
 
-        _linkedAuthDiscord = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Discord.ToString());
-        _linkedAuthGoogle = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Google.ToString());
-        _linkedAuthSpotify = externalAuthRequest.Data.Any(x => x.Description == ExternalAuthProvider.Spotify.ToString());
+        _linkedAuthDiscord = externalAuthRequest.Data.Any(x => x.Description == nameof(ExternalAuthProvider.Discord));
+        _linkedAuthGoogle = externalAuthRequest.Data.Any(x => x.Description == nameof(ExternalAuthProvider.Google));
+        _linkedAuthSpotify = externalAuthRequest.Data.Any(x => x.Description == nameof(ExternalAuthProvider.Spotify));
+        _linkedAuthCustomOne = externalAuthRequest.Data.Any(x => x.Description == nameof(ExternalAuthProvider.CustomOne));
+        _linkedAuthCustomTwo = externalAuthRequest.Data.Any(x => x.Description == nameof(ExternalAuthProvider.CustomTwo));
+        _linkedAuthCustomThree = externalAuthRequest.Data.Any(x => x.Description == nameof(ExternalAuthProvider.CustomThree));
     }
 
     private async Task GenerateUserApiToken()
@@ -363,7 +382,7 @@ public partial class SecuritySettings
         if (!_canGenerateApiTokens) return;
 
         var dialogParameters = new DialogParameters {{"ApiTokenId", Guid.Empty}};
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
         var dialogResult = await DialogService.ShowAsync<UserApiTokenDialog>("Create API Token", dialogParameters, dialogOptions);
         var answer = await dialogResult.Result;
         if (answer?.Data is null || answer.Canceled)
@@ -381,7 +400,7 @@ public partial class SecuritySettings
         if (_selectedApiTokens.Count != 1) return;
 
         var dialogParameters = new DialogParameters {{"ApiTokenId", _selectedApiTokens.FirstOrDefault()!.Id}};
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true};
         await DialogService.ShowAsync<UserApiTokenDialog>("Update API Token", dialogParameters, dialogOptions);
 
         await GetUserApiTokens();
@@ -399,7 +418,7 @@ public partial class SecuritySettings
             {"Title", $"Are you sure you want to delete these {_selectedApiTokens.Count} API Tokens?"},
             {"Content", string.Join(Environment.NewLine, tokensList)}
         };
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Medium, CloseOnEscapeKey = true};
         var confirmation = await DialogService.ShowAsync<ConfirmationDialog>("Confirm Deletion", dialogParameters, dialogOptions);
         var dialogResult = await confirmation.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)
@@ -456,7 +475,7 @@ public partial class SecuritySettings
 
     private async Task HandleExternalAuthLinking(ExternalAuthProvider provider, bool accountIsLinked)
     {
-        // Account is linked so we'll unlink/remove the account
+        // Account is linked, so we'll unlink/remove the account
         if (accountIsLinked)
         {
             var removeRequest = await AccountService.RemoveExternalAuthProvider(CurrentUser.Id, provider);
@@ -466,13 +485,21 @@ public partial class SecuritySettings
                 return;
             }
 
-            Snackbar.Add($"Successfully unlinked your {provider} account", Severity.Success);
+            var providerName = provider switch
+            {
+                ExternalAuthProvider.CustomOne => OauthConfig.Value.CustomProviderOne.ProviderName,
+                ExternalAuthProvider.CustomTwo => OauthConfig.Value.CustomProviderTwo.ProviderName,
+                ExternalAuthProvider.CustomThree => OauthConfig.Value.CustomProviderThree.ProviderName,
+                _ => provider.ToString()
+            };
+
+            Snackbar.Add($"Successfully unlinked your {providerName} account", Severity.Success);
             await GetUserExternalAuthLinks();
             StateHasChanged();
             return;
         }
 
-        // Account is not linked so we'll start linking - initiate a redirect to the provider, on successful auth we'll link the account
+        // Account is not linked, so we'll start linking - initiate a redirect to the provider; on successful auth we'll link the account
         var loginUriRedirectRequest = await ExternalAuthService.GetLoginUri(provider, ExternalAuthRedirect.Security);
         if (!loginUriRedirectRequest.Succeeded)
         {
@@ -487,18 +514,32 @@ public partial class SecuritySettings
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(OauthCode) || string.IsNullOrWhiteSpace(OauthState)) return;
+            if (string.IsNullOrWhiteSpace(OauthCode) || string.IsNullOrWhiteSpace(OauthState) || string.IsNullOrWhiteSpace(OauthExternalId)) return;
 
-            var provider = ExternalAuthHelpers.StringToProvider(OauthCode);
+            var parsedOauthState = OauthState.Split('-')[0];
+            var provider = ExternalAuthHelpers.StringToProvider(parsedOauthState);
+            if (provider is ExternalAuthProvider.Unknown)
+            {
+                Snackbar.Add("Invalid external login data was received, please try again", Severity.Error);
+                return;
+            }
 
-            var addExternalAuthRequest = await AccountService.SetExternalAuthProvider(CurrentUser.Id, provider, OauthState);
+            var addExternalAuthRequest = await AccountService.SetExternalAuthProvider(CurrentUser.Id, provider, OauthExternalId);
             if (!addExternalAuthRequest.Succeeded)
             {
                 addExternalAuthRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
 
-            Snackbar.Add($"Your {AppConfig.Value.ApplicationName} account has been linked to your {provider} account!", Severity.Success);
+            var providerName = provider switch
+            {
+                ExternalAuthProvider.CustomOne => OauthConfig.Value.CustomProviderOne.ProviderName,
+                ExternalAuthProvider.CustomTwo => OauthConfig.Value.CustomProviderTwo.ProviderName,
+                ExternalAuthProvider.CustomThree => OauthConfig.Value.CustomProviderThree.ProviderName,
+                _ => provider.ToString()
+            };
+
+            Snackbar.Add($"Your {AppConfig.Value.ApplicationName} account has been linked to your {providerName} account!", Severity.Success);
             await GetUserExternalAuthLinks();
             _securityTabs.ActivatePanel(_externalAuthPanel);
             StateHasChanged();
