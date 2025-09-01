@@ -5,6 +5,8 @@ using Application.Helpers.GameServer;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Models.GameServer.ConfigurationItem;
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.LocalResource;
 using Application.Models.Identity.User;
@@ -120,6 +122,120 @@ public partial class AdminPanel : ComponentBase
         StateHasChanged();
     }
 
+    private async Task CreateBackupTshootRecord(Guid troubleshootRecordId, string title, string error, List<string> messages, GameProfileSlim? profile = null,
+        GameSlim? game = null, LocalResourceSlim? resource = null)
+    {
+        if (troubleshootRecordId == Guid.Empty)
+        {
+            troubleshootRecordId = Guid.CreateVersion7();
+        }
+
+        var tshootDetails = new Dictionary<string, string> {{"Error", error}};
+        if (profile is not null)
+        {
+            tshootDetails.Add("ProfileId", profile.Id.ToString());
+            tshootDetails.Add("ProfileName", profile.FriendlyName);
+        }
+
+        if (game is not null)
+        {
+            tshootDetails.Add("GameId", game.Id.ToString());
+            tshootDetails.Add("GameName", game.FriendlyName);
+        }
+
+        if (resource is not null)
+        {
+            tshootDetails.Add("ResourceId", resource.Id.ToString());
+            tshootDetails.Add("ResourceName", resource.Name);
+            tshootDetails.Add("ResourcePathWindows", resource.PathWindows);
+            tshootDetails.Add("ResourcePathLinux", resource.PathLinux);
+            tshootDetails.Add("ResourcePathMac", resource.PathMac);
+            tshootDetails.Add("ResourceType", resource.Type.ToString());
+            tshootDetails.Add("ResourceContentType", resource.ContentType.ToString());
+        }
+
+        for (var i = 0; i < messages.Count; i++)
+        {
+            tshootDetails.Add($"Error{i + 1}", messages[i]);
+        }
+
+        await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Backup, troubleshootRecordId, CurrentUser.Id, title, tshootDetails);
+    }
+
+    private async Task CreateRestoreTshootRecord(Guid troubleshootRecordId, string title, string error, List<string>? messages = null, GameProfileExport? profile = null,
+        List<LocalResourceExport>? importResources = null, LocalResourceExport? exportResource = null, GameProfilesBackup? profilesBackup = null, Guid? profileId = null,
+        Guid? createdResourceId = null, ConfigurationItemSlim? configItem = null, Guid? configItemId = null)
+    {
+        if (troubleshootRecordId == Guid.Empty)
+        {
+            troubleshootRecordId = Guid.CreateVersion7();
+        }
+
+        var tshootDetails = new Dictionary<string, string> {{"Error", error}};
+        if (profile is not null)
+        {
+            tshootDetails.Add("ProfileName", profile.Name);
+            tshootDetails.Add("ProfileGameId", profile.GameId);
+            tshootDetails.Add("ProfileResourceCount", profile.Resources.Count.ToString());
+        }
+
+        if (importResources is not null)
+        {
+            tshootDetails.Add("ProfileResourceCount", importResources.Count.ToString());
+        }
+
+        if (exportResource is not null)
+        {
+            tshootDetails.Add("ResourceName", exportResource.Name);
+            tshootDetails.Add("ResourcePathWindows", exportResource.PathWindows);
+            tshootDetails.Add("ResourcePathLinux", exportResource.PathLinux);
+            tshootDetails.Add("ResourcePathMac", exportResource.PathMac);
+            tshootDetails.Add("ResourceType", exportResource.Type.ToString());
+            tshootDetails.Add("ResourceContentType", exportResource.ContentType.ToString());
+        }
+
+        if (profilesBackup is not null)
+        {
+            tshootDetails.Add("ExportInstanceName", profilesBackup.InstanceName);
+            tshootDetails.Add("ExportInstanceVersion", profilesBackup.InstanceVersion);
+            tshootDetails.Add("ExportTimestampUtc", profilesBackup.ExportedTimestampUtc.ToFriendlyDisplay());
+        }
+
+        if (profileId is not null)
+        {
+            tshootDetails.Add("ProfileId", profileId.ToString() ?? string.Empty);
+        }
+
+        if (createdResourceId is not null)
+        {
+            tshootDetails.Add("CreatedResourceId", createdResourceId.ToString() ?? string.Empty);
+        }
+
+        if (configItemId is not null)
+        {
+            tshootDetails.Add("ConfigItemId", configItemId.ToString() ?? string.Empty);
+        }
+
+        if (configItem is not null)
+        {
+            tshootDetails.Add("ConfigItemPath", configItem.Path);
+            tshootDetails.Add("ConfigItemKey", configItem.Key);
+            tshootDetails.Add("ConfigItemValue", configItem.Value);
+            tshootDetails.Add("ConfigItemCategory", configItem.Category);
+            tshootDetails.Add("ConfigItemDuplicateKey", configItem.DuplicateKey.ToString());
+        }
+
+        if (messages is not null)
+        {
+            for (var i = 0; i < messages.Count; i++)
+            {
+                tshootDetails.Add($"Error{i + 1}", messages[i]);
+            }
+        }
+
+        await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id, title, tshootDetails);
+    }
+
     private async Task ExportGameProfiles()
     {
         if (!_canGetGameProfileCount)
@@ -157,26 +273,8 @@ public partial class AdminPanel : ComponentBase
             var profileResourcesRequest = await GameServerService.GetLocalResourcesByGameProfileIdAsync(profile.Id);
             if (!profileResourcesRequest.Succeeded)
             {
-                if (troubleshootRecordId == Guid.Empty)
-                {
-                    troubleshootRecordId = Guid.CreateVersion7();
-                }
-
-                var tshootDetails = new Dictionary<string, string>
-                {
-                    {"ProfileId", profile.Id.ToString()},
-                    {"ProfileName", profile.FriendlyName},
-                    {"GameId", matchingGame.Id.ToString()},
-                    {"GameName", matchingGame.FriendlyName},
-                    {"Error", "Was unable to get the resources for the game profile"}
-                };
-                for (var i = 0; i < profileResourcesRequest.Messages.Count; i++)
-                {
-                    tshootDetails.Add($"Error{i + 1}", profileResourcesRequest.Messages[i]);
-                }
-
-                await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Backup, troubleshootRecordId, CurrentUser.Id,
-                    "Failed to export game profile to backup export", tshootDetails);
+                await CreateBackupTshootRecord(troubleshootRecordId, "Failed to export game profile to backup export", "Was unable to get the resources for the game profile",
+                    profileResourcesRequest.Messages, profile: profile, game: matchingGame);
                 continue;
             }
 
@@ -185,33 +283,9 @@ public partial class AdminPanel : ComponentBase
                 var configItemsRequest = await GameServerService.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
                 if (!configItemsRequest.Succeeded)
                 {
-                    if (troubleshootRecordId == Guid.Empty)
-                    {
-                        troubleshootRecordId = Guid.CreateVersion7();
-                    }
-
-                    var tshootDetails = new Dictionary<string, string>
-                    {
-                        {"ProfileId", profile.Id.ToString()},
-                        {"ProfileName", profile.FriendlyName},
-                        {"GameId", matchingGame.Id.ToString()},
-                        {"GameName", matchingGame.FriendlyName},
-                        {"ResourceId", resource.Id.ToString()},
-                        {"ResourceName", resource.Name},
-                        {"ResourcePathWindows", resource.PathWindows},
-                        {"ResourcePathLinux", resource.PathLinux},
-                        {"ResourcePathMac", resource.PathMac},
-                        {"ResourceType", resource.Type.ToString()},
-                        {"ResourceContentType", resource.ContentType.ToString()},
-                        {"Error", "Was unable to get config items for the resource of the game profile"}
-                    };
-                    for (var i = 0; i < configItemsRequest.Messages.Count; i++)
-                    {
-                        tshootDetails.Add($"Error{i + 1}", configItemsRequest.Messages[i]);
-                    }
-
-                    await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Backup, troubleshootRecordId, CurrentUser.Id,
-                        "Failed to export game profile to backup export", tshootDetails);
+                    await CreateBackupTshootRecord(troubleshootRecordId, "Failed to export game profile to backup export",
+                        "Was unable to get the config items for the resource of the game profile", configItemsRequest.Messages, profile: profile,
+                        game: matchingGame, resource: resource);
                     continue;
                 }
 
@@ -270,7 +344,7 @@ public partial class AdminPanel : ComponentBase
             return;
         }
 
-        await ImportGameProfiles(profileToImport!);
+        await ImportGameProfiles(profileToImport);
     }
 
     private async Task ImportGameProfiles(IBrowserFile importFile)
@@ -326,22 +400,8 @@ public partial class AdminPanel : ComponentBase
 
             if (matchingGame is null)
             {
-                if (troubleshootRecordId == Guid.Empty)
-                {
-                    troubleshootRecordId = Guid.CreateVersion7();
-                }
-
-                await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                    "Failed to import game profile from backup export", new Dictionary<string, string>
-                    {
-                        {"ExportInstanceName", deserializedBackup.InstanceName},
-                        {"ExportInstanceVersion", deserializedBackup.InstanceVersion},
-                        {"ExportTimestampUtc", deserializedBackup.ExportedTimestampUtc.ToFriendlyDisplay()},
-                        {"ProfileName", profile.Name},
-                        {"ProfileGameId", profile.GameId},
-                        {"ProfileResourceCount", profile.Resources.Count.ToString()},
-                        {"Error", "No matching game could be found for the game id on the game profile"}
-                    });
+                await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
+                    "No matching game could be found for the game id on the game profile", profilesBackup: deserializedBackup, profile: profile);
                 continue;
             }
 
@@ -356,28 +416,8 @@ public partial class AdminPanel : ComponentBase
                 var createProfileRequest = await GameServerService.CreateGameProfileAsync(profile.ToCreateRequest(CurrentUser.Id, matchingGame.Id), CurrentUser.Id);
                 if (!createProfileRequest.Succeeded)
                 {
-                    if (troubleshootRecordId == Guid.Empty)
-                    {
-                        troubleshootRecordId = Guid.CreateVersion7();
-                    }
-
-                    var tshootDetails = new Dictionary<string, string>
-                    {
-                        {"ExportInstanceName", deserializedBackup.InstanceName},
-                        {"ExportInstanceVersion", deserializedBackup.InstanceVersion},
-                        {"ExportTimestampUtc", deserializedBackup.ExportedTimestampUtc.ToFriendlyDisplay()},
-                        {"ProfileName", profile.Name},
-                        {"ProfileGameId", profile.GameId},
-                        {"ProfileResourceCount", profile.Resources.Count.ToString()},
-                        {"Error", "Failed to create new profile for non-existent game profile"}
-                    };
-                    for (var i = 0; i < createProfileRequest.Messages.Count; i++)
-                    {
-                        tshootDetails.Add($"Error{i + 1}", createProfileRequest.Messages[i]);
-                    }
-
-                    await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                        "Failed to import game profile from backup export", tshootDetails);
+                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
+                        "Failed to create new profile for non-existent game profile", createProfileRequest.Messages, profilesBackup: deserializedBackup, profile: profile);
                     continue;
                 }
 
@@ -388,29 +428,8 @@ public partial class AdminPanel : ComponentBase
                 var updateProfileRequest = await GameServerService.UpdateGameProfileAsync(profile.ToUpdateRequest(matchingProfile.Data.Id), CurrentUser.Id);
                 if (!updateProfileRequest.Succeeded)
                 {
-                    if (troubleshootRecordId == Guid.Empty)
-                    {
-                        troubleshootRecordId = Guid.CreateVersion7();
-                    }
-
-                    var tshootDetails = new Dictionary<string, string>
-                    {
-                        {"ExportInstanceName", deserializedBackup.InstanceName},
-                        {"ExportInstanceVersion", deserializedBackup.InstanceVersion},
-                        {"ExportTimestampUtc", deserializedBackup.ExportedTimestampUtc.ToFriendlyDisplay()},
-                        {"ProfileId", matchingProfile.Data.Id.ToString()},
-                        {"ProfileName", profile.Name},
-                        {"ProfileGameId", profile.GameId},
-                        {"ProfileResourceCount", profile.Resources.Count.ToString()},
-                        {"Error", "Failed to update existing game profile"}
-                    };
-                    for (var i = 0; i < updateProfileRequest.Messages.Count; i++)
-                    {
-                        tshootDetails.Add($"Error{i + 1}", updateProfileRequest.Messages[i]);
-                    }
-
-                    await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                        "Failed to import game profile from backup export", tshootDetails);
+                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
+                        "Failed to update existing game profile", updateProfileRequest.Messages, profilesBackup: deserializedBackup, profile: profile);
                     continue;
                 }
             }
@@ -437,24 +456,8 @@ public partial class AdminPanel : ComponentBase
         var existingResourcesRequest = await GameServerService.GetLocalResourcesByGameProfileIdAsync(profileId);
         if (!existingResourcesRequest.Succeeded)
         {
-            if (troubleshootRecordId == Guid.Empty)
-            {
-                troubleshootRecordId = Guid.CreateVersion7();
-            }
-
-            var tshootDetails = new Dictionary<string, string>
-            {
-                {"ProfileId", profileId.ToString()},
-                {"ProfileResourceCount", importResources.Count.ToString()},
-                {"Error", "Failed to get resources for game profile to import resources"}
-            };
-            for (var i = 0; i < existingResourcesRequest.Messages.Count; i++)
-            {
-                tshootDetails.Add($"Error{i + 1}", existingResourcesRequest.Messages[i]);
-            }
-
-            await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                "Failed to import config items for game profile from backup export", tshootDetails);
+            await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
+                "Failed to get resources for game profile to import resources", existingResourcesRequest.Messages, profileId: profileId, importResources: importResources);
             return;
         }
 
@@ -471,61 +474,17 @@ public partial class AdminPanel : ComponentBase
                 var createResourceRequest = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), CurrentUser.Id);
                 if (!createResourceRequest.Succeeded)
                 {
-                    if (troubleshootRecordId == Guid.Empty)
-                    {
-                        troubleshootRecordId = Guid.CreateVersion7();
-                    }
-
-                    var tshootDetails = new Dictionary<string, string>
-                    {
-                        {"ProfileId", profileId.ToString()},
-                        {"ResourceName", resource.Name},
-                        {"ResourcePathWindows", resource.PathWindows},
-                        {"ResourcePathLinux", resource.PathLinux},
-                        {"ResourcePathMac", resource.PathMac},
-                        {"ResourceType", resource.Type.ToString()},
-                        {"ResourceContentType", resource.ContentType.ToString()},
-                        {"ResourceConfigCount", resource.Configuration.Count.ToString()},
-                        {"Error", "Failed to create resource for game profile to import resources"}
-                    };
-                    for (var i = 0; i < createResourceRequest.Messages.Count; i++)
-                    {
-                        tshootDetails.Add($"Error{i + 1}", createResourceRequest.Messages[i]);
-                    }
-
-                    await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                        "Failed to import local resource for game profile from backup export", tshootDetails);
+                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
+                        "Failed to create resource for game profile to import resources", createResourceRequest.Messages, profileId: profileId, exportResource: resource);
                     continue;
                 }
 
                 var createdResourceRequest = await GameServerService.GetLocalResourceByIdAsync(createResourceRequest.Data);
                 if (!createdResourceRequest.Succeeded)
                 {
-                    if (troubleshootRecordId == Guid.Empty)
-                    {
-                        troubleshootRecordId = Guid.CreateVersion7();
-                    }
-
-                    var tshootDetails = new Dictionary<string, string>
-                    {
-                        {"ProfileId", profileId.ToString()},
-                        {"CreatedResourceId", createResourceRequest.Data.ToString()},
-                        {"ResourceName", resource.Name},
-                        {"ResourcePathWindows", resource.PathWindows},
-                        {"ResourcePathLinux", resource.PathLinux},
-                        {"ResourcePathMac", resource.PathMac},
-                        {"ResourceType", resource.Type.ToString()},
-                        {"ResourceContentType", resource.ContentType.ToString()},
-                        {"ResourceConfigCount", resource.Configuration.Count.ToString()},
-                        {"Error", "Failed to get created resource for game profile to import resources"}
-                    };
-                    for (var i = 0; i < createdResourceRequest.Messages.Count; i++)
-                    {
-                        tshootDetails.Add($"Error{i + 1}", createdResourceRequest.Messages[i]);
-                    }
-
-                    await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                        "Failed to import local resource for game profile from backup export", tshootDetails);
+                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import local resource for game profile from backup export",
+                        "Failed to get created resource for game profile to import resources", createdResourceRequest.Messages, profileId: profileId,
+                        exportResource: resource, createdResourceId: createResourceRequest.Data);
                     continue;
                 }
 
@@ -543,35 +502,9 @@ public partial class AdminPanel : ComponentBase
                     var createConfigItemRequest = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), CurrentUser.Id);
                     if (!createConfigItemRequest.Succeeded)
                     {
-                        if (troubleshootRecordId == Guid.Empty)
-                        {
-                            troubleshootRecordId = Guid.CreateVersion7();
-                        }
-
-                        var tshootDetails = new Dictionary<string, string>
-                        {
-                            {"ProfileId", profileId.ToString()},
-                            {"ResourceName", resource.Name},
-                            {"ResourcePathWindows", resource.PathWindows},
-                            {"ResourcePathLinux", resource.PathLinux},
-                            {"ResourcePathMac", resource.PathMac},
-                            {"ResourceType", resource.Type.ToString()},
-                            {"ResourceContentType", resource.ContentType.ToString()},
-                            {"ResourceConfigCount", resource.Configuration.Count.ToString()},
-                            {"ConfigItemPath", configItem.Path},
-                            {"ConfigItemKey", configItem.Key},
-                            {"ConfigItemValue", configItem.Value},
-                            {"ConfigItemCategory", configItem.Category},
-                            {"ConfigItemDuplicateKey", configItem.DuplicateKey.ToString()},
-                            {"Error", "Failed to create config item on resource for game profile to import resources"}
-                        };
-                        for (var i = 0; i < createConfigItemRequest.Messages.Count; i++)
-                        {
-                            tshootDetails.Add($"Error{i + 1}", createConfigItemRequest.Messages[i]);
-                        }
-
-                        await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                            "Failed to import config item on local resource for game profile from backup export", tshootDetails);
+                        await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import config item on local resource for game profile from backup export",
+                            "Failed to create config item on resource for game profile to import resources", createConfigItemRequest.Messages, profileId: profileId,
+                            exportResource: resource, configItem: configItem);
                     }
 
                     continue;
@@ -589,36 +522,9 @@ public partial class AdminPanel : ComponentBase
                 var updateConfigItemRequest = await GameServerService.UpdateConfigurationItemAsync(updatedConfigItem.ToUpdate(), CurrentUser.Id);
                 if (updateConfigItemRequest.Succeeded) continue;
                 {
-                    if (troubleshootRecordId == Guid.Empty)
-                    {
-                        troubleshootRecordId = Guid.CreateVersion7();
-                    }
-
-                    var tshootDetails = new Dictionary<string, string>
-                    {
-                        {"ProfileId", profileId.ToString()},
-                        {"ResourceName", resource.Name},
-                        {"ResourcePathWindows", resource.PathWindows},
-                        {"ResourcePathLinux", resource.PathLinux},
-                        {"ResourcePathMac", resource.PathMac},
-                        {"ResourceType", resource.Type.ToString()},
-                        {"ResourceContentType", resource.ContentType.ToString()},
-                        {"ResourceConfigCount", resource.Configuration.Count.ToString()},
-                        {"ConfigItemId", updatedConfigItem.Id.ToString()},
-                        {"ConfigItemPath", configItem.Path},
-                        {"ConfigItemKey", configItem.Key},
-                        {"ConfigItemValue", configItem.Value},
-                        {"ConfigItemCategory", configItem.Category},
-                        {"ConfigItemDuplicateKey", configItem.DuplicateKey.ToString()},
-                        {"Error", "Failed to update config item on resource for game profile to import resources"}
-                    };
-                    for (var i = 0; i < updateConfigItemRequest.Messages.Count; i++)
-                    {
-                        tshootDetails.Add($"Error{i + 1}", updateConfigItemRequest.Messages[i]);
-                    }
-
-                    await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id,
-                        "Failed to import config item on local resource for game profile from backup export", tshootDetails);
+                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import config item on local resource for game profile from backup export",
+                        "Failed to update config item on resource for game profile to import resources", updateConfigItemRequest.Messages, profileId: profileId,
+                        exportResource: resource, configItemId: updatedConfigItem.Id, configItem: configItem);
                     return;
                 }
             }

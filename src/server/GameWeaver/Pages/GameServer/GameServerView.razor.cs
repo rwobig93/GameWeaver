@@ -335,6 +335,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             if (resource.Id == Guid.Empty)
             {
                 resource.GameProfileId = _gameServer.GameProfileId;
+                // TODO: Difference between ignore and deleted, update client, ignore should never make it to the client
+                // TODO: Update dialog for resource not existing to be delete instead, ignore should only be for inherited resources
                 resource.ContentType = ContentType.Ignore;
                 var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
                 if (createResourceResponse.Succeeded)
