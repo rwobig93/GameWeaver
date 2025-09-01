@@ -1,4 +1,3 @@
-
 using Application.Helpers.Runtime;
 using Application.Models.GameServer.Host;
 using Application.Models.GameServer.HostCheckIn;
@@ -11,16 +10,6 @@ namespace GameWeaver.Components.GameServer;
 
 public partial class HostWidget : ComponentBase
 {
-    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
-    [Parameter] public HostSlim Host { get; set; } = null!;
-    [Parameter] public TimeZoneInfo LocalTimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
-
-
-    private double[] _cpuData = [0, 0];
-    private double[] _ramData = [0, 0];
-    private readonly List<TimeSeriesChartSeries> _netIn = [];
-    private readonly List<TimeSeriesChartSeries> _netOut = [];
     private readonly ChartOptions _chartOptionsCpu = new()
     {
         LineStrokeWidth = 4,
@@ -32,17 +21,7 @@ public partial class HostWidget : ComponentBase
         ShowLabels = false,
         ShowLegendLabels = false
     };
-    private readonly ChartOptions _chartOptionsRam = new()
-    {
-        LineStrokeWidth = 4,
-        InterpolationOption = InterpolationOption.NaturalSpline,
-        YAxisLines = false,
-        XAxisLines = false,
-        ShowLegend = false,
-        ShowToolTips = false,
-        ShowLabels = false,
-        ShowLegendLabels = false
-    };
+
     private readonly ChartOptions _chartOptionsNetwork = new()
     {
         LineStrokeWidth = 2,
@@ -58,12 +37,35 @@ public partial class HostWidget : ComponentBase
         ShowLegendLabels = false
     };
 
+    private readonly ChartOptions _chartOptionsRam = new()
+    {
+        LineStrokeWidth = 4,
+        InterpolationOption = InterpolationOption.NaturalSpline,
+        YAxisLines = false,
+        XAxisLines = false,
+        ShowLegend = false,
+        ShowToolTips = false,
+        ShowLabels = false,
+        ShowLegendLabels = false
+    };
+
+    private readonly List<TimeSeriesChartSeries> _netIn = [];
+    private readonly List<TimeSeriesChartSeries> _netOut = [];
+
     private List<HostCheckInFull> _checkins = [];
+
+
+    private double[] _cpuData = [0, 0];
     private PaletteDark _currentPalette = new();
+    private double[] _ramData = [0, 0];
+    [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
+    [Parameter] public HostSlim Host { get; set; } = null!;
+    [Parameter] public TimeZoneInfo LocalTimeZone { get; set; } = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    [Inject] private IOptions<AppConfiguration> AppConfig { get; init; } = null!;
     private Color StatusColor { get; set; } = Color.Success;
     private bool IsOffline { get; set; }
     private DateTime WentOffline { get; set; }
-    private double StorageUsed { get; set; } = 0;
+    private double StorageUsed { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -200,12 +202,12 @@ public partial class HostWidget : ComponentBase
         _netOut.Clear();
 
         var networkIn = _checkins.Select(x =>
-            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double)x.NetworkInBytes / 8_000))).Reverse().ToList();
+            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double) x.NetworkInBytes / 8_000))).Reverse().ToList();
         var networkOut = _checkins.Select(x =>
-            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double)x.NetworkOutBytes / 8_000))).Reverse().ToList();
+            new TimeSeriesChartSeries.TimeValue(x.ReceiveTimestamp.ConvertToLocal(LocalTimeZone), Math.Ceiling((double) x.NetworkOutBytes / 8_000))).Reverse().ToList();
 
-        _netIn.Add(new TimeSeriesChartSeries { Data = networkIn });
-        _netOut.Add(new TimeSeriesChartSeries { Data = networkOut });
+        _netIn.Add(new TimeSeriesChartSeries {Data = networkIn});
+        _netOut.Add(new TimeSeriesChartSeries {Data = networkOut});
         await Task.CompletedTask;
     }
 

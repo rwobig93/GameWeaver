@@ -11,6 +11,14 @@ namespace GameWeaver.Shared;
 
 public partial class SettingsMenu
 {
+    private bool _canEditTheme;
+    private bool _canViewAdminPanel;
+    private string _clientTimeZone = "GMT";
+    private string _cssThemedText = "";
+
+    private string _displayUsername = "";
+    private string _styleThemedText = "color: var(--mud-palette-secondary);";
+    private string _styleThemedTextSelected = "color: var(--mud-palette-primary);";
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IWebClientService WebClientService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
@@ -21,13 +29,6 @@ public partial class SettingsMenu
     [Parameter] public List<AppTheme> AvailableThemes { get; set; } = AppThemes.GetAvailableThemes();
     [Parameter] public MudTheme SelectedTheme { get; set; } = AppThemes.DarkTheme.Theme;
     [Parameter] public EventCallback<AppTheme> ThemeChanged { get; set; }
-
-    private string _displayUsername = "";
-    private string _cssThemedText = "";
-    private string _styleThemedTextSelected = "color: var(--mud-palette-primary);";
-    private string _styleThemedText = "color: var(--mud-palette-secondary);";
-    private string _clientTimeZone = "GMT";
-    private bool _canEditTheme;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -52,6 +53,7 @@ public partial class SettingsMenu
     {
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _canEditTheme = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.Identity.Preferences.ChangeTheme);
+        _canViewAdminPanel = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Admin.ViewPanel);
     }
 
     private async Task GetUser()

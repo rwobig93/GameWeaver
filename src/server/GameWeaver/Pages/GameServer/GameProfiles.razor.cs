@@ -174,7 +174,7 @@ public partial class GameProfiles : ComponentBase
 
         foreach (var file in importFiles)
         {
-            var fileContent = await file.GetContent();  // The max import size per file is 10MB by default
+            var fileContent = await file.GetContent(); // The max import size per file is 10MB by default
             if (!fileContent.Succeeded || fileContent.Data is null)
             {
                 errors.AddRange(fileContent.Messages);
@@ -252,7 +252,6 @@ public partial class GameProfiles : ComponentBase
 
     private async Task CreateGameProfileResourcesAndConfig(GameProfileExport profile, List<string> errors, List<Guid> createdProfiles)
     {
-        var profileCreateRequest = profile.ToCreateRequest();
         GameSlim matchingGame;
 
         var gameIdIsSteam = int.TryParse(profile.GameId, out var steamId);
@@ -264,6 +263,7 @@ public partial class GameProfiles : ComponentBase
                 errors.AddRange(steamGameResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
                 return;
             }
+
             matchingGame = steamGameResponse.Data;
         }
         else
@@ -274,11 +274,11 @@ public partial class GameProfiles : ComponentBase
                 errors.AddRange(manualGameResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
                 return;
             }
+
             matchingGame = manualGameResponse.Data;
         }
 
-        profileCreateRequest.GameId = matchingGame.Id;
-        profileCreateRequest.OwnerId = _loggedInUserId;
+        var profileCreateRequest = profile.ToCreateRequest(_loggedInUserId, matchingGame.Id);
         var createProfileResponse = await GameServerService.CreateGameProfileAsync(profileCreateRequest, _loggedInUserId);
         if (!createProfileResponse.Succeeded)
         {
@@ -289,7 +289,7 @@ public partial class GameProfiles : ComponentBase
         if (!profile.AllowAutoDelete)
         {
             var updateAutoDeleteResponse = await GameServerService.UpdateGameProfileAsync(new GameProfileUpdateRequest
-            { Id = createProfileResponse.Data, AllowAutoDelete = profile.AllowAutoDelete }, _loggedInUserId);
+                {Id = createProfileResponse.Data, AllowAutoDelete = profile.AllowAutoDelete}, _loggedInUserId);
             if (!updateAutoDeleteResponse.Succeeded)
             {
                 errors.AddRange(updateAutoDeleteResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));

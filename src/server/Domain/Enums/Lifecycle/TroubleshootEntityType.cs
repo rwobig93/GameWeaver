@@ -23,5 +23,7 @@ public enum TroubleshootEntityType
     Network = 18,
     WeaverWork = 19,
     HostAuth = 20,
-    FileStorage = 21
+    FileStorage = 21,
+    Backup = 22,
+    Restore = 23
 }

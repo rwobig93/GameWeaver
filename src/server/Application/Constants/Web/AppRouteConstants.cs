@@ -4,13 +4,6 @@ public static class AppRouteConstants
 {
     public const string Index = "/";
 
-    public static class Example
-    {
-        public const string Counter = "/example/counter";
-        public const string WeatherData = "/example/weather-data";
-        public const string Books = "/example/books";
-    }
-
     public static class Identity
     {
         public const string Login = "/identity/login";
@@ -34,9 +27,9 @@ public static class AppRouteConstants
         public const string RoleView = "/admin/role/view";
         public const string AuditTrails = "/admin/audittrail";
         public const string AuditTrailView = "/admin/audittrail/view";
-        public const string ServiceAccountAdmin = "/admin/service/users";
         public const string TroubleshootRecords = "/admin/troubleshoot";
         public const string TroubleshootRecordsView = "/admin/troubleshoot/view";
+        public const string Panel = "/admin/panel";
     }
 
     public static class Developer
@@ -60,28 +53,28 @@ public static class AppRouteConstants
         {
             public const string HostsDashboard = "/hosts/dashboard";
             public const string View = "/hosts/{HostId:guid}";
-            public static string ViewId (Guid id) => $"/hosts/{id}";
+            public static string ViewId(Guid id) => $"/hosts/{id}";
         }
 
         public static class Games
         {
             public const string ViewAll = "/games";
             public const string View = "/games/{GameId:guid}";
-            public static string ViewId (Guid id) => $"/games/{id}";
+            public static string ViewId(Guid id) => $"/games/{id}";
         }
 
         public static class GameProfiles
         {
             public const string ViewAll = "/gameprofiles";
             public const string View = "/gameprofiles/{GameProfileId:guid}";
-            public static string ViewId (Guid id) => $"/gameprofiles/{id}";
+            public static string ViewId(Guid id) => $"/gameprofiles/{id}";
         }
 
         public static class GameServers
         {
             public const string ViewAll = "/gameservers";
             public const string View = "/gameservers/{GameServerId:guid}";
-            public static string ViewId (Guid id) => $"/gameservers/{id}";
+            public static string ViewId(Guid id) => $"/gameservers/{id}";
         }
     }
 }

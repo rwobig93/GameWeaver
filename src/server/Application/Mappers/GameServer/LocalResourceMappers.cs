@@ -261,4 +261,24 @@ public static class LocalResourceMappers
             Configuration = []
         };
     }
+
+    public static LocalResourceSlim ToSlim(this LocalResourceExport resource, Guid profileId)
+    {
+        return new LocalResourceSlim
+        {
+            Id = Guid.CreateVersion7(),
+            GameProfileId = profileId,
+            Name = resource.Name,
+            PathWindows = resource.PathWindows,
+            PathLinux = resource.PathLinux,
+            PathMac = resource.PathMac,
+            Startup = resource.Startup,
+            StartupPriority = resource.StartupPriority,
+            Type = resource.Type,
+            ContentType = resource.ContentType,
+            Args = resource.Args,
+            LoadExisting = resource.LoadExisting,
+            ConfigSets = resource.Configuration.Select(x => x.ToSlim()),
+        };
+    }
 }

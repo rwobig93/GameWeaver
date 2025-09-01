@@ -4,20 +4,20 @@ namespace GameWeaver.Components.GameServer;
 
 public partial class GameWidget : ComponentBase
 {
+    private bool _imageExists = true;
+    private bool _imageLoaded;
+
+    private string _imageUrl = string.Empty;
     [Parameter] public GameSlim Game { get; set; } = new();
     [Parameter] public bool ShowName { get; set; }
     [Parameter] public string CssDisplay { get; set; } = "game-card-lift";
-    [Parameter] public bool Vertical { get; set; } = false;
-    [Parameter] public int WidthPx { get; set; } = 293;  // 385
-    [Parameter] public int HeightPx { get; set; } = 137;  // 180
-    [Parameter] public bool GamerMode { get; set; } = false;
+    [Parameter] public bool Vertical { get; set; }
+    [Parameter] public int WidthPx { get; set; } = 293; // 385
+    [Parameter] public int HeightPx { get; set; } = 137; // 180
+    [Parameter] public bool GamerMode { get; set; }
 
     [Inject] public IWebClientService WebClientService { get; set; } = null!;
     [Inject] public HttpClient HttpClient { get; set; } = null!;
-
-    private string _imageUrl = string.Empty;
-    private bool _imageExists = true;
-    private bool _imageLoaded = false;
     private string CardWidth => $"{WidthPx}px";
     private string CardHeight => $"{HeightPx}px";
 

@@ -33,4 +33,9 @@ public static class DateTimeHelpers
     {
         return dateTime.ToString("MMMM dd yyyy HH:mm:ss zz");
     }
+
+    public static string ToFileTimestamp(this DateTime dateTime)
+    {
+        return dateTime.ToString("yyyyMMddHHmmss");
+    }
 }
