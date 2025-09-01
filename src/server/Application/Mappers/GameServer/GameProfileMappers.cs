@@ -79,11 +79,13 @@ public static class GameProfileMappers
         };
     }
 
-    public static GameProfileCreateRequest ToCreateRequest(this GameProfileExport profile)
+    public static GameProfileCreateRequest ToCreateRequest(this GameProfileExport profile, Guid ownerId, Guid gameId)
     {
         return new GameProfileCreateRequest
         {
-            Name = profile.Name
+            Name = profile.Name,
+            OwnerId = ownerId,
+            GameId = gameId
         };
     }
 
@@ -95,6 +97,16 @@ public static class GameProfileMappers
             GameId = gameId,
             AllowAutoDelete = profile.AllowAutoDelete,
             Resources = []
+        };
+    }
+
+    public static GameProfileUpdateRequest ToUpdateRequest(this GameProfileExport profile, Guid profileId)
+    {
+        return new GameProfileUpdateRequest
+        {
+            Id = profileId,
+            Name = profile.Name,
+            AllowAutoDelete = profile.AllowAutoDelete
         };
     }
 }

@@ -1,3 +1,4 @@
+@using Application.Constants.GameServer
 @using Application.Constants.Identity
 @attribute [Route(AppRouteConstants.Admin.Panel)]
 @attribute [Authorize(PermissionConstants.System.Admin.ViewPanel)]
@@ -6,32 +7,121 @@
     <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">Admin Panel</MudText>
 </MudPaper>
 
-<MudGrid Class="d-flex flex-row gap-3 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
-    @if (_canGetUserCount)
+<MudGrid Class="d-flex flex-row gap-3 pa-2 justify-center" Justify="Justify.Center" Style="">
+    @if (!_loadedData)
     {
-        <NumberDisplay Number="_userCount" Title="Users" ClickUrl="@AppRouteConstants.Admin.Users" GamerMode="_userPreferences.GamerMode"/>
+        foreach (var _ in Enumerable.Range(0, 5))
+        {
+            <MudSkeleton Animation="Animation.Wave" SkeletonType="SkeletonType.Text" Width="195px" Height="91px" Class="align-self-center"/>
+        }
     }
-    @if (_canGetGameCount)
+    else
     {
-        <NumberDisplay Number="_gameCount" Title="Games" ClickUrl="@AppRouteConstants.GameServer.Games.ViewAll" GamerMode="_userPreferences.GamerMode"/>
-    }
-    @if (_canGetGameProfileCount)
-    {
-        <NumberDisplay Number="_gameProfileCount" Title="Game Profiles" ClickUrl="@AppRouteConstants.GameServer.GameProfiles.ViewAll" GamerMode="_userPreferences.GamerMode"/>
-    }
-    @if (_canGetHostCount)
-    {
-        <NumberDisplay Number="_hostCount" Title="Hosts" ClickUrl="@AppRouteConstants.GameServer.Hosts.HostsDashboard" GamerMode="_userPreferences.GamerMode"/>
-    }
-    @if (_canGetGameServerCount)
-    {
-        <NumberDisplay Number="_gameServerCount" Title="Game Servers" ClickUrl="@AppRouteConstants.GameServer.GameServers.ViewAll" GamerMode="_userPreferences.GamerMode"/>
+        @if (_canGetUserCount)
+        {
+            <NumberDisplay Number="_userCount" Title="Users" ClickUrl="@AppRouteConstants.Admin.Users" GamerMode="_userPreferences.GamerMode"/>
+        }
+
+        @if (_canGetGameCount)
+        {
+            <NumberDisplay Number="_gameCount" Title="Games" ClickUrl="@AppRouteConstants.GameServer.Games.ViewAll" GamerMode="_userPreferences.GamerMode"/>
+        }
+
+        @if (_canGetGameProfileCount)
+        {
+            <NumberDisplay Number="_gameProfileCount" Title="Game Profiles" ClickUrl="@AppRouteConstants.GameServer.GameProfiles.ViewAll" GamerMode="_userPreferences.GamerMode"/>
+        }
+
+        @if (_canGetHostCount)
+        {
+            <NumberDisplay Number="_hostCount" Title="Hosts" ClickUrl="@AppRouteConstants.GameServer.Hosts.HostsDashboard" GamerMode="_userPreferences.GamerMode"/>
+        }
+
+        @if (_canGetGameServerCount)
+        {
+            <NumberDisplay Number="_gameServerCount" Title="Game Servers" ClickUrl="@AppRouteConstants.GameServer.GameServers.ViewAll" GamerMode="_userPreferences.GamerMode"/>
+        }
     }
 </MudGrid>
 
-<MudContainer Class="pt-4">
-    <MudGrid Class="pa-4 justify-center mud-text-align-center">
-        <MudPaper Width="98%" Class="pa-4 mb-3">
+@if (_importProgressTotal != 0)
+{
+    <MudPaper Elevation="8" Square="false" Class="pa-2" Width="100%">
+        <MudStack Row="false" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 95%;" Class="py-1 my-1">
+            <MudText Color="Color.Secondary" Align="Align.Left" Typo="Typo.body2" Class="py-1 my-1">Current: @_importCurrentContext</MudText>
+            <MudProgressLinear Color="Color.Primary" Buffer="true" Max="@_importProgressTotal" Value="@_importProgressCurrent"
+                               BufferValue="@_importProgressCurrent" Class="pa-2" Min="0" Size="Size.Small" Rounded="true"/>
+        </MudStack>
+    </MudPaper>
+}
+
+@if (_isAdmin)
+{
+    <MudContainer Class="my-2 pa-2" Style="width: 95%;">
+        <MudPaper Width="100%" Class="pa-2">
+            <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 95%;" Class="py-1 my-1">
+                <MudToggleIconButton @bind-Toggled="_backupRestoreExpanded" Icon="@Icons.Material.Filled.Fullscreen" Color="@Color.Primary"
+                                     ToggledIcon="@Icons.Material.Filled.FullscreenExit" ToggledColor="@Color.Secondary"/>
+                <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.subtitle2">
+                    @(_backupRestoreExpanded ? "Collapse" : "Expand")
+                </MudText>
+                <MudSpacer/>
+                <MudSpacer/>
+                <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6" Class="py-1 my-1">Backup & Restore</MudText>
+                <MudSpacer/>
+                <MudSpacer/>
+            </MudStack>
+            <MudCollapse @bind-Expanded="_backupRestoreExpanded">
+                <MudStack Row="false" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 95%;" Class="py-1 my-1">
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
+                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.body2" Class="py-1 my-1">Backup / Export</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
+                        <MudPaper Elevation="10" Square="false">
+                            <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
+                                       OnClick="@ExportGameProfiles">
+                                Export All Game Profiles
+                            </MudButton>
+                        </MudPaper>
+                    </MudItem>
+                </MudStack>
+                <MudStack Row="false" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 95%;" Class="py-1 my-1">
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
+                        <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.body2" Class="py-1 my-1">Restore / Import</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
+                        <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => GameProfilesSelectedForImport(files))"
+                                       Accept="@(string.Join(',', LocalResourceConstants.ImportBackupExtensions))">
+                            <ActivatorContent>
+                                <MudPaper Elevation="10" Square="false">
+                                    <MudButton Class="ma-0" HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                        Import Game Profiles
+                                    </MudButton>
+                                </MudPaper>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudItem>
+                </MudStack>
+            </MudCollapse>
+        </MudPaper>
+    </MudContainer>
+}
+
+<MudContainer Class="my-2 pa-2" Style="width: 95%;">
+    <MudPaper Width="100%" Class="pa-2">
+        <MudStack Row="true" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 95%;" Class="py-1 my-1">
+            <MudToggleIconButton @bind-Toggled="_configurationExpanded" Icon="@Icons.Material.Filled.Fullscreen" Color="@Color.Primary"
+                                 ToggledIcon="@Icons.Material.Filled.FullscreenExit" ToggledColor="@Color.Secondary"/>
+            <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.subtitle2">
+                @(_configurationExpanded ? "Collapse" : "Expand")
+            </MudText>
+            <MudSpacer/>
+            <MudSpacer/>
+            <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.h6" Class="py-1 my-1">Configuration</MudText>
+            <MudSpacer/>
+            <MudSpacer/>
+        </MudStack>
+        <MudCollapse @bind-Expanded="_configurationExpanded">
             <MudItem xs="12" sm="12" md="12" Class="px-4">
                 <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info">
                     Configuration settings changes here will be available later and is coming soon™
@@ -45,6 +135,7 @@
                 <MudTextField Variant="Variant.Outlined" T="string" ReadOnly="true" Label="Example Setting Three"/>
                 <MudTextField Variant="Variant.Outlined" T="string" ReadOnly="true" Label="Example Setting Four"/>
             </MudItem>
-        </MudPaper>
-    </MudGrid>
+        </MudCollapse>
+    </MudPaper>
 </MudContainer>
+

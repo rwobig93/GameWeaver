@@ -1359,8 +1359,7 @@ public class GameServerService : IGameServerService
             convertedRequest.FriendlyName = $"{GameProfileConstants.EmptyProfileNamePrefix} {convertedRequest.Id}";
         }
 
-        if (convertedRequest.FriendlyName.StartsWith(GameProfileConstants.ServerProfileNamePrefix, StringComparison.InvariantCultureIgnoreCase) ||
-            convertedRequest.FriendlyName.StartsWith(GameProfileConstants.GameProfileDefaultNamePrefix, StringComparison.InvariantCultureIgnoreCase))
+        if (convertedRequest.HasInvalidName())
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.InvalidNamePrefix);
         }
@@ -1404,15 +1403,14 @@ public class GameServerService : IGameServerService
             return await Result.FailAsync(ErrorMessageConstants.GameProfiles.EmptyName);
         }
 
-        if (request.Name.StartsWith(GameProfileConstants.ServerProfileNamePrefix, StringComparison.InvariantCultureIgnoreCase) ||
-            request.Name.StartsWith(GameProfileConstants.GameProfileDefaultNamePrefix, StringComparison.InvariantCultureIgnoreCase))
+        if (foundProfile.Result.FriendlyName != request.Name && request.HasInvalidName())
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.GameProfiles.InvalidNamePrefix);
         }
 
         // Game profiles shouldn't have matching friendly names, so we'll enforce that
         var matchingUsernameRequest = await _gameServerRepository.GetGameProfileByFriendlyNameAsync(request.Name);
-        if (matchingUsernameRequest.Result is not null)
+        if (matchingUsernameRequest.Result is not null && matchingUsernameRequest.Result.Id != foundProfile.Result.Id)
         {
             return await Result.FailAsync(ErrorMessageConstants.GameProfiles.MatchingName);
         }
