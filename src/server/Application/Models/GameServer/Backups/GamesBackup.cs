@@ -1,9 +1,11 @@
-namespace Application.Models.GameServer.GameProfile;
+using Application.Models.GameServer.Game;
 
-public class GameProfilesBackup
+namespace Application.Models.GameServer.Backups;
+
+public class GamesBackup : IBackupExport
 {
     public string InstanceName { get; set; } = null!;
     public string InstanceVersion { get; set; } = null!;
     public DateTime ExportedTimestampUtc { get; set; } = DateTime.UtcNow;
-    public List<GameProfileExport> GameProfiles { get; set; } = [];
+    public List<GameExport> Games { get; set; } = [];
 }

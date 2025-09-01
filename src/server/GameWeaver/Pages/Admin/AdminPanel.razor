@@ -83,6 +83,12 @@
                                 Export All Game Profiles
                             </MudButton>
                         </MudPaper>
+                        <MudPaper Elevation="10" Square="false">
+                            <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
+                                       OnClick="@ExportGames">
+                                Export Games
+                            </MudButton>
+                        </MudPaper>
                     </MudItem>
                 </MudStack>
                 <MudStack Row="false" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 95%;" Class="py-1 my-1">
@@ -90,12 +96,22 @@
                         <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.body2" Class="py-1 my-1">Restore / Import</MudText>
                     </MudItem>
                     <MudItem xs="12" sm="12" md="12" Class="d-flex flex-wrap pa-2 gap-4">
-                        <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => GameProfilesSelectedForImport(files))"
+                        <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="@(file => GameProfileBackupSelectedForImport(file))"
                                        Accept="@(string.Join(',', LocalResourceConstants.ImportBackupExtensions))">
                             <ActivatorContent>
                                 <MudPaper Elevation="10" Square="false">
                                     <MudButton Class="ma-0" HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
                                         Import Game Profiles
+                                    </MudButton>
+                                </MudPaper>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                        <MudFileUpload T="IBrowserFile" Context="fileInput" FilesChanged="@(file => GamesBackupSelectedForImport(file))"
+                                       Accept="@(string.Join(',', LocalResourceConstants.ImportBackupExtensions))">
+                            <ActivatorContent>
+                                <MudPaper Elevation="10" Square="false">
+                                    <MudButton Class="ma-0" HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                        Import Games
                                     </MudButton>
                                 </MudPaper>
                             </ActivatorContent>

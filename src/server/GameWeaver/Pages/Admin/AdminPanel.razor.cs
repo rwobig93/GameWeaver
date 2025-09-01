@@ -5,6 +5,7 @@ using Application.Helpers.GameServer;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Models.GameServer.Backups;
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
@@ -122,12 +123,12 @@ public partial class AdminPanel : ComponentBase
         StateHasChanged();
     }
 
-    private async Task CreateBackupTshootRecord(Guid troubleshootRecordId, string title, string error, List<string> messages, GameProfileSlim? profile = null,
+    private async Task CreateBackupTshootRecord(Guid tshootId, string title, string error, List<string> messages, GameProfileSlim? profile = null,
         GameSlim? game = null, LocalResourceSlim? resource = null)
     {
-        if (troubleshootRecordId == Guid.Empty)
+        if (tshootId == Guid.Empty)
         {
-            troubleshootRecordId = Guid.CreateVersion7();
+            tshootId = Guid.CreateVersion7();
         }
 
         var tshootDetails = new Dictionary<string, string> {{"Error", error}};
@@ -159,16 +160,16 @@ public partial class AdminPanel : ComponentBase
             tshootDetails.Add($"Error{i + 1}", messages[i]);
         }
 
-        await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Backup, troubleshootRecordId, CurrentUser.Id, title, tshootDetails);
+        await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Backup, tshootId, CurrentUser.Id, title, tshootDetails);
     }
 
-    private async Task CreateRestoreTshootRecord(Guid troubleshootRecordId, string title, string error, List<string>? messages = null, GameProfileExport? profile = null,
+    private async Task CreateRestoreTshootRecord(Guid tshootId, string title, string error, List<string>? messages = null, GameProfileExport? profile = null,
         List<LocalResourceExport>? importResources = null, LocalResourceExport? exportResource = null, GameProfilesBackup? profilesBackup = null, Guid? profileId = null,
         Guid? createdResourceId = null, ConfigurationItemSlim? configItem = null, Guid? configItemId = null)
     {
-        if (troubleshootRecordId == Guid.Empty)
+        if (tshootId == Guid.Empty)
         {
-            troubleshootRecordId = Guid.CreateVersion7();
+            tshootId = Guid.CreateVersion7();
         }
 
         var tshootDetails = new Dictionary<string, string> {{"Error", error}};
@@ -233,7 +234,7 @@ public partial class AdminPanel : ComponentBase
             }
         }
 
-        await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, troubleshootRecordId, CurrentUser.Id, title, tshootDetails);
+        await TshootService.CreateTroubleshootRecord(DateTimeService, TroubleshootEntityType.Restore, tshootId, CurrentUser.Id, title, tshootDetails);
     }
 
     private async Task ExportGameProfiles()
@@ -265,7 +266,7 @@ public partial class AdminPanel : ComponentBase
             GameProfiles = []
         };
 
-        var troubleshootRecordId = Guid.Empty;
+        var tshootId = Guid.Empty;
         foreach (var profile in allGameProfilesRequest.Data)
         {
             var matchingGame = allGamesRequest.Data.FirstOrDefault(x => x.Id == profile.GameId);
@@ -273,7 +274,7 @@ public partial class AdminPanel : ComponentBase
             var profileResourcesRequest = await GameServerService.GetLocalResourcesByGameProfileIdAsync(profile.Id);
             if (!profileResourcesRequest.Succeeded)
             {
-                await CreateBackupTshootRecord(troubleshootRecordId, "Failed to export game profile to backup export", "Was unable to get the resources for the game profile",
+                await CreateBackupTshootRecord(tshootId, "Failed to export game profile to backup export", "Was unable to get the resources for the game profile",
                     profileResourcesRequest.Messages, profile: profile, game: matchingGame);
                 continue;
             }
@@ -283,7 +284,7 @@ public partial class AdminPanel : ComponentBase
                 var configItemsRequest = await GameServerService.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
                 if (!configItemsRequest.Succeeded)
                 {
-                    await CreateBackupTshootRecord(troubleshootRecordId, "Failed to export game profile to backup export",
+                    await CreateBackupTshootRecord(tshootId, "Failed to export game profile to backup export",
                         "Was unable to get the config items for the resource of the game profile", configItemsRequest.Messages, profile: profile,
                         game: matchingGame, resource: resource);
                     continue;
@@ -301,9 +302,9 @@ public partial class AdminPanel : ComponentBase
         var backupExportName = $"{FileHelpers.SanitizeSecureFilename(ServerState.ApplicationName)}_All_Game_Profiles_{DateTimeService.NowDatabaseTime.ToFileTimestamp()}.json";
         await WebClientService.InvokeFileDownload(serializedBackup, backupExportName, DataConstants.MimeTypes.Json);
 
-        if (troubleshootRecordId != Guid.Empty)
+        if (tshootId != Guid.Empty)
         {
-            Snackbar.Add($"Failed to export all game profiles due to errors, please see backup troubleshooting record(s) for entity id: {troubleshootRecordId}",
+            Snackbar.Add($"Failed to export all game profiles due to errors, please see backup troubleshooting record(s) for entity id: {tshootId}",
                 Severity.Error);
             return;
         }
@@ -311,7 +312,7 @@ public partial class AdminPanel : ComponentBase
         Snackbar.Add($"Successfully Exported All Game Profiles: {backupExportName}");
     }
 
-    private async Task GameProfilesSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
+    private async Task GameProfileBackupSelectedForImport(IBrowserFile? profilesBackup)
     {
         if (_importProgressTotal != 0)
         {
@@ -319,20 +320,14 @@ public partial class AdminPanel : ComponentBase
             return;
         }
 
-        if (importFiles is null || !importFiles.Any())
+        if (profilesBackup is null)
         {
             return;
         }
 
-        var profileToImport = importFiles[0];
-        if (profileToImport is null)
+        if (profilesBackup.Size > 100_000_000)
         {
-            return;
-        }
-
-        if (profileToImport.Size > 100_000_000)
-        {
-            Snackbar.Add($"File is over the max size of 100MB: {profileToImport.Name}");
+            Snackbar.Add($"File is over the max size of 100MB: {profilesBackup.Name}");
             return;
         }
 
@@ -344,19 +339,16 @@ public partial class AdminPanel : ComponentBase
             return;
         }
 
-        await ImportGameProfiles(profileToImport);
-    }
-
-    private async Task ImportGameProfiles(IBrowserFile importFile)
-    {
         _importProgressCurrent = 0;
         _importProgressTotal = 100;
         StateHasChanged();
 
-        var fileContents = await importFile.GetContent();
+        var fileContents = await profilesBackup.GetContent();
         if (!fileContents.Succeeded || fileContents.Data is null)
         {
             fileContents.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            _importProgressTotal = 0;
+            StateHasChanged();
             return;
         }
 
@@ -367,15 +359,20 @@ public partial class AdminPanel : ComponentBase
         }
         catch (Exception ex)
         {
-            Logger.Error(ex, "Game profile backup import failed: [{FileName}]{Error}", importFile.Name, ex.Message);
-            Snackbar.Add($"Failed to import game profiles from {importFile.Name} due to being in an unsupported or corrupt format", Severity.Error);
-            _importProgressTotal = 100;
+            Logger.Error(ex, "Game profile backup import failed: [{FileName}]{Error}", profilesBackup.Name, ex.Message);
+            Snackbar.Add($"Failed to import game profiles from {profilesBackup.Name} due to being in an unsupported or corrupt format", Severity.Error);
+            _importProgressTotal = 0;
             StateHasChanged();
             return;
         }
 
+        await ImportGameProfiles(deserializedBackup);
+    }
+
+    private async Task ImportGameProfiles(GameProfilesBackup profilesBackup)
+    {
         _importProgressCurrent = 0;
-        _importProgressTotal = deserializedBackup.GameProfiles.Count;
+        _importProgressTotal = profilesBackup.GameProfiles.Count;
         StateHasChanged();
 
         var allGamesRequest = await GameService.GetAllAsync();
@@ -385,9 +382,8 @@ public partial class AdminPanel : ComponentBase
             return;
         }
 
-        var troubleshootRecordId = Guid.Empty;
-
-        foreach (var profile in deserializedBackup.GameProfiles)
+        var tshootId = Guid.Empty;
+        foreach (var profile in profilesBackup.GameProfiles)
         {
             _importCurrentContext = profile.Name;
             _importProgressCurrent++;
@@ -400,8 +396,8 @@ public partial class AdminPanel : ComponentBase
 
             if (matchingGame is null)
             {
-                await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
-                    "No matching game could be found for the game id on the game profile", profilesBackup: deserializedBackup, profile: profile);
+                await CreateRestoreTshootRecord(tshootId, "Failed to import game profile from backup export",
+                    "No matching game could be found for the game id on the game profile", profilesBackup: profilesBackup, profile: profile);
                 continue;
             }
 
@@ -416,8 +412,8 @@ public partial class AdminPanel : ComponentBase
                 var createProfileRequest = await GameServerService.CreateGameProfileAsync(profile.ToCreateRequest(CurrentUser.Id, matchingGame.Id), CurrentUser.Id);
                 if (!createProfileRequest.Succeeded)
                 {
-                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
-                        "Failed to create new profile for non-existent game profile", createProfileRequest.Messages, profilesBackup: deserializedBackup, profile: profile);
+                    await CreateRestoreTshootRecord(tshootId, "Failed to import game profile from backup export",
+                        "Failed to create new profile for non-existent game profile", createProfileRequest.Messages, profilesBackup: profilesBackup, profile: profile);
                     continue;
                 }
 
@@ -428,35 +424,35 @@ public partial class AdminPanel : ComponentBase
                 var updateProfileRequest = await GameServerService.UpdateGameProfileAsync(profile.ToUpdateRequest(matchingProfile.Data.Id), CurrentUser.Id);
                 if (!updateProfileRequest.Succeeded)
                 {
-                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
-                        "Failed to update existing game profile", updateProfileRequest.Messages, profilesBackup: deserializedBackup, profile: profile);
+                    await CreateRestoreTshootRecord(tshootId, "Failed to import game profile from backup export",
+                        "Failed to update existing game profile", updateProfileRequest.Messages, profilesBackup: profilesBackup, profile: profile);
                     continue;
                 }
             }
 
-            await ImportConfigResources(matchingProfile.Data!.Id, profile.Resources, troubleshootRecordId);
+            await ImportConfigResources(matchingProfile.Data!.Id, profile.Resources, tshootId);
         }
 
         _importProgressCurrent = 0;
         _importProgressTotal = 0;
         StateHasChanged();
 
-        if (troubleshootRecordId != Guid.Empty)
+        if (tshootId != Guid.Empty)
         {
-            Snackbar.Add($"Failed to import all game profiles due to errors, please see restore troubleshooting record(s) for entity id: {troubleshootRecordId}",
+            Snackbar.Add($"Failed to import all game profiles due to errors, please see restore troubleshooting record(s) for entity id: {tshootId}",
                 Severity.Error);
             return;
         }
 
-        Snackbar.Add($"Finished game profile backup import for {deserializedBackup.GameProfiles.Count} profiles", Severity.Success);
+        Snackbar.Add($"Finished game profile backup import for {profilesBackup.GameProfiles.Count} profiles", Severity.Success);
     }
 
-    private async Task ImportConfigResources(Guid profileId, List<LocalResourceExport> importResources, Guid troubleshootRecordId)
+    private async Task ImportConfigResources(Guid profileId, List<LocalResourceExport> importResources, Guid tshootId)
     {
         var existingResourcesRequest = await GameServerService.GetLocalResourcesByGameProfileIdAsync(profileId);
         if (!existingResourcesRequest.Succeeded)
         {
-            await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
+            await CreateRestoreTshootRecord(tshootId, "Failed to import game profile from backup export",
                 "Failed to get resources for game profile to import resources", existingResourcesRequest.Messages, profileId: profileId, importResources: importResources);
             return;
         }
@@ -474,7 +470,7 @@ public partial class AdminPanel : ComponentBase
                 var createResourceRequest = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), CurrentUser.Id);
                 if (!createResourceRequest.Succeeded)
                 {
-                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import game profile from backup export",
+                    await CreateRestoreTshootRecord(tshootId, "Failed to import game profile from backup export",
                         "Failed to create resource for game profile to import resources", createResourceRequest.Messages, profileId: profileId, exportResource: resource);
                     continue;
                 }
@@ -482,7 +478,7 @@ public partial class AdminPanel : ComponentBase
                 var createdResourceRequest = await GameServerService.GetLocalResourceByIdAsync(createResourceRequest.Data);
                 if (!createdResourceRequest.Succeeded)
                 {
-                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import local resource for game profile from backup export",
+                    await CreateRestoreTshootRecord(tshootId, "Failed to import local resource for game profile from backup export",
                         "Failed to get created resource for game profile to import resources", createdResourceRequest.Messages, profileId: profileId,
                         exportResource: resource, createdResourceId: createResourceRequest.Data);
                     continue;
@@ -502,7 +498,7 @@ public partial class AdminPanel : ComponentBase
                     var createConfigItemRequest = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), CurrentUser.Id);
                     if (!createConfigItemRequest.Succeeded)
                     {
-                        await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import config item on local resource for game profile from backup export",
+                        await CreateRestoreTshootRecord(tshootId, "Failed to import config item on local resource for game profile from backup export",
                             "Failed to create config item on resource for game profile to import resources", createConfigItemRequest.Messages, profileId: profileId,
                             exportResource: resource, configItem: configItem);
                     }
@@ -522,12 +518,60 @@ public partial class AdminPanel : ComponentBase
                 var updateConfigItemRequest = await GameServerService.UpdateConfigurationItemAsync(updatedConfigItem.ToUpdate(), CurrentUser.Id);
                 if (updateConfigItemRequest.Succeeded) continue;
                 {
-                    await CreateRestoreTshootRecord(troubleshootRecordId, "Failed to import config item on local resource for game profile from backup export",
+                    await CreateRestoreTshootRecord(tshootId, "Failed to import config item on local resource for game profile from backup export",
                         "Failed to update config item on resource for game profile to import resources", updateConfigItemRequest.Messages, profileId: profileId,
                         exportResource: resource, configItemId: updatedConfigItem.Id, configItem: configItem);
                     return;
                 }
             }
         }
+    }
+
+    private async Task ExportGames()
+    {
+        if (!_canGetGameCount)
+        {
+            return;
+        }
+
+        var allGamesRequest = await GameService.GetAllAsync();
+        if (!allGamesRequest.Succeeded)
+        {
+            allGamesRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        var gameBackupExport = new GamesBackup
+        {
+            InstanceName = ServerState.ApplicationName,
+            InstanceVersion = ServerState.ApplicationVersion.ToString(),
+            ExportedTimestampUtc = DateTimeService.NowDatabaseTime,
+            Games = []
+        };
+
+        var tshootId = Guid.Empty;
+        foreach (var game in allGamesRequest.Data)
+        {
+            // TODO: Implement
+        }
+
+        var serializedBackup = SerializerService.SerializeJson(gameBackupExport);
+        var backupExportName = $"{FileHelpers.SanitizeSecureFilename(ServerState.ApplicationName)}_All_Games_{DateTimeService.NowDatabaseTime.ToFileTimestamp()}.json";
+        await WebClientService.InvokeFileDownload(serializedBackup, backupExportName, DataConstants.MimeTypes.Json);
+
+        if (tshootId != Guid.Empty)
+        {
+            Snackbar.Add($"Failed to export all games due to errors, please see backup troubleshooting record(s) for entity id: {tshootId}",
+                Severity.Error);
+            return;
+        }
+
+        Snackbar.Add($"Successfully Exported All Games: {backupExportName}");
+    }
+
+    private async Task GamesBackupSelectedForImport(IBrowserFile? gamesBackup)
+    {
+        // TODO: Implement
+        await Task.CompletedTask;
     }
 }
