@@ -1169,7 +1169,11 @@ public class GameServerService : IGameServerService
         }
 
         var gameServerHost = foundServer.Result.ToHost();
-        gameServerHost.Resources = new SerializableList<LocalResourceHost>(foundResources.Data.ToHosts(foundServer.Result.Id, foundHost.Result.Os));
+        // Ignored files are only for inheritance control, we never want to send them to the host
+        var nonIgnoreResources = foundResources.Data
+            .Where(x => x.ContentType != ContentType.Ignore)
+            .ToHosts(foundServer.Result.Id, foundHost.Result.Os);
+        gameServerHost.Resources = new SerializableList<LocalResourceHost>(nonIgnoreResources);
 
         var configUpdateRequest = await _hostRepository.SendWeaverWork(WeaverWorkTarget.GameServerConfigUpdateFull,
             foundHost.Result.Id, gameServerHost, requestUserId, _dateTime.NowDatabaseTime);

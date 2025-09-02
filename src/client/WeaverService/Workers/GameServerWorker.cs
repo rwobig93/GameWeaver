@@ -129,6 +129,7 @@ public class GameServerWorker : BackgroundService
                 attemptCount++;
                 continue;
             }
+
             nextWork.Data.SendStatusUpdate(WeaverWorkState.InProgress, "Work is now in progress");
 
             // ReSharper disable once AsyncVoidLambda
@@ -171,6 +172,7 @@ public class GameServerWorker : BackgroundService
             {
                 continue;
             }
+
             if (gameServer.ServerState == ServerState.Connectable && (realtimeState is ServerState.InternallyConnectable or ServerState.Unreachable))
             {
                 continue;
@@ -337,6 +339,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return null;
         }
+
         var deserializedServer = _serializerService.DeserializeMemory<GameServerToHost>(work.WorkData);
         if (deserializedServer is not null) return deserializedServer.ToLocal();
 
@@ -355,6 +358,7 @@ public class GameServerWorker : BackgroundService
             work.SendStatusUpdate(WeaverWorkState.Failed, $"Gameserver {work.TargetType} request has an empty work data payload: {work.Id}");
             return null;
         }
+
         var deserializedLocation = _serializerService.DeserializeMemory<LocalResource>(work.WorkData);
         if (deserializedLocation is not null) return deserializedLocation;
 
@@ -395,7 +399,7 @@ public class GameServerWorker : BackgroundService
         await Task.CompletedTask;
     }
 
-    private async Task<string> GetConfigurationIntegrityHash(IEnumerable<LocalResource> resources)
+    private static async Task<string> GetConfigurationIntegrityHash(IEnumerable<LocalResource> resources)
     {
         StringBuilder fullHashBuilder = new();
 
@@ -765,7 +769,7 @@ public class GameServerWorker : BackgroundService
 
         var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
         gameServerUpdated.StorageConfigHash = configurationHash;
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate {Id = gameServerUpdated.Id, StorageConfigHash = configurationHash});
 
         await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
 
@@ -821,7 +825,7 @@ public class GameServerWorker : BackgroundService
 
         var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
         gameServerUpdated.StorageConfigHash = configurationHash;
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate {Id = gameServerUpdated.Id, StorageConfigHash = configurationHash});
 
         await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
 
@@ -880,7 +884,7 @@ public class GameServerWorker : BackgroundService
 
         var configurationHash = await GetConfigurationIntegrityHash(gameServerUpdated.Resources);
         gameServerUpdated.StorageConfigHash = configurationHash;
-        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate { Id = gameServerUpdated.Id, StorageConfigHash = configurationHash });
+        work.SendGameServerUpdate(WeaverWorkState.Completed, new GameServerStateUpdate {Id = gameServerUpdated.Id, StorageConfigHash = configurationHash});
 
         await _gameServerService.UpdateState(gameServerUpdated.Id, gameServerUpdated.ServerState, configurationHash);
 

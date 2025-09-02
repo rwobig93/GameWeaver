@@ -109,6 +109,8 @@ public static class PermissionConstants
             public const string Update = $"{ClaimConstants.Permission}.GameServer.Host.Update";
             public const string Delete = $"{ClaimConstants.Permission}.GameServer.Host.Delete";
             public const string Search = $"{ClaimConstants.Permission}.GameServer.Host.Search";
+            public const string Export = $"{ClaimConstants.Permission}.GameServer.Host.Export";
+            public const string Import = $"{ClaimConstants.Permission}.GameServer.Host.Import";
             public const string ChangeOwnership = $"{ClaimConstants.Permission}.GameServer.Host.ChangeOwnership";
             public const string SearchPaginated = $"{ClaimConstants.Permission}.GameServer.Host.SearchPaginated";
         }
@@ -162,6 +164,8 @@ public static class PermissionConstants
             public const string Update = $"{ClaimConstants.Permission}.GameServer.Gameservers.Update";
             public const string Delete = $"{ClaimConstants.Permission}.GameServer.Gameservers.Delete";
             public const string Search = $"{ClaimConstants.Permission}.GameServer.Gameservers.Search";
+            public const string Export = $"{ClaimConstants.Permission}.GameServer.Gameservers.Export";
+            public const string Import = $"{ClaimConstants.Permission}.GameServer.Gameservers.Import";
             public const string ChangeOwnership = $"{ClaimConstants.Permission}.GameServer.Gameservers.ChangeOwnership";
             public const string StartServer = $"{ClaimConstants.Permission}.GameServer.Gameservers.StartServer";
             public const string StopServer = $"{ClaimConstants.Permission}.GameServer.Gameservers.StopServer";
@@ -194,6 +198,8 @@ public static class PermissionConstants
             public const string Update = $"{ClaimConstants.Permission}.GameServer.LocalResource.Update";
             public const string Delete = $"{ClaimConstants.Permission}.GameServer.LocalResource.Delete";
             public const string Search = $"{ClaimConstants.Permission}.GameServer.LocalResource.Search";
+            public const string Export = $"{ClaimConstants.Permission}.GameServer.LocalResource.Export";
+            public const string Import = $"{ClaimConstants.Permission}.GameServer.LocalResource.Import";
         }
 
         public static class GameProfile
@@ -206,6 +212,8 @@ public static class PermissionConstants
             public const string Update = $"{ClaimConstants.Permission}.GameServer.GameProfile.Update";
             public const string Delete = $"{ClaimConstants.Permission}.GameServer.GameProfile.Delete";
             public const string Search = $"{ClaimConstants.Permission}.GameServer.GameProfile.Search";
+            public const string Export = $"{ClaimConstants.Permission}.GameServer.GameProfile.Export";
+            public const string Import = $"{ClaimConstants.Permission}.GameServer.GameProfile.Import";
             public const string ChangeOwnership = $"{ClaimConstants.Permission}.GameServer.Gameservers.ChangeOwnership";
 
             public static string Dynamic(Guid id, DynamicPermissionLevel permission) =>
@@ -233,6 +241,8 @@ public static class PermissionConstants
             public const string Configure = $"{ClaimConstants.Permission}.GameServer.Game.Configure";
             public const string Delete = $"{ClaimConstants.Permission}.GameServer.Game.Delete";
             public const string Search = $"{ClaimConstants.Permission}.GameServer.Game.Search";
+            public const string Export = $"{ClaimConstants.Permission}.GameServer.Game.Export";
+            public const string Import = $"{ClaimConstants.Permission}.GameServer.Game.Import";
             public const string DownloadLatest = $"{ClaimConstants.Permission}.GameServer.Game.Download";
         }
 

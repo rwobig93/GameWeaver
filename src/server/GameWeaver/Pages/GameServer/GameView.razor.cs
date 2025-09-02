@@ -24,6 +24,14 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameView : ComponentBase
 {
+    [Parameter] public Guid GameId { get; set; } = Guid.Empty;
+
+    [Inject] public IGameService GameService { get; init; } = null!;
+    [Inject] public IGameServerService GameServerService { get; init; } = null!;
+    [Inject] public IFileStorageRecordService FileStorageService { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public ISerializerService SerializerService { get; init; } = null!;
+
     private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
     private readonly List<LocalResourceSlim> _createdLocalResources = [];
     private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
@@ -31,11 +39,6 @@ public partial class GameView : ComponentBase
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<LocalResourceSlim> _updatedLocalResources = [];
     private readonly List<Guid> _viewableGameServers = [];
-    private bool _canConfigureGame;
-
-    private bool _canEditGame;
-    private bool _canViewGameFiles;
-    private bool _canViewGameServers;
     private string _configSearchText = string.Empty;
     private string _editButtonText = "Enable Edit Mode";
     private bool _editMode;
@@ -44,15 +47,13 @@ public partial class GameView : ComponentBase
     private Guid _loggedInUserId = Guid.Empty;
     private List<FileStorageRecordSlim> _manualVersionFiles = [];
     private List<GameServerSlim> _runningGameservers = [];
-
     private bool _validIdProvided = true;
-    [Parameter] public Guid GameId { get; set; } = Guid.Empty;
 
-    [Inject] public IGameService GameService { get; init; } = null!;
-    [Inject] public IGameServerService GameServerService { get; init; } = null!;
-    [Inject] public IFileStorageRecordService FileStorageService { get; init; } = null!;
-    [Inject] public IWebClientService WebClientService { get; init; } = null!;
-    [Inject] public ISerializerService SerializerService { get; init; } = null!;
+    private bool _canConfigureGame;
+    private bool _canEditGame;
+    private bool _canViewGameFiles;
+    private bool _canViewGameServers;
+    private bool _canExportGame;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -83,6 +84,7 @@ public partial class GameView : ComponentBase
         _canConfigureGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Configure);
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.SeeUi);
         _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
+        _canExportGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Export);
     }
 
     private async Task GetViewingGame()
@@ -916,5 +918,55 @@ public partial class GameView : ComponentBase
         }
 
         Snackbar.Add($"Successfully Exported Game Profile: {profileExportName}");
+    }
+
+    private async Task ExportGame()
+    {
+        if (!_canExportGame)
+        {
+            return;
+        }
+
+        var gameExport = _game.ToExport();
+        var gameDefaultProfileRequest = await GameServerService.GetGameProfileByIdAsync(_game.DefaultGameProfileId);
+        if (!gameDefaultProfileRequest.Succeeded || gameDefaultProfileRequest.Data is null)
+        {
+            gameDefaultProfileRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        var profileExport = gameDefaultProfileRequest.Data.ToExport(_game);
+        var profileResourcesRequest = await GameServerService.GetLocalResourcesByGameProfileIdAsync(gameDefaultProfileRequest.Data.Id);
+        if (!profileResourcesRequest.Succeeded)
+        {
+            profileResourcesRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        foreach (var resource in profileResourcesRequest.Data)
+        {
+            var configItemsRequest = await GameServerService.GetConfigurationItemsByLocalResourceIdAsync(resource.Id);
+            if (!configItemsRequest.Succeeded)
+            {
+                configItemsRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+
+            var resourceExport = resource.ToExport();
+            resourceExport.Configuration = configItemsRequest.Data.Select(x => x.ToExport()).ToList();
+            profileExport.Resources.Add(resourceExport);
+        }
+
+        gameExport.DefaultGameProfile = profileExport;
+        var serializedExport = SerializerService.SerializeJson(gameExport);
+        var exportName = $"Game_{FileHelpers.SanitizeSecureFilename(_game.FriendlyName)}.json";
+        var downloadResult = await WebClientService.InvokeFileDownload(serializedExport, exportName, DataConstants.MimeTypes.Json);
+        if (!downloadResult.Succeeded)
+        {
+            downloadResult.Messages.ForEach(x => Snackbar.Add(x));
+            return;
+        }
+
+        Snackbar.Add($"Successfully Exported Game: {exportName}", Severity.Success);
     }
 }

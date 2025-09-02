@@ -1,5 +1,6 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Auth;
+using Application.Helpers.GameServer;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Models.GameServer.Game;
@@ -29,9 +30,12 @@ public partial class GameProfiles : ComponentBase
     private int _totalPages = 1;
     private int _pageSize = PaginationHelpers.GetPageSizes(true).First();
     private int _currentPage = 1;
+    private string _importCurrentContext = string.Empty;
+    private int _importProgressCurrent;
+    private int _importProgressTotal;
 
     private bool _canCreateProfiles;
-    private bool _canDeleteProfiles;
+    private bool _canImportProfiles;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -48,7 +52,7 @@ public partial class GameProfiles : ComponentBase
         var currentUser = (await CurrentUserService.GetCurrentUserPrincipal())!;
         _loggedInUserId = CurrentUserService.GetIdFromPrincipal(currentUser);
         _canCreateProfiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Create);
-        _canDeleteProfiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Delete);
+        _canImportProfiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Import);
     }
 
     private async Task GetUserPreferences()
@@ -138,12 +142,17 @@ public partial class GameProfiles : ComponentBase
 
     private async Task ProfilesSelectedForImport(IReadOnlyList<IBrowserFile?>? importFiles)
     {
+        if (!_canImportProfiles)
+        {
+            return;
+        }
+
         if (importFiles is null || !importFiles.Any())
         {
             return;
         }
 
-        List<IBrowserFile> profilesToImport = [];
+        List<IBrowserFile> filesToImport = [];
         foreach (var file in importFiles)
         {
             if (file is null)
@@ -153,32 +162,37 @@ public partial class GameProfiles : ComponentBase
 
             if (file.Size > 10_000_000)
             {
-                Snackbar.Add($"File is over the max size of 10MB: {file.Name}");
+                Snackbar.Add($"File is over the max size of 10MB: {file.Name}", Severity.Error);
                 continue;
             }
 
-            profilesToImport.Add(file);
+            filesToImport.Add(file);
+        }
+
+        var confirmText = $"Are you sure you want to import these {filesToImport.Count} game profiles?{Environment.NewLine}" +
+                          $"Any existing game profiles with the same name will be overwritten";
+        var importConfirmation = await DialogService.ConfirmDialog($"Import {filesToImport.Count} game profiles", confirmText);
+        if (importConfirmation.Canceled)
+        {
+            return;
         }
 
         Snackbar.Add("Importing files, this may take a moment or two depending on file count and size...", Severity.Info);
-        await ImportProfiles(profilesToImport);
-    }
+        _importProgressCurrent = 0;
+        _importProgressTotal = filesToImport.Count;
+        StateHasChanged();
 
-    private async Task ImportProfiles(IEnumerable<IBrowserFile> importFiles)
-    {
-        List<Guid> createdProfiles = [];
-        List<GameProfileExport> overlappingProfiles = [];
-        List<GameProfileSlim> existingOverlappingProfiles = [];
-        List<GameProfileExport> profilesToCreate = [];
-        List<string> errors = [];
-
-        foreach (var file in importFiles)
+        foreach (var file in filesToImport)
         {
+            _importCurrentContext = file.Name;
+            _importProgressCurrent++;
+            StateHasChanged();
+
             var fileContent = await file.GetContent(); // The max import size per file is 10MB by default
             if (!fileContent.Succeeded || fileContent.Data is null)
             {
-                errors.AddRange(fileContent.Messages);
-                continue;
+                fileContent.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
             }
 
             GameProfileExport deserializedProfile;
@@ -186,72 +200,58 @@ public partial class GameProfiles : ComponentBase
             {
                 deserializedProfile = SerializerService.DeserializeJson<GameProfileExport>(fileContent.Data);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                errors.Add($"Failed to parse profile from file due to invalid data: {file.Name}");
-                continue;
+                _importCurrentContext = string.Empty;
+                _importProgressCurrent = 0;
+                _importProgressTotal = 0;
+                StateHasChanged();
+                Logger.Error(ex, "Game profile import from file failed: [{FileName}]{Error}", file.Name, ex.Message);
+                Snackbar.Add($"File {file.Name} import failed due to being in an unsupported or corrupt format", Severity.Error);
+                return;
             }
 
-            var matchingProfileName = await GameServerService.GetGameProfileByFriendlyNameAsync(deserializedProfile.Name);
-            if (matchingProfileName.Data is not null)
-            {
-                overlappingProfiles.Add(deserializedProfile);
-                existingOverlappingProfiles.Add(matchingProfileName.Data);
-                continue;
-            }
-
-            profilesToCreate.Add(deserializedProfile);
+            await ImportProfile(deserializedProfile);
         }
 
-        var replaceOverlapping = false;
-        if (overlappingProfiles.Count > 0)
-        {
-            var actionText = _canDeleteProfiles ? "do you want to replace them?" : "these will be skipped due to not having permission to delete them";
-            var confirmText = _canDeleteProfiles ? "Replace" : "Ok";
-            var cancelText = _canDeleteProfiles ? "Skip" : "Got it";
-            var overlapContent = $"The following profiles overlap with existing profiles, {actionText}{Environment.NewLine}{Environment.NewLine}" +
-                                 $"{string.Join(Environment.NewLine, overlappingProfiles.Select(x => x.Name))}";
-            var replaceProfilesDialog = await DialogService.ConfirmDialog("Overlapping Profiles Found", overlapContent, confirmText, cancelText);
-            if (_canDeleteProfiles && !replaceProfilesDialog.Canceled)
-            {
-                replaceOverlapping = true;
-            }
-        }
+        Snackbar.Add($"Finished importing {filesToImport.Count} game profile(s)", Severity.Success);
+        _importCurrentContext = string.Empty;
+        _importProgressCurrent = 0;
+        _importProgressTotal = 0;
+        StateHasChanged();
+    }
 
-        if (replaceOverlapping)
+    private async Task ImportProfile(GameProfileExport profileExport)
+    {
+        if (!_canImportProfiles)
         {
-            foreach (var profile in existingOverlappingProfiles)
-            {
-                var deleteResponse = await GameServerService.DeleteGameProfileAsync(profile.Id, _loggedInUserId);
-                if (deleteResponse.Succeeded) continue;
-
-                errors.AddRange(deleteResponse.Messages);
-            }
-        }
-
-        foreach (var profile in profilesToCreate)
-        {
-            await CreateGameProfileResourcesAndConfig(profile, errors, createdProfiles);
-        }
-
-        if (errors.Count > 0)
-        {
-            var errorContent = $"The following errors occurred while importing profiles:{Environment.NewLine}{Environment.NewLine}" +
-                               $"{string.Join(Environment.NewLine, errors)}{Environment.NewLine}";
-            await DialogService.MessageDialog("Profile Import Errors", errorContent);
-        }
-
-        if (createdProfiles.Count == 0)
-        {
-            Snackbar.Add($"No profiles were imported", Severity.Info);
             return;
         }
 
-        Snackbar.Add($"Successfully imported {createdProfiles.Count} profile(s)", Severity.Success);
+        var matchingProfileName = await GameServerService.GetGameProfileByFriendlyNameAsync(profileExport.Name);
+        if (matchingProfileName.Data is null)
+        {
+            await CreateGameProfileResourcesAndConfig(profileExport);
+            return;
+        }
+
+        var updateProfileRequest = await GameServerService.UpdateGameProfileAsync(profileExport.ToUpdateRequest(matchingProfileName.Data.Id), _loggedInUserId);
+        if (!updateProfileRequest.Succeeded)
+        {
+            updateProfileRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        await UpdateExistingConfig(profileExport, matchingProfileName.Data.Id);
     }
 
-    private async Task CreateGameProfileResourcesAndConfig(GameProfileExport profile, List<string> errors, List<Guid> createdProfiles)
+    private async Task CreateGameProfileResourcesAndConfig(GameProfileExport profile)
     {
+        if (!_canImportProfiles)
+        {
+            return;
+        }
+
         GameSlim matchingGame;
 
         var gameIdIsSteam = int.TryParse(profile.GameId, out var steamId);
@@ -260,7 +260,7 @@ public partial class GameProfiles : ComponentBase
             var steamGameResponse = await GameService.GetBySteamToolIdAsync(steamId);
             if (!steamGameResponse.Succeeded || steamGameResponse.Data is null)
             {
-                errors.AddRange(steamGameResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                steamGameResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
 
@@ -271,7 +271,7 @@ public partial class GameProfiles : ComponentBase
             var manualGameResponse = await GameService.GetByFriendlyNameAsync(profile.GameId);
             if (!manualGameResponse.Succeeded || manualGameResponse.Data is null)
             {
-                errors.AddRange(manualGameResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                manualGameResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
 
@@ -282,7 +282,7 @@ public partial class GameProfiles : ComponentBase
         var createProfileResponse = await GameServerService.CreateGameProfileAsync(profileCreateRequest, _loggedInUserId);
         if (!createProfileResponse.Succeeded)
         {
-            errors.AddRange(createProfileResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+            createProfileResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
 
@@ -292,11 +292,11 @@ public partial class GameProfiles : ComponentBase
                 {Id = createProfileResponse.Data, AllowAutoDelete = profile.AllowAutoDelete}, _loggedInUserId);
             if (!updateAutoDeleteResponse.Succeeded)
             {
-                errors.AddRange(updateAutoDeleteResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                updateAutoDeleteResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
             }
         }
 
-        createdProfiles.Add(createProfileResponse.Data);
         foreach (var resource in profile.Resources)
         {
             var resourceCreateRequest = resource.ToCreate();
@@ -304,18 +304,96 @@ public partial class GameProfiles : ComponentBase
             var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resourceCreateRequest, _loggedInUserId);
             if (!createResourceResponse.Succeeded)
             {
-                errors.AddRange(createResourceResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
-                continue;
+                createResourceResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
             }
 
             foreach (var configCreateRequest in resource.Configuration.Select(configItem => configItem.ToCreate()))
             {
                 configCreateRequest.LocalResourceId = createResourceResponse.Data;
                 var createConfigResponse = await GameServerService.CreateConfigurationItemAsync(configCreateRequest, _loggedInUserId);
-                if (!createConfigResponse.Succeeded)
+                if (createConfigResponse.Succeeded) continue;
+
+                createConfigResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                return;
+            }
+        }
+    }
+
+    private async Task UpdateExistingConfig(GameProfileExport profileExport, Guid existingProfileId)
+    {
+        if (!_canImportProfiles)
+        {
+            return;
+        }
+
+        var existingResourcesRequest = await GameServerService.GetLocalResourcesByGameProfileIdAsync(existingProfileId);
+        if (!existingResourcesRequest.Succeeded)
+        {
+            existingResourcesRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        foreach (var resource in profileExport.Resources)
+        {
+            var matchingResource = existingResourcesRequest.Data.FirstOrDefault(x =>
+                !string.IsNullOrWhiteSpace(x.PathWindows) && string.Equals(x.PathWindows, resource.PathWindows, StringComparison.CurrentCultureIgnoreCase) ||
+                !string.IsNullOrWhiteSpace(x.PathLinux) && string.Equals(x.PathLinux, resource.PathLinux, StringComparison.CurrentCultureIgnoreCase) ||
+                !string.IsNullOrWhiteSpace(x.PathMac) && string.Equals(x.PathMac, resource.PathMac, StringComparison.CurrentCultureIgnoreCase));
+
+            // Create the resource if it doesn't exist
+            if (matchingResource is null)
+            {
+                var createResourceRequest = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
+                if (!createResourceRequest.Succeeded)
                 {
-                    errors.AddRange(createConfigResponse.Messages.Select(x => $"Profile '{profile.Name}': {x}"));
+                    createResourceRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    continue;
                 }
+
+                var createdResourceRequest = await GameServerService.GetLocalResourceByIdAsync(createResourceRequest.Data);
+                if (!createdResourceRequest.Succeeded)
+                {
+                    createdResourceRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                    continue;
+                }
+
+                matchingResource = createdResourceRequest.Data;
+            }
+
+            // Create or update all config items from the resource import
+            var importConfigItems = resource.Configuration.Select(x => x.ToSlim()).ToList();
+            matchingResource.ConfigSets = matchingResource.ConfigSets.MergeConfiguration(importConfigItems, true);
+            foreach (var configItem in importConfigItems)
+            {
+                // Set any config items not merged into existing items to be created
+                configItem.LocalResourceId = matchingResource.Id;
+                if (matchingResource.ConfigSets.FirstOrDefault(x => x.Id == configItem.Id) is not null)
+                {
+                    var createConfigItemRequest = await GameServerService.CreateConfigurationItemAsync(configItem.ToCreate(), _loggedInUserId);
+                    if (!createConfigItemRequest.Succeeded)
+                    {
+                        createConfigItemRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+                        return;
+                    }
+
+                    continue;
+                }
+
+                // Any config items where the id doesn't exist are updated
+                var updatedConfigItem = matchingResource.ConfigSets.FirstOrDefault(x =>
+                    (x.DuplicateKey && x.Category == configItem.Category && x.Key == configItem.Key && x.Path == configItem.Path && x.Value == configItem.Value) ||
+                    (x.Category == configItem.Category && x.Key == configItem.Key && x.Path == configItem.Path));
+                if (updatedConfigItem is null)
+                {
+                    continue;
+                }
+
+                configItem.Id = updatedConfigItem.Id;
+                var updateConfigItemRequest = await GameServerService.UpdateConfigurationItemAsync(configItem.ToUpdate(), _loggedInUserId);
+                if (updateConfigItemRequest.Succeeded) continue;
+
+                updateConfigItemRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             }
         }
     }

@@ -402,34 +402,43 @@
                             Add Config File
                         </MudButton>
                     </MudPaper>
-                    <MudPaper Elevation="10" Square="false" Class="rounded-lg">
-                        <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ConfigSelectedForImport(files))"
-                                       Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))">
-                            <ActivatorContent>
-                                <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
-                                    Import Config Files
-                                </MudButton>
-                            </ActivatorContent>
-                        </MudFileUpload>
-                    </MudPaper>
-                    <MudPaper Elevation="10" Square="false">
-                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
-                                   OnClick="@ExportServerConfig">
-                            Export Configuration
-                        </MudButton>
-                    </MudPaper>
+                    @if (_canImportConfig)
+                    {
+                        <MudPaper Elevation="10" Square="false" Class="rounded-lg">
+                            <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ConfigSelectedForImport(files))"
+                                           Accept="@(string.Join(',', LocalResourceConstants.ImportConfigExtensions))">
+                                <ActivatorContent>
+                                    <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                        Import Config Files
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                        </MudPaper>
+                    }
+                    @if (_canExportConfig)
+                    {
+                        <MudPaper Elevation="10" Square="false">
+                            <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
+                                       OnClick="@ExportServerConfig">
+                                Export Configuration
+                            </MudButton>
+                        </MudPaper>
+                    }
                 </MudStack>
             }
             else
             {
-                <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-4 pt-3">
-                    <MudPaper Elevation="10" Square="false">
-                        <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
-                                   OnClick="@ExportServerConfig">
-                            Export All Configuration
-                        </MudButton>
-                    </MudPaper>
-                </MudStack>
+                @if (_canExportConfig)
+                {
+                    <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Center" Class="px-4 pt-3">
+                        <MudPaper Elevation="10" Square="false">
+                            <MudButton Class="ma-0" Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Outlined.Download" FullWidth="true"
+                                       OnClick="@ExportServerConfig">
+                                Export All Configuration
+                            </MudButton>
+                        </MudPaper>
+                    </MudStack>
+                }
             }
             @foreach (var localResource in _localResources.Where(x => x.Type == ResourceType.ConfigFile).OrderBy(x => x.Name))
             {

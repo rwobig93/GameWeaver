@@ -33,7 +33,6 @@ public static class ConfigurationItemMappers
         return new ConfigurationItemUpdate
         {
             Id = configDb.Id,
-            LocalResourceId = configDb.LocalResourceId,
             DuplicateKey = configDb.DuplicateKey,
             Path = configDb.Path,
             Category = configDb.Category,
@@ -141,7 +140,6 @@ public static class ConfigurationItemMappers
         return new ConfigurationItemUpdate
         {
             Id = configItem.Id,
-            LocalResourceId = configItem.LocalResourceId,
             DuplicateKey = configItem.DuplicateKey,
             Path = configItem.Path,
             Category = configItem.Category,
