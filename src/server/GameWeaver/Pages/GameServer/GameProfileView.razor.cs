@@ -25,6 +25,17 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameProfileView : ComponentBase
 {
+    [Parameter] public Guid GameProfileId { get; set; } = Guid.Empty;
+
+    [Inject] public IGameService GameService { get; init; } = null!;
+    [Inject] public IGameServerService GameServerService { get; init; } = null!;
+    [Inject] public IWebClientService WebClientService { get; init; } = null!;
+    [Inject] public ISerializerService SerializerService { get; init; } = null!;
+    [Inject] public IAppUserService UserService { get; init; } = null!;
+    [Inject] public IAppRoleService RoleService { get; init; } = null!;
+    [Inject] public IAppPermissionService PermissionService { get; init; } = null!;
+
+    private bool _validIdProvided = true;
     private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
     private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
     private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
@@ -34,13 +45,6 @@ public partial class GameProfileView : ComponentBase
     private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
     private readonly List<LocalResourceSlim> _updatedLocalResources = [];
     private readonly List<Guid> _viewableGameServers = [];
-    private bool _canChangeOwnership;
-    private bool _canConfigureProfile;
-    private bool _canDeleteProfile;
-
-    private bool _canEditProfile;
-    private bool _canPermissionProfile;
-    private bool _canViewGameServers;
     private string _configSearchText = string.Empty;
     private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
     private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
@@ -53,16 +57,14 @@ public partial class GameProfileView : ComponentBase
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private Guid _loggedInUserId = Guid.Empty;
 
-    private bool _validIdProvided = true;
-    [Parameter] public Guid GameProfileId { get; set; } = Guid.Empty;
-
-    [Inject] public IGameService GameService { get; init; } = null!;
-    [Inject] public IGameServerService GameServerService { get; init; } = null!;
-    [Inject] public IWebClientService WebClientService { get; init; } = null!;
-    [Inject] public ISerializerService SerializerService { get; init; } = null!;
-    [Inject] public IAppUserService UserService { get; init; } = null!;
-    [Inject] public IAppRoleService RoleService { get; init; } = null!;
-    [Inject] public IAppPermissionService PermissionService { get; init; } = null!;
+    private bool _canChangeOwnership;
+    private bool _canConfigureProfile;
+    private bool _canDeleteProfile;
+    private bool _canEditProfile;
+    private bool _canPermissionProfile;
+    private bool _canViewGameServers;
+    private bool _canImportConfig;
+    private bool _canExportConfig;
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -103,6 +105,8 @@ public partial class GameProfileView : ComponentBase
             _canConfigureProfile = true;
             _canChangeOwnership = true;
             _canDeleteProfile = true;
+            _canImportConfig = true;
+            _canExportConfig = true;
             return;
         }
 
@@ -114,6 +118,8 @@ public partial class GameProfileView : ComponentBase
         _canPermissionProfile =
             await AuthorizationService.UserHasDynamicPermission(currentUser, DynamicPermissionGroup.GameProfiles, DynamicPermissionLevel.Permission, _gameProfile.Id);
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.ChangeOwnership);
+        _canImportConfig = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Import);
+        _canExportConfig = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameProfile.Export);
     }
 
     private async Task GetClientTimezone()
@@ -977,7 +983,7 @@ public partial class GameProfileView : ComponentBase
         }
 
         var serializedProfile = SerializerService.SerializeJson(profileExport);
-        var profileExportName = $"{FileHelpers.SanitizeSecureFilename(_gameProfile.FriendlyName)}.json";
+        var profileExportName = $"Game_Profile_{FileHelpers.SanitizeSecureFilename(_gameProfile.FriendlyName)}.json";
         var downloadResult = await WebClientService.InvokeFileDownload(serializedProfile, profileExportName, DataConstants.MimeTypes.Json);
         if (!downloadResult.Succeeded)
         {
@@ -985,7 +991,7 @@ public partial class GameProfileView : ComponentBase
             return;
         }
 
-        Snackbar.Add($"Successfully Exported Profile: {profileExportName}");
+        Snackbar.Add($"Successfully Exported Profile: {profileExportName}", Severity.Success);
     }
 
     private async Task GetGameProfilePermissions()

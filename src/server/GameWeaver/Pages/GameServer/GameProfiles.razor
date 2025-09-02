@@ -12,14 +12,17 @@
                 <MudButton Class="my-2" Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Outlined.Add" OnClick="@CreateProfile">
                     Create
                 </MudButton>
-                <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ProfilesSelectedForImport(files))"
-                               Accept=".json" MaximumFileCount="100">
-                    <ActivatorContent>
-                        <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.UploadFile">
-                            Import
-                        </MudButton>
-                    </ActivatorContent>
-                </MudFileUpload>
+                @if (_canImportProfiles)
+                {
+                    <MudFileUpload T="IReadOnlyList<IBrowserFile>" Context="fileInput" FilesChanged="@(files => ProfilesSelectedForImport(files))"
+                                   Accept=".json" MaximumFileCount="100">
+                        <ActivatorContent>
+                            <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.UploadFile">
+                                Import
+                            </MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+                }
             </MudStack>
             <MudSpacer/>
             <MudDivider Vertical="true"/>
@@ -35,6 +38,18 @@
         </MudButton>
     </MudContainer>
 </MudPaper>
+
+@if (_importProgressTotal != 0)
+{
+    <MudPaper Elevation="8" Square="false" Class="pa-2" Width="100%">
+        <MudStack Row="false" Justify="Justify.SpaceAround" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Center" Style="width: 95%;" Class="py-1 my-1">
+            <MudText Color="Color.Secondary" Align="Align.Left" Typo="Typo.body2" Class="py-1 my-1">Current: @_importCurrentContext</MudText>
+            <MudProgressLinear Color="Color.Primary" Buffer="true" Max="@_importProgressTotal" Value="@_importProgressCurrent"
+                               BufferValue="@_importProgressCurrent" Class="pa-2" Min="0" Size="Size.Small" Rounded="true"/>
+        </MudStack>
+    </MudPaper>
+}
+
 <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
     @foreach (var gameProfile in _pagedData)
     {

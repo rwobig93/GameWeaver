@@ -4,6 +4,7 @@ using Application.Models.GameServer.GameProfile;
 using Application.Requests.GameServer.Game;
 using Domain.DatabaseEntities.GameServer;
 using Domain.Enums.GameServer;
+
 // ReSharper disable ConvertTypeCheckToNullCheck
 
 namespace Application.Mappers.GameServer;
@@ -247,6 +248,164 @@ public static class GameMappers
             SupportsLinux = response.Platforms.Linux,
             SupportsMac = response.Platforms.Mac,
             SourceType = GameSource.Steam
+        };
+    }
+
+    public static GameExport ToExport(this GameSlim game)
+    {
+        return new GameExport
+        {
+            FriendlyName = game.FriendlyName,
+            SteamName = game.SteamName,
+            SteamGameId = game.SteamGameId,
+            SteamToolId = game.SteamToolId,
+            DefaultGameProfile = new GameProfileExport(),
+            LatestBuildVersion = game.LatestBuildVersion,
+            UrlBackground = game.UrlBackground,
+            UrlLogo = game.UrlLogo,
+            UrlLogoSmall = game.UrlLogoSmall,
+            UrlWebsite = game.UrlWebsite,
+            ControllerSupport = game.ControllerSupport,
+            DescriptionShort = game.DescriptionShort,
+            DescriptionLong = game.DescriptionLong,
+            DescriptionAbout = game.DescriptionAbout,
+            PriceInitial = game.PriceInitial,
+            PriceCurrent = game.PriceCurrent,
+            PriceDiscount = game.PriceDiscount,
+            MetaCriticScore = game.MetaCriticScore,
+            UrlMetaCriticPage = game.UrlMetaCriticPage,
+            RequirementsPcMinimum = game.RequirementsPcMinimum,
+            RequirementsPcRecommended = game.RequirementsPcRecommended,
+            RequirementsMacMinimum = game.RequirementsMacMinimum,
+            RequirementsMacRecommended = game.RequirementsMacRecommended,
+            RequirementsLinuxMinimum = game.RequirementsLinuxMinimum,
+            RequirementsLinuxRecommended = game.RequirementsLinuxRecommended,
+            SupportsWindows = game.SupportsWindows,
+            SupportsLinux = game.SupportsLinux,
+            SupportsMac = game.SupportsMac,
+            SourceType = game.SourceType,
+            ManualVersionUrlCheck = game.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = game.ManualVersionUrlDownload
+        };
+    }
+
+    public static GameCreate ToCreate(this GameExport game)
+    {
+        return new GameCreate
+        {
+            Id = Guid.CreateVersion7(),
+            FriendlyName = game.FriendlyName,
+            SteamName = game.SteamName,
+            SteamGameId = game.SteamGameId,
+            SteamToolId = game.SteamToolId,
+            DefaultGameProfileId = Guid.Empty,
+            LatestBuildVersion = game.LatestBuildVersion,
+            UrlBackground = game.UrlBackground,
+            UrlLogo = game.UrlLogo,
+            UrlLogoSmall = game.UrlLogoSmall,
+            UrlWebsite = game.UrlWebsite,
+            ControllerSupport = game.ControllerSupport,
+            DescriptionShort = game.DescriptionShort,
+            DescriptionLong = game.DescriptionLong,
+            DescriptionAbout = game.DescriptionAbout,
+            PriceInitial = game.PriceInitial,
+            PriceCurrent = game.PriceCurrent,
+            PriceDiscount = game.PriceDiscount,
+            MetaCriticScore = game.MetaCriticScore,
+            UrlMetaCriticPage = game.UrlMetaCriticPage,
+            RequirementsPcMinimum = game.RequirementsPcMinimum,
+            RequirementsPcRecommended = game.RequirementsPcRecommended,
+            RequirementsMacMinimum = game.RequirementsMacMinimum,
+            RequirementsMacRecommended = game.RequirementsMacRecommended,
+            RequirementsLinuxMinimum = game.RequirementsLinuxMinimum,
+            RequirementsLinuxRecommended = game.RequirementsLinuxRecommended,
+            IsDeleted = false,
+            SupportsWindows = game.SupportsWindows,
+            SupportsLinux = game.SupportsLinux,
+            SupportsMac = game.SupportsMac,
+            SourceType = game.SourceType,
+            ManualFileRecordId = null,
+            ManualVersionUrlCheck = game.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = game.ManualVersionUrlDownload
+        };
+    }
+
+    public static GameCreateRequest ToCreateRequest(this GameExport game)
+    {
+        return new GameCreateRequest
+        {
+            Name = game.FriendlyName,
+            Description = game.DescriptionShort,
+            SteamGameId = game.SteamGameId,
+            SteamToolId = game.SteamToolId,
+            SupportsWindows = game.SupportsWindows,
+            SupportsLinux = game.SupportsLinux,
+            SupportsMac = game.SupportsMac,
+            SourceType = game.SourceType,
+            ManualVersionUrlCheck = game.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = game.ManualVersionUrlDownload,
+        };
+    }
+
+    public static GameUpdate ToUpdate(this GameExport game, Guid updateId)
+    {
+        return new GameUpdate
+        {
+            Id = updateId,
+            FriendlyName = game.FriendlyName,
+            SteamName = game.SteamName,
+            SteamGameId = game.SteamGameId,
+            SteamToolId = game.SteamToolId,
+            LatestBuildVersion = game.LatestBuildVersion,
+            UrlBackground = game.UrlBackground,
+            UrlLogo = game.UrlLogo,
+            UrlLogoSmall = game.UrlLogoSmall,
+            UrlWebsite = game.UrlWebsite,
+            ControllerSupport = game.ControllerSupport,
+            DescriptionShort = game.DescriptionShort,
+            DescriptionLong = game.DescriptionLong,
+            DescriptionAbout = game.DescriptionAbout,
+            PriceInitial = game.PriceInitial,
+            PriceCurrent = game.PriceCurrent,
+            PriceDiscount = game.PriceDiscount,
+            MetaCriticScore = game.MetaCriticScore,
+            UrlMetaCriticPage = game.UrlMetaCriticPage,
+            RequirementsPcMinimum = game.RequirementsPcMinimum,
+            RequirementsPcRecommended = game.RequirementsPcRecommended,
+            RequirementsMacMinimum = game.RequirementsMacMinimum,
+            RequirementsMacRecommended = game.RequirementsMacRecommended,
+            RequirementsLinuxMinimum = game.RequirementsLinuxMinimum,
+            RequirementsLinuxRecommended = game.RequirementsLinuxRecommended,
+            SupportsWindows = game.SupportsWindows,
+            SupportsLinux = game.SupportsLinux,
+            SupportsMac = game.SupportsMac,
+            SourceType = game.SourceType,
+            ManualVersionUrlCheck = game.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = game.ManualVersionUrlDownload,
+        };
+    }
+
+    public static GameUpdateRequest ToUpdateRequest(this GameExport game, Guid updateId)
+    {
+        return new GameUpdateRequest
+        {
+            Id = updateId,
+            Name = game.FriendlyName,
+            LatestBuildVersion = game.LatestBuildVersion,
+            UrlBackground = game.UrlBackground,
+            UrlLogo = game.UrlLogo,
+            UrlLogoSmall = game.UrlLogoSmall,
+            UrlWebsite = game.UrlWebsite,
+            ControllerSupport = game.ControllerSupport,
+            DescriptionShort = game.DescriptionShort,
+            DescriptionLong = game.DescriptionLong,
+            DescriptionAbout = game.DescriptionAbout,
+            UrlMetaCriticPage = game.UrlMetaCriticPage,
+            SupportsWindows = game.SupportsWindows,
+            SupportsLinux = game.SupportsLinux,
+            SupportsMac = game.SupportsMac,
+            ManualVersionUrlCheck = game.ManualVersionUrlCheck,
+            ManualVersionUrlDownload = game.ManualVersionUrlDownload,
         };
     }
 }

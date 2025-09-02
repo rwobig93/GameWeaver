@@ -46,6 +46,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     private bool _canPermissionServer;
     private bool _canStartServer;
     private bool _canStopServer;
+    private bool _canExportConfig;
+    private bool _canImportConfig;
 
     private bool _canViewGameServer;
     private string _configSearchText = string.Empty;
@@ -237,6 +239,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canStopServer = true;
             _canDeleteServer = true;
             _canChangeOwnership = true;
+            _canExportConfig = true;
+            _canImportConfig = true;
             return;
         }
 
@@ -252,8 +256,10 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canConfigServer = true;
             _canStartServer = true;
             _canStopServer = true;
-            _canDeleteServer = false;
-            _canChangeOwnership = false;
+            _canDeleteServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
+            _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
+            _canExportConfig = true;
+            _canImportConfig = true;
             return;
         }
 
@@ -269,6 +275,8 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             DynamicPermissionGroup.GameServers, DynamicPermissionLevel.Stop, _gameServer.Id);
         _canDeleteServer = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.Delete);
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
+        _canExportConfig = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.LocalResource.Export);
+        _canImportConfig = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.LocalResource.Import);
     }
 
     private async Task GetGameServerPermissions()
@@ -335,8 +343,6 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             if (resource.Id == Guid.Empty)
             {
                 resource.GameProfileId = _gameServer.GameProfileId;
-                // TODO: Difference between ignore and deleted, update client, ignore should never make it to the client
-                // TODO: Update dialog for resource not existing to be delete instead, ignore should only be for inherited resources
                 resource.ContentType = ContentType.Ignore;
                 var createResourceResponse = await GameServerService.CreateLocalResourceAsync(resource.ToCreate(), _loggedInUserId);
                 if (createResourceResponse.Succeeded)

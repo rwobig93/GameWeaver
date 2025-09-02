@@ -3,7 +3,6 @@
 public class ConfigurationItemUpdate
 {
     public Guid Id { get; set; }
-    public Guid? LocalResourceId { get; set; }
     public bool? DuplicateKey { get; set; }
     public string? Path { get; set; }
     public string? Category { get; set; }

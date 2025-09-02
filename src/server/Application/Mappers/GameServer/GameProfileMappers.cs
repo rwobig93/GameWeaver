@@ -1,6 +1,8 @@
+using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Requests.GameServer.GameProfile;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 
 namespace Application.Mappers.GameServer;
 
@@ -95,6 +97,17 @@ public static class GameProfileMappers
         {
             Name = profile.FriendlyName,
             GameId = gameId,
+            AllowAutoDelete = profile.AllowAutoDelete,
+            Resources = []
+        };
+    }
+
+    public static GameProfileExport ToExport(this GameProfileSlim profile, GameSlim game)
+    {
+        return new GameProfileExport
+        {
+            Name = profile.FriendlyName,
+            GameId = game!.SourceType is GameSource.Steam ? game.SteamToolId.ToString() : game.FriendlyName,
             AllowAutoDelete = profile.AllowAutoDelete,
             Resources = []
         };

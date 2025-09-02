@@ -22,6 +22,12 @@
                    OnClick="@ToggleEditMode">@_editButtonText
         </MudButton>
     }
+    @if (_canExportGame)
+    {
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Download"
+                   OnClick="@ExportGame">Export Game
+        </MudButton>
+    }
     @if (_editMode)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" 

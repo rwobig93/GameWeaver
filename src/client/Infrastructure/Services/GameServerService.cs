@@ -13,6 +13,7 @@ using Domain.Enums;
 using Domain.Models.GameServer;
 using GameWeaverShared.Parsers;
 using Microsoft.Extensions.Options;
+using Process = System.Diagnostics.Process;
 
 namespace Infrastructure.Services;
 
@@ -101,6 +102,7 @@ public class GameServerService : IGameServerService
                 _logger.Information(ex, "Failed to delete SteamCMD cache fiel: {Error}", ex.Message);
             }
         }
+
         _logger.Information("Finished deleting root SteamCMD data files");
 
         foreach (var dir in steamCmdDir.EnumerateDirectories())
@@ -115,6 +117,7 @@ public class GameServerService : IGameServerService
                 _logger.Information(ex, "Failed to delete SteamCMD cache directory: {Error}", ex.Message);
             }
         }
+
         _logger.Information("Finished deleting SteamCMD data directories");
 
         RunSteamCmdCommand(SteamConstants.CommandUpdate, true).RunSynchronously();
@@ -301,6 +304,7 @@ public class GameServerService : IGameServerService
                 return serverClientDownload;
             }
         }
+
         _logger.Debug("Downloaded manual game server client, now saving to the local file system: [{GameserverId}]{GameserverName} => {Filename}",
             gameServer.Id, gameServer.ServerName, serverClientDownload.Data.FileName);
 
@@ -511,7 +515,8 @@ public class GameServerService : IGameServerService
                 {
                     _logger.Error("Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{GameserverId}]{GameserverName}",
                         gameServer.Id, gameServer.ServerName);
-                    failures.Add($"Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{gameServer.Id}]{gameServer.ServerName}");
+                    failures.Add(
+                        $"Gameserver process was started but exited already, likely due to a gameserver misconfiguration or bug: [{gameServer.Id}]{gameServer.ServerName}");
                     continue;
                 }
 
@@ -809,7 +814,7 @@ public class GameServerService : IGameServerService
 
         foreach (var configFile in configItemFiles)
         {
-            if (configFile.ContentType is ContentType.Deleted)  // Local resource is an ignore file so we'll delete it since we don't want it
+            if (configFile.ContentType is ContentType.Deleted) // Local resource is an ignore file so we'll delete it since we don't want it
             {
                 try
                 {
@@ -846,11 +851,11 @@ public class GameServerService : IGameServerService
 
             switch (configFile)
             {
-                case {ContentType: ContentType.Ignore or ContentType.Deleted}:
+                case {ContentType: ContentType.Deleted}:
                 {
-                    _logger.Debug("Attempting to delete ignore/delete file: {FilePath}", configFile.GetFullPath());
+                    _logger.Debug("Attempting to delete delete file: {FilePath}", configFile.GetFullPath());
                     File.Delete(configFile.GetFullPath());
-                    _logger.Information("Ignore/delete file deleted: {FilePath}", configFile.GetFullPath());
+                    _logger.Information("Delete file deleted: {FilePath}", configFile.GetFullPath());
                     continue;
                 }
                 case {ContentType: ContentType.Json}:
@@ -880,6 +885,7 @@ public class GameServerService : IGameServerService
                     {
                         errorMessages.AddRange(xmlUpdateRequest.Messages);
                     }
+
                     continue;
                 }
                 case {ContentType: ContentType.Raw}:
@@ -889,6 +895,7 @@ public class GameServerService : IGameServerService
                     {
                         errorMessages.AddRange(rawUpdateRequest.Messages);
                     }
+
                     continue;
                 }
                 default:
