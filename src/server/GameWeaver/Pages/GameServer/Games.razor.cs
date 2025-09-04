@@ -1,8 +1,10 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Auth;
 using Application.Helpers.GameServer;
+using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Mappers.Identity;
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.LocalResource;
@@ -86,6 +88,7 @@ public partial class Games : ComponentBase
         }
 
         _userPreferences = (await AccountService.GetPreferences(_loggedInUserId)).Data;
+        _showNames = _userPreferences.HasToggled(UserPreferenceConstants.Toggled.GameNames);
         StateHasChanged();
     }
 
@@ -137,12 +140,26 @@ public partial class Games : ComponentBase
     private async Task ToggleNames()
     {
         _showNames = !_showNames;
+
+        switch (_showNames)
+        {
+            case true when !_userPreferences.HasToggled(UserPreferenceConstants.Toggled.GameNames):
+                _userPreferences.Toggled.Add(UserPreferenceConstants.Toggled.GameNames);
+                break;
+            case false when _userPreferences.HasToggled(UserPreferenceConstants.Toggled.GameNames):
+                _userPreferences.Toggled.Remove(UserPreferenceConstants.Toggled.GameNames);
+                break;
+        }
+
+        await AccountService.UpdatePreferences(_loggedInUserId, _userPreferences.ToUpdateToggled());
+
         StateHasChanged();
         await UpdateGameWidgets();
     }
 
     private async Task CreateGame()
     {
+        // TODO: Create game hasn't been implemented yet somehow, so it's time to do that
         await Task.CompletedTask;
         Snackbar.Add("Not currently implemented", Severity.Warning);
     }

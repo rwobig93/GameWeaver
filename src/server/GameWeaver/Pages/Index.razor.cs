@@ -1,6 +1,9 @@
 ﻿using Application.Constants.Identity;
 using Application.Helpers.Auth;
+using Application.Models.GameServer.GameServer;
+using Application.Models.GameServer.Host;
 using Application.Models.Identity.User;
+using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Domain.Models.Identity;
 
@@ -9,18 +12,22 @@ namespace GameWeaver.Pages;
 public partial class Index
 {
     // MainLayout has a CascadingParameter of itself, this allows the refresh button on the AppBar to refresh all page state data
-    //  If this parameter isn't cascaded to a page then the refresh button won't affect that pages' state data
+    //  If this parameter isn't cascaded to a page, then the refresh button won't affect that pages' state data
     [CascadingParameter] public MainLayout ParentLayout { get; set; } = null!;
 
     [Inject] private IAppAccountService AccountService { get; init; } = null!;
     [Inject] private IRunningServerState ServerState { get; init; } = null!;
+    [Inject] private IGameServerService GameServerService { get; init; } = null!;
+    [Inject] private IHostService HostService { get; init; } = null!;
 
     private AppUserFull _loggedInUser = new();
-    private AppUserPreferenceFull? _userPreferences;
+    private AppUserPreferenceFull _userPreferences = new();
 
     private string _cssBase = "rounded-lg pa-6 mt-12";
     private string _cssThemedBorder = "";
     private string _cssThemedText = "smaller";
+    private List<GameServerSlim> _ownedGameServers = new();
+    private List<HostSlim> _ownedHosts = new();
 
     private bool _canViewApi;
     private bool _canViewJobs;
@@ -30,8 +37,10 @@ public partial class Index
         if (firstRender)
         {
             await UpdateLoggedInUser();
-            UpdateThemedElements();
             await GetPermissions();
+            await GetOwnedGameServers();
+            await GetOwnedHosts();
+            UpdateThemedElements();
             StateHasChanged();
         }
     }
@@ -76,5 +85,17 @@ public partial class Index
 
         _cssThemedBorder = " border-rainbow";
         _cssThemedText = "smaller rainbow-text";
+    }
+
+    private async Task GetOwnedGameServers()
+    {
+        var ownedGameServersRequest = await GameServerService.GetByOwnerIdAsync(_loggedInUser.Id, _loggedInUser.Id);
+        _ownedGameServers = ownedGameServersRequest.Data.ToList();
+    }
+
+    private async Task GetOwnedHosts()
+    {
+        var ownedHosts = await HostService.GetByOwnerIdAsync(_loggedInUser.Id);
+        _ownedHosts = ownedHosts.Data.ToList();
     }
 }

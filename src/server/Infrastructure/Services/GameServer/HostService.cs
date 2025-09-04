@@ -441,12 +441,24 @@ public class HostService : IHostService
         {
             return await Result<HostSlim>.FailAsync(foundHost.ErrorMessage);
         }
+
         if (foundHost.Result is null)
         {
             return await Result<HostSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
         }
 
         return await Result<HostSlim>.SuccessAsync(foundHost.Result.ToSlim());
+    }
+
+    public async Task<IResult<IEnumerable<HostSlim>>> GetByOwnerIdAsync(Guid id)
+    {
+        var foundHosts = await _hostRepository.GetByOwnerIdAsync(id);
+        if (!foundHosts.Succeeded)
+        {
+            return await Result<IEnumerable<HostSlim>>.FailAsync(foundHosts.ErrorMessage);
+        }
+
+        return await Result<IEnumerable<HostSlim>>.SuccessAsync(foundHosts.Result?.ToSlims() ?? new List<HostSlim>());
     }
 
     public async Task<IResult<HostSlim?>> GetByHostnameAsync(string hostName)
@@ -456,6 +468,7 @@ public class HostService : IHostService
         {
             return await Result<HostSlim>.FailAsync(foundHost.ErrorMessage);
         }
+
         if (foundHost.Result is null)
         {
             return await Result<HostSlim>.FailAsync(ErrorMessageConstants.Generic.NotFound);
@@ -1097,7 +1110,8 @@ public class HostService : IHostService
                 {
                     _logger.Error("Game server state update failed for [{WorkId}]{WorkType}: {Error}", request.Id, request.TargetType, serverStateResult.Messages);
                 }
-                request.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
+
+                request.WorkData = null; // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.StatusUpdate:
                 if (request.Status == WeaverWorkState.Failed)
@@ -1109,13 +1123,19 @@ public class HostService : IHostService
                         WeaverWorkTarget.HostStatusUpdate => foundWork.Result?.HostId ?? Guid.Empty,
                         WeaverWorkTarget.HostDetail => foundWork.Result?.HostId ?? Guid.Empty,
                         WeaverWorkTarget.GameServer => foundWork.Result?.HostId ?? Guid.Empty,
-                        WeaverWorkTarget.GameServerInstall => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerInstall => foundWork.Result.WorkData is null
+                            ? Guid.Empty
+                            : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
                         WeaverWorkTarget.GameServerUpdate => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
-                        WeaverWorkTarget.GameServerUninstall => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerUninstall => foundWork.Result.WorkData is null
+                            ? Guid.Empty
+                            : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
                         WeaverWorkTarget.GameServerStateUpdate => foundWork.Result?.HostId ?? Guid.Empty,
                         WeaverWorkTarget.GameServerStart => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
                         WeaverWorkTarget.GameServerStop => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
-                        WeaverWorkTarget.GameServerRestart => foundWork.Result.WorkData is null ? Guid.Empty : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
+                        WeaverWorkTarget.GameServerRestart => foundWork.Result.WorkData is null
+                            ? Guid.Empty
+                            : _serializerService.DeserializeMemory<Guid>(foundWork.Result.WorkData),
                         WeaverWorkTarget.GameServerConfigNew => foundWork.Result?.HostId ?? Guid.Empty,
                         WeaverWorkTarget.GameServerConfigUpdate => foundWork.Result?.HostId ?? Guid.Empty,
                         WeaverWorkTarget.GameServerConfigDelete => foundWork.Result?.HostId ?? Guid.Empty,
@@ -1125,7 +1145,7 @@ public class HostService : IHostService
                         _ => Guid.Empty
                     };
 
-                    var messages = request.WorkData is null? [] : _serializerService.DeserializeMemory<List<string>>(request.WorkData);
+                    var messages = request.WorkData is null ? [] : _serializerService.DeserializeMemory<List<string>>(request.WorkData);
                     foreach (var message in messages ?? [])
                     {
                         await _recordRepository.CreateAsync(new NotifyRecordCreate
@@ -1149,6 +1169,7 @@ public class HostService : IHostService
                 {
                     _logger.Debug("Weaver work status update received: [{WorkId}]{WorkStatus}", request.Id, request.Status);
                 }
+
                 break;
             case WeaverWorkTarget.HostDetail:
                 var hostDetailResult = await HandleHostDetail(request, sourceIp);
@@ -1156,7 +1177,8 @@ public class HostService : IHostService
                 {
                     _logger.Error("Host detail update failed for [{WorkId}]{WorkType}: {Error}", request.Id, request.TargetType, hostDetailResult.Messages);
                 }
-                request.WorkData = null;  // Empty WorkData so we don't overwrite the actual command
+
+                request.WorkData = null; // Empty WorkData so we don't overwrite the actual command
                 break;
             case WeaverWorkTarget.Host:
             case WeaverWorkTarget.HostStatusUpdate:
@@ -1326,7 +1348,7 @@ public class HostService : IHostService
                 return;
             }
 
-            var serverIsLocal = _serverState.PublicIp == gameServer.PublicIp;  // If the gameserver has the same public IP as this server we'll assume it's local
+            var serverIsLocal = _serverState.PublicIp == gameServer.PublicIp; // If the gameserver has the same public IP as this server we'll assume it's local
             var gameServerCheck = gameServer.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !serverIsLocal);
             var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
             if (!connectableResponse.Data)
@@ -1336,7 +1358,7 @@ public class HostService : IHostService
                 continue;
             }
 
-            var gameServerUpdate = new GameServerUpdate { Id = gameServer.Id, ServerState = ConnectivityState.Connectable };
+            var gameServerUpdate = new GameServerUpdate {Id = gameServer.Id, ServerState = ConnectivityState.Connectable};
             var updateState = await _gameServerRepository.UpdateAsync(gameServerUpdate);
             if (!updateState.Succeeded)
             {
@@ -1441,7 +1463,7 @@ public class HostService : IHostService
             if (gameServerUpdate.ServerState is not null && gameServerUpdate.ServerState != foundServer.Result.ServerState)
             {
                 await GameServerStateChange(foundServer.Result.Id, request.Id, foundServer.Result.HostId,
-                    foundServer.Result.ServerState, (ConnectivityState)gameServerUpdate.ServerState);
+                    foundServer.Result.ServerState, (ConnectivityState) gameServerUpdate.ServerState);
             }
 
             var updatedGameServer = await _gameServerRepository.GetByIdAsync(foundServer.Result.Id);
@@ -1457,7 +1479,7 @@ public class HostService : IHostService
 
             if (deserializedData.ServerState is ConnectivityState.InternallyConnectable)
             {
-                foundServer.Result.ServerState = (ConnectivityState)deserializedData.ServerState;
+                foundServer.Result.ServerState = (ConnectivityState) deserializedData.ServerState;
                 BackgroundJob.Enqueue(() => VerifyGameServerConnectable(foundServer.Result));
             }
 
@@ -1487,7 +1509,7 @@ public class HostService : IHostService
             return await Result.FailAsync(deleteServerRequest.ErrorMessage);
         }
 
-        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, (Guid)foundServer.Result.LastModifiedBy!,
+        await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.GameServers, foundServer.Result.Id, (Guid) foundServer.Result.LastModifiedBy!,
             AuditAction.Delete, foundServer.Result);
 
         var serverOwner = await _userRepository.GetByIdAsync(foundServer.Result.OwnerId);
@@ -1518,7 +1540,7 @@ public class HostService : IHostService
         if (userUpdate.Succeeded) return await Result.SuccessAsync();
 
         var tshootId = await _tshootRepository.CreateTroubleshootRecord(_serverState, _dateTime, TroubleshootEntityType.GameServers, foundServer.Result.Id,
-            "Deleted game server and profile but failed to update user currency",new Dictionary<string, string>
+            "Deleted game server and profile but failed to update user currency", new Dictionary<string, string>
             {
                 {"UserId", serverOwner.Result.Id.ToString()},
                 {"Username", serverOwner.Result.Username},

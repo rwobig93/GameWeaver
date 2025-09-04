@@ -15,6 +15,7 @@ public interface IHostRepository
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<HostDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<HostDb?>> GetByIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<HostDb>>> GetByOwnerIdAsync(Guid id);
     Task<DatabaseActionResult<HostDb?>> GetByHostnameAsync(string hostName);
     Task<DatabaseActionResult<Guid>> CreateAsync(HostCreateDb createObject);
     Task<DatabaseActionResult> UpdateAsync(HostUpdateDb updateObject);

@@ -13,8 +13,8 @@ using Domain.DatabaseEntities._Management;
 using Domain.Enums.Database;
 using Infrastructure.Database.MsSql._Management;
 using Infrastructure.Database.Shared;
-using Microsoft.Extensions.Options;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
 
 namespace Infrastructure.Services.Database;
 
@@ -85,7 +85,7 @@ public class SqlDataService : ISqlDataService
         var response = (await connection.QueryAsync<int, TDataClass, (int, TDataClass)>(script.Path, (totalCount, entity) => (totalCount, entity),
             parameters, commandType: CommandType.StoredProcedure, commandTimeout: timeoutSeconds)).ToArray();
 
-        return new PaginatedDbEntity<IEnumerable<TDataClass>> { Data = response.Select(x => x.Item2), TotalCount = response.FirstOrDefault().Item1 };
+        return new PaginatedDbEntity<IEnumerable<TDataClass>> {Data = response.Select(x => x.Item2), TotalCount = response.FirstOrDefault().Item1};
     }
 
     public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoin, TParameters>(ISqlDatabaseScript script,
@@ -97,7 +97,7 @@ public class SqlDataService : ISqlDataService
     }
 
     public async Task<IEnumerable<TDataClass>> LoadDataJoin<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TParameters>(
-        ISqlDatabaseScript script,  Func<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TDataClass> joinMapping,
+        ISqlDatabaseScript script, Func<TDataClass, TDataClassJoinOne, TDataClassJoinTwo, TDataClass> joinMapping,
         TParameters parameters, int timeoutSeconds = 5)
     {
         using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
@@ -172,7 +172,9 @@ public class SqlDataService : ISqlDataService
             // Sort by EnforcementOrder in descending order
             var orderWinner = scriptOne.EnforcementOrder.CompareTo(scriptTwo.EnforcementOrder);
 
-            return orderWinner != 0 ? orderWinner :
+            return orderWinner != 0
+                ? orderWinner
+                :
                 // EnforcementOrder matches on both comparable objects, secondary sort by Table Name in Descending order
                 string.Compare(scriptOne.FriendlyName, scriptTwo.FriendlyName, StringComparison.Ordinal);
         });
@@ -195,6 +197,7 @@ public class SqlDataService : ISqlDataService
             {
                 continue;
             }
+
             await ExecuteSqlScriptObject(script);
         }
     }
@@ -263,12 +266,14 @@ public class SqlDataService : ISqlDataService
             // Sort by EnforcementOrder in descending order
             var orderWinner = scriptOne.EnforcementOrder.CompareTo(scriptTwo.EnforcementOrder);
 
-            return orderWinner != 0 ? orderWinner :
+            return orderWinner != 0
+                ? orderWinner
+                :
                 // EnforcementOrder matches on both comparable objects, secondary sort by Table Name in Descending order
                 string.Compare(scriptOne.FriendlyName, scriptTwo.FriendlyName, StringComparison.Ordinal);
         });
 
-        // Get current database entity enforcement state, we only want to enforce what doesn't match and ensure we don't enforce for newer app versions
+        // Get the current database entity enforcement state, we only want to enforce what doesn't match and ensure we don't enforce for newer app versions
         var currentEntityStates = await GetManagementEntities();
 
         // Enforce database tables and stored procedures
@@ -280,7 +285,7 @@ public class SqlDataService : ISqlDataService
             {
                 if (currentStatementHash == matchingState.Hash)
                 {
-                    // Current statement hash matches the existing statement hash, no work is needed
+                    // The current statement hash matches the existing statement hash, no work is needed
                     continue;
                 }
 
@@ -306,9 +311,11 @@ public class SqlDataService : ISqlDataService
                     AppVersion = _serverState.ApplicationVersion.ToString(),
                     LastUpdated = _dateTime.NowDatabaseTime
                 });
+                _logger.Information("Created database entity: [{Path}] {CurrentHash}", script.Path, currentStatementHash);
                 continue;
             }
 
+            _logger.Information("Updated database entity: [{Path}]{PreviousHash} => {CurrentHash}", script.Path, matchingState.Hash, currentStatementHash);
             matchingState.Hash = currentStatementHash;
             matchingState.AppVersion = _serverState.ApplicationVersion.ToString();
             matchingState.LastUpdated = _dateTime.NowDatabaseTime;

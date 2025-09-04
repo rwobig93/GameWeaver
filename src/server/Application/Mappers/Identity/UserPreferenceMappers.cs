@@ -1,3 +1,4 @@
+using Application.Helpers.Identity;
 using Application.Models.Identity.UserExtensions;
 using Domain.DatabaseEntities.Identity;
 using Domain.Models.Identity;
@@ -7,119 +8,147 @@ namespace Application.Mappers.Identity;
 
 public static class UserPreferenceMappers
 {
-    public static AppUserPreferenceFull ToFull(this AppUserPreferenceDb preferenceDb)
+    public static AppUserPreferenceFull ToFull(this AppUserPreferenceDb preference)
     {
         return new AppUserPreferenceFull
         {
-            Id = preferenceDb.Id,
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
             CustomThemeOne = AppThemeCustom.GetExampleCustomOne(),
             CustomThemeTwo = AppThemeCustom.GetExampleCustomTwo(),
             CustomThemeThree = AppThemeCustom.GetExampleCustomThree(),
-            GamerMode = preferenceDb.GamerMode,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.GetToggledFromDb()
         };
     }
 
-    public static AppUserPreferenceDb ToDb(this AppUserPreferenceFull preferenceFull)
+    public static AppUserPreferenceDb ToDb(this AppUserPreferenceFull preference)
     {
         return new AppUserPreferenceDb
         {
-            Id = preferenceFull.Id,
-            OwnerId = preferenceFull.OwnerId,
-            ThemePreference = preferenceFull.ThemePreference,
-            DrawerDefaultOpen = preferenceFull.DrawerDefaultOpen,
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
             CustomThemeOne = "",
             CustomThemeTwo = "",
             CustomThemeThree = "",
-            GamerMode = preferenceFull.GamerMode,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.GetDbToggledValue()
         };
     }
 
-    public static AppUserPreferenceCreate ToCreate(this AppUserPreferenceDb preferenceDb)
+    public static AppUserPreferenceCreate ToCreate(this AppUserPreferenceDb preference)
     {
         return new AppUserPreferenceCreate
         {
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = preferenceDb.CustomThemeOne,
-            CustomThemeTwo = preferenceDb.CustomThemeTwo,
-            CustomThemeThree = preferenceDb.CustomThemeThree,
-            GamerMode = preferenceDb.GamerMode,
+            Id = Guid.CreateVersion7(),
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = preference.CustomThemeOne,
+            CustomThemeTwo = preference.CustomThemeTwo,
+            CustomThemeThree = preference.CustomThemeThree,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.GetToggledFromDb()
         };
     }
 
-    public static AppUserPreferenceCreate ToCreate(this AppUserPreferenceUpdate preferenceUpdate)
+    public static AppUserPreferenceCreate ToCreate(this AppUserPreferenceUpdate preference)
     {
         return new AppUserPreferenceCreate
         {
-            ThemePreference = preferenceUpdate.ThemePreference,
-            DrawerDefaultOpen = preferenceUpdate.DrawerDefaultOpen,
-            CustomThemeOne = preferenceUpdate.CustomThemeOne,
-            CustomThemeTwo = preferenceUpdate.CustomThemeTwo,
-            CustomThemeThree = preferenceUpdate.CustomThemeThree,
-            GamerMode = preferenceUpdate.GamerMode,
+            Id = Guid.CreateVersion7(),
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = preference.CustomThemeOne,
+            CustomThemeTwo = preference.CustomThemeTwo,
+            CustomThemeThree = preference.CustomThemeThree,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.GetDbToggledValue()
         };
     }
 
-    public static AppUserPreferenceDb ToDb(this AppUserPreferenceCreate preferenceCreate)
+    public static AppUserPreferenceDb ToDb(this AppUserPreferenceCreate preference)
     {
         return new AppUserPreferenceDb
         {
-            OwnerId = preferenceCreate.OwnerId,
-            ThemePreference = preferenceCreate.ThemePreference,
-            DrawerDefaultOpen = preferenceCreate.DrawerDefaultOpen,
-            CustomThemeOne = preferenceCreate.CustomThemeOne,
-            CustomThemeTwo = preferenceCreate.CustomThemeTwo,
-            CustomThemeThree = preferenceCreate.CustomThemeThree,
-            GamerMode = preferenceCreate.GamerMode,
+            Id = Guid.CreateVersion7(),
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = preference.CustomThemeOne,
+            CustomThemeTwo = preference.CustomThemeTwo,
+            CustomThemeThree = preference.CustomThemeThree,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.GetDbToggledValue()
         };
     }
 
-    public static AppUserPreferenceDb ToDb(this AppUserPreferenceUpdate preferenceUpdate)
+    public static AppUserPreferenceDb ToDb(this AppUserPreferenceUpdate preference)
     {
         return new AppUserPreferenceDb
         {
             Id = Guid.Empty,
-            OwnerId = preferenceUpdate.OwnerId,
-            ThemePreference = preferenceUpdate.ThemePreference,
-            DrawerDefaultOpen = preferenceUpdate.DrawerDefaultOpen,
-            CustomThemeOne = preferenceUpdate.CustomThemeOne,
-            CustomThemeTwo = preferenceUpdate.CustomThemeTwo,
-            CustomThemeThree = preferenceUpdate.CustomThemeThree,
-            GamerMode = preferenceUpdate.GamerMode,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = preference.CustomThemeOne,
+            CustomThemeTwo = preference.CustomThemeTwo,
+            CustomThemeThree = preference.CustomThemeThree,
+            GamerMode = preference.GamerMode,
+            Toggled = null
         };
     }
 
-    public static AppUserPreferenceUpdate ToUpdate(this AppUserPreferenceDb preferenceDb)
+    public static AppUserPreferenceUpdate ToUpdate(this AppUserPreferenceDb preference)
     {
         return new AppUserPreferenceUpdate
         {
-            Id = preferenceDb.Id,
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = preferenceDb.CustomThemeOne,
-            CustomThemeTwo = preferenceDb.CustomThemeTwo,
-            CustomThemeThree = preferenceDb.CustomThemeThree,
-            GamerMode = preferenceDb.GamerMode,
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = preference.CustomThemeOne,
+            CustomThemeTwo = preference.CustomThemeTwo,
+            CustomThemeThree = preference.CustomThemeThree,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.Toggled
         };
     }
 
-    public static AppUserPreferenceUpdate ToUpdate(this AppUserPreferenceFull preferenceDb)
+    public static AppUserPreferenceUpdate ToUpdate(this AppUserPreferenceFull preference)
     {
         return new AppUserPreferenceUpdate
         {
-            Id = preferenceDb.Id,
-            OwnerId = preferenceDb.OwnerId,
-            ThemePreference = preferenceDb.ThemePreference,
-            DrawerDefaultOpen = preferenceDb.DrawerDefaultOpen,
-            CustomThemeOne = JsonConvert.SerializeObject(preferenceDb.CustomThemeOne),
-            CustomThemeTwo = JsonConvert.SerializeObject(preferenceDb.CustomThemeTwo),
-            CustomThemeThree = JsonConvert.SerializeObject(preferenceDb.CustomThemeThree),
-            GamerMode = preferenceDb.GamerMode,
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = JsonConvert.SerializeObject(preference.CustomThemeOne),
+            CustomThemeTwo = JsonConvert.SerializeObject(preference.CustomThemeTwo),
+            CustomThemeThree = JsonConvert.SerializeObject(preference.CustomThemeThree),
+            GamerMode = preference.GamerMode,
+            Toggled = preference.GetDbToggledValue()
+        };
+    }
+
+    public static AppUserPreferenceUpdate ToUpdateToggled(this AppUserPreferenceFull preference)
+    {
+        return new AppUserPreferenceUpdate
+        {
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = null,
+            CustomThemeTwo = null,
+            CustomThemeThree = null,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.GetDbToggledValue()
         };
     }
 }
