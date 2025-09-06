@@ -2,71 +2,52 @@
 @attribute [Route(AppRouteConstants.Index)]
 @attribute [Authorize]
 
-<MudPaper Elevation="5" Square="false" Class="@($"{_cssBase}{_cssThemedBorder}")" Style="opacity: 95%;">
-    <MudGrid Class="pa-4 justify-center mud-text-align-center">
-        <MudItem xs="12" sm="12" md="12">
-            <div class="d-flex justify-center">
-                <MudIcon Icon="@Icons.Material.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
-            </div>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12">
-            <MudText Align="Align.Center" Typo="Typo.h5" Class="@(_cssThemedText)">
-                Hello @_loggedInUser.Username! Welcome to @ServerState.ApplicationName!
-            </MudText>
-        </MudItem>
-        @if (_canViewApi)
-        {
-            <MudItem xs="12" sm="12" md="12">
-                <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info" Class="border-pulse-info">
-                    You have access to view our API!
-                    <MudLink Target="_blank" Href="@AppRouteConstants.Api.Root">
-                        Check out the API documentation!
-                    </MudLink>
-                </MudAlert>
-            </MudItem>
-        }
-        @if (_canViewJobs)
-        {
-            <MudItem xs="12" sm="12" md="12">
-                <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning" Class="border-pulse-warning">
-                    You have access to view background jobs, execute them and check their status on the
-                    <MudLink Target="_blank" Href="@AppRouteConstants.Jobs.Root">Jobs Page</MudLink>
-                </MudAlert>
-            </MudItem>
-        }
-        <MudItem xs="12" sm="12" md="12">
-            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error" Class="border-pulse-error">
-                @ServerState.ApplicationName is a work in progress, more to come!
-            </MudAlert>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12">
-            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error" Class="border-glowing-error">
-                I glow!
-            </MudAlert>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12">
-            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Normal" NoIcon="true" Class="border-rainbow">
-                <MudText Class="rainbow-text">I'm rainbow!</MudText>
-            </MudAlert>
-        </MudItem>
-        <MudItem xs="12" sm="12" md="12">
-            <MudExpansionPanel Text="Documentation" MaxHeight="150" Class="rounded-lg" Style="background: var(--mud-palette-drawer-background);">
-                Documentation will be coming soon!
-                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/info/getting-started">
-                    I'll link to the documentation page!
-                </MudButton>
-            </MudExpansionPanel>
-        </MudItem>
-    </MudGrid>
+<MudPaper Elevation="5" Square="false" Class="@($"my-6 {_cssBase} {_cssThemedBorder}")" Style="opacity: 95%;">
+    <MudItem xs="12" sm="12" md="12">
+        <MudText Align="Align.Center" Typo="Typo.h5" Class="@(_cssThemedText)" Color="Color.Primary">
+            Hello @_loggedInUser.Username! Welcome to @ServerState.ApplicationName!
+        </MudText>
+    </MudItem>
 </MudPaper>
+
+<SectionHeader Title="Favorite GameServers" Class="mb-0 mt-6 mx-6" Color="Color.Secondary" GamerMode="@_userPreferences.GamerMode"/>
+<MudPaper Elevation="10" Square="false" Class="@($"mb-6 mx-6 {_cssBase} {_cssThemedBorder}")" Style="opacity: 80%;">
+    @if (_favoriteGameServers.Count != 0)
+    {
+        <MudGrid Class="d-flex flex-row gap-2 py-2 px-4 justify-center" Justify="Justify.Center" Style="{width: 98%}">
+            @foreach (var gameServer in _ownedGameServers)
+            {
+                <GameServerWidget GameServer="@gameServer" GamerMode="@_userPreferences.GamerMode"/>
+            }
+        </MudGrid>
+    }
+    else
+    {
+        <MudText Align="Align.Center" Typo="Typo.body1" Class="@($"py-2 px-4 {_cssThemedText}")">You don't currently have any favorite GameServers</MudText>
+        <MudText Align="Align.Center" Typo="Typo.body1" Class="@($"py-2 px-4 {_cssThemedText}")">But I don't blame you, they're all pretty great</MudText>
+    }
+</MudPaper>
+
+@if (_ownedHosts.Count != 0)
+{
+    <SectionHeader Title="Your Hosts" Class="mb-0 mt-6 mx-6" Color="Color.Secondary" GamerMode="@_userPreferences.GamerMode"/>
+    <MudPaper Elevation="10" Square="false" Class="@($"mb-6 mx-6 {_cssBase} {_cssThemedBorder}")" Style="opacity: 80%;">
+        <MudStack Row="false" Class="d-flex gap-3 mt-5">
+            <MudGrid Class="d-flex flex-row gap-2 py-2 px-4 justify-center" Justify="Justify.Center" Style="{width: 98%}">
+                @foreach (var gameServer in _ownedGameServers)
+                {
+                    <GameServerWidget GameServer="@gameServer" GamerMode="@_userPreferences.GamerMode"/>
+                }
+            </MudGrid>
+        </MudStack>
+    </MudPaper>
+}
 
 @if (_ownedGameServers.Count != 0)
 {
-    <MudPaper Elevation="5" Square="false" Class="@($"{_cssBase}{_cssThemedBorder}")" Style="opacity: 90%;">
-        <MudStack Row="false" Class="d-flex gap-3">
-            <MudItem xs="12" sm="12" md="12" Class="mb-3">
-                <MudText Align="Align.Center" Typo="Typo.h5" Class="@(_cssThemedText)">Owned GameServers</MudText>
-            </MudItem>
+    <SectionHeader Title="Your GameServers" Class="mb-0 mt-6 mx-6" Color="Color.Secondary" GamerMode="@_userPreferences.GamerMode"/>
+    <MudPaper Elevation="10" Square="false" Class="@($"mb-6 mx-6 {_cssBase} {_cssThemedBorder}")" Style="opacity: 80%;">
+        <MudStack Row="false" Class="d-flex gap-3 mt-5">
             <MudGrid Class="d-flex flex-row gap-2 pa-2 justify-center" Justify="Justify.Center" Style="{width: 98%}">
                 @foreach (var gameServer in _ownedGameServers)
                 {

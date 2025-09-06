@@ -107,7 +107,7 @@
     background: linear-gradient(45deg, #6666ff, #0099ff , #00ff00, #ff3399, #6666ff);
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent;
+    color: transparent !important;
     animation: rainbow-text 5s ease-in-out infinite;
     background-size: 400% 100%;
 }
@@ -213,6 +213,21 @@
 .border-status-error::after {
     filter: blur(8px);
     transform: translate3d(0, 0, 0);
+}
+
+/*#endregion*/
+/*#region Section Header Borders */
+
+.section-header-primary {
+    border: 1px solid rgb(from var(--mud-palette-primary) r g b/var(--mud-palette-border-opacity));
+}
+
+.section-header-secondary {
+    border: 1px solid rgb(from var(--mud-palette-secondary) r g b/var(--mud-palette-border-opacity));
+}
+
+.section-header-tertiary {
+    border: 1px solid rgb(from var(--mud-palette-tertiary) r g b/var(--mud-palette-border-opacity));
 }
 
 /*#endregion*/

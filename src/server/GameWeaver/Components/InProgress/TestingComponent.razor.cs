@@ -1,13 +1,13 @@
-﻿using Application.Models.GameServer.GameServer;
-using Application.Models.GameServer.Host;
-using Application.Responses.v1.Identity;
+using Application.Constants.Identity;
+using Application.Helpers.Auth;
+using Application.Models.Identity.User;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Domain.Models.Identity;
 
-namespace GameWeaver.Pages;
+namespace GameWeaver.Components.InProgress;
 
-public partial class Index
+public partial class TestingComponent : ComponentBase
 {
     // MainLayout has a CascadingParameter of itself, this allows the refresh button on the AppBar to refresh all page state data
     //  If this parameter isn't cascaded to a page, then the refresh button won't affect that pages' state data
@@ -18,33 +18,39 @@ public partial class Index
     [Inject] private IGameServerService GameServerService { get; init; } = null!;
     [Inject] private IHostService HostService { get; init; } = null!;
 
-    private UserBasicResponse _loggedInUser = new();
+    private AppUserFull _loggedInUser = new();
     private AppUserPreferenceFull _userPreferences = new();
 
-    private string _cssBase = "rounded-lg py-3";
+    private string _cssBase = "rounded-lg pa-6 mt-12";
     private string _cssThemedBorder = "";
     private string _cssThemedText = "smaller";
-    private List<GameServerSlim> _ownedGameServers = [];
-    private List<GameServerSlim> _favoriteGameServers = [];
-    private List<HostSlim> _ownedHosts = [];
+
+    private bool _canViewApi;
+    private bool _canViewJobs;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await UpdateLoggedInUser();
-            await GetOwnedGameServers();
-            await GetOwnedHosts();
+            await GetPermissions();
             UpdateThemedElements();
+            StateHasChanged();
         }
+    }
+
+    private async Task GetPermissions()
+    {
+        var currentUser = await CurrentUserService.GetCurrentUserPrincipal();
+        _canViewApi = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Api.View);
+        _canViewJobs = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.System.Jobs.View);
     }
 
     private async Task UpdateLoggedInUser()
     {
-        var user = await CurrentUserService.GetCurrentUserBasic();
+        var user = await CurrentUserService.GetCurrentUserFull();
         if (user is null)
         {
-            StateHasChanged();
             return;
         }
 
@@ -53,12 +59,10 @@ public partial class Index
         var preferenceResponse = await AccountService.GetPreferences(_loggedInUser.Id);
         if (!preferenceResponse.Succeeded)
         {
-            StateHasChanged();
             return;
         }
 
         _userPreferences = preferenceResponse.Data;
-        StateHasChanged();
     }
 
     private void UpdateThemedElements()
@@ -70,20 +74,5 @@ public partial class Index
 
         _cssThemedBorder = " border-rainbow";
         _cssThemedText = "smaller rainbow-text";
-        StateHasChanged();
-    }
-
-    private async Task GetOwnedGameServers()
-    {
-        var ownedGameServersRequest = await GameServerService.GetByOwnerIdAsync(_loggedInUser.Id, ServerState.SystemUserId);
-        _ownedGameServers = ownedGameServersRequest.Data.ToList();
-        StateHasChanged();
-    }
-
-    private async Task GetOwnedHosts()
-    {
-        var ownedHosts = await HostService.GetByOwnerIdAsync(_loggedInUser.Id);
-        _ownedHosts = ownedHosts.Data.ToList();
-        StateHasChanged();
     }
 }

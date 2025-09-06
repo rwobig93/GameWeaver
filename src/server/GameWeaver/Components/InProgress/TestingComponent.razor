@@ -1,0 +1,59 @@
+@attribute [Authorize]
+
+<MudPaper Elevation="5" Square="false" Class="@($"{_cssBase}{_cssThemedBorder}")" Style="opacity: 95%;">
+    <MudGrid Class="pa-4 justify-center mud-text-align-center">
+        <MudItem xs="12" sm="12" md="12">
+            <div class="d-flex justify-center">
+                <MudIcon Icon="@Icons.Material.Outlined.LensBlur" Color="Color.Primary" Size="Size.Large" Style="width: 250px; height: 250px;"/>
+            </div>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudText Align="Align.Center" Typo="Typo.h5" Class="@(_cssThemedText)">
+                Hello @_loggedInUser.Username! Welcome to @ServerState.ApplicationName!
+            </MudText>
+        </MudItem>
+        @if (_canViewApi)
+        {
+            <MudItem xs="12" sm="12" md="12">
+                <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Info" Class="border-pulse-info">
+                    You have access to view our API!
+                    <MudLink Target="_blank" Href="@AppRouteConstants.Api.Root">
+                        Check out the API documentation!
+                    </MudLink>
+                </MudAlert>
+            </MudItem>
+        }
+        @if (_canViewJobs)
+        {
+            <MudItem xs="12" sm="12" md="12">
+                <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Warning" Class="border-pulse-warning">
+                    You have access to view background jobs, execute them and check their status on the
+                    <MudLink Target="_blank" Href="@AppRouteConstants.Jobs.Root">Jobs Page</MudLink>
+                </MudAlert>
+            </MudItem>
+        }
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error" Class="border-pulse-error">
+                @ServerState.ApplicationName is a work in progress, more to come!
+            </MudAlert>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Error" Class="border-glowing-error">
+                I glow!
+            </MudAlert>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudAlert ContentAlignment="HorizontalAlignment.Center" Severity="Severity.Normal" NoIcon="true" Class="border-rainbow">
+                <MudText Class="rainbow-text">I'm rainbow!</MudText>
+            </MudAlert>
+        </MudItem>
+        <MudItem xs="12" sm="12" md="12">
+            <MudExpansionPanel Text="Documentation" MaxHeight="150" Class="rounded-lg" Style="background: var(--mud-palette-drawer-background);">
+                Documentation will be coming soon!
+                <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/info/getting-started">
+                    I'll link to the documentation page!
+                </MudButton>
+            </MudExpansionPanel>
+        </MudItem>
+    </MudGrid>
+</MudPaper>

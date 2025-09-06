@@ -1,7 +1,6 @@
-﻿@using GameWeaver.Components.Account
+﻿@using Application.Constants.Identity
 @using Domain.Enums.Identity
-@using Application.Constants.Identity
-
+@using GameWeaver.Components.Account
 @attribute [Route(AppRouteConstants.Account.Themes)]
 @attribute [Authorize(PermissionConstants.Identity.Preferences.ChangeTheme)]
 
@@ -96,11 +95,7 @@
 </MudContainer>
 
 <MudContainer Fixed="false" Class="pb-1 mb-1 z-0" MaxWidth="MaxWidth.Medium" Style="position: relative;">
-    <MudPaper Square="false">
-        <MudAlert NoIcon="true" Dense="false" Severity="Severity.Info" Variant="Variant.Outlined" ContentAlignment="HorizontalAlignment.Center">
-            Editing Theme Preview
-        </MudAlert>
-    </MudPaper>
+    <SectionHeader Title="Editing Theme Preview" Color="Color.Primary" GamerMode="@_userPreferences.GamerMode"/>
     <MudAppBar Class="z-0" Fixed="false" Style="@($"color: {_editingTheme.ColorPrimary}; background-color: {_editingTheme.ColorTitleBar};")">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DemoToggleDrawer"/>
         <MudSpacer/>
@@ -112,21 +107,21 @@
                        Style="@($"background-color: {_editingTheme.ColorNavBar};")">
                 <MudNavMenu>
                     <MudItem Class="ml-4">
-                        <MudIcon Class="d-inline-flex mt-2" Icon="@Icons.Material.Filled.Home" Style="@($"color: {_editingTheme.ColorPrimary};")" />
+                        <MudIcon Class="d-inline-flex mt-2" Icon="@Icons.Material.Filled.Home" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
                         @if (_demoOpen)
                         {
                             <MudText Class="d-inline-flex ml-2" Typo="Typo.caption" Style="@($"color: {_editingTheme.ColorPrimary};")">Example 1</MudText>
                         }
                     </MudItem>
                     <MudItem Class="ml-4">
-                        <MudIcon Class="d-inline-flex mt-2" Icon="@Icons.Material.Filled.Pages" Style="@($"color: {_editingTheme.ColorPrimary};")" />
+                        <MudIcon Class="d-inline-flex mt-2" Icon="@Icons.Material.Filled.Pages" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
                         @if (_demoOpen)
                         {
                             <MudText Class="d-inline-flex ml-2" Typo="Typo.caption" Style="@($"color: {_editingTheme.ColorPrimary};")">Example 2</MudText>
                         }
                     </MudItem>
                     <MudItem Class="ml-4">
-                        <MudIcon Class="d-inline-flex mt-2" Icon="@Icons.Material.Filled.Analytics" Style="@($"color: {_editingTheme.ColorPrimary};")" />
+                        <MudIcon Class="d-inline-flex mt-2" Icon="@Icons.Material.Filled.Analytics" Style="@($"color: {_editingTheme.ColorPrimary};")"/>
                         @if (_demoOpen)
                         {
                             <MudText Class="d-inline-flex ml-2" Typo="Typo.caption" Style="@($"color: {_editingTheme.ColorPrimary};")">Example 2</MudText>
