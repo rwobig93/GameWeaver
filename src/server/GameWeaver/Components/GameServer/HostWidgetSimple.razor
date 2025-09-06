@@ -1,0 +1,32 @@
+@using Application.Helpers.GameServer
+<MudPaper Class="@($"{_cssBorderBase}{_cssBorderStatus}")" Width="@Width" Height="@Height" Elevation="8"
+          Style="background-color: var(--mud-palette-surface); cursor: pointer; position: relative;" @onclick="ViewHost">
+    <div style="position: absolute; width: 100%; height: 100%;" class="z-0 rounded-lg darken-content">
+        <img src="@(_imageUrl)" width="100%" height="100%" alt="Host Server Background" class="z-0 rounded-lg"
+             style="position: absolute; top: 0; bottom: 0; clip: rect(0, @Width, @Height, 0);"/>
+    </div>
+    <MudStack Class="pa-4 z-2 rounded-lg" Row="true" Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Style="position: absolute; width: 100%;">
+        <MudStack Row="false" Justify="Justify.Center" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Style="width: 20%;">
+            <MudIcon Size="Size.Large" Icon="@(Host.CurrentState.IsRunning() ? Icons.Material.Filled.ArrowCircleUp : Icons.Material.Filled.ArrowCircleDown)"
+                     Color="@(Host.CurrentState.IsRunning() ? Color.Success : Color.Error)" Style="width: 55px; height: 55px"/>
+            <MudText Align="Align.Center" Typo="Typo.body2" Color="@(Host.CurrentState.IsRunning() ? Color.Success : Color.Error)">
+                @(Host.CurrentState.IsRunning() ? "Online" : "Offline")
+            </MudText>
+        </MudStack>
+        <MudStack Row="false" Justify="Justify.SpaceAround" AlignItems="AlignItems.Center" Wrap="Wrap.NoWrap" Spacing="1" Style="width: 80%;">
+            <MudPaper Outlined="false" Elevation="6" Square="false" Class="rounded-lg px-1">
+                <MudText Align="Align.Center" Color="Color.Primary" Typo="Typo.body1" Style="position: relative;" Class="@(_cssTextStatus)">
+                    @(Host.FriendlyName.Length > 30 ? Host.FriendlyName[..30] : Host.FriendlyName)
+                </MudText>
+            </MudPaper>
+            <MudSpacer/>
+            <MudDivider Vertical="false" DividerType="DividerType.FullWidth"/>
+            <MudSpacer/>
+            <MudPaper Outlined="false" Elevation="6" Square="false" Class="rounded-lg px-1">
+                <MudText Align="Align.Center" Color="Color.Secondary" Typo="Typo.body2" Style="position: relative">
+                    GameServers: @_hostGameServers
+                </MudText>
+            </MudPaper>
+        </MudStack>
+    </MudStack>
+</MudPaper>
