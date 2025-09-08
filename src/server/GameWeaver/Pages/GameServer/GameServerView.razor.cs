@@ -4,6 +4,7 @@ using Application.Constants.Identity;
 using Application.Helpers.Auth;
 using Application.Helpers.External;
 using Application.Helpers.GameServer;
+using Application.Helpers.Identity;
 using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
 using Application.Mappers.Identity;
@@ -21,6 +22,7 @@ using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
+using Domain.Models.Identity;
 using GameWeaver.Components.GameServer;
 using GameWeaver.Helpers;
 using GameWeaverShared.Parsers;
@@ -30,46 +32,6 @@ namespace GameWeaver.Pages.GameServer;
 
 public partial class GameServerView : ComponentBase, IAsyncDisposable
 {
-    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
-    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
-    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
-    private readonly List<LocalResourceSlim> _createdLocalResources = [];
-    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
-    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
-    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
-    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
-    private List<GameProfileSlim>? _availableParentProfiles;
-    private bool _canChangeOwnership;
-    private bool _canConfigServer;
-    private bool _canDeleteServer;
-    private bool _canEditServer;
-    private bool _canPermissionServer;
-    private bool _canStartServer;
-    private bool _canStopServer;
-    private bool _canExportConfig;
-    private bool _canImportConfig;
-
-    private bool _canViewGameServer;
-    private string _configSearchText = string.Empty;
-    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
-    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
-    private string _editButtonText = "Enable Edit Mode";
-    private bool _editMode;
-    private GameSlim _game = new() {Id = Guid.Empty};
-    private GameServerSlim _gameServer = new() {Id = Guid.Empty};
-    private HostSlim _host = new() {Id = Guid.Empty};
-    private List<LocalResourceSlim> _localResources = [];
-    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
-    private Guid _loggedInUserId = Guid.Empty;
-    private IEnumerable<NotifyRecordSlim> _notifyPagedData = new List<NotifyRecordSlim>();
-    private string _notifySearchText = string.Empty;
-    private MudTable<NotifyRecordSlim> _notifyTable = new();
-    private GameProfileSlim? _parentProfile;
-    private int _selectedNotifyViewDetail;
-    private int _totalNotifyRecords;
-    private bool _updateIsAvailable;
-
-    private bool _validIdProvided = true;
     [Parameter] public Guid GameServerId { get; init; } = Guid.Empty;
 
     [Inject] public IAppRoleService RoleService { get; init; } = null!;
@@ -82,6 +44,50 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
     [Inject] public IAppPermissionService PermissionService { get; init; } = null!;
     [Inject] public IAppUserService UserService { get; init; } = null!;
     [Inject] public ISerializerService SerializerService { get; init; } = null!;
+    [Inject] public IAppAccountService AccountService { get; init; } = null!;
+
+    private readonly List<AppPermissionDisplay> _assignedRolePermissions = [];
+    private readonly List<AppPermissionDisplay> _assignedUserPermissions = [];
+    private readonly List<ConfigurationItemSlim> _createdConfigItems = [];
+    private readonly List<LocalResourceSlim> _createdLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _deletedConfigItems = [];
+    private readonly List<LocalResourceSlim> _deletedLocalResources = [];
+    private readonly List<ConfigurationItemSlim> _updatedConfigItems = [];
+    private readonly List<LocalResourceSlim> _updatedLocalResources = [];
+    private List<GameProfileSlim>? _availableParentProfiles;
+    private List<LocalResourceSlim> _localResources = [];
+    private HashSet<AppPermissionDisplay> _deleteRolePermissions = [];
+    private HashSet<AppPermissionDisplay> _deleteUserPermissions = [];
+    private IEnumerable<NotifyRecordSlim> _notifyPagedData = new List<NotifyRecordSlim>();
+    private GameServerSlim _gameServer = new() {Id = Guid.Empty};
+    private GameSlim _game = new() {Id = Guid.Empty};
+    private HostSlim _host = new() {Id = Guid.Empty};
+    private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
+    private MudTable<NotifyRecordSlim> _notifyTable = new();
+    private GameProfileSlim? _parentProfile;
+    private AppUserPreferenceFull _userPreferences = new();
+    private Guid _loggedInUserId = Guid.Empty;
+    private bool _validIdProvided = true;
+    private int _selectedNotifyViewDetail;
+    private int _totalNotifyRecords;
+    private bool _updateIsAvailable;
+    private string _notifySearchText = string.Empty;
+    private string _editButtonText = "Enable Edit Mode";
+    private bool _editMode;
+    private bool _canViewGameServer;
+    private string _configSearchText = string.Empty;
+    private bool _isFavorite;
+
+    private bool _canChangeOwnership;
+    private bool _canConfigServer;
+    private bool _canDeleteServer;
+    private bool _canEditServer;
+    private bool _canPermissionServer;
+    private bool _canStartServer;
+    private bool _canStopServer;
+    private bool _canExportConfig;
+    private bool _canImportConfig;
+
 
     public async ValueTask DisposeAsync()
     {
@@ -92,18 +98,19 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         await Task.CompletedTask;
     }
 
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
         {
             if (firstRender)
             {
+                await GetPermissions();
                 await GetViewingGameServer();
+                await _notifyTable.ReloadServerData();
+                await GetUserPreferences();
                 await GetServerParentProfile();
                 await GetServerGame();
                 await GetServerHost();
-                await GetPermissions();
                 await GetClientTimezone();
                 await GetGameServerResources();
                 await GetGameServerPermissions();
@@ -139,23 +146,20 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            StateHasChanged();
             return;
         }
 
-        if (response.Data is null)
+        if (response.Data is null || response.Data.Id == Guid.Empty)
         {
             Snackbar.Add(ErrorMessageConstants.GameServers.NotFound);
             _validIdProvided = false;
+            StateHasChanged();
             return;
         }
 
         _gameServer = response.Data;
-
-        if (_gameServer.Id == Guid.Empty)
-        {
-            _validIdProvided = false;
-            StateHasChanged();
-        }
+        StateHasChanged();
     }
 
     private async Task GetServerParentProfile()
@@ -241,6 +245,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canChangeOwnership = true;
             _canExportConfig = true;
             _canImportConfig = true;
+            StateHasChanged();
             return;
         }
 
@@ -260,6 +265,7 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
             _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
             _canExportConfig = true;
             _canImportConfig = true;
+            StateHasChanged();
             return;
         }
 
@@ -277,6 +283,19 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
         _canChangeOwnership = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.ChangeOwnership);
         _canExportConfig = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.LocalResource.Export);
         _canImportConfig = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.LocalResource.Import);
+        StateHasChanged();
+    }
+
+    private async Task GetUserPreferences()
+    {
+        if (_loggedInUserId == Guid.Empty)
+        {
+            return;
+        }
+
+        _userPreferences = (await AccountService.GetPreferences(_loggedInUserId)).Data;
+        _isFavorite = _userPreferences.HasFavoriteGameServer(_gameServer.Id);
+        StateHasChanged();
     }
 
     private async Task GetGameServerPermissions()
@@ -610,6 +629,24 @@ public partial class GameServerView : ComponentBase, IAsyncDisposable
 
         Snackbar.Add("Gameserver successfully deleted!", Severity.Success);
         GoBack();
+    }
+
+    private async Task ToggleFavorite()
+    {
+        _isFavorite = !_isFavorite;
+
+        switch (_isFavorite)
+        {
+            case true when !_userPreferences.HasFavoriteGameServer(_gameServer.Id):
+                _userPreferences.FavoriteGameServers.Add(_gameServer.Id.ToString());
+                break;
+            case false when _userPreferences.HasFavoriteGameServer(_gameServer.Id):
+                _userPreferences.FavoriteGameServers.Remove(_gameServer.Id.ToString());
+                break;
+        }
+
+        await AccountService.UpdatePreferences(_loggedInUserId, _userPreferences.ToUpdateFavoriteGameServers());
+        StateHasChanged();
     }
 
     private async Task ConfigAdd(LocalResourceSlim localResource)

@@ -2,7 +2,6 @@
 @using Application.Constants.Communication
 @using Application.Helpers.Runtime
 @using GameWeaver.Components.GameServer
-
 @attribute [Route(AppRouteConstants.GameServer.Hosts.View)]
 @attribute [Authorize]
 
@@ -17,6 +16,7 @@
     <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.ArrowBack"
                OnClick="@GoBack">Go Back
     </MudButton>
+    <MudSpacer/>
     @if (_canEditHost)
     {
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit"
@@ -37,10 +37,18 @@
     }
     @if (_canDeleteHost)
     {
+        <MudSpacer/>
         <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete"
                    OnClick="@DeleteHost">Delete Host
         </MudButton>
     }
+</MudPaper>
+
+@* Host Name *@
+<MudPaper Elevation="8" Class="d-flex rounded-lg flex-wrap mt-4 pa-2 gap-4">
+    <MudStack Row="true" Justify="Justify.Center" AlignItems="AlignItems.Stretch" Style="width:100%">
+        <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@_host.FriendlyName</MudText>
+    </MudStack>
 </MudPaper>
 
 @* Notifications *@

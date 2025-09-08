@@ -13,4 +13,5 @@ public class AppUserPreferenceUpdate
     public string? CustomThemeThree { get; set; }
     public bool GamerMode { get; set; }
     public string? Toggled { get; set; }
+    public string? FavoriteGameServers { get; set; }
 }

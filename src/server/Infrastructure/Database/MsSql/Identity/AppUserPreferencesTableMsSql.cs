@@ -26,7 +26,8 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                     [CustomThemeTwo] NVARCHAR(1024) NULL,
                     [CustomThemeThree] NVARCHAR(1024) NULL,
                     [GamerMode] BIT NULL,
-                    [Toggled] NVARCHAR(4000) NULL
+                    [Toggled] NVARCHAR(4000) NULL,
+                    [FavoriteGameServers] NVARCHAR(4000) NULL
                 )
             end"
     };
@@ -119,12 +120,14 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 @CustomThemeTwo NVARCHAR(1024),
                 @CustomThemeThree NVARCHAR(1024),
                 @GamerMode BIT,
-                @Toggled NVARCHAR(4000)
+                @Toggled NVARCHAR(4000),
+                @FavoriteGameServers NVARCHAR(4000)
             AS
             begin
-                INSERT into dbo.[{Table.TableName}] (Id, OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree, GamerMode, Toggled)
+                INSERT into dbo.[{Table.TableName}] (Id, OwnerId, ThemePreference, DrawerDefaultOpen, CustomThemeOne, CustomThemeTwo, CustomThemeThree, GamerMode, Toggled,
+                    FavoriteGameServers)
                 OUTPUT INSERTED.Id
-                VALUES (@Id, @OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree, @GamerMode, @Toggled);
+                VALUES (@Id, @OwnerId, @ThemePreference, @DrawerDefaultOpen, @CustomThemeOne, @CustomThemeTwo, @CustomThemeThree, @GamerMode, @Toggled, @FavoriteGameServers);
             end"
     };
 
@@ -142,14 +145,15 @@ public class AppUserPreferencesTableMsSql : IMsSqlEnforcedEntity
                 @CustomThemeTwo NVARCHAR(1024) = null,
                 @CustomThemeThree NVARCHAR(1024) = null,
                 @GamerMode INT = null,
-                @Toggled NVARCHAR(4000) = null
+                @Toggled NVARCHAR(4000) = null,
+                @FavoriteGameServers NVARCHAR(4000) = null
             AS
             begin
                 UPDATE dbo.[{Table.TableName}]
                 SET OwnerId = COALESCE(@OwnerId, OwnerId), ThemePreference = COALESCE(@ThemePreference, ThemePreference),
                     DrawerDefaultOpen = COALESCE(@DrawerDefaultOpen, DrawerDefaultOpen), CustomThemeOne = COALESCE(@CustomThemeOne, CustomThemeOne),
                     CustomThemeTwo = COALESCE(@CustomThemeTwo, CustomThemeTwo), CustomThemeThree = COALESCE(@CustomThemeThree, CustomThemeThree),
-                    GamerMode = COALESCE(@GamerMode, GamerMode), Toggled = COALESCE(@Toggled, Toggled)
+                    GamerMode = COALESCE(@GamerMode, GamerMode), Toggled = COALESCE(@Toggled, Toggled), FavoriteGameServers = COALESCE(@FavoriteGameServers, FavoriteGameServers)
                 WHERE Id = COALESCE(@Id, Id);
             end"
     };

@@ -159,7 +159,6 @@ public partial class Games : ComponentBase
 
     private async Task CreateGame()
     {
-        // TODO: Create game hasn't been implemented yet somehow, so it's time to do that
         await Task.CompletedTask;
         Snackbar.Add("Not currently implemented", Severity.Warning);
     }

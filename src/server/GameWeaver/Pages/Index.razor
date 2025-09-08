@@ -14,12 +14,14 @@
 <MudPaper Elevation="10" Square="false" Class="@($"mb-6 mx-6 {_cssBase} {_cssThemedBorder}")" Style="opacity: 80%;">
     @if (_favoriteGameServers.Count != 0)
     {
-        <MudGrid Class="d-flex flex-row gap-2 py-2 px-4 justify-center" Justify="Justify.Center" Style="{width: 98%}">
-            @foreach (var gameServer in _ownedGameServers)
-            {
-                <GameServerWidget GameServer="@gameServer" GamerMode="@_userPreferences.GamerMode"/>
-            }
-        </MudGrid>
+        <MudStack Row="false" Class="d-flex gap-3 mt-5">
+            <MudGrid Class="d-flex flex-row gap-2 py-2 px-4 justify-center" Justify="Justify.Center" Style="{width: 98%}">
+                @foreach (var gameServer in _ownedGameServers)
+                {
+                    <GameServerWidget GameServer="@gameServer" GamerMode="@_userPreferences.GamerMode"/>
+                }
+            </MudGrid>
+        </MudStack>
     }
     else
     {

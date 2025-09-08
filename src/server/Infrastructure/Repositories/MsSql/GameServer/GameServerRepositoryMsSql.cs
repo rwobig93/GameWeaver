@@ -106,6 +106,24 @@ public class GameServerRepositoryMsSql : IGameServerRepository
         return actionReturn;
     }
 
+    public async Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByIdMultipleAsync(IEnumerable<Guid> ids)
+    {
+        DatabaseActionResult<IEnumerable<GameServerDb>> actionReturn = new();
+
+        try
+        {
+            var foundGameServers = await _database.LoadData<GameServerDb, dynamic>(GameServersTableMsSql.GetByIdMultiple,
+                new {Ids = string.Join(',', ids)});
+            actionReturn.Succeed(foundGameServers);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, GameServersTableMsSql.GetByIdMultiple.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
     public async Task<DatabaseActionResult<GameServerDb?>> GetByServerNameAsync(string serverName)
     {
         DatabaseActionResult<GameServerDb?> actionReturn = new();

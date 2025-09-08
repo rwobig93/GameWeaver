@@ -20,7 +20,8 @@ public static class UserPreferenceMappers
             CustomThemeTwo = AppThemeCustom.GetExampleCustomTwo(),
             CustomThemeThree = AppThemeCustom.GetExampleCustomThree(),
             GamerMode = preference.GamerMode,
-            Toggled = preference.GetToggledFromDb()
+            Toggled = preference.GetToggledFromDb(),
+            FavoriteGameServers = preference.GetFavoriteGameServerFromDb()
         };
     }
 
@@ -36,7 +37,8 @@ public static class UserPreferenceMappers
             CustomThemeTwo = "",
             CustomThemeThree = "",
             GamerMode = preference.GamerMode,
-            Toggled = preference.GetDbToggledValue()
+            Toggled = preference.GetDbToggledValue(),
+            FavoriteGameServers = preference.GetDbFavoriteGameServerValue()
         };
     }
 
@@ -52,7 +54,8 @@ public static class UserPreferenceMappers
             CustomThemeTwo = preference.CustomThemeTwo,
             CustomThemeThree = preference.CustomThemeThree,
             GamerMode = preference.GamerMode,
-            Toggled = preference.GetToggledFromDb()
+            Toggled = preference.GetToggledFromDb(),
+            FavoriteGameServers = preference.GetFavoriteGameServerFromDb()
         };
     }
 
@@ -68,7 +71,8 @@ public static class UserPreferenceMappers
             CustomThemeTwo = preference.CustomThemeTwo,
             CustomThemeThree = preference.CustomThemeThree,
             GamerMode = preference.GamerMode,
-            Toggled = preference.GetDbToggledValue()
+            Toggled = preference.GetDbToggledValue(),
+            FavoriteGameServers = preference.GetDbFavoriteGameServerValue()
         };
     }
 
@@ -84,7 +88,8 @@ public static class UserPreferenceMappers
             CustomThemeTwo = preference.CustomThemeTwo,
             CustomThemeThree = preference.CustomThemeThree,
             GamerMode = preference.GamerMode,
-            Toggled = preference.GetDbToggledValue()
+            Toggled = preference.GetDbToggledValue(),
+            FavoriteGameServers = preference.GetDbFavoriteGameServerValue()
         };
     }
 
@@ -100,7 +105,8 @@ public static class UserPreferenceMappers
             CustomThemeTwo = preference.CustomThemeTwo,
             CustomThemeThree = preference.CustomThemeThree,
             GamerMode = preference.GamerMode,
-            Toggled = null
+            Toggled = null,
+            FavoriteGameServers = null
         };
     }
 
@@ -116,7 +122,42 @@ public static class UserPreferenceMappers
             CustomThemeTwo = preference.CustomThemeTwo,
             CustomThemeThree = preference.CustomThemeThree,
             GamerMode = preference.GamerMode,
-            Toggled = preference.Toggled
+            Toggled = preference.Toggled,
+            FavoriteGameServers = preference.FavoriteGameServers
+        };
+    }
+
+    public static AppUserPreferenceUpdate ToUpdateToggled(this AppUserPreferenceDb preference)
+    {
+        return new AppUserPreferenceUpdate
+        {
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = null,
+            CustomThemeTwo = null,
+            CustomThemeThree = null,
+            GamerMode = preference.GamerMode,
+            Toggled = preference.Toggled,
+            FavoriteGameServers = null
+        };
+    }
+
+    public static AppUserPreferenceUpdate ToUpdateFavoriteGameServers(this AppUserPreferenceDb preference)
+    {
+        return new AppUserPreferenceUpdate
+        {
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = null,
+            CustomThemeTwo = null,
+            CustomThemeThree = null,
+            GamerMode = preference.GamerMode,
+            Toggled = null,
+            FavoriteGameServers = preference.FavoriteGameServers
         };
     }
 
@@ -132,7 +173,8 @@ public static class UserPreferenceMappers
             CustomThemeTwo = JsonConvert.SerializeObject(preference.CustomThemeTwo),
             CustomThemeThree = JsonConvert.SerializeObject(preference.CustomThemeThree),
             GamerMode = preference.GamerMode,
-            Toggled = preference.GetDbToggledValue()
+            Toggled = preference.GetDbToggledValue(),
+            FavoriteGameServers = preference.GetDbFavoriteGameServerValue()
         };
     }
 
@@ -148,7 +190,25 @@ public static class UserPreferenceMappers
             CustomThemeTwo = null,
             CustomThemeThree = null,
             GamerMode = preference.GamerMode,
-            Toggled = preference.GetDbToggledValue()
+            Toggled = preference.GetDbToggledValue(),
+            FavoriteGameServers = null
+        };
+    }
+
+    public static AppUserPreferenceUpdate ToUpdateFavoriteGameServers(this AppUserPreferenceFull preference)
+    {
+        return new AppUserPreferenceUpdate
+        {
+            Id = preference.Id,
+            OwnerId = preference.OwnerId,
+            ThemePreference = preference.ThemePreference,
+            DrawerDefaultOpen = preference.DrawerDefaultOpen,
+            CustomThemeOne = null,
+            CustomThemeTwo = null,
+            CustomThemeThree = null,
+            GamerMode = preference.GamerMode,
+            Toggled = null,
+            FavoriteGameServers = preference.GetDbFavoriteGameServerValue()
         };
     }
 }

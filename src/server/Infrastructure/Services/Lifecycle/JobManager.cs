@@ -1,7 +1,11 @@
 ﻿using Application.Constants.Communication;
+using Application.Constants.Identity;
 using Application.Helpers.GameServer;
+using Application.Helpers.Identity;
 using Application.Helpers.Lifecycle;
+using Application.Helpers.Runtime;
 using Application.Mappers.GameServer;
+using Application.Mappers.Identity;
 using Application.Models.Events;
 using Application.Models.External.Steam;
 using Application.Models.GameServer.Developers;
@@ -110,12 +114,77 @@ public class JobManager : IJobManager
 
             await HostCheckInCleanup();
 
+            await UserPreferenceCleanup();
+
             _logger.Debug("Finished daily cleanup");
         }
         catch (Exception ex)
         {
             _logger.Error(ex, "{LogPrefix} Daily cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, ex.Message);
         }
+    }
+
+    [DisableConcurrentExecution(10)]
+    [AutomaticRetry(Attempts = 0, LogEvents = false, OnAttemptsExceeded = AttemptsExceededAction.Delete)]
+    private async Task UserPreferenceCleanup()
+    {
+        var allUserPreferencesRequest = await _userRepository.GetAllPreferencesAsync();
+        if (!allUserPreferencesRequest.Succeeded || allUserPreferencesRequest.Result is null)
+        {
+            _logger.Error("{LogPrefix} User preference cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, allUserPreferencesRequest.ErrorMessage);
+            return;
+        }
+
+        var validToggles = ReflectionHelpers.GetConstantsRecursively(typeof(UserPreferenceConstants.Toggled));
+        foreach (var userPreference in allUserPreferencesRequest.Result)
+        {
+            var invalidToggles = userPreference.GetToggledFromDb().Where(x => !validToggles.Contains(x)).ToList();
+            if (invalidToggles.Count == 0)
+            {
+                continue;
+            }
+
+            _logger.Debug("{LogPrefix} User preference has invalid toggles, cleaning up: [{Id}]{InvalidToggles}",
+                DataConstants.Logging.JobDailyCleanup, userPreference.Id, invalidToggles);
+            userPreference.Toggled = userPreference.GetToggledFromDb().Where(x => validToggles.Contains(x)).ToUserPreferenceToggledDb();
+            var updateToggledRequest = await _userRepository.UpdatePreferences(userPreference.OwnerId, userPreference.ToUpdateToggled());
+            if (!updateToggledRequest.Succeeded)
+            {
+                _logger.Error("{LogPrefix} User preference update failed for toggle cleanup: [{Id}] {Error}",
+                    DataConstants.Logging.JobDailyCleanup, userPreference.Id, updateToggledRequest.ErrorMessage);
+                continue;
+            }
+
+            _logger.Information("{LogPrefix} User preference toggled updated to remove invalid toggles: [{Id}] {InvalidToggles}",
+                DataConstants.Logging.JobDailyCleanup, userPreference.Id, invalidToggles);
+        }
+
+        var allGameServersRequest = await _gameServerRepository.GetAllAsync();
+        var allGameServerIds = allGameServersRequest.Result?.Select(x => x.Id.ToString()).ToList() ?? [];
+        foreach (var userPreference in allUserPreferencesRequest.Result)
+        {
+            var invalidGameServers = userPreference.GetFavoriteGameServerFromDb().Where(x => !allGameServerIds.Contains(x)).ToList();
+            if (invalidGameServers.Count == 0)
+            {
+                continue;
+            }
+
+            _logger.Debug("{LogPrefix} User preference has invalid game servers, cleaning up: [{Id}]{InvalidGameServers}",
+                DataConstants.Logging.JobDailyCleanup, userPreference.Id, invalidGameServers);
+            userPreference.FavoriteGameServers = userPreference.GetFavoriteGameServerFromDb().Where(x => allGameServerIds.Contains(x)).ToUserPreferenceFavoriteDb();
+            var updateFavoriteGameServersRequest = await _userRepository.UpdatePreferences(userPreference.OwnerId, userPreference.ToUpdateFavoriteGameServers());
+            if (!updateFavoriteGameServersRequest.Succeeded)
+            {
+                _logger.Error("{LogPrefix} User preference update failed for favorite game servers cleanup: [{Id}] {Error}",
+                    DataConstants.Logging.JobDailyCleanup, userPreference.Id, updateFavoriteGameServersRequest.ErrorMessage);
+                continue;
+            }
+
+            _logger.Information("{LogPrefix} User preference favorite game servers updated to remove invalid ids: [{Id}] {InvalidGameServers}",
+                DataConstants.Logging.JobDailyCleanup, userPreference.Id, invalidGameServers);
+        }
+
+        _logger.Information("{LogPrefix} Cleaned {PreferenceCount} user preferences", DataConstants.Logging.JobDailyCleanup, allUserPreferencesRequest.Result.Count());
     }
 
     [DisableConcurrentExecution(10)]
@@ -128,6 +197,7 @@ public class JobManager : IJobManager
         {
             _logger.Error("{LogPrefix} Host checkin cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, hostCheckInCleanup.Messages);
         }
+
         _logger.Information("{LogPrefix} Cleaned {RecordCount} host checkin records", DataConstants.Logging.JobDailyCleanup, hostCheckInCleanup.Data);
     }
 
@@ -141,6 +211,7 @@ public class JobManager : IJobManager
         {
             _logger.Error("{LogPrefix} Weaver work cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, weaverWorkCleanup.Messages);
         }
+
         _logger.Information("{LogPrefix} Cleaned {RecordCount} weaver work records", DataConstants.Logging.JobDailyCleanup, weaverWorkCleanup.Data);
     }
 
@@ -189,6 +260,7 @@ public class JobManager : IJobManager
         {
             _logger.Error("{LogPrefix} Host registration cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, hostRegistrationCleanup.Messages);
         }
+
         _logger.Information("{LogPrefix} Cleaned {RecordCount} host registration records", DataConstants.Logging.JobDailyCleanup, hostRegistrationCleanup.Data);
     }
 
@@ -201,6 +273,7 @@ public class JobManager : IJobManager
         {
             _logger.Error("{LogPrefix} Audit cleanup failed: {Error}", DataConstants.Logging.JobDailyCleanup, auditCleanup.Messages);
         }
+
         _logger.Information("{LogPrefix} Cleaned {RecordCount} audit records", DataConstants.Logging.JobDailyCleanup, auditCleanup.Data);
     }
 
@@ -469,12 +542,12 @@ public class JobManager : IJobManager
         List<SteamAppDetailResponseJson> filteredGameMatches = [];
 
         var baseGameMatches = allSteamApps.Data.Where(x =>
-            x.AppId != serverApp.AppId &&
-            !x.Name.EndsWith(" beta", StringComparison.InvariantCultureIgnoreCase) &&
-            !x.Name.EndsWith(" test", StringComparison.InvariantCultureIgnoreCase) &&
-            !x.Name.EndsWith(" demo", StringComparison.InvariantCultureIgnoreCase) &&
-            !x.Name.Contains("developer build", StringComparison.InvariantCultureIgnoreCase) &&
-            x.Name.Contains(sanitizedServerAppName))
+                x.AppId != serverApp.AppId &&
+                !x.Name.EndsWith(" beta", StringComparison.InvariantCultureIgnoreCase) &&
+                !x.Name.EndsWith(" test", StringComparison.InvariantCultureIgnoreCase) &&
+                !x.Name.EndsWith(" demo", StringComparison.InvariantCultureIgnoreCase) &&
+                !x.Name.Contains("developer build", StringComparison.InvariantCultureIgnoreCase) &&
+                x.Name.Contains(sanitizedServerAppName))
             .OrderBy(x => x.Name != sanitizedServerAppName)
             .ToArray();
 
@@ -516,7 +589,8 @@ public class JobManager : IJobManager
 
         if (filteredGameMatches.Count > 1)
         {
-            _logger.Information("Found {MatchCount} base game matches for {GameName}, will select the first but all matches were:", filteredGameMatches.Count, sanitizedServerAppName);
+            _logger.Information("Found {MatchCount} base game matches for {GameName}, will select the first but all matches were:", filteredGameMatches.Count,
+                sanitizedServerAppName);
             foreach (var gameMatch in filteredGameMatches)
             {
                 _logger.Information("  Matching Game: [{GameId}] {GameName}", gameMatch.Steam_AppId, gameMatch.Name);
@@ -543,7 +617,7 @@ public class JobManager : IJobManager
             }
 
             // Last checkin is within configured seconds so is considered online or not
-            var secondsSinceLastCheckIn = (int)Math.Round((_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds, 1, MidpointRounding.ToZero);
+            var secondsSinceLastCheckIn = (int) Math.Round((_dateTime.NowDatabaseTime - latestCheckIn.Data.Last().ReceiveTimestamp).TotalSeconds, 1, MidpointRounding.ToZero);
             var hostIsOffline = secondsSinceLastCheckIn > _appConfig.CurrentValue.HostOfflineAfterSeconds;
             switch (hostIsOffline)
             {
@@ -591,7 +665,8 @@ public class JobManager : IJobManager
                 gameserver.ServerState != ConnectivityState.Unreachable &&
                 gameserver.ServerState != ConnectivityState.InternallyConnectable)
             {
-                _logger.Debug("Gameserver isn't in a valid state for checking connectable state, skipping: [{GameserverId}]{GameserverState}", gameserver.Id, gameserver.ServerState);
+                _logger.Debug("Gameserver isn't in a valid state for checking connectable state, skipping: [{GameserverId}]{GameserverState}", gameserver.Id,
+                    gameserver.ServerState);
                 continue;
             }
 
@@ -608,7 +683,7 @@ public class JobManager : IJobManager
             return;
         }
 
-        var serverIsLocal = _serverState.PublicIp == gameserver.PublicIp;  // If the gameserver has the same public IP as this server we'll assume it's local
+        var serverIsLocal = _serverState.PublicIp == gameserver.PublicIp; // If the gameserver has the same public IP as this server we'll assume it's local
         var gameServerCheck = gameserver.GetConnectivityCheck(gameServerGame.Result.SourceType is GameSource.Steam, usePublicIp: !serverIsLocal);
         var connectableResponse = await _networkService.IsGameServerConnectableAsync(gameServerCheck);
         switch (connectableResponse.Data)

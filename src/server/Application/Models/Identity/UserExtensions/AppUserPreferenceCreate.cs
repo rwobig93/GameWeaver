@@ -15,4 +15,5 @@ public class AppUserPreferenceCreate
     public string? CustomThemeThree { get; set; } = JsonConvert.SerializeObject(AppThemeCustom.GetExampleCustomThree());
     public bool GamerMode { get; set; }
     public List<string> Toggled { get; set; } = [];
+    public List<string> FavoriteGameServers { get; set; } = [];
 }

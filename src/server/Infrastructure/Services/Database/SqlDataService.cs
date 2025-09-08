@@ -135,17 +135,19 @@ public class SqlDataService : ISqlDataService
         }
     }
 
-    private async Task ExecuteSqlScriptObject(ISqlDatabaseScript dbEntity)
+    private async Task<bool> ExecuteSqlScriptObject(ISqlDatabaseScript dbEntity)
     {
         try
         {
             using IDbConnection connection = new SqlConnection(GetCurrentConnectionString());
             await connection.ExecuteAsync(dbEntity.SqlStatement);
             _logger.Debug("Sql Enforce Success: [Type]{scriptType} [Name]{scriptName}", dbEntity.Type, dbEntity.FriendlyName);
+            return true;
         }
         catch (Exception ex)
         {
             _logger.Error("Sql Enforce Fail: [Type]{scriptType} [Name]{scriptName} :: {errorMessage}", dbEntity.Type, dbEntity.FriendlyName, ex.Message);
+            return false;
         }
     }
 
@@ -299,7 +301,12 @@ public class SqlDataService : ISqlDataService
                 }
             }
 
-            await ExecuteSqlScriptObject(script);
+            var enforceSucceeded = await ExecuteSqlScriptObject(script);
+            if (!enforceSucceeded)
+            {
+                _logger.Error("Failed to enforce database entity: [{Path}]{Hash}", script.Path, currentStatementHash);
+                continue;
+            }
 
             if (matchingState is null)
             {

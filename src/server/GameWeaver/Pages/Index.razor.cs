@@ -1,4 +1,5 @@
-﻿using Application.Models.GameServer.GameServer;
+﻿using Application.Helpers.Identity;
+using Application.Models.GameServer.GameServer;
 using Application.Models.GameServer.Host;
 using Application.Responses.v1.Identity;
 using Application.Services.GameServer;
@@ -33,6 +34,7 @@ public partial class Index
         if (firstRender)
         {
             await UpdateLoggedInUser();
+            await GetFavoriteGameServers();
             await GetOwnedGameServers();
             await GetOwnedHosts();
             UpdateThemedElements();
@@ -84,6 +86,25 @@ public partial class Index
     {
         var ownedHosts = await HostService.GetByOwnerIdAsync(_loggedInUser.Id);
         _ownedHosts = ownedHosts.Data.ToList();
+        StateHasChanged();
+    }
+
+    private async Task GetFavoriteGameServers()
+    {
+        var favoriteGameServerIds = _userPreferences.GetFavoriteGameServerIds().ToList();
+        if (favoriteGameServerIds.Count == 0)
+        {
+            return;
+        }
+
+        var gameServersRequest = await GameServerService.GetByIdMultipleAsync(favoriteGameServerIds, ServerState.SystemUserId);
+        if (!gameServersRequest.Succeeded)
+        {
+            gameServersRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        _favoriteGameServers = gameServersRequest.Data.ToList();
         StateHasChanged();
     }
 }
