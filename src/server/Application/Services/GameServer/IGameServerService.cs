@@ -15,6 +15,7 @@ public interface IGameServerService
     Task<PaginatedResult<IEnumerable<GameServerSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize, Guid requestUserId);
     Task<IResult<int>> GetCountAsync();
     Task<IResult<GameServerSlim?>> GetByIdAsync(Guid id, Guid requestUserId);
+    Task<IResult<IEnumerable<GameServerSlim>>> GetByIdMultipleAsync(IEnumerable<Guid> ids, Guid requestUserId);
     Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName, Guid requestUserId);
     Task<IResult<IEnumerable<GameServerSlim>>> GetByGameIdAsync(Guid id, Guid requestUserId);
     Task<IResult<GameServerSlim?>> GetByGameProfileIdAsync(Guid id, Guid requestUserId);

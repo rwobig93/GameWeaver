@@ -12,4 +12,6 @@ public class AppUserPreferenceFull
     public AppThemeCustom CustomThemeTwo { get; set; } = AppThemeCustom.GetExampleCustomTwo();
     public AppThemeCustom CustomThemeThree { get; set; } = AppThemeCustom.GetExampleCustomThree();
     public bool GamerMode { get; set; }
+    public List<string> Toggled { get; set; } = [];
+    public List<string> FavoriteGameServers { get; set; } = [];
 }

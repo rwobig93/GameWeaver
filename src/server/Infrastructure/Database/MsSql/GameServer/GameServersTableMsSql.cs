@@ -114,6 +114,25 @@ public class GameServersTableMsSql : IMsSqlEnforcedEntity
             end"
     };
 
+    public static readonly SqlStoredProcedure GetByIdMultiple = new()
+    {
+        Table = Table,
+        Action = "GetByIdMultiple",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByIdMultiple]
+                @Ids NVARCHAR(MAX)
+            AS
+            begin
+                SELECT g.*
+                FROM dbo.[{Table.TableName}] AS g
+                INNER JOIN (
+                    SELECT TRY_CAST(Value AS UNIQUEIDENTIFIER) AS Id
+                    FROM STRING_SPLIT(@Ids, ',')
+                ) AS u ON g.Id = u.Id
+                ORDER BY g.Id;
+            end"
+    };
+
     public static readonly SqlStoredProcedure GetByOwnerId = new()
     {
         Table = Table,

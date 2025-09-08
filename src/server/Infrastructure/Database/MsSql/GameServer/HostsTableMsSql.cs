@@ -113,6 +113,22 @@ public class HostsTableMsSql : IMsSqlEnforcedEntity
             end"
     };
 
+    public static readonly SqlStoredProcedure GetByOwnerId = new()
+    {
+        Table = Table,
+        Action = "GetByOwnerId",
+        SqlStatement = @$"
+            CREATE OR ALTER PROCEDURE [dbo].[sp{Table.TableName}_GetByOwnerId]
+                @OwnerId UNIQUEIDENTIFIER
+            AS
+            begin
+                SELECT h.*
+                FROM dbo.[{Table.TableName}] h
+                WHERE h.OwnerId = @OwnerId AND h.IsDeleted = 0
+                ORDER BY h.Id;
+            end"
+    };
+
     public static readonly SqlStoredProcedure GetByHostname = new()
     {
         Table = Table,

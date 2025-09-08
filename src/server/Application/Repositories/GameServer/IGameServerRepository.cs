@@ -15,6 +15,7 @@ public interface IGameServerRepository
     Task<DatabaseActionResult<PaginatedDbEntity<IEnumerable<GameServerDb>>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<DatabaseActionResult<int>> GetCountAsync();
     Task<DatabaseActionResult<GameServerDb?>> GetByIdAsync(Guid id);
+    Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByIdMultipleAsync(IEnumerable<Guid> ids);
     Task<DatabaseActionResult<GameServerDb?>> GetByServerNameAsync(string serverName);
     Task<DatabaseActionResult<IEnumerable<GameServerDb>>> GetByGameIdAsync(Guid id);
     Task<DatabaseActionResult<GameServerDb?>> GetByGameProfileIdAsync(Guid id);

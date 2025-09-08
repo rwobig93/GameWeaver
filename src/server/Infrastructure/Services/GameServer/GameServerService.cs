@@ -129,6 +129,19 @@ public class GameServerService : IGameServerService
         return await Result<GameServerSlim?>.SuccessAsync(permissionFilteredGameserver.ToSlim());
     }
 
+    public async Task<IResult<IEnumerable<GameServerSlim>>> GetByIdMultipleAsync(IEnumerable<Guid> ids, Guid requestUserId)
+    {
+        var response = await _gameServerRepository.GetByIdMultipleAsync(ids);
+        if (!response.Succeeded)
+        {
+            return await Result<IEnumerable<GameServerSlim>>.FailAsync(response.ErrorMessage);
+        }
+
+        var accessFilteredServers = await FilterNoAccessServers(response.Result ?? [], requestUserId);
+
+        return await Result<IEnumerable<GameServerSlim>>.SuccessAsync(accessFilteredServers.ToSlims());
+    }
+
     public async Task<IResult<GameServerSlim?>> GetByServerNameAsync(string serverName, Guid requestUserId)
     {
         var request = await _gameServerRepository.GetByServerNameAsync(serverName);

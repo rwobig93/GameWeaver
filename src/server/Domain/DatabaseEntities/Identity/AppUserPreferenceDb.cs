@@ -14,4 +14,6 @@ public class AppUserPreferenceDb
     public string? CustomThemeTwo { get; set; } = JsonConvert.SerializeObject(new AppThemeCustom());
     public string? CustomThemeThree { get; set; } = JsonConvert.SerializeObject(new AppThemeCustom());
     public bool GamerMode { get; set; }
+    public string? Toggled { get; set; }
+    public string? FavoriteGameServers { get; set; }
 }

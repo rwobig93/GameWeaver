@@ -19,6 +19,7 @@ public interface IHostService
     Task<PaginatedResult<IEnumerable<HostSlim>>> GetAllPaginatedAsync(int pageNumber, int pageSize);
     Task<IResult<int>> GetCountAsync();
     Task<IResult<HostSlim?>> GetByIdAsync(Guid id);
+    Task<IResult<IEnumerable<HostSlim>>> GetByOwnerIdAsync(Guid id);
     Task<IResult<HostSlim?>> GetByHostnameAsync(string hostName);
     Task<IResult<Guid>> CreateAsync(HostCreate request, Guid requestUserId);
     Task<IResult> UpdateAsync(HostUpdate request, Guid requestUserId);

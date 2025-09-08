@@ -59,7 +59,7 @@ public class AppAccountService : IAppAccountService
     private readonly ITroubleshootingRecordsRepository _tshootRepository;
 
     public AppAccountService(IOptions<AppConfiguration> appConfig, IAppPermissionRepository appPermissionRepository, IAppRoleRepository
-    roleRepository,
+            roleRepository,
         IAppUserRepository userRepository, ILocalStorageService localStorage, AuthStateProvider authProvider,
         IEmailService mailService, IDateTimeService dateTime, IRunningServerState serverState,
         IHttpContextAccessor contextAccessor, IOptions<SecurityConfiguration> securityConfig,
@@ -177,8 +177,11 @@ public class AppAccountService : IAppAccountService
         var token = await GenerateJwtAsync(userSecurity.ToUserDb());
         var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
         var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
-        var response = new UserLoginResponse { ClientId = clientId, Token = token, RefreshToken = refreshToken,
-            RefreshTokenExpiryTime = refreshTokenExpiration };
+        var response = new UserLoginResponse
+        {
+            ClientId = clientId, Token = token, RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = refreshTokenExpiration
+        };
 
         // Create audit log for login if configured
         if (_lifecycleConfig.AuditLoginLogout)
@@ -209,7 +212,7 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult<LocalStorageRequest>> GetLocalStorage()
     {
-        var tokenRequest = new LocalStorageRequest { Token = "", RefreshToken = "" };
+        var tokenRequest = new LocalStorageRequest {Token = "", RefreshToken = ""};
 
         try
         {
@@ -270,8 +273,11 @@ public class AppAccountService : IAppAccountService
         var token = await GenerateJwtAsync(userSecurity.ToUserDb());
         var refreshToken = JwtHelpers.GenerateUserJwtRefreshToken(_dateTime, _securityConfig, _appConfig, userSecurity.Id);
         var refreshTokenExpiration = JwtHelpers.GetJwtExpirationTime(refreshToken);
-        var response = new UserLoginResponse { ClientId = clientId, Token = token, RefreshToken = refreshToken,
-            RefreshTokenExpiryTime = refreshTokenExpiration };
+        var response = new UserLoginResponse
+        {
+            ClientId = clientId, Token = token, RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = refreshTokenExpiration
+        };
 
         var result = await CacheTokensAndAuthAsync(response);
         if (!result.Succeeded)
@@ -500,8 +506,11 @@ public class AppAccountService : IAppAccountService
         var clientId = clientIdRequest.Result.FirstOrDefault();
         await _userRepository.UpdateExtendedAttributeAsync(clientId!.Id, clientId.Value, UserClientIdState.Active.ToString());
 
-        var response = new UserLoginResponse { ClientId = localStorage.ClientId, Token = token, RefreshToken = refreshToken,
-            RefreshTokenExpiryTime = refreshTokenExpiration };
+        var response = new UserLoginResponse
+        {
+            ClientId = localStorage.ClientId, Token = token, RefreshToken = refreshToken,
+            RefreshTokenExpiryTime = refreshTokenExpiration
+        };
 
         // Cache new tokens and authenticate user principal
         var cacheRequest = await CacheTokensAndAuthAsync(response);
@@ -885,7 +894,9 @@ public class AppAccountService : IAppAccountService
     {
         var updateRequest = await _userRepository.UpdatePreferences(userId, preferenceUpdate);
         if (!updateRequest.Succeeded)
+        {
             return await Result.FailAsync($"Failure occurred attempting to update preferences: {updateRequest.ErrorMessage}");
+        }
 
         return await Result.SuccessAsync("Preferences updated successfully");
     }
@@ -918,8 +929,8 @@ public class AppAccountService : IAppAccountService
 
         var beforeState = new Dictionary<string, string>
         {
-            { "UserId", userSecurity.Result.Id.ToString() },
-            { "AuthState", userSecurity.Result.AuthState.ToString() }
+            {"UserId", userSecurity.Result.Id.ToString()},
+            {"AuthState", userSecurity.Result.AuthState.ToString()}
         };
 
         // Update account auth state to indicate login is required
@@ -929,9 +940,9 @@ public class AppAccountService : IAppAccountService
         {
             var tshootId = await _tshootRepository.CreateTroubleshootRecord(_dateTime, TroubleshootEntityType.Users, userSecurity.Result.Id,
                 requestUserId, "Failed to update user security with auth state for force user login", new Dictionary<string, string>
-            {
-                {"Error", updateSecurity.ErrorMessage}
-            });
+                {
+                    {"Error", updateSecurity.ErrorMessage}
+                });
             return await Result.FailAsync([ErrorMessageConstants.Generic.ContactAdmin, ErrorMessageConstants.Troubleshooting.RecordId(tshootId.Data)]);
         }
 
@@ -968,8 +979,8 @@ public class AppAccountService : IAppAccountService
         await _auditRepository.CreateAuditTrail(_dateTime, AuditTableName.Users, userSecurity.Result.Id, requestUserId, AuditAction.Update, beforeState,
             new Dictionary<string, string>
             {
-                { "UserId", userSecurity.Result.Id.ToString() },
-                { "AuthState", AuthState.LoginRequired.ToString() }
+                {"UserId", userSecurity.Result.Id.ToString()},
+                {"AuthState", AuthState.LoginRequired.ToString()}
             });
 
         if (messages.Count != 0)
@@ -995,7 +1006,7 @@ public class AppAccountService : IAppAccountService
         }
 
         await SetUserPassword(userId, UrlHelpers.GenerateToken());
-        return await ForgotPasswordAsync(new ForgotPasswordRequest { Email = userSecurity.Result!.Email });
+        return await ForgotPasswordAsync(new ForgotPasswordRequest {Email = userSecurity.Result!.Email});
     }
 
     public async Task<IResult> SetTwoFactorEnabled(Guid userId, bool enabled)
@@ -1030,9 +1041,9 @@ public class AppAccountService : IAppAccountService
 
     private async Task<string> GenerateJwtAsync(AppUserDb user, bool isApiToken = false)
     {
-        return isApiToken ?
-            JwtHelpers.GenerateApiJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _securityConfig, _appConfig) :
-            JwtHelpers.GenerateUserJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _securityConfig, _appConfig);
+        return isApiToken
+            ? JwtHelpers.GenerateApiJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _securityConfig, _appConfig)
+            : JwtHelpers.GenerateUserJwtEncryptedToken(await GetClaimsAsync(user), _dateTime, _securityConfig, _appConfig);
     }
 
     private async Task<IEnumerable<Claim>> GetClaimsAsync(AppUserDb user)
@@ -1048,8 +1059,8 @@ public class AppAccountService : IAppAccountService
                 new(ClaimTypes.Email, user.Email),
                 new(ClaimTypes.Name, user.Username)
             }
-        .Union(allUserAndRolePermissions)
-        .Union(allRoles);
+            .Union(allUserAndRolePermissions)
+            .Union(allRoles);
 
         return claims;
     }
@@ -1171,7 +1182,6 @@ public class AppAccountService : IAppAccountService
 
     public async Task<IResult<AuthState>> GetCurrentAuthState(Guid userId)
     {
-
         var userSecurity = await _userRepository.GetSecurityAsync(userId);
         if (userSecurity.Result is null)
         {

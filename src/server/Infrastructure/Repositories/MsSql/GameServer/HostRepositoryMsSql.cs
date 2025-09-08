@@ -54,7 +54,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<HostDb, dynamic>(
-                HostsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                HostsTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -99,6 +99,23 @@ public class HostRepositoryMsSql : IHostRepository
         catch (Exception ex)
         {
             actionReturn.FailLog(_logger, HostsTableMsSql.GetById.Path, ex.Message);
+        }
+
+        return actionReturn;
+    }
+
+    public async Task<DatabaseActionResult<IEnumerable<HostDb>>> GetByOwnerIdAsync(Guid id)
+    {
+        DatabaseActionResult<IEnumerable<HostDb>> actionReturn = new();
+
+        try
+        {
+            var ownedHosts = await _database.LoadData<HostDb, dynamic>(HostsTableMsSql.GetByOwnerId, new {OwnerId = id});
+            actionReturn.Succeed(ownedHosts);
+        }
+        catch (Exception ex)
+        {
+            actionReturn.FailLog(_logger, HostsTableMsSql.GetByOwnerId.Path, ex.Message);
         }
 
         return actionReturn;
@@ -162,7 +179,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            await _database.SaveData(HostsTableMsSql.Delete, new { Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime });
+            await _database.SaveData(HostsTableMsSql.Delete, new {Id = id, DeletedBy = requestUserId, DeletedOn = _dateTime.NowDatabaseTime});
             actionReturn.Succeed();
         }
         catch (Exception ex)
@@ -180,7 +197,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var cleanupTimestamp = _dateTime.NowDatabaseTime.AddHours(-olderThanHours).ToString(CultureInfo.CurrentCulture);
-            var rowsDeleted = await _database.SaveData(HostsTableMsSql.DeleteUnregisteredOlderThan, new { OlderThan = cleanupTimestamp });
+            var rowsDeleted = await _database.SaveData(HostsTableMsSql.DeleteUnregisteredOlderThan, new {OlderThan = cleanupTimestamp});
             actionReturn.Succeed(rowsDeleted);
         }
         catch (Exception ex)
@@ -198,7 +215,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var searchResults = await _database.LoadData<HostDb, dynamic>(
-                HostsTableMsSql.Search, new { SearchTerm = searchText });
+                HostsTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -218,7 +235,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<HostDb, dynamic>(
-                HostsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                HostsTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -239,7 +256,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var allRegistrations = await _database.LoadData<HostRegistrationDb, dynamic>(
-                HostRegistrationsTableMsSql.GetAll, new {});
+                HostRegistrationsTableMsSql.GetAll, new { });
             actionReturn.Succeed(allRegistrations);
         }
         catch (Exception ex)
@@ -258,7 +275,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<HostRegistrationDb, dynamic>(
-                HostRegistrationsTableMsSql.GetAllPaginated, new {Offset =  offset, PageSize = pageSize});
+                HostRegistrationsTableMsSql.GetAllPaginated, new {Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -279,7 +296,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var allRegistrations = await _database.LoadData<HostRegistrationDb, dynamic>(
-                HostRegistrationsTableMsSql.GetAllActive, new {});
+                HostRegistrationsTableMsSql.GetAllActive, new { });
             actionReturn.Succeed(allRegistrations);
         }
         catch (Exception ex)
@@ -297,7 +314,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var allRegistrations = await _database.LoadData<HostRegistrationDb, dynamic>(
-                HostRegistrationsTableMsSql.GetAllInActive, new {});
+                HostRegistrationsTableMsSql.GetAllInActive, new { });
             actionReturn.Succeed(allRegistrations);
         }
         catch (Exception ex)
@@ -439,7 +456,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var cleanupTimestamp = _dateTime.NowDatabaseTime.AddHours(-olderThanHours).ToString(CultureInfo.CurrentCulture);
-            var rowsDeleted = await _database.SaveData(HostRegistrationsTableMsSql.DeleteOlderThan, new { OlderThan = cleanupTimestamp });
+            var rowsDeleted = await _database.SaveData(HostRegistrationsTableMsSql.DeleteOlderThan, new {OlderThan = cleanupTimestamp});
             actionReturn.Succeed(rowsDeleted);
         }
         catch (Exception ex)
@@ -457,7 +474,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var searchResults = await _database.LoadData<HostRegistrationDb, dynamic>(
-                HostRegistrationsTableMsSql.Search, new { SearchTerm = searchText });
+                HostRegistrationsTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -477,7 +494,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<HostRegistrationDb, dynamic>(
-                HostRegistrationsTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                HostRegistrationsTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -530,7 +547,6 @@ public class HostRepositoryMsSql : IHostRepository
 
     public async Task<DatabaseActionResult<IEnumerable<HostCheckInDb>>> GetCheckInsAfterByHostIdAsync(Guid id, DateTime afterDate)
     {
-
         DatabaseActionResult<IEnumerable<HostCheckInDb>> actionReturn = new();
 
         try
@@ -687,7 +703,7 @@ public class HostRepositoryMsSql : IHostRepository
 
         try
         {
-            var rowsDeleted = await _database.SaveData(HostCheckInTableMsSql.DeleteOlderThan, new { OlderThan = olderThan });
+            var rowsDeleted = await _database.SaveData(HostCheckInTableMsSql.DeleteOlderThan, new {OlderThan = olderThan});
             actionReturn.Succeed(rowsDeleted);
         }
         catch (Exception ex)
@@ -705,7 +721,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var searchResults = await _database.LoadData<HostCheckInDb, dynamic>(
-                HostCheckInTableMsSql.Search, new { SearchTerm = searchText });
+                HostCheckInTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -726,7 +742,7 @@ public class HostRepositoryMsSql : IHostRepository
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
 
             var response = await _database.LoadDataPaginated<HostCheckInDb, dynamic>(
-                HostCheckInTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                HostCheckInTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
@@ -1016,7 +1032,7 @@ public class HostRepositoryMsSql : IHostRepository
         try
         {
             var searchResults = await _database.LoadData<WeaverWorkDb, dynamic>(
-                WeaverWorksTableMsSql.Search, new { SearchTerm = searchText });
+                WeaverWorksTableMsSql.Search, new {SearchTerm = searchText});
 
             actionReturn.Succeed(searchResults);
         }
@@ -1036,7 +1052,7 @@ public class HostRepositoryMsSql : IHostRepository
         {
             var offset = PaginationHelpers.GetPaginatedOffset(pageNumber, pageSize);
             var response = await _database.LoadDataPaginated<WeaverWorkDb, dynamic>(
-                WeaverWorksTableMsSql.SearchPaginated, new { SearchTerm = searchText, Offset = offset, PageSize = pageSize });
+                WeaverWorksTableMsSql.SearchPaginated, new {SearchTerm = searchText, Offset = offset, PageSize = pageSize});
 
             response.UpdatePaginationProperties(pageNumber, pageSize);
 
