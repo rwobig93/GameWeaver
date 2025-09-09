@@ -20,8 +20,6 @@ public partial class GameServerCreateDialog : ComponentBase
     [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter] public string Title { get; set; } = "New Gameserver";
     [Parameter] public string ConfirmButtonText { get; set; } = "Create";
-    [Parameter] public int IconWidthPixels { get; set; } = 75;
-    [Parameter] public int IconHeightPixels { get; set; } = 75;
 
     [Inject] public IGameServerService GameServerService { get; init; } = null!;
     [Inject] public ITroubleshootingRecordService TshootService { get; init; } = null!;
@@ -40,7 +38,7 @@ public partial class GameServerCreateDialog : ComponentBase
     private HostSlim _selectedHost = new() {Id = Guid.Empty, Hostname = "Unknown"};
     private GameSlim _selectedGame = new() {Id = Guid.Empty, FriendlyName = "Unknown"};
     private GameProfileSlim _selectedParentProfile = new() {Id = Guid.Empty, FriendlyName = "None"};
-    private readonly GameServerCreateRequest _createRequest = new() { Name = NameHelpers.GenerateName(true) };
+    private readonly GameServerCreateRequest _createRequest = new() {Name = NameHelpers.GenerateName(true)};
     private bool _showPortConfig;
 
     private InputType _passwordInput = InputType.Password;

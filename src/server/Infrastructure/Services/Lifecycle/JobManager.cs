@@ -339,6 +339,7 @@ public class JobManager : IJobManager
         var gamesFromGameServers = allGameServers.Result?.Select(x => x.GameId).Distinct().ToList() ?? [];
         _logger.Debug("Gathered {GameCount} games from active game servers to check for version updates", gamesFromGameServers.Count);
 
+        // TODO: Handle manual source game updates
         foreach (var gameId in gamesFromGameServers)
         {
             try
@@ -371,7 +372,7 @@ public class JobManager : IJobManager
                     continue;
                 }
 
-                // Latest version is newer than the game's current version, so we'll update the game and add an update record
+                // The latest version is newer than the game's current version, so we'll update the game and add an update record
                 var gameUpdate = await _gameService.UpdateAsync(new GameUpdate
                 {
                     Id = foundGame.Data.Id,

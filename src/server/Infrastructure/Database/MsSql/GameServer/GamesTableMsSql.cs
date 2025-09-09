@@ -56,7 +56,9 @@ public class GamesTableMsSql : IMsSqlEnforcedEntity
                     [SourceType] INT NOT NULL,
                     [ManualFileRecordId] UNIQUEIDENTIFIER NULL,
                     [ManualVersionUrlCheck] NVARCHAR(1024) NULL,
-                    [ManualVersionUrlDownload] NVARCHAR(1024) NULL
+                    [ManualVersionUrlCheckPath] NVARCHAR(1024) NULL,
+                    [ManualVersionUrlDownload] NVARCHAR(1024) NULL,
+                    [ManualGameClientInstallUrl] NVARCHAR(1024) NULL
                 )
             end"
     };

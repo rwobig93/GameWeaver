@@ -43,5 +43,7 @@ public class GameDb : IAuditableEntity<Guid>
     public GameSource SourceType { get; set; }
     public Guid? ManualFileRecordId { get; set; }
     public string ManualVersionUrlCheck { get; set; } = "";
+    public string ManualVersionUrlCheckPath { get; set; } = "";
     public string ManualVersionUrlDownload { get; set; } = "";
+    public string ManualGameClientInstallUrl { get; set; } = "";
 }

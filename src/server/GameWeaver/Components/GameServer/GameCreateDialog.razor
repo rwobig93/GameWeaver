@@ -1,0 +1,44 @@
+@using Application.Constants.Identity
+@using Domain.Enums.GameServer
+@attribute [Authorize(PermissionConstants.GameServer.Game.Create)]
+
+<MudDialog Class="rounded-lg">
+    <DialogContent>
+        <MudStack Row="false" Spacing="3" Wrap="Wrap.NoWrap" AlignItems="AlignItems.Stretch">
+            <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
+                <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
+            </MudItem>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-1" Style="width: 100%">
+                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3">
+                    @* TODO: Add game source toggle buttons group for steam or manual *@
+                </MudStack>
+            </MudPaper>
+            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-1" Style="width: 100%">
+                <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3" Style="width: 100%">
+                    <MudTextField @bind-Value="_gameRequest.Name" Label="Game Name" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+                <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3" Style="width: 100%">
+                    <MudTextField @bind-Value="_gameRequest.Description" Label="Description" Variant="Variant.Outlined" Disabled="false"/>
+                </MudStack>
+                @if (_gameRequest.SourceType is GameSource.Steam)
+                {
+                    <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3" Style="width: 100%">
+                        <MudTextField @bind-Value="_gameRequest.SteamToolId" Label="Steam Tool Id" Variant="Variant.Outlined" Disabled="false"/>
+                        <MudTextField @bind-Value="_gameRequest.SteamGameId" Label="Steam Game Id" Variant="Variant.Outlined" Disabled="false"/>
+                    </MudStack>
+                }
+                <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row="false" Spacing="2" Class="px-3" Style="width: 100%">
+                    <MudSwitch @bind-Value="_gameRequest.SupportsWindows" Label="Windows Support" Color="Color.Primary" Disabled="false"/>
+                    <MudSwitch @bind-Value="_gameRequest.SupportsLinux" Label="Linux Support" Color="Color.Secondary" Disabled="false"/>
+                    <MudSwitch @bind-Value="_gameRequest.SupportsMac" Label="Mac Support" Color="Color.Tertiary" Disabled="false"/>
+                </MudStack>
+            </MudPaper>
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudItem xs="12" sm="12" md="12" Class="d-flex gap-4 justify-center pb-3">
+            <MudButton Color="Color.Success" Variant="Variant.Outlined" OnClick="@CreateGame">@ConfirmButtonText</MudButton>
+            <MudButton Color="Color.Warning" Variant="Variant.Outlined" OnClick="@Cancel">Cancel</MudButton>
+        </MudItem>
+    </DialogActions>
+</MudDialog>

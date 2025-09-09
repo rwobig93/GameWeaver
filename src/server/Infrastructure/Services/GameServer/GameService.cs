@@ -239,8 +239,8 @@ public class GameService : IGameService
         if (assignedGameServers.Succeeded && (assignedGameServers.Result ?? Array.Empty<GameServerDb>()).Any())
         {
             List<string> errorMessages = [ErrorMessageConstants.Games.AssignedGameServers];
-            errorMessages.AddRange((assignedGameServers.Result ?? Array.Empty<GameServerDb>()).ToList().Select(
-                server => $"Assigned Game Server: [id]{server.Id} [name]{server.ServerName}"));
+            errorMessages.AddRange((assignedGameServers.Result ?? Array.Empty<GameServerDb>()).ToList()
+                .Select(server => $"Assigned Game Server: [id]{server.Id} [name]{server.ServerName}"));
             return await Result.FailAsync(errorMessages);
         }
 
@@ -853,7 +853,9 @@ public class GameService : IGameService
 
         var request = await _gameRepository.CreateGameUpdateAsync(createObject);
         if (!request.Succeeded)
+        {
             return await Result<Guid>.FailAsync(request.ErrorMessage);
+        }
 
         _eventService.TriggerGameVersionUpdate("CreateGameUpdateAsync", new GameVersionUpdatedEvent
         {

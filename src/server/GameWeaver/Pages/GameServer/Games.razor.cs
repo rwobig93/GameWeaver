@@ -159,6 +159,7 @@ public partial class Games : ComponentBase
 
     private async Task CreateGame()
     {
+        // TODO: Create dialog with top group slider for steam or manual game
         await Task.CompletedTask;
         Snackbar.Add("Not currently implemented", Severity.Warning);
     }
