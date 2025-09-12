@@ -16,6 +16,7 @@ using Application.Services.Integrations;
 using Application.Services.System;
 using Domain.Contracts;
 using Domain.DatabaseEntities.GameServer;
+using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 
 namespace Infrastructure.Services.GameServer;
@@ -139,12 +140,16 @@ public class GameService : IGameService
 
     public async Task<IResult<Guid>> CreateAsync(GameCreate request, Guid requestUserId)
     {
-        if (request.SteamToolId == 0)
+        if (request.SourceType is GameSource.Steam && request.SteamToolId == 0)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.InvalidSteamToolId);
         }
 
-        var matchingGame = await _gameRepository.GetBySteamToolIdAsync(request.SteamToolId);
+        var matchingGame = request.SourceType switch
+        {
+            GameSource.Steam => await _gameRepository.GetBySteamToolIdAsync(request.SteamToolId),
+            _ => await _gameRepository.GetByFriendlyNameAsync(request.FriendlyName)
+        };
         if (matchingGame.Result is not null)
         {
             return await Result<Guid>.FailAsync(ErrorMessageConstants.Games.DuplicateSteamToolId);

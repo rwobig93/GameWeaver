@@ -7,6 +7,7 @@
         }
         @if (_imageExists)
         {
+            // TODO: Image isn't scaling properly when a manual URL is provided
             <img src="@(_imageUrl)" width="@CardWidth" height="@CardHeight" alt="Game Cover"/>
             @if (ShowName)
             {

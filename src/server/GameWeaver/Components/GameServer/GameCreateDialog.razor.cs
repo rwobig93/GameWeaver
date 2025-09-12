@@ -19,7 +19,7 @@ public partial class GameCreateDialog : ComponentBase
     [Inject] public IGameService GameService { get; init; } = null!;
     [Inject] public ITroubleshootingRecordService TshootService { get; init; } = null!;
 
-    private GameCreateRequest _gameRequest = new();
+    private readonly GameCreateRequest _gameRequest = new();
     private UserBasicResponse _loggedInUser = new();
 
 
@@ -44,6 +44,12 @@ public partial class GameCreateDialog : ComponentBase
         StateHasChanged();
     }
 
+    private void ChangeGameSource(GameSource source)
+    {
+        _gameRequest.SourceType = source;
+        StateHasChanged();
+    }
+
     private async Task CreateGame()
     {
         if (string.IsNullOrWhiteSpace(_gameRequest.Name))
@@ -60,7 +66,7 @@ public partial class GameCreateDialog : ComponentBase
 
         if (_gameRequest is {SupportsWindows: false, SupportsLinux: false, SupportsMac: false})
         {
-            Snackbar.Add("At least one platform must be supported", Severity.Error);
+            Snackbar.Add("At least one platform must be flagged as supported", Severity.Error);
             return;
         }
 
@@ -83,7 +89,6 @@ public partial class GameCreateDialog : ComponentBase
             return;
         }
 
-        // TODO: Version URL & Manual file uploads will occur on the game view page rather than this dialog
         var response = await GameService.CreateAsync(_gameRequest.ToCreate(), _loggedInUser.Id);
         if (!response.Succeeded)
         {

@@ -60,6 +60,7 @@ public partial class GameView : ComponentBase
     {
         try
         {
+            // TODO: Handle Version URL & Manual file uploads
             if (firstRender)
             {
                 await GetPermissions();

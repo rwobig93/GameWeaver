@@ -159,9 +159,30 @@ public partial class Games : ComponentBase
 
     private async Task CreateGame()
     {
-        // TODO: Create dialog with top group slider for steam or manual game
-        await Task.CompletedTask;
-        Snackbar.Add("Not currently implemented", Severity.Warning);
+        if (!_canCreateGames)
+        {
+            return;
+        }
+
+        var dialogResult = await DialogService.CreateGameDialog();
+        if (dialogResult.Data is null || dialogResult.Canceled)
+        {
+            return;
+        }
+
+        var createdGameId = (Guid) dialogResult.Data;
+        Snackbar.Add("Successfully created your new game!", Severity.Success);
+
+        var newGameResponse = await GameService.GetByIdAsync(createdGameId);
+        if (!newGameResponse.Succeeded || newGameResponse.Data is null)
+        {
+            newGameResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            return;
+        }
+
+        // We'll search for the newly created game after it's created
+        _searchText = newGameResponse.Data.FriendlyName;
+        await RefreshData();
     }
 
     private async Task SearchKeyDown(KeyboardEventArgs keyArgs)

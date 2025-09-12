@@ -8,11 +8,19 @@
             <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex justify-center pa-2">
                 <MudText Color="Color.Primary" Align="Align.Center" Typo="Typo.h5">@Title</MudText>
             </MudItem>
-            <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-1" Style="width: 100%">
-                <MudStack Justify="Justify.SpaceEvenly" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3">
-                    @* TODO: Add game source toggle buttons group for steam or manual *@
-                </MudStack>
-            </MudPaper>
+            <MudStack Justify="Justify.Center" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3">
+                <MudText Color="Color.Secondary" Align="Align.Center" Typo="Typo.body1">Game Source / Type:</MudText>
+                <MudButtonGroup Color="Color.Primary" Variant="Variant.Outlined" OverrideStyles="false">
+                    <MudButton OnClick="@(() => ChangeGameSource(GameSource.Steam))" Variant="Variant.Outlined"
+                               Color="@(_gameRequest.SourceType == GameSource.Steam ? Color.Primary : Color.Secondary)">
+                        Steam
+                    </MudButton>
+                    <MudButton OnClick="@(() => ChangeGameSource(GameSource.Manual))" Variant="Variant.Outlined"
+                               Color="@(_gameRequest.SourceType == GameSource.Manual ? Color.Primary : Color.Secondary)">
+                        Manual
+                    </MudButton>
+                </MudButtonGroup>
+            </MudStack>
             <MudPaper Elevation="6" Outlined="true" Class="rounded-lg py-1" Style="width: 100%">
                 <MudStack Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Row="true" Spacing="2" Class="px-3" Style="width: 100%">
                     <MudTextField @bind-Value="_gameRequest.Name" Label="Game Name" Variant="Variant.Outlined" Disabled="false"/>
