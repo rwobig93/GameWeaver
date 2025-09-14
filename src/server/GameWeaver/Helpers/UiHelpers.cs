@@ -1,6 +1,7 @@
 ﻿using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
-using GameWeaver.Components.GameServer;
+using GameWeaver.Components.Game;
+using GameWeaver.Components.GameProfile;
 using GameWeaver.Components.Identity;
 
 namespace GameWeaver.Helpers;

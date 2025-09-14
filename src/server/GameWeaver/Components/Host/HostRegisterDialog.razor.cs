@@ -1,5 +1,4 @@
-﻿
-using Application.Constants.Communication;
+﻿using Application.Constants.Communication;
 using Application.Helpers.Lifecycle;
 using Application.Helpers.Runtime;
 using Application.Mappers.Identity;
@@ -9,7 +8,7 @@ using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 using Domain.Enums.Lifecycle;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.Host;
 
 public partial class HostRegisterDialog : ComponentBase
 {

@@ -57,17 +57,17 @@ public static class FileHelpers
 
     public static string SanitizeSecureFilename(string filename)
     {
-        if (filename.StartsWith(':'))  // Remove any attempts to jump outside our managed path
+        if (filename.StartsWith(':')) // Remove any attempts to jump outside our managed path
         {
             filename = filename[1..];
         }
 
         return filename
-            .Replace("\\", "/")  // Standardize slashes, we normalize these per OS when applied on that OS anyway
-            .Replace("\"", "")  // Remove any quote characters that could scope paths and aren't valid anyway
-            .Replace("'", "")  // Remove any quote characters that could scope paths and aren't valid anyway
-            .Trim('.')  // Remove any attempts to jump outside our managed path
-            .Trim('/');  // Remove any attempts to jump outside our managed path
+            .Replace("\\", "/") // Standardize slashes, we normalize these per OS when applied on that OS anyway
+            .Replace("\"", "") // Remove any quote characters that could scope paths and aren't valid anyway
+            .Replace("'", "") // Remove any quote characters that could scope paths and aren't valid anyway
+            .Trim('.') // Remove any attempts to jump outside our managed path
+            .Trim('/'); // Remove any attempts to jump outside our managed path
     }
 
     public static ContentType GetContentTypeFromName(string fileName)
@@ -131,7 +131,7 @@ public static class FileHelpers
 
         var itemsWithPaths = configurationItemLocals
             .Where(item => !string.IsNullOrWhiteSpace(item.Path))
-            .GroupBy(item => new { item.Path, item.Category })
+            .GroupBy(item => new {item.Path, item.Category})
             .Select(g => new ConfigurationItemSlim
             {
                 Path = g.Key.Path,
@@ -231,6 +231,7 @@ public static class FileHelpers
                         nextElement = new XElement(element);
                         currentElement?.Add(nextElement);
                     }
+
                     currentElement = nextElement;
                 }
             }
@@ -288,7 +289,7 @@ public static class FileHelpers
                 continue;
             }
 
-            sourceConfigItems.Add(new ConfigurationItemSlim { Key = line.ToString(), Value = string.Empty });
+            sourceConfigItems.Add(new ConfigurationItemSlim {Key = line.ToString(), Value = string.Empty});
         }
 
         foreach (var configItem in sourceConfigItems.OrderBy(x => x.Key))
@@ -304,7 +305,7 @@ public static class FileHelpers
         }
     }
 
-    public static async Task<IResult<string?>> GetContent(this IBrowserFile? file, int maxSizeBytes = 10_000_000, int bufferSize = FileConstants.BufferSize)
+    public static async Task<IResult<string?>> GetContent(this IBrowserFile? file, long maxSizeBytes = 10_000_000, int bufferSize = FileConstants.BufferSize)
     {
         if (file is null)
         {

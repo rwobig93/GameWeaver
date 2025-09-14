@@ -1,7 +1,7 @@
 using Application.Models.GameServer.ConfigurationItem;
 using Application.Models.GameServer.LocalResource;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.LocalResource;
 
 public partial class ConfigAddDialog : ComponentBase
 {
@@ -16,7 +16,7 @@ public partial class ConfigAddDialog : ComponentBase
     [Parameter] public LocalResourceSlim ReferenceResource { get; set; } = null!;
 
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
-    private readonly ConfigurationItemSlim _newConfigItem = new() { Id = Guid.CreateVersion7() };
+    private readonly ConfigurationItemSlim _newConfigItem = new() {Id = Guid.CreateVersion7()};
     private bool _friendlyNameEdited;
 
 

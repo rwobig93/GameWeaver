@@ -85,11 +85,13 @@ public partial class DeveloperTesting : IAsyncDisposable
         SteamGameId = 440900,
         SteamToolId = 443030
     };
+
     private readonly GameProfileSlim _defaultProfile = new()
     {
         Id = Guid.CreateVersion7(),
         FriendlyName = "Conan Exiles - Profile",
     };
+
     private readonly GameServerSlim _desiredGameServer = new()
     {
         Id = Guid.CreateVersion7(),
@@ -104,6 +106,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         Modded = false,
         Private = false
     };
+
     private readonly LocalResourceSlim _desiredResourceExecutable = new()
     {
         Id = Guid.CreateVersion7(),
@@ -115,6 +118,7 @@ public partial class DeveloperTesting : IAsyncDisposable
         ContentType = ContentType.Raw,
         Args = "-log"
     };
+
     private readonly LocalResourceSlim _desiredResourceEngine = new()
     {
         Id = Guid.CreateVersion7(),
@@ -126,25 +130,38 @@ public partial class DeveloperTesting : IAsyncDisposable
         ContentType = ContentType.Ini,
         ConfigSets =
         [
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../Engine/Content", DuplicateKey = true },
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "%GAMEDIR%Content", DuplicateKey = true },
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/2D/Paper2D/Content",
-                DuplicateKey = true },
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/Runtime/HoudiniEngine/Content",
-                DuplicateKey = true },
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/DialoguePlugin/Content",
-                DuplicateKey = true },
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/FuncomLiveServices/Content",
-                DuplicateKey = true },
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "ServerName", Value = "%%%SERVER_NAME%%%"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "ServerPassword", Value = "%%%PASSWORD%%%"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "AsyncTaskTimeout", Value = "360"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "GameServerQueryPort", Value = "%%%QUERY_PORT%%%"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "url", Key = "Port", Value = "%%%GAME_PORT%%%"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "url", Key = "PeerPort", Value = "%%%GAME_PORT_PEER%%%"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "/script/onlinesubsystemutils.ipnetdriver", Key = "NetServerMaxTickRate", Value = "30"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../Engine/Content", DuplicateKey = true},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "%GAMEDIR%Content", DuplicateKey = true},
+            new ConfigurationItemSlim
+            {
+                Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/2D/Paper2D/Content",
+                DuplicateKey = true
+            },
+            new ConfigurationItemSlim
+            {
+                Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../Engine/Plugins/Runtime/HoudiniEngine/Content",
+                DuplicateKey = true
+            },
+            new ConfigurationItemSlim
+            {
+                Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/DialoguePlugin/Content",
+                DuplicateKey = true
+            },
+            new ConfigurationItemSlim
+            {
+                Id = Guid.CreateVersion7(), Category = "Core.System", Key = "Paths", Value = "../../../ConanSandbox/Plugins/FuncomLiveServices/Content",
+                DuplicateKey = true
+            },
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "ServerName", Value = "%%%SERVER_NAME%%%"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "ServerPassword", Value = "%%%PASSWORD%%%"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "AsyncTaskTimeout", Value = "360"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "OnlineSubsystemSteam", Key = "GameServerQueryPort", Value = "%%%QUERY_PORT%%%"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "url", Key = "Port", Value = "%%%GAME_PORT%%%"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "url", Key = "PeerPort", Value = "%%%GAME_PORT_PEER%%%"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "/script/onlinesubsystemutils.ipnetdriver", Key = "NetServerMaxTickRate", Value = "30"},
         ]
     };
+
     private readonly LocalResourceSlim _desiredResourceGame = new()
     {
         Id = Guid.CreateVersion7(),
@@ -156,9 +173,10 @@ public partial class DeveloperTesting : IAsyncDisposable
         ContentType = ContentType.Ini,
         ConfigSets =
         [
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "/script/engine.gamesession", Key = "MaxPlayers", Value = "70"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "/script/engine.gamesession", Key = "MaxPlayers", Value = "70"},
         ]
     };
+
     private readonly LocalResourceSlim _desiredResourceServerSettings = new()
     {
         Id = Guid.CreateVersion7(),
@@ -170,13 +188,13 @@ public partial class DeveloperTesting : IAsyncDisposable
         ContentType = ContentType.Ini,
         ConfigSets =
         [
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "AdminPassword", Value = "%%%PASSWORD_ADMIN%%%"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "MaxNudity", Value = "2"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "PVPBlitzServer", Value = "False"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "PVPEnabled", Value = "True"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "serverRegion", Value = "1"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "ServerCommunity", Value = "3"},
-            new ConfigurationItemSlim { Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "IsBattlEyeEnabled", Value = "False"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "AdminPassword", Value = "%%%PASSWORD_ADMIN%%%"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "MaxNudity", Value = "2"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "PVPBlitzServer", Value = "False"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "PVPEnabled", Value = "True"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "serverRegion", Value = "1"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "ServerCommunity", Value = "3"},
+            new ConfigurationItemSlim {Id = Guid.CreateVersion7(), Category = "ServerSettings", Key = "IsBattlEyeEnabled", Value = "False"},
         ]
     };
 
@@ -423,6 +441,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -444,6 +463,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             hostUpdateRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
             return;
         }
+
         Snackbar.Add("Successfully enforced profile resources on the server and host", Severity.Success);
     }
 
@@ -461,7 +481,6 @@ public partial class DeveloperTesting : IAsyncDisposable
             Name = _defaultProfile.FriendlyName,
             OwnerId = _loggedInUser.Id,
             GameId = matchingGame.Data.Id
-
         };
         var matchingProfile = await GameServerService.GetGameProfileByIdAsync(matchingGame.Data.DefaultGameProfileId);
         if (!matchingProfile.Succeeded || matchingProfile.Data is null)
@@ -473,6 +492,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 {
                     Snackbar.Add(message, Severity.Error);
                 }
+
                 return;
             }
 
@@ -484,8 +504,10 @@ public partial class DeveloperTesting : IAsyncDisposable
                 {
                     Snackbar.Add(message, Severity.Error);
                 }
+
                 return;
             }
+
             Snackbar.Add($"Created default game profile: [{createProfileRequest.Data}]{profileCreate.Name}", Severity.Success);
             matchingProfile = await GameServerService.GetGameProfileByIdAsync(createProfileRequest.Data);
             if (!matchingProfile.Succeeded || matchingProfile.Data is null)
@@ -493,6 +515,7 @@ public partial class DeveloperTesting : IAsyncDisposable
                 Snackbar.Add("Failed to create default game profile", Severity.Error);
                 return;
             }
+
             _defaultProfile.Id = matchingProfile.Data.Id;
         }
 
@@ -533,15 +556,17 @@ public partial class DeveloperTesting : IAsyncDisposable
             var resourceConfigItems = resourcesRequest.Succeeded ? resourcesRequest.Data.ToList() : [];
             foreach (var configItem in resource.ConfigSets)
             {
-                var matchingItem = configItem.DuplicateKey ? resourceConfigItems.FirstOrDefault(x =>
-                    x.Category == configItem.Category &&
-                    x.Key == configItem.Key &&
-                    x.Value == configItem.Value) :
-                    resourceConfigItems.FirstOrDefault(x => x.Category == configItem.Category && x.Key == configItem.Key);
+                var matchingItem = configItem.DuplicateKey
+                    ? resourceConfigItems.FirstOrDefault(x =>
+                        x.Category == configItem.Category &&
+                        x.Key == configItem.Key &&
+                        x.Value == configItem.Value)
+                    : resourceConfigItems.FirstOrDefault(x => x.Category == configItem.Category && x.Key == configItem.Key);
                 if (matchingItem is not null && configItem.DuplicateKey)
                 {
                     continue;
                 }
+
                 if (matchingItem is not null && configItem.Value == matchingItem.Value)
                 {
                     continue;
@@ -618,6 +643,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -650,6 +676,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -673,6 +700,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -694,6 +722,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -715,6 +744,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -736,6 +766,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -758,6 +789,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             {
                 Snackbar.Add(message, Severity.Error);
             }
+
             return;
         }
 
@@ -768,6 +800,7 @@ public partial class DeveloperTesting : IAsyncDisposable
             Snackbar.Add($"Generated host registration token but failed to copy it to your clipboard", Severity.Warning);
             return;
         }
+
         Snackbar.Add($"Generated host registration token and copied it to your clipboard!", Severity.Success);
     }
 
@@ -798,7 +831,7 @@ public partial class DeveloperTesting : IAsyncDisposable
 
     private async Task CreateTshootRecord()
     {
-        var tshootEntityType = (TroubleshootEntityType)(Enum.GetValues(typeof(TroubleshootEntityType))
+        var tshootEntityType = (TroubleshootEntityType) (Enum.GetValues(typeof(TroubleshootEntityType))
             .GetValue(Random.Shared.Next(Enum.GetValues(typeof(TroubleshootEntityType)).Length)) ?? TroubleshootEntityType.Network);
 
         var tshootId = await TshootService.CreateTroubleshootRecord(DateTimeService, tshootEntityType, Guid.Empty,
@@ -853,7 +886,7 @@ public partial class DeveloperTesting : IAsyncDisposable
 
         Snackbar.Add("Starting file upload!", Severity.Info);
         _fileUploading = true;
-        var friendlyName = $"New_File_{DateTimeService.NowDatabaseTime.ToString(DataConstants.DateTime.FileNameFormat)}";
+        var friendlyName = $"{file.Name}_{DateTimeService.NowDatabaseTime.ToString(DataConstants.DateTime.FileNameFormat)}";
         var fileName = Guid.NewGuid().ToString();
         var uploadRequest = await FileService.CreateAsync(new FileStorageRecordCreateRequest
         {
@@ -876,7 +909,6 @@ public partial class DeveloperTesting : IAsyncDisposable
         Snackbar.Add("Finished file upload!", Severity.Success);
         _fileUploading = false;
         RefreshFileRecords();
-        await Task.CompletedTask;
     }
 
     private async Task DownloadGameFile(Guid fileId)
@@ -888,9 +920,8 @@ public partial class DeveloperTesting : IAsyncDisposable
             return;
         }
 
-        var fileContent = await File.ReadAllBytesAsync(foundFile.Data.GetLocalFilePath());
-        var convertedContent = Convert.ToBase64String(fileContent);
-        var downloadRequest = await WebClientService.InvokeFileDownload(convertedContent, foundFile.Data.FriendlyName, DataConstants.MimeTypes.Binary);
+        var fileContent = await File.ReadAllTextAsync(foundFile.Data.GetLocalFilePath());
+        var downloadRequest = await WebClientService.InvokeFileDownload(fileContent, foundFile.Data.FriendlyName, DataConstants.MimeTypes.Binary);
         if (downloadRequest.Succeeded)
         {
             downloadRequest.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));

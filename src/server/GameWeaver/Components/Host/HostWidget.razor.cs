@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.Host;
 
 public partial class HostWidget : ComponentBase
 {

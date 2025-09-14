@@ -3,7 +3,7 @@ using Application.Models.GameServer.Host;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.Host;
 
 public partial class HostWidgetSimple : ComponentBase
 {

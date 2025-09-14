@@ -1,7 +1,7 @@
 ﻿using Application.Mappers.Identity;
 using Application.Responses.v1.Identity;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.Shared;
 
 public partial class ChangeOwnershipDialog : ComponentBase
 {
@@ -20,7 +20,7 @@ public partial class ChangeOwnershipDialog : ComponentBase
 
     private List<UserBasicResponse> _users = [];
     private UserBasicResponse? _selectedUser;
-    private UserBasicResponse _currentOwner = new() { Username = "Unknown" };
+    private UserBasicResponse _currentOwner = new() {Username = "Unknown"};
     private string StyleString => $"width: {IconWidthPixels}px; height: {IconHeightPixels}px;";
 
 
@@ -55,7 +55,7 @@ public partial class ChangeOwnershipDialog : ComponentBase
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
         }
 
-        _currentOwner = response.Data?.ToResponse() ?? new UserBasicResponse { Username = "Unknown" };
+        _currentOwner = response.Data?.ToResponse() ?? new UserBasicResponse {Username = "Unknown"};
     }
 
     private async Task<IEnumerable<UserBasicResponse>> FilterUsers(string filterText, CancellationToken token)

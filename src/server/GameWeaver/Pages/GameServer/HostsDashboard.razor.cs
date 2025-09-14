@@ -4,7 +4,7 @@ using Application.Helpers.Runtime;
 using Application.Models.GameServer.Host;
 using Application.Services.GameServer;
 using Application.Settings.AppSettings;
-using GameWeaver.Components.GameServer;
+using GameWeaver.Components.Host;
 using Microsoft.Extensions.Options;
 
 namespace GameWeaver.Pages.GameServer;
@@ -20,6 +20,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
     private TimeZoneInfo _localTimeZone = TimeZoneInfo.FindSystemTimeZoneById("GMT");
     private Timer? _timer;
     private readonly List<HostWidget> _hostWidgets = [];
+
     public HostWidget WidgetReference
     {
         set => _hostWidgets.Add(value);
@@ -163,7 +164,7 @@ public partial class HostsDashboard : ComponentBase, IAsyncDisposable
             return;
         }
 
-        var dialogOptions = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true };
+        var dialogOptions = new DialogOptions {CloseButton = true, MaxWidth = MaxWidth.Large, CloseOnEscapeKey = true};
         var dialog = await DialogService.ShowAsync<HostRegisterDialog>("Generate New Host Registration", new DialogParameters(), dialogOptions);
         var dialogResult = await dialog.Result;
         if (dialogResult?.Data is null || dialogResult.Canceled)

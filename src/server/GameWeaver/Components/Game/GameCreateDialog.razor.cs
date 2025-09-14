@@ -8,7 +8,7 @@ using Application.Services.Lifecycle;
 using Domain.Enums.GameServer;
 using Domain.Enums.Lifecycle;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.Game;
 
 public partial class GameCreateDialog : ComponentBase
 {

@@ -23,7 +23,7 @@ using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
 using Domain.Models.Identity;
-using GameWeaver.Components.GameServer;
+using GameWeaver.Components.LocalResource;
 using GameWeaver.Helpers;
 using GameWeaverShared.Parsers;
 using Microsoft.AspNetCore.Components.Forms;

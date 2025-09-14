@@ -3,7 +3,7 @@ using Application.Models.GameServer.Game;
 using Application.Requests.GameServer.GameProfile;
 using Application.Services.GameServer;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.GameProfile;
 
 public partial class GameProfileCreateDialog : ComponentBase
 {
@@ -18,7 +18,7 @@ public partial class GameProfileCreateDialog : ComponentBase
     private Guid _loggedInUserId = Guid.Empty;
     private List<GameSlim> _games = [];
     private GameSlim _selectedGame = new() {Id = Guid.Empty, FriendlyName = "None"};
-    private readonly GameProfileCreateRequest _createRequest = new() { Name = string.Empty };
+    private readonly GameProfileCreateRequest _createRequest = new() {Name = string.Empty};
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

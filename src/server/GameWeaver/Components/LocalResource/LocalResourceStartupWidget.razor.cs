@@ -1,7 +1,7 @@
 using Application.Models.GameServer.Game;
 using Application.Models.GameServer.LocalResource;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.LocalResource;
 
 public partial class LocalResourceStartupWidget : ComponentBase
 {

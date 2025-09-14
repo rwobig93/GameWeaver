@@ -248,10 +248,10 @@ public static class PermissionConstants
 
         public static class GameVersions
         {
-            public const string Get = $"{ClaimConstants.Permission}.GameServer.Game.Get";
-            public const string Create = $"{ClaimConstants.Permission}.GameServer.Game.Create";
-            public const string Update = $"{ClaimConstants.Permission}.GameServer.Game.Update";
-            public const string Delete = $"{ClaimConstants.Permission}.GameServer.Game.Delete";
+            public const string Get = $"{ClaimConstants.Permission}.GameServer.GameVersion.Get";
+            public const string Create = $"{ClaimConstants.Permission}.GameServer.GameVersion.Create";
+            public const string Update = $"{ClaimConstants.Permission}.GameServer.GameVersion.Update";
+            public const string Delete = $"{ClaimConstants.Permission}.GameServer.GameVersion.Delete";
         }
 
         public static class GameGenre

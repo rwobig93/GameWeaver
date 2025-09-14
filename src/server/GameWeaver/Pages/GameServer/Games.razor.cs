@@ -10,7 +10,7 @@ using Application.Models.GameServer.GameProfile;
 using Application.Models.GameServer.LocalResource;
 using Application.Services.GameServer;
 using Domain.Models.Identity;
-using GameWeaver.Components.GameServer;
+using GameWeaver.Components.Game;
 using GameWeaver.Helpers;
 using Microsoft.AspNetCore.Components.Forms;
 

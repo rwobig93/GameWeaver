@@ -4,7 +4,7 @@ using Application.Models.GameServer.GameServer;
 using Application.Services.GameServer;
 using Application.Services.Lifecycle;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.GameProfile;
 
 public partial class GameProfileWidget : ComponentBase
 {
@@ -17,7 +17,7 @@ public partial class GameProfileWidget : ComponentBase
     [Inject] public IGameServerService GameServerService { get; init; } = null!;
     [Inject] public IRunningServerState ServerState { get; init; } = null!;
 
-    private GameSlim _game = new() { Id = Guid.Empty, FriendlyName = "Unknown" };
+    private GameSlim _game = new() {Id = Guid.Empty, FriendlyName = "Unknown"};
     private GameServerSlim _directGameServer = new() {Id = Guid.Empty, ServerName = "None"};
     public readonly string _cssBorderBase = "rounded-lg justify-center align-center mud-text-align-center";
     private string _cssBorderStatus = " border-status-default";
@@ -53,7 +53,7 @@ public partial class GameProfileWidget : ComponentBase
 
     private async Task GetProfileUsage()
     {
-        if (GameProfile.Id == _game.DefaultGameProfileId)  // The default game profile is on every server for that game, we'll check game usage instead
+        if (GameProfile.Id == _game.DefaultGameProfileId) // The default game profile is on every server for that game, we'll check game usage instead
         {
             var gameResponse = await GameServerService.GetByGameIdAsync(_game.Id, ServerState.SystemUserId);
             if (!gameResponse.Succeeded)
@@ -61,6 +61,7 @@ public partial class GameProfileWidget : ComponentBase
                 gameResponse.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
                 return;
             }
+
             _serverUsages = gameResponse.Data.Count();
             return;
         }
@@ -140,6 +141,7 @@ public partial class GameProfileWidget : ComponentBase
             NavManager.NavigateTo(AppRouteConstants.GameServer.Games.ViewId(GameProfile.GameId));
             return;
         }
+
         // The game profile for a server shouldn't be separately modified, we'll go to the game server page instead
         if (_directGameServer.Id != Guid.Empty)
         {

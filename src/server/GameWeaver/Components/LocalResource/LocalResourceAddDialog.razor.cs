@@ -3,7 +3,7 @@ using Application.Models.GameServer.LocalResource;
 using Application.Services.GameServer;
 using Domain.Enums.GameServer;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.LocalResource;
 
 public partial class LocalResourceAddDialog : ComponentBase
 {
@@ -77,6 +77,7 @@ public partial class LocalResourceAddDialog : ComponentBase
         {
             _newLocalResource.ContentType = ContentType.Deleted;
         }
+
         MudDialog.Close(DialogResult.Ok(_newLocalResource));
     }
 

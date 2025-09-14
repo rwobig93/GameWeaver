@@ -1,6 +1,6 @@
 ﻿using Application.Models.GameServer.Game;
 
-namespace GameWeaver.Components.GameServer;
+namespace GameWeaver.Components.Game;
 
 public partial class GameWidget : ComponentBase
 {
@@ -11,7 +11,6 @@ public partial class GameWidget : ComponentBase
     [Parameter] public GameSlim Game { get; set; } = new();
     [Parameter] public bool ShowName { get; set; }
     [Parameter] public string CssDisplay { get; set; } = "game-card-lift";
-    [Parameter] public bool Vertical { get; set; }
     [Parameter] public int WidthPx { get; set; } = 293; // 385
     [Parameter] public int HeightPx { get; set; } = 137; // 180
     [Parameter] public bool GamerMode { get; set; }
@@ -20,6 +19,8 @@ public partial class GameWidget : ComponentBase
     [Inject] public HttpClient HttpClient { get; set; } = null!;
     private string CardWidth => $"{WidthPx}px";
     private string CardHeight => $"{HeightPx}px";
+    private string MaxCardWidth => $"{WidthPx}px";
+    private string MaxCardHeight => ShowName ? $"{HeightPx + 20}px" : $"{HeightPx}px";
 
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -33,7 +34,7 @@ public partial class GameWidget : ComponentBase
 
     private async Task UpdateImageUrl()
     {
-        if (!Vertical && !string.IsNullOrWhiteSpace(Game.UrlLogo))
+        if (!string.IsNullOrWhiteSpace(Game.UrlLogo))
         {
             if (await UrlExists(Game.UrlLogo))
             {
@@ -43,7 +44,7 @@ public partial class GameWidget : ComponentBase
             }
         }
 
-        if (Vertical && Game.SteamGameId != 0)
+        if (Game.SteamGameId != 0)
         {
             if (await UrlExists($"https://steamcdn-a.akamaihd.net/steam/apps/{Game.SteamGameId}/library_600x900.jpg"))
             {
@@ -54,7 +55,7 @@ public partial class GameWidget : ComponentBase
         }
 
         _imageExists = false;
-        _imageUrl = Vertical ? "/images/gameserver/game-default-vertical.jpg" : "/images/gameserver/game-default-horizontal.jpg";
+        _imageUrl = "/images/gameserver/game-default-horizontal.jpg";
     }
 
     private void ViewGame()

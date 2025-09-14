@@ -15,7 +15,7 @@ using Application.Services.Integrations;
 using Domain.Enums.GameServer;
 using Domain.Enums.Identity;
 using Domain.Enums.Integrations;
-using GameWeaver.Components.GameServer;
+using GameWeaver.Components.LocalResource;
 using GameWeaver.Helpers;
 using GameWeaverShared.Parsers;
 using Microsoft.AspNetCore.Components.Forms;
@@ -42,7 +42,7 @@ public partial class GameView : ComponentBase
     private string _configSearchText = string.Empty;
     private string _editButtonText = "Enable Edit Mode";
     private bool _editMode;
-    private GameSlim _game = new() {Id = Guid.Empty};
+    private GameSlim _game = new() {Id = Guid.Empty, SourceType = GameSource.Manual};
     private List<LocalResourceSlim> _localResources = [];
     private Guid _loggedInUserId = Guid.Empty;
     private List<FileStorageRecordSlim> _manualVersionFiles = [];
@@ -65,10 +65,9 @@ public partial class GameView : ComponentBase
             {
                 await GetPermissions();
                 await GetViewingGame();
+                await GetGameProfileResources();
                 await GetGameVersionFiles();
                 await GetGameServers();
-                await GetGameProfileResources();
-                StateHasChanged();
             }
         }
         catch
@@ -86,6 +85,7 @@ public partial class GameView : ComponentBase
         _canViewGameServers = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Gameserver.SeeUi);
         _canViewGameFiles = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.GameVersions.Get);
         _canExportGame = await AuthorizationService.UserHasPermission(currentUser, PermissionConstants.GameServer.Game.Export);
+        StateHasChanged();
     }
 
     private async Task GetViewingGame()
@@ -94,6 +94,7 @@ public partial class GameView : ComponentBase
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            StateHasChanged();
             return;
         }
 
@@ -101,16 +102,17 @@ public partial class GameView : ComponentBase
         {
             Snackbar.Add(ErrorMessageConstants.Games.NotFound);
             _validIdProvided = false;
+            StateHasChanged();
             return;
         }
 
         _game = response.Data;
-
         if (_game.Id == Guid.Empty)
         {
             _validIdProvided = false;
-            StateHasChanged();
         }
+
+        StateHasChanged();
     }
 
     private async Task GetGameServers()
@@ -125,11 +127,11 @@ public partial class GameView : ComponentBase
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            StateHasChanged();
             return;
         }
 
         _runningGameservers = response.Data.ToList();
-
         foreach (var server in _runningGameservers)
         {
             if (await CanViewGameServer(server.Id))
@@ -137,6 +139,8 @@ public partial class GameView : ComponentBase
                 _viewableGameServers.Add(server.Id);
             }
         }
+
+        StateHasChanged();
     }
 
     private async Task GetGameProfileResources()
@@ -150,10 +154,12 @@ public partial class GameView : ComponentBase
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            StateHasChanged();
             return;
         }
 
         _localResources = response.Data.ToList();
+        StateHasChanged();
     }
 
     private async Task Save()
@@ -278,10 +284,12 @@ public partial class GameView : ComponentBase
         if (!response.Succeeded)
         {
             response.Messages.ForEach(x => Snackbar.Add(x, Severity.Error));
+            StateHasChanged();
             return;
         }
 
         _manualVersionFiles = response.Data.ToList();
+        StateHasChanged();
     }
 
     private async Task ConfigAdd(LocalResourceSlim localResource)

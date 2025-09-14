@@ -2,6 +2,7 @@
 @using Application.Constants.Identity
 @using Domain.Enums.GameServer
 @using GameWeaver.Components.GameServer
+@using GameWeaver.Components.LocalResource
 @attribute [Route(AppRouteConstants.GameServer.Games.View)]
 @attribute [Authorize(PermissionConstants.GameServer.Game.Get)]
 
@@ -100,7 +101,7 @@
     {
         <MudItem xs="12" sm="12" md="12" lg="18" xl="24" xxl="36" Class="d-flex flex-wrap gap-4">
             <MudTextField @bind-Value="_game.ManualFileRecordId" Label="Current Game Version Id" Variant="Variant.Outlined" Disabled="true"/>
-            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.FileOpen"
+            <MudButton Variant="Variant.Outlined" Color="Color.Tertiary" StartIcon="@Icons.Material.Filled.FileOpen" Class="my-3"
                        OnClick="@ViewGameVersionFiles">View Game Versions
             </MudButton>
         </MudItem>
