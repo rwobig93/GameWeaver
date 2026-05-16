@@ -136,7 +136,7 @@ public static class DependencyInjection
         services.AddHangfireServer();
         services.AddMudServices(config =>
         {
-            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomLeft;
+            config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.TopEnd;
             config.SnackbarConfiguration.PreventDuplicates = true;
             config.SnackbarConfiguration.NewestOnTop = false;
             config.SnackbarConfiguration.ShowCloseIcon = true;
